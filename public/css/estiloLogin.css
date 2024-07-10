@@ -1,0 +1,107 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: url(../img/paise2.jpg) no-repeat center top;
+    background-size: cover;
+    font-family: 'Roboto', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-box {
+    position: relative;
+    width: 90%;
+    max-width: 320px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .login-box::before {
+    content: '';
+    position: absolute;
+    top: -90px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 120px;
+    background: url(/build/img/LogoTransp.png) no-repeat center center;
+    background-size: contain;
+  }
+  
+  .login-box h1 {
+    margin: 0 0 20px;
+    text-align: center;
+    font-size: 24px;
+  }
+  
+  .login-box label {
+    margin: 0 0 10px;
+    font-weight: bold;
+    display: block;
+  }
+  
+  .login-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #333;
+    font-size: 16px;
+    transition: background 0.3s ease;
+  }
+  
+  .login-box input:focus {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .login-box input[type="submit"] {
+    background: #5629a8;
+    color: #fff;
+    font-size: 18px;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 0;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .login-box input[type="submit"]:hover {
+    background: #df9b86;
+  }
+  
+  .login-box a {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: darkgrey;
+    font-size: 14px;
+  }
+  
+  .login-box a:hover {
+    color: #333;
+  }
+  
+  /* Consulta de medios para dispositivos móviles */
+  @media screen and (max-width: 480px) {
+    .login-box {
+      padding: 20px;
+    }
+  
+    .login-box h1 {
+      font-size: 20px;
+    }
+    
+    .login-box::before {
+      width: 80px;
+      height: 80px;
+      top: -50px;
+    }
+  }
+  
