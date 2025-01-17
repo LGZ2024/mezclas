@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Mezclas</title>
+    <link rel="icon" type="image/svg+xml" href="../img/LogoTransp.svg">
+    <%- include("../templates/cabecera") %>
+</head>
+<style>
+    .producto-item {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    .producto-item select,
+    .producto-item input {
+        margin-right: 10px;
+    }
+
+    #notificacionModal .modal-content {
+        border-radius: 10px;
+    }
+
+    #notificacionModal .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    #notificacionModal .modal-body {
+        padding: 20px;
+    }
+
+    #modalMensaje {
+        font-size: 16px;
+        font-weight: 500;
+    }
+
+    #modalMensaje.error {
+        color: #dc3545;
+    }
+
+    #modalMensaje.success {
+        color: #28a745;
+    }
+</style>
+
+<body>
+    <header>
+        <div class="barra contenedor">
+            <div class="barra__logo">
+                <img src="../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
+            </div>
+
+            <nav class="barra__navegacion">
+                <a class="barra__link" id="inicio"></a>
+            </nav>
+
+            <nav class="barra__login">
+                <a class="barra__link" id="cerrarSesion">Cerrar Sesion</a>
+            </nav>
+        </div>
+    </header>
+    <section class="formularios">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <form class="form" id="recetaForm" novalidate>
+                                <div class="card">
+                                    <div class="titulo">
+                                        <div class="col">
+                                            <button class="formulario__submit" id="regresar" type="button">
+                                                <span class="mdi mdi-arrow-left-bold"></span>
+                                            </button>
+                                        </div>
+                                        <div class="text-center">
+                                            <h3>Receta Preparacion</h3>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div id="productosContainer">
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="nombre">Nombre receta</label>
+                                            <input type="text" id="nombre" class="formulario__input"
+                                                placeholder="Nombre de la receta" required>
+                                            <div class="error-message" id="nombre-error"></div>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="descripcion">Descripcion</label>
+                                            <textarea id="descripcion" class="formulario__input"
+                                                placeholder="Descripcion" required></textarea>
+                                            <div class="error-message" id="descripcion-error"></div>
+                                        </div>
+                                        <hr>
+                                        <label class="formulario__label">Productos</label>
+
+                                        <div class="producto-item">
+                                            <select name="producto[]" class="formulario__input select-producto"
+                                                required>
+                                                <option value="">Seleccionar Producto</option>
+                                            </select>
+
+                                            <select name="unidad_medida[]"
+                                                class="formulario__input select-unidad-medida" required disabled>
+                                                <option value="">Unidad de Medida</option>
+                                            </select>
+
+                                            <input class="formulario__input" type="number" name="cantidad[]"
+                                                placeholder="Cantidad" min="0" step="0.01" required>
+
+                                            <button type="button"
+                                                class="eliminar-producto formulario__submit">Eliminar</button>
+                                        </div>
+                                    </div>
+                                    <div class="formulario__campo">
+                                        <button class="formulario__submit" type="button" id="agregarProducto">
+                                            + Agregar Producto
+                                        </button>
+                                        <button class="formulario__submit" type="submit">Guardar Receta</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Firebase Configuración y funciones -->
+    <%- include("../templates/scripts") %>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const productosContainer = document.getElementById('productosContainer');
+                const agregarProductoBtn = document.getElementById('agregarProducto');
+                const recetaForm = document.getElementById('recetaForm');
+                let productosData = []; // Variable global para almacenar los datos de productos
+
+                // Función para mostrar notificaciones
+                function mostrarNotificacion(mensaje, esError = false) {
+                    const modal = $('#notificacionModal');
+                    const modalMensaje = document.getElementById('modalMensaje');
+
+                    // Limpiar clases previas
+                    modalMensaje.classList.remove('error', 'success');
+
+                    // Establecer mensaje y estilo
+                    modalMensaje.textContent = mensaje;
+                    modalMensaje.classList.add(esError ? 'error' : 'success');
+
+                    // Mostrar modal
+                    modal.modal('show');
+                }
+
+                // Función para generar unidades
+                function generarUnidades(unidadBase) {
+                    const unidadesMap = {
+                        'litro': ['Litro', 'Mililitro'],
+                        'kilo': ['Kilogramo', 'Gramo'],
+                        // Añadir más unidades según sea necesario
+                    };
+
+                    const unidadNormalizada = unidadBase.toLowerCase().trim();
+                    return unidadesMap[unidadNormalizada] || [unidadBase];
+                }
+
+                // Función para obtener productos
+                async function fetchProductos() {
+                    try {
+                        const response = await fetch(`/api/productos/`);
+                        if (!response.ok) {
+                            throw new Error('Error al obtener productos');
+                        }
+                        const data = await response.json();
+                        productosData = data;
+                        return data;
+                    } catch (error) {
+                        console.error('Error al obtener productos:', error);
+                        mostrarNotificacion('No se pudieron cargar los productos', true);
+                        return [];
+                    }
+                }
+
+                // Validación de formulario
+                function validarFormulario() {
+                    let esValido = true;
+                    const nombre = document.getElementById('nombre');
+                    const descripcion = document.getElementById('descripcion');
+                    const nombreError = document.getElementById('nombre-error');
+                    const descripcionError = document.getElementById('descripcion-error');
+
+                    nombreError.textContent = '';
+                    descripcionError.textContent = '';
+
+                    if (nombre.value.trim() === '') {
+                        nombreError.textContent = 'El nombre de la receta es obligatorio.';
+                        esValido = false;
+                    }
+
+                    if (descripcion.value.trim() === '') {
+                        descripcionError.textContent = 'La descripción es obligatoria.';
+                        esValido = false;
+                    }
+
+                    return esValido;
+                }
+
+                // Función de validación extendida para productos
+                function validarProductos() {
+                    const productos = document.querySelectorAll('select[name="producto[]"]');
+                    const unidadesMedida = document.querySelectorAll('select[name="unidad_medida[]"]');
+                    const cantidades = document.querySelectorAll('input[name="cantidad[]"]');
+
+                    // Conjunto para rastrear productos únicos
+                    const productosUnicos = new Set();
+                    let esValido = true;
+
+                    // Contenedor para mensajes de error
+                    const errorProductosContainer = document.getElementById('productos-error') ||
+                        (() => {
+                            const errorDiv = document.createElement('div');
+                            errorDiv.id = 'productos-error';
+                            errorDiv.classList.add('error-mensaje');
+                            productosContainer.insertAdjacentElement('beforebegin', errorDiv);
+                            return errorDiv;
+                        })();
+
+                    // Limpiar errores previos
+                    errorProductosContainer.textContent = '';
+
+                    // Arreglo para almacenar mensajes de error
+                    const errores = [];
+
+                    productos.forEach((productoSelect, index) => {
+                        const producto = productoSelect.value;
+                        const unidad = unidadesMedida[index].value;
+                        const cantidad = cantidades[index].value;
+
+                        // Validar que todos los campos estén llenos
+                        if (!producto) {
+                            errores.push('Debe seleccionar un producto');
+                            productoSelect.classList.add('input-error');
+                        }
+
+                        if (!unidad) {
+                            errores.push('Debe seleccionar una unidad de medida');
+                            unidadesMedida[index].classList.add('input-error');
+                        }
+
+                        if (!cantidad || parseFloat(cantidad) <= 0) {
+                            errores.push('Debe ingresar una cantidad válida');
+                            cantidades[index].classList.add('input-error');
+                        }
+
+                        // Validar productos únicos
+                        if (producto) {
+                            if (productosUnicos.has(producto)) {
+                                errores.push('No se pueden agregar productos duplicados');
+                                productoSelect.classList.add('input-error');
+                            } else {
+                                productosUnicos.add(producto);
+                            }
+                        }
+                    });
+
+                    // Mostrar errores si existen
+                    if (errores.length > 0) {
+                        // Eliminar duplicados
+                        const erroresUnicos = [...new Set(errores)];
+
+                        errorProductosContainer.textContent = erroresUnicos.join('. ');
+                        esValido = false;
+                    }
+
+                    return esValido;
+                }
+
+                // Función para manejar el cambio de producto
+                function handleCambioProducto(event) {
+                    // Encontrar el contenedor del producto
+                    const contenedorProducto = event.target.closest('.producto-item');
+
+                    // Buscar los selects dentro de este contenedor
+                    const selectUnidadMedida = contenedorProducto.querySelector('.select-unidad-medida');
+
+                    // Limpiar select de unidades
+                    selectUnidadMedida.innerHTML = '';
+                    selectUnidadMedida.disabled = false;
+
+                    // Obtener el producto seleccionado
+                    const productoSeleccionado = event.target.options[event.target.selectedIndex];
+
+                    // Verificar si se ha seleccionado un producto válido
+                    if (productoSeleccionado.value) {
+                        // Obtener la unidad base del producto
+                        const unidadBase = productoSeleccionado.dataset.unidadBase;
+
+                        // Generar unidades
+                        const unidades = generarUnidades(unidadBase);
+
+                        // Agregar opción por defecto
+                        const optionDefault = document.createElement('option');
+                        optionDefault.value = '';
+                        optionDefault.textContent = 'Seleccionar Unidad';
+                        selectUnidadMedida.appendChild(optionDefault);
+
+                        // Agregar unidades al select
+                        unidades.forEach(unidad => {
+                            const option = document.createElement('option');
+                            option.value = unidad.toLowerCase();
+                            option.textContent = unidad;
+                            selectUnidadMedida.appendChild(option);
+                        });
+                    } else {
+                        // Deshabilitar select de unidades si no hay producto seleccionado
+                        selectUnidadMedida.disabled = true;
+                    }
+                }
+
+                // Función para inicializar el formulario con productos
+                async function inicializarFormulario() {
+                    try {
+                        const datos = await fetchProductos();
+                        const selectsProducto = document.querySelectorAll('.select-producto');
+
+                        selectsProducto.forEach(selectProducto => {
+                            // Limpiar opciones existentes
+                            selectProducto.innerHTML = '<option value="">Seleccionar Producto</option>';
+
+                            // Agregar nuevas opciones
+                            datos.forEach(producto => {
+                                const option = document.createElement('option');
+                                option.value = producto.id_producto;
+                                option.textContent = producto.nombre;
+                                option.dataset.unidadBase = producto.unidad_medida;
+                                selectProducto.appendChild(option);
+                            });
+
+                            // Añadir evento de cambio
+                            selectProducto.removeEventListener('change', handleCambioProducto);
+                            selectProducto.addEventListener('change', handleCambioProducto);
+                        });
+
+                    } catch (error) {
+                        console.error('Error al inicializar formulario:', error);
+                        mostrarNotificacion('No se pudieron cargar los productos', true);
+                    }
+                }
+
+                // Función para crear un nuevo campo de producto
+                function crearCampoProducto(datos) {
+                    const nuevoItem = document.createElement('div');
+                    nuevoItem.classList.add('producto-item');
+
+                    // Crear el select de productos
+                    const selectProducto = document.createElement('select');
+                    selectProducto.name = 'producto[]';
+                    selectProducto.classList.add('formulario__input', 'select-producto');
+                    selectProducto.required = true;
+
+                    // Crear el select de unidades de medida
+                    const selectUnidadMedida = document.createElement('select');
+                    selectUnidadMedida.name = 'unidad_medida[]';
+                    selectUnidadMedida.classList.add('formulario__input', 'select-unidad-medida');
+                    selectUnidadMedida.required = true;
+                    selectUnidadMedida.disabled = true; // Inicialmente deshabilitado
+
+                    // Opción por defecto para productos
+                    const optionDefaultProducto = document.createElement('option');
+                    optionDefaultProducto.value = '';
+                    optionDefaultProducto.textContent = 'Seleccionar Producto';
+                    selectProducto.appendChild(optionDefaultProducto);
+
+                    // Agregar opciones de productos
+                    datos.forEach(producto => {
+                        const option = document.createElement('option');
+                        option.value = producto.id_producto;
+                        option.textContent = producto.nombre;
+                        option.dataset.unidadBase = producto.unidad_medida;
+                        selectProducto.appendChild(option);
+                    });
+
+                    // Evento para cambio de producto
+                    selectProducto.addEventListener('change', handleCambioProducto);
+
+                    // Crear estructura HTML
+                    nuevoItem.innerHTML = `
+        ${selectProducto.outerHTML}
+        ${selectUnidadMedida.outerHTML}
+        <input
+            class="formulario__input" 
+            type="number" 
+            name="cantidad[]" 
+            placeholder="Cantidad" 
+            min="0" 
+            step="0.01" 
+            required
+        >
+        <button type="button" class="eliminar-producto formulario__submit">Eliminar</button>
+    `;
+
+                    // Agregar evento para eliminar el campo
+                    nuevoItem.querySelector('.eliminar-producto').addEventListener('click', () => {
+                        // Verificar que quede al menos un producto
+                        const productosActuales = document.querySelectorAll('.producto-item');
+                        if (productosActuales.length > 1) {
+                            nuevoItem.remove();
+                        } else {
+                            mostrarNotificacion('Debe haber al menos un producto', true);
+                        }
+                    });
+
+                    return nuevoItem;
+                }
+
+                // Evento para agregar nuevo producto
+                agregarProductoBtn.addEventListener('click', async () => {
+                    // Limpiar errores previos
+                    const errorProductosContainer = document.getElementById('productos-error');
+                    if (errorProductosContainer) {
+                        errorProductosContainer.textContent = '';
+                    }
+                    // Agregar nuevo producto
+                    const datos = await fetchProductos();
+                    const nuevoCampo = crearCampoProducto(datos);
+                    productosContainer.appendChild(nuevoCampo);
+
+                    // Reinicializar para asegurar que los nuevos selects tengan eventos
+                    inicializarFormulario();
+                });
+
+                // evento para el formulario
+                recetaForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+
+                    // Limpiar errores previos
+                    document.querySelectorAll('.input-error').forEach(el => {
+                        el.classList.remove('input-error');
+                    });
+                    // validaciones
+                    if (!validarFormulario()) {
+                        return;
+                    }
+
+                    if (!validarProductos()) {
+                        return;
+                    }
+
+
+                    const nombre = document.getElementById('nombre').value;
+                    const descripcion = document.getElementById('descripcion').value;
+                    const productos = document.querySelectorAll('select[name="producto[]"]');
+                    const unidadesMedida = document.querySelectorAll('select[name="unidad_medida[]"]');
+                    const cantidades = document.querySelectorAll('input[name="cantidad[]"]');
+
+                    const receta = [{
+                        nombre: nombre,
+                        descripcion: descripcion,
+                    }];
+
+                    productos.forEach((producto, index) => {
+                        receta.push({
+                            producto: producto.value,
+                            unidad_medida: unidadesMedida[index].value,
+                            cantidad: cantidades[index].value
+                        });
+                    });
+
+                    try {
+                        const response = await fetch('/api/guardar-receta', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(receta)
+                        });
+                        if (!response.ok) {
+                            throw new Error('Error en la respuesta del servidor');
+                        }
+
+                        const data = await response.json();
+
+                        recetaForm.reset();
+                        mostrarNotificacion('Receta guardada exitosamente');
+                        await inicializarFormulario();
+
+                    } catch (error) {
+                        console.error('Error:', error);
+                        mostrarNotificacion(`Error al guardar la receta: ${error.message}`, true);
+                    }
+                });
+
+                // evento para el boton de regresar
+                const botonRegresar = document.getElementById('regresar');
+                botonRegresar.addEventListener('click', () => {
+                    window.history.back();
+                });
+
+                inicializarFormulario();
+            });
+        </script>
+</body>
+
+</html>

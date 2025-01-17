@@ -1,26 +1,57 @@
-import { conexion } from "../bd/db.js";
+export class CentroController {
+  constructor ({ centroModel }) {
+    this.centroModel = centroModel
+  }
 
-//extraer un solo Usuario
-export const CentroCostes= async (req, res)=>{
-  const id=req.params.id
-  const [result]= await conexion.query('SELECT * FROM `centrocoste` WHERE `rancho`=?',[id])
-  
-  if(result.length <=0 ) return res.status(404).json({
-    mensaje: 'No se encontro centros de costo'
-  })
+  // extraer
+  getCentrosPorRancho = async (req, res) => {
+    const { rancho } = req.params
+    const { user } = req.session
+    let centroCoste
+    try {
+      // esta validacion es especial para fransico ya que el solo podra solicitar de fresa en estos ranchos
+      if (user.rol === 'administrativo' && (rancho === 'Romero' || rancho === 'Potrero')) {
+        centroCoste = await this.centroModel.getCentrosPorRancho({ rancho, cultivo: 'Fresa' })
+      } else {
+        centroCoste = await this.centroModel.getCentrosPorRancho({ rancho, cultivo: user.cultivo })
+      }
+      if (centroCoste.error) {
+        res.status(404).json({ error: `${centroCoste.error}` })
+      }
+      res.json(centroCoste)
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error)
+      res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
+    }
+  }
 
-  res.json(result)
-};
+  // extraer un solo variedades
+  getVariedadPorCentroCoste = async (req, res) => {
+    const { id } = req.params
 
-//extraer un solo variedades
-export const Variedades= async (req, res)=>{
-  const id=req.params.id
-  const [result]= await conexion.query('SELECT variedad FROM `centrocoste` WHERE id=?',[id])
-  
-  if(result.length <=0 ) return res.status(404).json({
-    mensaje: 'No se encontro centros de costo'
-  })
+    try {
+      const variedad = await this.centroModel.getVariedadPorCentroCoste({ id })
+      if (variedad.error) {
+        res.status(404).json({ error: `${variedad.error}` })
+      }
+      res.json(variedad)
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error)
+      res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
+    }
+  }
 
-  res.json(result)
-};
-
+  // extraer un solo variedades
+  getAll = async (req, res) => {
+    try {
+      const variedad = await this.centroModel.getAll()
+      if (variedad.error) {
+        res.status(404).json({ error: `${variedad.error}` })
+      }
+      res.json(variedad)
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error)
+      res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
+    }
+  }
+}

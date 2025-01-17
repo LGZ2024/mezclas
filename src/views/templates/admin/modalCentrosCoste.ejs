@@ -1,0 +1,39 @@
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel"></h1>
+      </div>
+      <div class="modal-body">
+        <form class="forms-sample" id="formCentroCostes">
+          <div class="form-group">
+            <label for="centroCoste">Centro de Coste</label>
+            <input type="text" class="form-control" id="centroCoste" placeholder="Nombre" required>
+          </div>
+          <div class="form-group">
+            <label for="rancho">Rancho</label>
+            <input type="text" class="form-control" id="rancho" placeholder="Agregar descripcion" required>
+          </div>
+          <div class="form-group">
+            <label for="cultivo">Cultivo</label>
+            <input type="text" class="form-control" placeholder="Direccion donde se encuentra la vivienda" id="cultivo"
+              required>
+          </div>
+          <div id="productosContainer">
+            <label for="cultivo">Variedades</label>
+            <!-- AQUI SE VAN AGREGANDO LAS VARIEDADES -->
+          </div>
+          <div class="formulario__campo">
+            <button type="button" class="formulario__submit" id="agregarProducto">
+              + Agregar Producto
+            </button>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cerrarModal">Cerrar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

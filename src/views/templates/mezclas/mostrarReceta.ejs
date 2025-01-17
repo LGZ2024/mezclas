@@ -1,0 +1,50 @@
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+    aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-lg-down">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="titulo">
+                            <div class="text-center">
+                                <h3>Receta</h3>
+                            </div>
+                        </div>
+                        <% if ( rol==="mezclador" ) { %>
+                            <button id="nuevoProducto" type="button" class="btn formulario__submit">Agregar Producto</button>
+                            <% } %>
+                                <hr>
+                                <div class="table-responsive">
+
+                                    <table
+                                        class="table table-striped table-bordered table-hover table-sm table-compac border-0"
+                                        id="tbReceta" style="white-space: nowrap;">
+                                        <thead class="bg-primary">
+                                            <tr class="bg-primary">
+                                                <th>id</th>
+                                                <th>Producto</th>
+                                                <th>Unidad Medida</th>
+                                                <th>Cantidad</th>
+                                                <th>Confirmacion</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Contenido de la tabla -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <% if ( rol==="mezclador" ) { %>
+                    <button type="button" class="btn btn-primary" id="btnEnviarEstado">Guardar</button>
+                    <% } %>
+            </div>
+        </div>
+    </div>
+</div>

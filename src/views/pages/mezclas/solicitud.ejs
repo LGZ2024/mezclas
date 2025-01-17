@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Mezclas</title>
+    <link rel="icon" type="image/svg+xml" href="../img/LogoTransp.svg">
+    <%- include("../../templates/mezclas/cabecera") %>
+</head>
+<style>
+    .producto-item {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+
+    .producto-item select,
+    .producto-item input {
+        margin-right: 10px;
+    }
+</style>
+
+<body>
+    <header>
+        <div class="barra contenedor">
+            <div class="barra__logo">
+                <img src="../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
+            </div>
+
+            <nav class="barra__navegacion">
+                <a class="barra__link" id="inicio"></a>
+            </nav>
+
+            <nav class="barra__login">
+                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="formularios">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <form class="form" id="recetaForm" novalidate>
+                                <div class="card">
+                                    <div class="titulo">
+                                        <div class="col">
+                                            <button type="button" class="formulario__submit" id="regresar">
+                                                <span class="mdi mdi-arrow-left-bold"></span>
+                                            </button>
+                                        </div>
+                                        <div class="text-center">
+                                            <h3>Solicitar Mezcla</h3>
+                                        </div>
+                                    </div>
+                                    <hr>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="rancho">Rancho destino</label>
+                                        <select id="rancho" class="formulario__input" required>
+                                            <option value="">Seleccione un rancho</option>
+                                            <% ranchos.forEach(function(rancho) { %>
+                                                <option value="<%= rancho %>">
+                                                    <%= rancho %>
+                                                </option>
+                                                <% }); %>
+                                        </select>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="centroCoste">Centro de coste</label>
+                                        <select id="centroCoste" class="formulario__input" required>
+                                            <option value="">Seleccione un centro de coste</option>
+                                            <!-- Se poblará dinámicamente con JavaScript -->
+                                        </select>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="variedad">Variedades</label>
+                                        <select id="variedad" class="formulario__input" required>
+                                            <option value="">Seleccione una variedad</option>
+                                            <!-- Se poblará dinámicamente con JavaScript -->
+                                        </select>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="folio">Folio de receta</label>
+                                        <input type="text" id="folio" class="formulario__input"
+                                            placeholder="Ingrese el folio de receta" required>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="temporada">Temporada</label>
+                                        <select id="temporada" class="formulario__input" required>
+                                            <option value="">Seleccione una temporada</option>
+                                            <option value="Julio23-Junio24">Julio23-Junio24</option>
+                                            <option value="Julio24-Junio25">Julio24-Junio25</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="cantidad">Cantidad de mezcla</label>
+                                        <input type="text" id="cantidad" class="formulario__input"
+                                            placeholder="Ingrese la cantidad de mezcla" required>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="presentacion">Presentación de
+                                            mezcla</label>
+                                        <select id="presentacion" class="formulario__input" required>
+                                            <option value="">Seleccione una presentación</option>
+                                            <option value="Willi">Willi</option>
+                                            <option value="Barril">Barril</option>
+                                            <option value="Garrafa">Garrafa</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="metodoAplicacion">Método de
+                                            Aplicación</label>
+                                        <select id="metodoAplicacion" class="formulario__input" required>
+                                            <option value="">Seleccione un método</option>
+                                            <option value="Foliar">Foliar</option>
+                                            <option value="Drench">Drench</option>
+                                            <option value="Trampeo">Trampeo</option>
+                                            <option value="Herbicida">Herbicida</option>
+                                            <option value="Termonebulizacion">Termonebulización</option>
+                                            <option value="Filtro">Filtro</option>
+                                            <option value="Riego">Riego</option>
+                                            <option value="Preparacion de Tierras">Preparación de Tierras</option>
+                                            <option value="Enmienda">Enmienda</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <label class="formulario__label" for="descripcion">Descripción</label>
+                                        <textarea id="descripcion" class="formulario__input"
+                                            placeholder="Ingrese una descripción" rows="3" ></textarea>
+                                    </div>
+                                    <label class="formulario__label">Productos</label>
+                                    <div id="productosContainer">
+                                        <!-- Primer campo de producto -->
+                                        <div class="producto-item">
+                                            <select name="producto[]" class="formulario__input select-producto"
+                                                required>
+                                                <option value="">Seleccionar Producto</option>
+                                            </select>
+
+                                            <select name="unidad_medida[]"
+                                                class="formulario__input select-unidad-medida" required disabled>
+                                                <option value="">Unidad de Medida</option>
+                                            </select>
+
+                                            <input class="formulario__input" type="number" name="cantidad[]"
+                                                placeholder="Cantidad" min="0" step="0.01" required>
+
+                                            <button type="button"
+                                                class="eliminar-producto formulario__submit">Eliminar</button>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="formulario__campo">
+                                        <button type="button" class="formulario__submit" id="agregarProducto">
+                                            + Agregar Producto
+                                        </button>
+                                    </div>
+
+                                    <div class="formulario__campo">
+                                        <button type="submit" class="formulario__submit" id="btnSolicitar">
+                                            Solicitar Mezcla
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Firebase Configuración y funciones -->
+    <%- include("../../templates/mezclas/scripts") %>
+    <script type="module" src="../../app/solicitud/solicitarMezcla.js"></script>
+</body>
+
+</html>

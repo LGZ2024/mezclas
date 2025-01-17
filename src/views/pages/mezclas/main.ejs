@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Mezclas</title>
+    <link rel="icon" type="image/svg+xml" href="../img/LogoTransp.svg">
+    <%- include("../../templates/mezclas/cabecera") %>
+</head>
+
+
+<body>
+    <header>
+        <div class="barra contenedor">
+            <div class="barra__logo">
+                <img src="../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
+            </div>
+            <nav class="barra__navegacion">
+                <a class="barra__link" ><%= nombre %></a>
+            </nav>
+            <nav class="barra__login">
+                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="opciones">
+        <div class="formulario contenedor" id="viaje-form">
+            <% if (['solicita', 'solicitaVisual' , 'solicita2' ].includes(rol)) { %>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="solicitar">Solicitar</button>
+                </div>
+            <% } %>
+                    <div class="formulario__campo">
+                        <button class="formulario__submit" type="button" id="solicitud">Mezclas Solicitadas</button>
+                    </div>
+                    <div class="formulario__campo">
+                        <button class="formulario__submit" type="button" id="preparadas">Mezclas En Proceso</button>
+                    </div>
+                    <div class="formulario__campo">
+                        <button class="formulario__submit" type="button" id="entregadas">Mezclas Completadas</button>
+                    </div>
+        </div>
+    </section>
+    <%- include("../../templates/mezclas/scripts") %>
+</body>
+
+</html>
+<script>
+
+const btnSolicitar=document.getElementById('solicitar')
+if(btnSolicitar){
+    btnSolicitar.addEventListener('click',()=>{
+        window.location.href = '/protected/solicitud';
+    })
+}else{
+    console.log('No se encontró el botón')
+}
+
+document.getElementById('solicitud').addEventListener('click',()=>{
+    window.location.href = '/protected/solicitudes';
+})
+document.getElementById('preparadas').addEventListener('click',()=>{
+    window.location.href = '/protected/proceso';
+})
+document.getElementById('entregadas').addEventListener('click',()=>{
+    window.location.href = '/protected/completadas';
+})
+</script>

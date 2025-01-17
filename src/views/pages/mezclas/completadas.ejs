@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Mezclas</title>
+    <link rel="icon" type="image/svg+xml" href="../img/LogoTransp.svg">
+    <%- include("../../templates/mezclas/cabecera") %>
+</head>
+
+
+<body>
+    <header>
+        <div class="barra contenedor">
+            <div class="barra__logo">
+                <img src="../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
+            </div>
+
+            <nav class="barra__navegacion">
+                <a class="barra__link" id="inicio"></a>
+            </nav>
+
+            <nav class="barra__login">
+                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
+            </nav>
+        </div>
+    </header>
+    <section class="tablas">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+
+                            <div class="titulo">
+                                <div class="col">
+                                    <button class="formulario__submit" id="regresar"><span
+                                            class="mdi mdi-arrow-left-bold"></span></button>
+                                </div>
+                                <div class="text-center">
+                                    <h3>Mezclas Completadas</h3>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="table-responsive">
+                                <table
+                                    class="table table-striped table-bordered table-hover table-sm table-compac border-0"
+                                    id="completadas" style="white-space: nowrap;">
+                                    <thead class="bg-primary">
+                                        <tr class="bg-primary">
+                                            <th>id Mescla</th>
+                                            <th>Solicita</th>
+                                            <th>Fecha de Solicitud</th>
+                                            <th>Rancho destino</th>
+                                            <th>Empresa</th>
+                                            <th>Centro de Coste</th>
+                                            <th>Folio</th>
+                                            <th>Temporada</th>
+                                            <th>Cantidad de Producto</th>
+                                            <th>Presentacion de Producto</th>
+                                            <th>Metodo de Aplicacion</th>
+                                            <th>Descripcion</th>
+                                            <th>variedad</th>
+                                            <th>Imagen Receta</th>
+                                            <th>Nota de almacen</th>
+                                            <th>Imagen Entrega</th>
+                                            <th>Fecha de Entrega</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Contenido de la tabla -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!--  cargamos modal para receta -->
+    <%- include("../../templates/mezclas/mostrarRecetaProceso") %>
+    
+    <!--Modal2 pdf-->
+    <div class="modal" id="pdfModal" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="false">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" style="color: black;" id="pdfModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <embed id="pdfEmbed" src="" type="image/jpeg" width="100%" height="500px" />
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Firebase Configuración y funciones -->
+    <%- include("../../templates/mezclas/scripts") %>
+    <script type="module" src="../../app/completadas/Funciones.js"></script>
+</body>
+
+</html>

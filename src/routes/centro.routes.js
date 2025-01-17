@@ -1,13 +1,19 @@
-import express from 'express';
-import { CentroCostes,Variedades} from '../controller/centro.controller.js';
+import { Router } from 'express'
+import { CentroController } from '../controller/centro.controller.js'
 
-const router = express.Router();
+export const createCentroCosteRouter = ({ centroModel }) => {
+  const router = Router()
 
+  const centroController = new CentroController({ centroModel })
 
-//Obtener centros de coste. pasamos
-router.get('/cc/:id',CentroCostes)
+  // Obtener centros de coste. pasamos
+  router.get('/cc/:rancho', centroController.getCentrosPorRancho)
 
-//obtener variedades de contros de costo
-router.get('/variedades/:id',Variedades)
+  // obtener variedades de contros de costo
+  router.get('/variedades/:id', centroController.getVariedadPorCentroCoste)
 
-export default router;
+  // obtener todos los centros de costo
+  router.get('/centroCoste', centroController.getAll)
+
+  return router
+}

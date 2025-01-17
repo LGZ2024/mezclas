@@ -1,0 +1,33 @@
+<div class="modal fade" id="ModalResetPass" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Cambiar Contraseña</h1>
+      </div>
+      <div class="modal-body">
+        <form class="forms-sample" id="formResetPass">
+          <!-- Envoltura de la contraseña y repetir contraseña -->
+          <div class="form-group">
+            <label for="contrasena">Contraseña</label>
+            <input type="password" class="form-control"
+              title="Ingrese una contraseña válida, debe tener al menos 8 caracteres, letras mayúsculas, minúsculas, números y símbolos"
+              placeholder="Contraseña" id="contrasenaRes" required>
+            <a href="#" id="mostrarPassRes">Mostrar contraseña</a>
+          </div>
+          <div class="form-group">
+            <label for="contrasenaRep">Repetir Contraseña</label>
+            <input type="password" class="form-control" title="Repetir Contraseña" placeholder="Repetir Contraseña"
+              id="contrasenaRepRes" required>
+            <a href="#" id="mostrarPassRRes">Mostrar contraseña</a>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</div>

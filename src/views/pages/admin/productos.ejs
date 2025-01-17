@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <%- include("../../templates/admin/cabecera") %>
+</head>
+
+<body>
+    <div class="container-scroller">
+        <!-- navcabecera -->
+        <%- include("../../templates/admin/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <!-- nav lateral -->
+                <%- include("../../templates/admin/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="d-xl-flex justify-content-between align-items-start">
+                                <!-- <h2 class="text-dark font-weight-bold mb-2"> Dashboard</h2> -->
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Productos</h4>
+                                            <% if (user.rol==="admin" ) { %>
+                                                <button type="button" class="btn btn-inverse-primary mb-3"
+                                                    id="btnCrear">Agregar
+                                                    Producto</button>
+                                                <% } %>
+                                                    <div class="table-responsive w-100">
+                                                        <table class="table table-striped table-bordered w-100"
+                                                            id="tbProductos">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th> id# </th>
+                                                                    <th> Productos</th>
+                                                                    <th> Descripcion</th>
+                                                                    <th> Unidad_medida</th>
+                                                                    <th> Acciones</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- content-wrapper ends -->
+                        <!-- partial:partials/_footer.html -->
+                        <%- include("../../templates/admin/footer") %>
+                            <!-- partial -->
+                    </div>
+                    <!-- main-panel ends -->
+            </div>
+            <!-- page-body-wrapper ends -->
+    </div>
+    <!-- Modal -->
+    <%- include("../../templates/admin/modalProductos") %>
+
+        <!-- container-scroller -->
+        <%- include("../../templates/admin/scripts") %>
+            <script type="module" src="../../../app/productos/main.js"></script>
+</body>
+
+</html>

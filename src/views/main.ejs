@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Mezclas</title>
+  <link rel="icon" type="image/svg+xml" href="./img/LogoTransp.png">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+</head>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background: url(./img/paise2.jpg) no-repeat center top;
+    background-size: cover;
+    font-family: 'Roboto', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .login-box {
+    position: relative;
+    width: 90%;
+    max-width: 320px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .login-box::before {
+    content: '';
+    position: absolute;
+    top: -90px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 120px;
+    background: url(./img/LogoTransp.png) no-repeat center center;
+    background-size: contain;
+  }
+  
+  .login-box h1 {
+    margin: 0 0 20px;
+    text-align: center;
+    font-size: 24px;
+  }
+  
+  .login-box label {
+    margin: 0 0 10px;
+    font-weight: bold;
+    display: block;
+  }
+  
+  .login-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #333;
+    font-size: 16px;
+    transition: background 0.3s ease;
+  }
+  
+  .login-box input:focus {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .login-box input[type="submit"] {
+    background: #5629a8;
+    color: #fff;
+    font-size: 18px;
+    border: none;
+    border-radius: 25px;
+    padding: 12px 0;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .login-box input[type="submit"]:hover {
+    background: #df9b86;
+  }
+  
+  .login-box a {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: darkgrey;
+    font-size: 14px;
+  }
+  
+  .login-box a:hover {
+    color: #333;
+  }
+</style>
+<body>
+
+  <div class="login-box">
+    <h1>Hola Bienvenidos</h1>
+    <form id="form-login">
+      <!-- Correo electrónico INPUT -->
+      <label for="email">Correo electrónico</label>
+      <input type="text" id="email" name="email" autocomplete="username" placeholder="Ingresa el usuario">
+      <!-- Contraseña INPUT -->
+      <label for="password">Contraseña</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Ingresa la contraseña">
+      <input type="submit" value="Iniciar sesión">
+    </form>
+  </div>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</body>
+
+</html>
+<script type="module">
+
+  const formLogin = document.getElementById('form-login');
+  formLogin.addEventListener('submit', handleLogin);
+
+  // Función para manejar el inicio de sesión
+  async function handleLogin(event) {
+    event.preventDefault()
+    const user = document.getElementById('email').value
+    const password = document.getElementById('password').value
+    // Aquí deberías agregar la lógica para autenticar al usuario
+    const response = await fechPeticion({ user, password })
+    validarUsuario(response)
+  }
+
+
+  //hacemos peticion fecht
+  async function fechPeticion({ user, password }) {
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ user, password })
+    };
+    try {
+      const response = await fetch(`http://localhost:3000/api/usuario/login`, options);
+      return response;
+    } catch (error) {
+
+    }
+  }
+
+  //validamos el usuario
+  async function validarUsuario(response) {
+    if (response.status === 200) {
+      const data = await response.json();
+      Toastify({
+        text: data.message,
+        duration: 1000
+      }).showToast()
+      setTimeout(() => {
+        window.location.href = '/protected/admin';
+      }, 3000)
+    } else {
+      const data = await response.json();
+      if (data.error) {
+        return  Toastify({
+        text: data.error,
+        duration: 1000
+      }).showToast()
+      }
+    }
+  }
+</script>

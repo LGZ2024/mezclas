@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Mezclas</title>
+    <link rel="icon" type="image/svg+xml" href="../img/LogoTransp.svg">
+    <%- include("../../templates/mezclas/cabecera") %>
+
+</head>
+
+
+<body>
+    <header>
+        <div class="barra contenedor">
+            <div class="barra__logo">
+                <img src="../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
+            </div>
+
+            <nav class="barra__navegacion">
+                <a class="barra__link" id="inicio"></a>
+            </nav>
+
+            <nav class="barra__login">
+                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
+            </nav>
+        </div>
+    </header>
+    <input type="hidden" value="<%= rol %>" id="rol">
+    <section id="tablaFuciones" class="tablas" style="display: block;">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="titulo">
+                                <div class="col">
+                                    <button class="formulario__submit" id="regresarInicio"><span
+                                            class="mdi mdi-arrow-left-bold"></span></button>
+                                </div>
+                                <div class="text-center">
+                                    <h3>Solicitudes</h3>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="table-responsive">
+                                <table
+                                    class="table table-striped table-bordered table-hover table-sm table-compac border-0"
+                                    id="tbSolicitadas" style="white-space: nowrap;">
+                                    <thead class="bg-primary">
+                                        <tr class="bg-primary">
+                                            <th>Solicitud</th>
+                                            <th>Solicita</th>
+                                            <th>Fecha de Solicitud</th>
+                                            <th>Rancho destino</th>
+                                            <th>Empresa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Contenido de la tabla -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="formPreparadas" class="formularios" style="display: none;">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="form">
+                                <div class="card">
+                                    <div class="titulo">
+                                        <div class="col">
+                                            <button class="formulario__submit" id="regresatabla"><span
+                                                    class="mdi mdi-arrow-left-bold"></span></button>
+                                        </div>
+                                        <div class="text-center">
+                                            <h3>Solicitud</h3>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <input type="text" id="idSolicitud" disabled hidden>
+                                    <% if (rol==="mezclador" ) { %>
+                                        <div class="formulario__campo"
+                                            style="display: flex; flex-direction: column; align-items: center;">
+                                            <label class="formulario__label" for="folioi">Descargar Solicitud</label>
+                                            <button type="button" class="btn btn-primary formulario__submit"
+                                                id="descargar" style="width: 20vw;">
+                                                Descargar
+                                            </button>
+                                        </div>
+                                        <% } %>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="folioi">Folio de Receta</label>
+                                                <input type="text" class="formulario__input" id="folioi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="solicitai">Solicita</label>
+                                                <input type="text" class="formulario__input" id="solicitai" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="fechai">Fecha de Solicitud</label>
+                                                <input type="text" class="formulario__input" id="fechai" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="ranchoi">Rancho Destino</label>
+                                                <input type="text" class="formulario__input" id="ranchoi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="centroCostei">Centro de
+                                                    coste</label>
+                                                <input type="text" class="formulario__input" id="centroCostei" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="variedadi">Variedad</label>
+                                                <input type="text" class="formulario__input" id="variedadi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="empresai">Empresa</label>
+                                                <input type="text" class="formulario__input" id="empresai" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="temporadai">Temporada</label>
+                                                <input type="text" class="formulario__input" id="temporadai" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="cantidadi">Cantidad de
+                                                    producto</label>
+                                                <input type="text" class="formulario__input" id="cantidadi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label"
+                                                    for="presentacioni">Presentacion</label>
+                                                <input type="text" class="formulario__input" id="presentacioni"
+                                                    disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="metodoi">Metodo de
+                                                    aplicacion</label>
+                                                <input type="text" class="formulario__input" id="metodoi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="descripcioni">Descripcion</label>
+                                                <input type="text" class="formulario__input" id="descripcioni" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label">Productos</label>
+                                                <button type="button" class="btn btn-primary formulario__submit"
+                                                    id="receta" data-bs-toggle="modal">
+                                                    Mostrar Receta
+                                                </button>
+                                            </div>
+                                            <% if (rol==="mezclador" ) { %>
+                                                <form id="formSolicutudes">
+                                                    <div class="formulario__campo">
+                                                        <label class="formulario__label" for="notaMezcla">Nota de
+                                                            mezclador</label>
+                                                        <textarea id="notaMezcla" class="formulario__input"></textarea>
+                                                    </div>
+                                                    <div class="formulario__campo">
+                                                        <button type="submit" class="formulario__submit"
+                                                            id="btnGuardarMescla" style="display: none;">Guardar
+                                                            mezcla</button>
+                                                    </div>
+                                                </form>
+                                                <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </section>
+
+    <!-- Button trigger modal -->
+
+    <!-- Modal mostar receta -->
+    <%- include("../../templates/mezclas/mostrarReceta") %>
+
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Agregar Producto</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form class="form" id="productoForm">
+                            <div class="card">
+                                <div class="producto-item">
+                                    <select id="producto" name="producto[]" class="formulario__input select-producto"
+                                        required>
+                                        <option value="">Seleccionar Producto</option>
+                                    </select>
+
+                                    <select id="unidad_medida" name="unidad_medida[]"
+                                        class="formulario__input select-unidad-medida" required disabled>
+                                        <option value="">Unidad de Medida</option>
+                                    </select>
+
+                                    <input id="cantidad" class="formulario__input" type="number" name="cantidad[]"
+                                        placeholder="Cantidad" min="0" step="0.01" required>
+                                </div>
+                                <div class="formulario__campo">
+                                    <button class="formulario__submit" type="submit">Guardar Producto</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cerrarNuevoProducto">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/pendientes/funcionesAlmacen.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</body>
+
+</html>
+<script>
+
+
+</script>

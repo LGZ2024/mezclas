@@ -1,0 +1,75 @@
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel"></h1>
+      </div>
+      <div class="modal-body">
+        <form class="forms-sample" id="formEditar">
+          <div class="form-group">
+            <label for="nombre">Nombre Completo</label>
+            <input type="text" class="form-control" id="nombre" title="Ingrese su nombre completo"
+              placeholder="Nombre completo" required>
+          </div>
+          <div class="form-group">
+            <label for="correo">Correo o Usuario</label>
+            <input type="email" class="form-control" id="correo" title="Ingrese un correo válido"
+              placeholder="Agregar correo" required>
+          </div>
+
+          <!-- Envoltura de la contraseña y repetir contraseña -->
+          <div class="form-group">
+            <label for="contrasena">Contraseña</label>
+            <input type="password" class="form-control"
+              title="Ingrese una contraseña válida, debe tener al menos 8 caracteres, letras mayúsculas, minúsculas, números y símbolos"
+              placeholder="Contraseña" id="contrasena" required>
+            <a href="#" id="mostrarPass">Mostrar contraseña</a>
+          </div>
+          <div class="form-group">
+            <label for="contrasenaRep">Repetir Contraseña</label>
+            <input type="password" class="form-control" title="Repetir Contraseña" placeholder="Repetir Contraseña"
+              id="contrasenaRep" required>
+            <a href="#" id="mostrarPassR">Mostrar contraseña</a>
+          </div>
+
+          <!-- Selección de rol -->
+          <div class="form-group">
+            <label for="roles">Rol</label>
+            <select name="roles" id="roles" class="form-control" required>
+              <option value="">Selecciona una Opción</option>
+              <option value="admin">Admin</option>
+              <option value="mezclador">Mezclador</option>
+              <option value="solicita">Solicita</option>
+              <option value="solicita2">Solicita2</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="administrativo">Administrativo</option>
+            </select>
+          </div>
+
+          <!-- Selección de empresa -->
+          <div class="form-group">
+            <label for="empresa">Empresa</label>
+            <select name="empresa" id="empresa" class="form-control" required>
+              <option value="">Selecciona una Opción</option>
+              <option value="Moras Finas">Moras Finas</option>
+              <option value="Ballas del centro">Bayas del Centro</option>
+              <option value="Bioagricultura">Bioagricultura</option>
+              <option value="Bioagricultura">Lugar Agricola</option>
+            </select>
+          </div>
+
+          <!-- Contenedor para ranchos -->
+          <div id="ranchosContainer">
+
+          </div>
+          <button type="button" class="btn btn-secondary" id="agregarRancho" style="display: block;">Agregar Rancho</button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
