@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Mezclas</title>
-    <link rel="icon" type="image/svg+xml" href="../img/LogoTransp.svg">
     <%- include("../../templates/mezclas/cabecera") %>
 </head>
 
@@ -82,21 +81,10 @@
     </section>
     <!--  cargamos modal para receta -->
     <%- include("../../templates/mezclas/mostrarRecetaProceso") %>
-    
     <!--Modal2 pdf-->
-    <div class="modal" id="pdfModal" tabindex="-1" role="dialog" aria-labelledby="pdfModalLabel" aria-hidden="false">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" style="color: black;" id="pdfModalLabel"></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <embed id="pdfEmbed" src="" type="image/jpeg" width="100%" height="500px" />
-                </div>
-            </div>
-        </div>
-    </div>
+    <%- include("../../templates/mezclas/modalPdf") %>
+
+
     <!-- Firebase Configuración y funciones -->
     <%- include("../../templates/mezclas/scripts") %>
     <script type="module" src="../../app/completadas/Funciones.js"></script>

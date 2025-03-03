@@ -195,8 +195,8 @@ export class MezclaModel {
         }
       })
 
-      // Devolver los resultados
-      return resultadosFormateados
+      // Devolver los resultados validar si hay resultados mandar vacio
+      return resultadosFormateados || []
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
       return {

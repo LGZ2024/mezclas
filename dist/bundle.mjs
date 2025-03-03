@@ -79,7 +79,7 @@ var external_cors_y = (x) => (() => (x))
 const external_cors_namespaceObject = external_cors_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_cors__["default"]) });
 ;// CONCATENATED MODULE: ./src/middlewares/cors.js
 
-const ACCEPTED_ORIGINS = ['http://localhost:3000', 'http://192.168.1.130:3000', 'http://localhost:1234', 'https://movies.com', 'https://midu.dev'];
+const ACCEPTED_ORIGINS = ['http://localhost:3000', 'https://solicitudmezclas.portalrancho.com.mx'];
 const corsMiddleware = ({
   acceptedOrigins = ACCEPTED_ORIGINS
 } = {}) => (0,external_cors_namespaceObject["default"])({
@@ -137,15 +137,15 @@ external_dotenv_namespaceObject["default"].config();
 
 // este es un objeto que guarda nuestas variables de entorno para utilizarlas en nuestro proyecto
 const envs = {
-  PORT: process.env.PORT || 3000,
-  DB_HOST: process.env.DB_HOST || 'localhost',
-  DB_USER: process.env.DB_USER || 'root',
-  DB_PASSWORD: process.env.DB_PASSWORD || '',
-  DB_NAME: process.env.DB_NAME || 'viajes',
-  SECRET_JWT_KEY: process.env.SECRET_JWT_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpeXF5bmhhcXF5am1peHdtYWtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzMzc5MjEsImV4cCI6MjAzMzkxMzkyMX0.9g4wlyxPa9KFzfsjhl0ty_GCNpvrP_4nxvi2ctEdP1M',
+  PORT: process.env.PORT,
+  DB_HOST: process.env.DB_HOST,
+  DB_USER: process.env.DB_USER,
+  DB_PASSWORD: process.env.DB_PASSWORD,
+  DB_NAME: process.env.DB_NAME,
+  SECRET_JWT_KEY: process.env.SECRET_JWT_KEY,
   EMAIL_USER: process.env.EMAIL_USER,
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
-  MODE: process.env.MODE || 'development'
+  MODE: process.env.MODE
 };
 ;// CONCATENATED MODULE: ./src/middlewares/authMiddleware.js
 
@@ -193,6 +193,7 @@ const verifyToken = async token => {
 const isAdmin = (req, res, next) => {
   if (req.userRole !== 'admin') return res.status(403).render('errorPage', {
     codeError: 403,
+    title: 'Sin Autorizacion',
     errorMsg: 'No autorizado'
   });
   next();
@@ -207,6 +208,7 @@ const isGeneral = (req, res, next) => {
 const isAdminsitrativoOrAdmin = (req, res, next) => {
   if (req.userRole !== 'administrativo' && req.userRole !== 'admin') return res.status(403).render('errorPage', {
     codeError: 403,
+    title: 'Sin Autorizacion',
     errorMsg: 'No autorizado'
   });
   next();
@@ -214,6 +216,7 @@ const isAdminsitrativoOrAdmin = (req, res, next) => {
 const isSolicitaOrMezclador = (req, res, next) => {
   if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo') return res.status(403).render('errorPage', {
     codeError: 403,
+    title: 'Sin Autorizacion',
     errorMsg: 'No autorizado'
   });
   next();
@@ -632,7 +635,6 @@ const external_nodemailer_namespaceObject = external_nodemailer_x({ ["default"]:
 const createTransporter = () => {
   const transporter = external_nodemailer_namespaceObject["default"].createTransport({
     host: 'portalrancho.com.mx',
-    // Cambiar a mail. en lugar de portalrancho.com.mx
     port: 465,
     secure: true,
     auth: {
@@ -641,12 +643,11 @@ const createTransporter = () => {
     },
     tls: {
       rejectUnauthorized: true,
-      minVersion: 'TLSv1.2'
+      minVersion: 'TLSv1.2' // Versión mínima de TLS
     },
     pool: true,
-    maxConnections: 5,
     debug: true,
-    logger: true
+    logger: false
   });
 
   // Verificar conexión
@@ -704,21 +705,37 @@ const sendMail = async message => {
     throw error;
   }
 };
-
+const validateEmailData = (type, data) => {
+  const requiredFields = {
+    status: ['email', 'nombre', 'solicitudId', 'status'],
+    solicitud: ['email', 'nombre', 'solicitudId', 'fechaSolicitud', 'usuario', 'data'],
+    notificacion: ['email', 'nombre', 'solicitudId', 'data'],
+    usuario: ['email', 'password']
+  };
+  const fields = requiredFields[type] || [];
+  const missing = fields.filter(field => !data[field]);
+  if (missing.length > 0) {
+    throw new Error(`Faltan campos requeridos para el tipo ${type}: ${missing.join(', ')}`);
+  }
+};
 // Función principal para enviar correos
-const enviarCorreo = async ({
-  type,
-  email,
-  nombre,
-  subject,
-  password,
-  solicitudId,
-  fechaSolicitud,
-  data,
-  status,
-  usuario
-}) => {
-  // Validar datos requeridos
+const enviarCorreo = async params => {
+  const {
+    type,
+    email,
+    password = '',
+    fechaSolicitud = '',
+    nombre = 'Usuario',
+    solicitudId = '',
+    status = '',
+    usuario = {},
+    data = {}
+  } = params;
+
+  // Validar datos requeridos según el tipo
+  validateEmailData(type, params);
+
+  // Configurar mensaje según tipo
   if (!email || !type) {
     throw new Error('Email y tipo de mensaje son requeridos');
   }
@@ -751,7 +768,7 @@ const enviarCorreo = async ({
     },
     usuario: {
       from: '"Registro Portal Checador" <mezclas.rancho@portalrancho.com.mx>',
-      subject,
+      subject: 'Usuario Creado Exitosamente',
       html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
         <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
             <h1>Grupo LG</h1>
@@ -1359,7 +1376,7 @@ class UsuarioModel {
   static async getAll() {
     try {
       const usuario = await Usuario.findAll({
-        attributes: ['id', 'nombre', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
+        attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
       });
       return usuario;
     } catch (e) {
@@ -1673,6 +1690,8 @@ class MezclasController {
   }) {
     this.mezclaModel = mezclaModel;
   }
+
+  // crear solicitudes
   create = async (req, res) => {
     let ress;
     try {
@@ -1757,6 +1776,43 @@ class MezclasController {
       });
     }
   };
+
+  // pasar a proceso
+  estadoProceso = async (req, res) => {
+    try {
+      const idSolicitud = req.params.idSolicitud;
+      const result = await this.mezclaModel.estadoProceso({
+        id: idSolicitud,
+        data: req.body
+      });
+      if (result.error) {
+        return res.status(400).json({
+          error: result.error
+        });
+      }
+      const ress = await UsuarioModel.getOneId({
+        id: result.idUsuarioSolicita
+      });
+      console.log(`nombre:${ress.nombre}, correo:${ress.email}`);
+      await enviarCorreo({
+        type: 'status',
+        email: ress.email,
+        nombre: ress.nombre,
+        solicitudId: idSolicitud,
+        status: req.body.status
+      });
+      return res.json({
+        message: result.message
+      });
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error);
+      res.status(500).json({
+        error: 'Ocurrió un error al crear la solicitud'
+      });
+    }
+  };
+
+  // cerrar solicitudes
   cerrarSolicitid = async (req, res) => {
     try {
       // obtenemos los datos de la sesion
@@ -1782,7 +1838,14 @@ class MezclasController {
         email: ress.email,
         nombre: ress.nombre,
         solicitudId: result.id,
-        status: result.status
+        status: result.status,
+        usuario: user,
+        data: {
+          rancho: result.rancho || req.body.rancho,
+          // Usar el rancho del resultado o del body
+          descripcion: result.descripcion || req.body.descripcion,
+          folio: result.folio || req.body.folio
+        }
       });
       return res.json({
         message: result.message
@@ -1799,7 +1862,7 @@ class MezclasController {
       const {
         user
       } = req.session;
-      console.log(`user:${user}`);
+      console.log('user', user);
       const {
         status
       } = req.params;
@@ -1853,7 +1916,9 @@ class MezclasController {
         case 'administrativo':
           {
             if (user.empresa === 'General' && user.ranchos) {
-              result = await this.mezclaModel.getAll();
+              result = await this.mezclaModel.getAllGeneral({
+                status
+              });
             } else {
               const [res2, res1] = await Promise.all([this.mezclaModel.obtenerTablaMezclasEmpresa({
                 status,
@@ -1926,39 +1991,6 @@ class MezclasController {
       console.error('Error al crear la solicitud:', error);
       res.status(500).json({
         mensaje: 'Ocurrió un error al crear la solicitud'
-      });
-    }
-  };
-  estadoProceso = async (req, res) => {
-    try {
-      const idSolicitud = req.params.idSolicitud;
-      const result = await this.mezclaModel.estadoProceso({
-        id: idSolicitud,
-        data: req.body
-      });
-      if (result.error) {
-        return res.status(400).json({
-          error: result.error
-        });
-      }
-      const ress = await UsuarioModel.getOneId({
-        id: result.idUsuarioSolicita
-      });
-      console.log(`nombre:${ress.nombre}, correo:${ress.email}`);
-      await enviarCorreo({
-        type: 'status',
-        email: ress.email,
-        nombre: ress.nombre,
-        solicitudId: idSolicitud,
-        status: req.body.status
-      });
-      return res.json({
-        message: result.message
-      });
-    } catch (error) {
-      console.error('Error al crear la solicitud:', error);
-      res.status(500).json({
-        error: 'Ocurrió un error al crear la solicitud'
       });
     }
   };
@@ -2358,7 +2390,6 @@ class productosSolicitud_controller_ProductosController {
 ;// CONCATENATED MODULE: ./src/routes/productosSolitud.routes.js
 
 
-
 const createProductosSoliRouter = ({
   productossModel
 }) => {
@@ -2372,7 +2403,7 @@ const createProductosSoliRouter = ({
   router.get('/mezclasId/:id', productossController.obtenerTablaMezclasId);
   router.post('/productoSoli', productossController.create);
   router.post('/actualizarEstadoProductos', productossController.actulizarEstado);
-  router.delete('/eliminarProducto/:id', isAdmin, productossController.EliminarPorducto);
+  router.delete('/eliminarProducto/:id', productossController.EliminarPorducto);
   return router;
 };
 ;// CONCATENATED MODULE: ./src/controller/produccion.controller.js
@@ -2752,6 +2783,8 @@ class CentroCosteModel {
     id,
     data
   }) {
+    console.log(id);
+    console.log(data);
     try {
       // Verificar si existe el centro de coste
       const centroCoste = await Centrocoste.findByPk(id);
@@ -2761,9 +2794,9 @@ class CentroCosteModel {
           error: 'Centro de coste no encontrado'
         };
       }
-
+      console.log(centroCoste);
       // Actualiza solo los campos que se han proporcionado
-      if (data.porcentajes) centroCoste.porcentajes = data.porcentajes;
+      if (data) centroCoste.porcentajes = data;
       await centroCoste.save();
       return {
         message: 'Porcentajes actualizados correctamente'
@@ -3143,7 +3176,7 @@ const CONFIG = {
   maxSize: 5 * 1024 * 1024,
   // 5MB
   allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-  uploadDir: external_path_namespaceObject.join(foto_dirname, '../../../public/uploads')
+  uploadDir: external_path_namespaceObject.join(foto_dirname, '../../public/uploads')
 };
 const guardarImagen = async ({
   imagen
@@ -3171,22 +3204,53 @@ const guardarImagen = async ({
       throw new Error('Imagen demasiado grande');
     }
 
-    // Crear directorio si no existe
-    await promises_namespaceObject["default"].mkdir(CONFIG.uploadDir, {
-      recursive: true
-    });
+    // Verificar y crear directorio
+    try {
+      const stats = await promises_namespaceObject["default"].stat(CONFIG.uploadDir);
+      if (!stats.isDirectory()) {
+        throw new Error('La ruta de uploads no es un directorio');
+      }
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        // console.log('Creando directorio de uploads...')
+        await promises_namespaceObject["default"].mkdir(CONFIG.uploadDir, {
+          recursive: true
+        });
+      } else {
+        throw error;
+      }
+    }
 
     // Generar nombre único
     const imageExtension = `.${matches[1]}`;
     const imageName = `image_${Date.now()}_${Math.random().toString(36).substring(2)}${imageExtension}`;
     const imagePath = external_path_namespaceObject.join(CONFIG.uploadDir, imageName);
 
-    // Guardar imagen
-    await promises_namespaceObject["default"].writeFile(imagePath, buffer);
+    // Debug: Mostrar ruta completa
+    // console.log('Ruta completa de la imagen:', imagePath)
+
+    // Guardar imagen con manejo de errores específico
+    try {
+      await promises_namespaceObject["default"].writeFile(imagePath, buffer);
+      // console.log('Imagen guardada exitosamente')
+    } catch (writeError) {
+      console.error('Error al escribir el archivo:', writeError);
+      throw new Error(`Error al guardar la imagen: ${writeError.message}`);
+    }
+
+    // Verificar que el archivo se haya creado
+    try {
+      await promises_namespaceObject["default"].access(imagePath);
+      // console.log('Archivo verificado correctamente')
+    } catch (accessError) {
+      console.error('El archivo no se creó correctamente:', accessError);
+      throw new Error('No se pudo verificar la creación del archivo');
+    }
 
     // Formatear fecha
     const fechaActual = new Date();
     const fechaFormateada = fechaActual.toISOString().split('T')[0];
+    console.log('ruta absoluta:', imagePath);
     return {
       relativePath: `../uploads/${imageName}`,
       fecha: fechaFormateada,
@@ -3318,6 +3382,7 @@ class MezclaModel {
       const response = await guardarImagen({
         imagen: data.imagen
       });
+
       // Actualiza solo los campos que se han proporcionado
       if (response.relativePath) solicitud.imagenEntrega = response.relativePath;
       if (status) solicitud.status = status;
@@ -3684,10 +3749,15 @@ class MezclaModel {
       };
     }
   }
-  static async getAllGeneral() {
+  static async getAllGeneral({
+    status
+  }) {
     try {
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
+        where: {
+          status
+        },
         include: [{
           model: Usuario,
           // Modelo de Usuario

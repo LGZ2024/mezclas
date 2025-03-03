@@ -2,10 +2,7 @@ import cors from 'cors'
 
 const ACCEPTED_ORIGINS = [
   'http://localhost:3000',
-  'http://192.168.1.130:3000',
-  'http://localhost:1234',
-  'https://movies.com',
-  'https://midu.dev'
+  'https://solicitudmezclas.portalrancho.com.mx'
 ]
 
 export const corsMiddleware = ({ acceptedOrigins = ACCEPTED_ORIGINS } = {}) => cors({

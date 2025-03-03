@@ -122,6 +122,7 @@ export class MezclasController {
       const { user } = req.session
       console.log('user', user)
       const { status } = req.params
+
       if (!status) {
         return res.status(400).json({ error: 'El estado es requerido' })
       }
@@ -133,9 +134,9 @@ export class MezclasController {
         case 'mezclador':
           if (user.ranchos === 'General') {
             result = await this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: user.empresa })
-          } else if (user.ranchos === 'Atemajac' && user.rol === 'mezclador') {
+          } else if (user.ranchos === 'Atemajac') {
             const r1 = await this.mezclaModel.obtenerTablaMezclasRancho({ status, ranchoDestino: user.ranchos })
-            const r2 = await this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: 'Lugar Agricola' })
+            const r2 = await this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: 'Lugar Agricola' }) ? await this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: 'Lugar Agricola' }) : []
             result = [...r1, ...r2]
           } else {
             result = await this.mezclaModel.obtenerTablaMezclasRancho({ status, ranchoDestino: user.ranchos })

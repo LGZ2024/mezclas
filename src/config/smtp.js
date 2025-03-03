@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer'
 // Configuración del transportador SMTP
 const createTransporter = () => {
   const transporter = nodemailer.createTransport({
-    host: 'portalrancho.com.mx', // Cambiar a mail. en lugar de portalrancho.com.mx
+    host: 'portalrancho.com.mx',
     port: 465,
     secure: true,
     auth: {
@@ -13,10 +13,9 @@ const createTransporter = () => {
     },
     tls: {
       rejectUnauthorized: true,
-      minVersion: 'TLSv1.2'
+      minVersion: 'TLSv1.2' // Versión mínima de TLS
     },
     pool: true,
-    maxConnections: 5,
     debug: true,
     logger: false
   })
@@ -242,7 +241,7 @@ export const enviarCorreo = async (params) => {
 
     const message = {
       ...template,
-      to: 'zaragoza051@lgfrutas.com.mx' // Reemplazar con el correo del cliente
+      to: email // Reemplazar con el correo del cliente
     }
 
     const result = await sendMail(message)
