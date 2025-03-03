@@ -32,10 +32,11 @@ import { ProduccionModel } from '../models/produccion.models.js'
 // Asociaciones
 import { setupAssociations } from '../models/modelAssociations.js'
 
+// Base de datos
 import sequelize from '../db/db.js'
 
 export const startServer = async (options) => {
-  const { PORT } = options
+  const { PORT, MODE } = options
 
   const app = express()
 
@@ -45,10 +46,18 @@ export const startServer = async (options) => {
   // MOTOR DE PLANTILLAS EJS
   app.set('views', path.resolve(__dirname, '..', 'views'))
   app.set('view engine', 'ejs')
+  app.set('trust proxy', 1)
 
-  // LOGGER
-  app.use(logger('dev'))
+  // Middlewares
+  if (MODE === 'development') {
+    console.log('🔧 Modo de desarrollo')
+    app.use(logger('dev'))
+  } else {
+    console.log('📦 Modo de producción')
+    app.use(logger('combined'))
+  }
 
+  // Configurar middleware para cookies y validar JSON en los request
   app.use(cookieParser())
   app.use(validateJSON)
   app.use(corsMiddleware())
@@ -56,7 +65,10 @@ export const startServer = async (options) => {
 
   app.use(fileUpload())
   app.use(bodyParser.json({ limit: '50mb' }))
-  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
+  app.use(bodyParser.urlencoded({
+    limit: '50mb',
+    extended: true
+  }))
 
   // rutas API
   app.use('/api/usuario/', createUsuarioRouter({ usuarioModel: UsuarioModel }))
@@ -84,9 +96,11 @@ export const startServer = async (options) => {
     // Configurar asociaciones antes de sincronizar
     setupAssociations()
     await sequelize.sync()
-    console.log('Base de datos sincronizada')
-    app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`))
+    console.log('📦 Base de datos conectada y sincronizada')
+    // Iniciamos el servidor en el puerto especificado
+    app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`))
   } catch (error) {
-    console.error('Error al sincronizar la base de datos:', error)
+    console.error('❌ Error al iniciar:', error)
+    process.exit(1)
   }
 }

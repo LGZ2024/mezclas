@@ -42,7 +42,6 @@ export class MezclaModel {
         const productosPromesas = productosValidos.map(async (producto) => {
           // comprobaramos si el id_producto es numero
           try {
-            // Llamar al procedimiento almacenado con transacción
             await SolicitudProductos.create({
               id_solicitud: solicitud.id,
               id_producto: parseInt(producto.id_producto),
@@ -110,6 +109,7 @@ export class MezclaModel {
 
       // Guardar imagen
       const response = await guardarImagen({ imagen: data.imagen })
+
       // Actualiza solo los campos que se han proporcionado
       if (response.relativePath) solicitud.imagenEntrega = response.relativePath
       if (status) solicitud.status = status
@@ -467,6 +467,87 @@ export class MezclaModel {
     try {
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
+        include: [
+          {
+            model: Usuario, // Modelo de Usuario
+            attributes: ['nombre'] // Campos que quieres obtener del usuario
+          },
+          {
+            model: Centrocoste, // Modelo de CentroCoste
+            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+          }
+        ],
+        attributes: [
+          'id',
+          'ranchoDestino',
+          'variedad',
+          'notaMezcla',
+          'folio',
+          'temporada',
+          'cantidad',
+          'presentacion',
+          'metodoAplicacion',
+          'descripcion',
+          'status',
+          'empresa',
+          'fechaSolicitud',
+          'imagenEntrega',
+          'fechaEntrega'
+        ]
+      })
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        }
+      }
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON()
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status
+        }
+      })
+
+      // Devolver los resultados
+      return {
+        message: 'Mezclas obtenidas correctamente',
+        data: resultadosFormateados
+      }
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message)
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      }
+    }
+  }
+
+  static async getAllGeneral ({ status }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          status
+        },
         include: [
           {
             model: Usuario, // Modelo de Usuario

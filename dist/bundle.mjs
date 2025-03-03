@@ -11,7 +11,7 @@ import * as __WEBPACK_EXTERNAL_MODULE_sequelize__ from "sequelize";
 import * as __WEBPACK_EXTERNAL_MODULE_nodemailer__ from "nodemailer";
 import * as __WEBPACK_EXTERNAL_MODULE_bcryptjs__ from "bcryptjs";
 import * as __WEBPACK_EXTERNAL_MODULE_date_fns_f4130be9__ from "date-fns";
-import * as __WEBPACK_EXTERNAL_MODULE_fs__ from "fs";
+import * as __WEBPACK_EXTERNAL_MODULE_fs_promises_f8dae9d1__ from "fs/promises";
 import * as __WEBPACK_EXTERNAL_MODULE_exceljs__ from "exceljs";
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -105,13 +105,17 @@ const validateJSON = async (err, req, res, next) => {
 
 ;// CONCATENATED MODULE: ./src/middlewares/error500Middleware.js
 const error500 = async (req, res, next) => {
-  return res.status(500).render('500', {
-    error: 'Error interno del servidor'
+  return res.status(500).render('errorPage', {
+    codeError: '500',
+    title: '500 - Error en el servidor',
+    errorMsg: 'Error interno del servidor'
   });
 };
 const error404 = async (req, res, next) => {
-  res.status(404).render('404', {
-    error: 'Página no encontrada'
+  res.status(404).render('errorPage', {
+    codeError: '404',
+    title: '404 - Página no encontrada',
+    errorMsg: 'La página que buscas no fue encontrada.'
   });
 };
 
@@ -140,7 +144,8 @@ const envs = {
   DB_NAME: process.env.DB_NAME || 'viajes',
   SECRET_JWT_KEY: process.env.SECRET_JWT_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpeXF5bmhhcXF5am1peHdtYWtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzMzc5MjEsImV4cCI6MjAzMzkxMzkyMX0.9g4wlyxPa9KFzfsjhl0ty_GCNpvrP_4nxvi2ctEdP1M',
   EMAIL_USER: process.env.EMAIL_USER,
-  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
+  MODE: process.env.MODE || 'development'
 };
 ;// CONCATENATED MODULE: ./src/middlewares/authMiddleware.js
 
@@ -154,13 +159,15 @@ const authenticate = async (req, res, next) => {
   try {
     if (!token) return res.status(403).render('errorPage', {
       codeError: 403,
-      errorMsg: 'No token provided'
+      title: '403 - token no proveeido',
+      errorMsg: 'No se ha iniciado sesion'
     });
     // Verificamos token
     decoded = await verifyToken(token);
     if (!decoded) return res.status(401).render('errorPage', {
       codeError: 401,
-      errorMsg: 'Token Invalido'
+      title: '401 - Token Invalido',
+      errorMsg: 'Error de autenticación'
     });
     req.session.user = decoded;
     req.userRole = decoded.userRole; // Establece la propiedad req.userRole
@@ -169,6 +176,7 @@ const authenticate = async (req, res, next) => {
     req.session.user = null;
     return res.status(401).render('errorPage', {
       codeError: 401,
+      title: '401 - Token Invalido',
       errorMsg: 'Error de autenticación'
     });
   }
@@ -619,6 +627,85 @@ const external_nodemailer_namespaceObject = external_nodemailer_x({ ["default"]:
 ;// CONCATENATED MODULE: ./src/config/smtp.js
 
 
+
+// Configuración del transportador SMTP
+const createTransporter = () => {
+  const transporter = external_nodemailer_namespaceObject["default"].createTransport({
+    host: 'portalrancho.com.mx',
+    // Cambiar a mail. en lugar de portalrancho.com.mx
+    port: 465,
+    secure: true,
+    auth: {
+      user: envs.EMAIL_USER,
+      pass: envs.EMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: true,
+      minVersion: 'TLSv1.2'
+    },
+    pool: true,
+    maxConnections: 5,
+    debug: true,
+    logger: true
+  });
+
+  // Verificar conexión
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('Error en verificación SMTP:', error);
+    } else {
+      console.log('Servidor SMTP listo');
+    }
+  });
+  return transporter;
+};
+
+// Función auxiliar para obtener color según el estatus
+const getStatusColor = status => {
+  const colors = {
+    Proceso: '#28a745',
+    // Verde
+    Completada: '#ffc107',
+    // Amarillo
+    Rechazado: '#dc3545',
+    // Rojo
+    default: '#17a2b8' // Azul
+  };
+  return colors[status] || colors.default;
+};
+
+// Función auxiliar para detalles adicionales según estatus
+const getAdditionalDetails = status => {
+  const details = {
+    Proceso: '<p>Su solicitud está siendo procesada. Le mantendremos informado sobre cualquier actualización.</p>',
+    Completada: '<p>Su solicitud ha sido <strong>completada</strong>. Para más detalles, por favor contacte a nuestro equipo.</p>',
+    default: ''
+  };
+  return details[status] || details.default;
+};
+
+// Función para enviar correo con manejo de errores
+const sendMail = async message => {
+  const transporter = createTransporter();
+  try {
+    const info = await transporter.sendMail(message);
+    console.log('Correo enviado:', {
+      messageId: info.messageId,
+      response: info.response
+    });
+    return info;
+  } catch (error) {
+    console.error('Error al enviar correo:', {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    });
+    throw error;
+  }
+};
+
+// Función principal para enviar correos
 const enviarCorreo = async ({
   type,
   email,
@@ -631,195 +718,147 @@ const enviarCorreo = async ({
   status,
   usuario
 }) => {
-  let message;
-  // Configuración del transportador de email
-  // Configuración del transporte
-  const transporter = external_nodemailer_namespaceObject["default"].createTransport({
-    host: 'portalrancho.com.mx',
-    // Servidor de correo saliente
-    port: 465,
-    // Puerto SMTP (puedes cambiarlo si tienes bloqueos)
-    secure: true,
-    // Cambiar a true si usas un puerto con SSL/TLS
-    auth: {
-      user: envs.EMAIL_USER,
-      // Usuario de correo
-      pass: envs.EMAIL_PASSWORD // Contraseña del correo
-    },
-    tls: {
-      rejectUnauthorized: false // Agrega esto si tienes problemas con certificados
-    }
-  });
-  if (type === 'status') {
-    // mensaje para status de solicitudes
-    message = {
+  // Validar datos requeridos
+  if (!email || !type) {
+    throw new Error('Email y tipo de mensaje son requeridos');
+  }
+
+  // Configurar mensaje según tipo
+  const templates = {
+    status: {
       from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
-      to: email,
       subject: `Actualización de Solicitud - ${solicitudId}`,
       html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
-      <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
-          <h1>Grupo LG</h1>
-      </div>
-      <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
-          <h2>Actualización de Solicitud</h2>
-          <p>Estimado(a) ${nombre},</p>
-          <p>Le informamos que su solicitud con ID: <b>${solicitudId}</b> ha cambiado de estatus.</p>
-          
-          <div style="background-color: ${getStatusColor(status)}; color: white; padding: 10px; border-radius: 5px; text-align: center;">
-              <h3>Estado Actual: ${status}</h3>
+             <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
+                 <h1>Grupo LG</h1>
+            </div>
+            <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
+                <h2>Actualización de Solicitud</h2>
+                <p>Estimado(a) ${nombre},</p>
+                <p>Le informamos que su solicitud con ID: <b>${solicitudId}</b> ha cambiado de estatus.</p>
+                <div style="background-color: ${getStatusColor(status)}; color: white; padding: 10px; border-radius: 5px; text-align: center;">
+                    <h3>Estado Actual: ${status}</h3>
+                </div>
+                <h4>Detalles de la Solicitud:</h4>
+                ${getAdditionalDetails(status)}
+      
+               <a href="https://solicitudmezclas.portalrancho.com.mx/protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
+      
+               <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
+               <p>Atentamente,<br>El equipo de Grupo LG</p>
           </div>
-  
-          <h4>Detalles de la Solicitud:</h4>
-
-          ${getAdditionalDetails(status)}
-  
-          <a href="http://localhost:3000//protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
-          
-          <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
-          <p>Atentamente,<br>El equipo de Grupo LG</p>
-      </div>
-  </body>`
-    };
-  } else if (type === 'usuario') {
-    // mesaje de registro de usuarios
-    message = {
-      from: 'Registro Portal Checador',
-      to: 'zaragoza051@lgfrutas.com.mx',
+      </body>`
+    },
+    usuario: {
+      from: '"Registro Portal Checador" <mezclas.rancho@portalrancho.com.mx>',
       subject,
       html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
-      <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
-          <h1>Grupo LG</h1>
-      </div>
-      <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
-          <h2>¡Bienvenido a Grupo LG!</h2>
-          <p>Estimado nuevo usuario,</p>
-          <p>Nos complace darte la bienvenida a Grupo LG. Tu cuenta ha sido creada exitosamente.</p>
-          <p>Para acceder a tu cuenta, por favor utiliza los siguientes datos:</p>
-          <ul>
-              <li>Nombre de usuario:<b>${email}</b></li>
-              <li>Contraseña temporal:<b>${password}</b></li>
-          </ul>
-          <p>Te recomendamos cambiar tu contraseña después de iniciar sesión por primera vez.</p>
-          <a href="http://localhost:3000/" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
-          <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>
-          <p>¡Gracias por unirte a nosotros!</p>
-          <p>Atentamente,<br>El equipo de Grupo LG</p>
-      </div>
-  </body>`
-    };
-  } else if (type === 'solicitud') {
-    // Mensaje para la creación de solicitudes
-    message = {
+        <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
+            <h1>Grupo LG</h1>
+        </div>
+        <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
+            <h2>¡Bienvenido a Grupo LG!</h2>
+            <p>Estimado nuevo usuario,</p>
+            <p>Nos complace darte la bienvenida a Grupo LG. Tu cuenta ha sido creada exitosamente.</p>
+            <p>Para acceder a tu cuenta, por favor utiliza los siguientes datos:</p>
+            <ul>
+                <li>Nombre de usuario:<b>${email}</b></li>
+                <li>Contraseña temporal:<b>${password}</b></li>
+            </ul>
+             <a href="https://solicitudmezclas.portalrancho.com.mx/" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
+            <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>
+            <p>¡Gracias por unirte a nosotros!</p>
+            <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+    </body>`
+    },
+    solicitud: {
       from: '"Portal de Solicitudes Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
-      to: email,
       subject: `Nueva Solicitud Creada - ${solicitudId}`,
       html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background-color: #4CAF50; color: white; text-align: center; padding: 20px;">
-        <h1>Grupo LG</h1>
-    </div>
-    <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
-        <h2>Nueva Solicitud Creada</h2>
-        <p>Estimado(a) ${nombre},</p>
-        <p>Le informamos nueva solicitud ha sido creada con éxito. ID de solicitud es: <b>${solicitudId}</b>.</p>
-        
-        <h4>Datos de solicitante:</h4>
-        <ul>
-            <li><strong>Nombre:</strong> ${usuario.nombre}</li>
-            <li><strong>Empresa</strong> ${usuario.empresa}</li>
-            <li><strong>Rancho:</strong> ${data.rancho}</li>
-        </ul>
+        <div style="background-color: #4CAF50; color: white; text-align: center; padding: 20px;">
+            <h1>Grupo LG</h1>
+        </div>
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+            <h2>Nueva Solicitud Creada</h2>
+            <p>Estimado(a) ${nombre},</p>
+            <p>Le informamos nueva solicitud ha sido creada con éxito. ID de solicitud es: <b>${solicitudId}</b>.</p>
 
-        <h4>Detalles de la Solicitud:</h4>
-        <ul>
-            <li><strong>Fecha de Solicitud:</strong> ${fechaSolicitud}</li>
-            <li><strong>Descripción:</strong> ${data.descripcion}</li>
-            <li><strong>Folio Receta:</strong> ${data.folio}</li>
-        </ul>
+            <h4>Datos de solicitante:</h4>
+            <ul>
+                <li><strong>Nombre:</strong> ${usuario.nombre}</li>
+                <li><strong>Empresa</strong> ${usuario.empresa}</li>
+                <li><strong>Rancho:</strong> ${data.rancho}</li>
+            </ul>
 
-        <a href="http://localhost:3000/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
-        
-        <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
-        <p>Atentamente,<br>El equipo de Grupo LG</p>
-    </div>
-</body>`
-    };
-  } else if (type === 'notificacion') {
-    message = {
+            <h4>Detalles de la Solicitud:</h4>
+            <ul>
+                <li><strong>Fecha de Solicitud:</strong> ${fechaSolicitud}</li>
+                <li><strong>Descripción:</strong> ${data.descripcion}</li>
+                <li><strong>Folio Receta:</strong> ${data.folio}</li>
+            </ul>
+
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
+
+            <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
+            <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+    </body>`
+    },
+    notificacion: {
       from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
-      to: email,
-      // Replace with the customer's email
       subject: `Notificación de No Disponibilidad - ${solicitudId}`,
-      html: `
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background-color: #FF5733; color: white; text-align: center; padding: 20px;">
-              <h1>Grupo LG</h1>
-          </div>
-          <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
-              <h2>Notificación de No Disponibilidad de Producto</h2>
-              <p>Estimado(a) ${nombre},</p>
-              <p>Le informamos que el producto que solicitó no está disponible en este momento. A continuación, se detallan los datos de los productos sin existencia:</p>
-              
-              <h4>Solicitud: <b>${solicitudId}</b></h4>
-
-              <ul>
-                 ${data.map(product => `
-              <li>
-                <strong>Id del Producto:</strong> ${product.id_producto}<br>
-                <strong>Nombre del Producto:</strong> ${product.nombre_producto}<br>
-                <strong>Unidad de Medida:</strong> ${product.unidad_medida}<br>
-                <strong>cantidad:</strong> ${product.cantidad}
-              </li>
-            `).join('')}
-              </ul>
-    
-              <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
-              
-              <p>Si tiene alguna pregunta o necesita más información, no dude en contactar a nuestro equipo de almacen.</p>
-              <p><strong>Encardado de almacen:</strong>${usuario.nombre}<br></p>
-              <p><strong>Empresa:</strong>${usuario.empresa}<br></p>
-              <p><strong>rancho:</strong>${usuario.ranchos}<br></p>
-              <p>Atentamente,<br>El equipo de Grupo LG</p>
-          </div>
-        </body>`
+      html: ` <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+               <div style="background-color: #FF5733; color: white; text-align: center; padding: 20px;">
+                   <h1>Grupo LG</h1>
+               </div>
+               <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+                   <h2>Notificación de No Disponibilidad de Producto</h2>
+                   <p>Estimado(a) ${nombre},</p>
+                   <p>Le informamos que el producto que solicitó no está disponible en este momento. A continuación, se detallan los datos de los productos sin existencia:</p>
+      
+                   <h4>Solicitud: <b>${solicitudId}</b></h4>
+      
+                   <ul>
+                      ${Array.isArray(data) ? data.map(product => `
+                   <li>
+                     <strong>Id del Producto:</strong> ${product.id_producto}<br>
+                     <strong>Nombre del Producto:</strong> ${product.nombre_producto}<br>
+                     <strong>Unidad de Medida:</strong> ${product.unidad_medida}<br>
+                     <strong>cantidad:</strong> ${product.cantidad}
+                   </li>
+                 `).join('') : '<li>No hay productos para mostrar</li>'}
+                   </ul>
+      
+                   <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
+      
+                   <p>Si tiene alguna pregunta o necesita más información, no dude en contactar a nuestro equipo de almacen.</p>
+                   <p><strong>Encargado de almacen:</strong> ${usuario?.nombre || 'No especificado'}<br></p>
+                   <p><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}<br></p>
+                   <p><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}<br></p>
+                   <p>Atentamente,<br>El equipo de Grupo LG</p>
+               </div>
+             </body>`
+    }
+  };
+  try {
+    const template = templates[type];
+    if (!template) {
+      throw new Error(`Tipo de mensaje "${type}" no válido`);
+    }
+    const message = {
+      ...template,
+      to: email // Reemplazar con el correo del cliente
     };
+    const result = await sendMail(message);
+    return {
+      success: true,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    console.error('Error en enviarCorreo:', error);
+    throw error;
   }
-
-  // Función auxiliar para obtener color según el estatus
-  function getStatusColor(status) {
-    switch (status) {
-      case 'Proceso':
-        return '#28a745';
-      // Verde
-      case 'Completada':
-        return '#ffc107';
-      // Amarillo
-      case 'Rechazado':
-        return '#dc3545';
-      // Rojo
-      default:
-        return '#17a2b8';
-      // Azul
-    }
-  }
-
-  // Función auxiliar para agregar detalles adicionales según el estatus
-  function getAdditionalDetails(status) {
-    switch (status) {
-      case 'Proceso':
-        return '<p>Su solicitud está siendo procesada. Le mantendremos informado sobre cualquier actualización.</p>';
-      case 'Completada':
-        return '<p>Su solocitud a sido <strong>completada</strong>. Para más detalles, por favor contacte a nuestro equipo.</p>';
-      default:
-        return '';
-    }
-  }
-  transporter.sendMail(message, (error, info) => {
-    if (error) {
-      console.error(`Error al enviar correo ${error}`);
-    } else {
-      console.log('Correo Enviado');
-    }
-  });
 };
 ;// CONCATENATED MODULE: ./src/controller/usuario.controller.js
 
@@ -1137,6 +1176,31 @@ class CentroController {
       });
     }
   };
+
+  // actualizar porcentajes de las variedades
+  porcentajeVariedad = async (req, res) => {
+    try {
+      const result = await this.centroModel.porcentajeVariedad({
+        id: req.body.centroCoste,
+        data: req.body.porcentajes
+      });
+      if (result.error) {
+        res.status(404).json({
+          error: `${result.error}`
+        });
+      }
+      return res.json({
+        message: result.message
+      });
+    } catch (error) {
+      console.error({
+        error: `${error}`
+      });
+      return res.status(500).render('500', {
+        error: 'Error interno del servidor'
+      });
+    }
+  };
 }
 ;// CONCATENATED MODULE: ./src/routes/centro.routes.js
 
@@ -1157,6 +1221,9 @@ const createCentroCosteRouter = ({
 
   // obtener todos los centros de costo
   router.get('/centroCoste', centroController.getAll);
+
+  // actualizar los datos del porcentaje de las variedades de contros de costo
+  router.post('/porcentajeVariedad', centroController.porcentajeVariedad);
   return router;
 };
 ;// CONCATENATED MODULE: external "bcryptjs"
@@ -1292,7 +1359,7 @@ class UsuarioModel {
   static async getAll() {
     try {
       const usuario = await Usuario.findAll({
-        attributes: ['id', 'nombre', 'email', 'rol', 'empresa', 'ranchos']
+        attributes: ['id', 'nombre', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
       });
       return usuario;
     } catch (e) {
@@ -1363,6 +1430,7 @@ class UsuarioModel {
           empresa // Se filtra por empresa
         }
       });
+      console.log(usuario);
       return usuario;
     } catch (e) {
       console.error(e.message); // Salida: Error la usuario
@@ -1626,15 +1694,19 @@ class MezclasController {
       // procesar fecha
       const fechaSolicitud = new Date(result.fechaSolicitud);
       const fechaFormateada = (0,external_date_fns_namespaceObject.format)(fechaSolicitud, 'dd/MM/yyyy HH:mm:ss');
+
+      // estos usuarios les llegaran todas las notificaciones
+      const r2 = await UsuarioModel.getUserEmailEmpresa({
+        rol: 'administrativo',
+        empresa: 'General'
+      });
+
+      // obtenemos los datos del usuario al que mandaremos el correo
       if (req.body.rancho === 'Atemajac' || req.body.rancho === 'Ahualulco') {
         const r1 = await UsuarioModel.getUserEmailRancho({
           rol: 'mezclador',
           empresa: req.body.empresaPertece,
           rancho: req.body.rancho
-        });
-        const r2 = await UsuarioModel.getUserEmailEmpresa({
-          rol: 'mezclador',
-          empresa: 'General'
         });
         ress = [...r1, ...r2];
       } else if (req.body.rancho === 'Seccion 7 Fresas') {
@@ -1643,23 +1715,20 @@ class MezclasController {
           empresa: 'Bioagricultura',
           rancho: 'Atemajac'
         });
-        const r2 = await UsuarioModel.getUserEmailEmpresa({
-          rol: 'mezclador',
-          empresa: 'General'
-        });
         ress = [...r1, ...r2];
       } else {
         // obtenemos los datos del usuario al que mandaremos el correo
-        ress = await UsuarioModel.getUserEmail({
+        const r1 = await UsuarioModel.getUserEmail({
           rol: 'mezclador',
           empresa: req.body.empresaPertece
         });
+        ress = [...r1, ...r2];
       }
       if (ress && !ress.error) {
         // Usar forEach para mapear los resultados
         ress.forEach(async usuario => {
-          // console.log(`nombre:${usuario.nombre}, correo:${usuario.email}`)
-          await enviarCorreo({
+          console.log(`nombre:${usuario.nombre}, correo:${usuario.email}`);
+          const respues = await enviarCorreo({
             type: 'solicitud',
             email: usuario.email,
             nombre: usuario.nombre,
@@ -1668,6 +1737,12 @@ class MezclasController {
             data: req.body,
             usuario: user
           });
+          // validamos los resultados
+          if (respues.error) {
+            console.error('Error al enviar correo:', respues.error);
+          } else {
+            console.log('Correo enviado:', respues.messageId);
+          }
         });
       } else {
         console.error(ress.error || 'No se encontraron usuarios');
@@ -1724,6 +1799,7 @@ class MezclasController {
       const {
         user
       } = req.session;
+      console.log(`user:${user}`);
       const {
         status
       } = req.params;
@@ -1776,40 +1852,44 @@ class MezclasController {
           break;
         case 'administrativo':
           {
-            const [res2, res1] = await Promise.all([this.mezclaModel.obtenerTablaMezclasEmpresa({
-              status,
-              empresa: user.empresa
-            }), this.mezclaModel.obtenerTablaMezclasUsuario({
-              status,
-              idUsuarioSolicita: user.id
-            })]);
-            // Verificar y combinar resultados
-            if (Array.isArray(res2)) {
-              result = result.concat(res2); // Agregar res2 si es un array
-            }
-            if (Array.isArray(res1)) {
-              result = result.concat(res1); // Agregar res1 si es un array
-            }
-            // Eliminar duplicados basados en un campo único, por ejemplo, 'id'
-            const uniqueIds = new Set();
-            const uniqueResults = result.filter(item => {
-              if (!uniqueIds.has(item.id)) {
-                // Cambia 'id' por el campo que identifique de manera única
-                uniqueIds.add(item.id);
-                return true;
+            if (user.empresa === 'General' && user.ranchos) {
+              result = await this.mezclaModel.getAll();
+            } else {
+              const [res2, res1] = await Promise.all([this.mezclaModel.obtenerTablaMezclasEmpresa({
+                status,
+                empresa: user.empresa
+              }), this.mezclaModel.obtenerTablaMezclasUsuario({
+                status,
+                idUsuarioSolicita: user.id
+              })]);
+              // Verificar y combinar resultados
+              if (Array.isArray(res2)) {
+                result = result.concat(res2); // Agregar res2 si es un array
               }
-              return false;
-            });
-
-            // Verificar si hay resultados
-            if (uniqueResults.length === 0) {
-              return res.status(404).json({
-                message: 'No se encontraron mezclas'
+              if (Array.isArray(res1)) {
+                result = result.concat(res1); // Agregar res1 si es un array
+              }
+              // Eliminar duplicados basados en un campo único, por ejemplo, 'id'
+              const uniqueIds = new Set();
+              const uniqueResults = result.filter(item => {
+                if (!uniqueIds.has(item.id)) {
+                  // Cambia 'id' por el campo que identifique de manera única
+                  uniqueIds.add(item.id);
+                  return true;
+                }
+                return false;
               });
-            }
 
-            // Asignar los resultados únicos a result
-            result = uniqueResults;
+              // Verificar si hay resultados
+              if (uniqueResults.length === 0) {
+                return res.status(404).json({
+                  message: 'No se encontraron mezclas'
+                });
+              }
+
+              // Asignar los resultados únicos a result
+              result = uniqueResults;
+            }
             break;
           }
         default:
@@ -2549,10 +2629,6 @@ const centroConfig = {
     validate: {
       notEmpty: {
         msg: 'La variedad es requerida'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'La variedad debe tener entre 3 y 50 caracteres'
       }
     }
   }
@@ -2560,7 +2636,7 @@ const centroConfig = {
 const Centrocoste = db.define('centrocoste', centroConfig, {
   tableName: 'centrocoste',
   // Nombre de la tabla en la base de datos
-  timestamps: true // Agrega createdAt y updatedAt automáticamente
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
 });
 ;// CONCATENATED MODULE: ./src/models/centro.models.js
 
@@ -2640,7 +2716,7 @@ class CentroCosteModel {
         where: {
           id
         },
-        attributes: ['variedad'] // Especifica los atributos que quieres devolver
+        attributes: ['variedad', 'porcentajes'] // Especifica los atributos que quieres devolver
       });
       return variedades.length > 0 ? variedades : {
         message: 'No se encontraron variedades de este centro de coste'
@@ -2669,6 +2745,34 @@ class CentroCosteModel {
       console.error(e.message); // Salida: Error al obtener los variedades de coste
       return {
         error: 'Error al obtener los variedades de centro de coste'
+      };
+    }
+  }
+  static async porcentajeVariedad({
+    id,
+    data
+  }) {
+    try {
+      // Verificar si existe el centro de coste
+      const centroCoste = await Centrocoste.findByPk(id);
+      if (!centroCoste) {
+        return {
+          success: false,
+          error: 'Centro de coste no encontrado'
+        };
+      }
+
+      // Actualiza solo los campos que se han proporcionado
+      if (data.porcentajes) centroCoste.porcentajes = data.porcentajes;
+      await centroCoste.save();
+      return {
+        message: 'Porcentajes actualizados correctamente'
+      };
+    } catch (e) {
+      console.error('Error en porcentajeVariedad:', e);
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener el centro de coste'
       };
     }
   }
@@ -3021,77 +3125,80 @@ const SolicitudProductos = db.define('solicitud_receta ', solicitud_receta_produ
   // Nombre de la tabla en la base de datos
   timestamps: false // Agrega createdAt y updatedAt automáticamente
 });
-;// CONCATENATED MODULE: external "fs"
-var external_fs_x = (y) => {
+;// CONCATENATED MODULE: external "fs/promises"
+var promises_x = (y) => {
 	var x = {}; __webpack_require__.d(x, y); return x
 } 
-var external_fs_y = (x) => (() => (x))
-const external_fs_namespaceObject = external_fs_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_fs__["default"]) });
+var promises_y = (x) => (() => (x))
+const promises_namespaceObject = promises_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_fs_promises_f8dae9d1__["default"]) });
 ;// CONCATENATED MODULE: ./src/config/foto.mjs
 
 
 
 const foto_filename = (0,external_url_namespaceObject.fileURLToPath)("file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/config/foto.mjs");
 const foto_dirname = (0,external_path_namespaceObject.dirname)(foto_filename);
+
+// Configuración
+const CONFIG = {
+  maxSize: 5 * 1024 * 1024,
+  // 5MB
+  allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  uploadDir: external_path_namespaceObject.join(foto_dirname, '../../../public/uploads')
+};
 const guardarImagen = async ({
   imagen
 }) => {
-  if (!imagen) {
-    return {
-      message: 'No se ha enviado ninguna imagen o nombre de archivo'
-    };
-  }
-  // Procesar base64
-  const matches = imagen.match(/^data:image\/([A-Za-z-+/]+);base64,(.+)$/);
-  if (!matches || matches.length !== 3) {
-    return {
-      message: 'Formato de imagen no válido'
-    };
-  }
-  const imageData = matches[2];
-  const buffer = Buffer.from(imageData, 'base64');
-  const imageExtension = external_path_namespaceObject.extname('imagen.jpg');
-  const imageName = `image_${Date.now()}${imageExtension}`;
-  const imagePath = external_path_namespaceObject.join(foto_dirname + '../../../public/uploads', imageName);
-  // Crear la carpeta 'uploads' si no existe
-  if (!external_fs_namespaceObject["default"].existsSync(external_path_namespaceObject.join(foto_dirname + '../../../public/uploads'))) {
-    external_fs_namespaceObject["default"].mkdirSync(external_path_namespaceObject.join(foto_dirname + '../../../public/uploads'));
-  }
-
-  // Guardar la imagen en el servidor
-  external_fs_namespaceObject["default"].writeFile(imagePath, buffer, err => {
-    if (err) {
-      console.error('Error al guardar la imagen:', err);
-      return {
-        message: 'Error al guardar la imagen'
-      };
+  try {
+    if (!imagen) {
+      throw new Error('No se ha enviado ninguna imagen');
     }
-  });
-  const pathParts = imagePath.split('\\');
 
-  // Obtener la última parte de la ruta (el nombre del archivo)
-  const fileName = pathParts[pathParts.length - 1];
-  // fecha
-  const fechaActual = new Date();
+    // Validar formato base64
+    const matches = imagen.match(/^data:image\/([A-Za-z-+/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      throw new Error('Formato de imagen no válido');
+    }
 
-  // Obtener el año
-  const anio = fechaActual.getFullYear();
+    // Validar tipo de imagen
+    const mimeType = `image/${matches[1]}`;
+    if (!CONFIG.allowedTypes.includes(mimeType)) {
+      throw new Error('Tipo de imagen no permitido');
+    }
 
-  // Obtener el mes (agregar 1 porque los meses comienzan desde 0)
-  const mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
+    // Validar tamaño
+    const buffer = Buffer.from(matches[2], 'base64');
+    if (buffer.length > CONFIG.maxSize) {
+      throw new Error('Imagen demasiado grande');
+    }
 
-  // Obtener el día
-  const dia = String(fechaActual.getDate()).padStart(2, '0');
+    // Crear directorio si no existe
+    await promises_namespaceObject["default"].mkdir(CONFIG.uploadDir, {
+      recursive: true
+    });
 
-  // Formatear la fecha en el formato YYYY-MM-DD
-  const fechaFormateada = `${anio}-${mes}-${dia}`;
+    // Generar nombre único
+    const imageExtension = `.${matches[1]}`;
+    const imageName = `image_${Date.now()}_${Math.random().toString(36).substring(2)}${imageExtension}`;
+    const imagePath = external_path_namespaceObject.join(CONFIG.uploadDir, imageName);
 
-  // Construir la ruta relativa
-  const relativePath = `../uploads/${fileName}`;
-  return {
-    relativePath,
-    fecha: fechaFormateada
-  };
+    // Guardar imagen
+    await promises_namespaceObject["default"].writeFile(imagePath, buffer);
+
+    // Formatear fecha
+    const fechaActual = new Date();
+    const fechaFormateada = fechaActual.toISOString().split('T')[0];
+    return {
+      relativePath: `../uploads/${imageName}`,
+      fecha: fechaFormateada,
+      success: true
+    };
+  } catch (error) {
+    console.error('Error en guardarImagen:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
 };
 ;// CONCATENATED MODULE: ./src/models/mezclas.models.js
 
@@ -3139,7 +3246,6 @@ class MezclaModel {
         const productosPromesas = productosValidos.map(async producto => {
           // comprobaramos si el id_producto es numero
           try {
-            // Llamar al procedimiento almacenado con transacción
             await SolicitudProductos.create({
               id_solicitud: solicitud.id,
               id_producto: parseInt(producto.id_producto),
@@ -3519,6 +3625,66 @@ class MezclaModel {
     }
   }
   static async getAll() {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status
+        };
+      });
+
+      // Devolver los resultados
+      return {
+        message: 'Mezclas obtenidas correctamente',
+        data: resultadosFormateados
+      };
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async getAllGeneral() {
     try {
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
@@ -4702,7 +4868,6 @@ const reporteSolicitudV2 = async parametros => {
   }
 };
 const crearSolicitud = async parametros => {
-  console.log(parametros);
   // Definir estilos
   const headerStyle = {
     font: {
@@ -4765,8 +4930,6 @@ const crearSolicitud = async parametros => {
   // varialbles globales
   let variedades;
   try {
-    console.log('Datos a procesar:', parametros);
-
     // Crear un nuevo libro de Excel
     const workbook = new external_exceljs_namespaceObject["default"].Workbook();
 
@@ -4852,9 +5015,6 @@ const crearSolicitud = async parametros => {
           cell.style = headerStyle;
         }); // Encabezado de la hoja
 
-        // obtenemos datos faltantes de la solicitud
-        const datosF = await obtenerDatosSolicitud(idSolicitud);
-        console.log('Datos de la solicitud:', datosF);
         hojaGeneral.addRow(['ID Solicitud', idSolicitud]).eachCell(cell => {
           cell.style = cellStyle;
         });
@@ -4909,7 +5069,7 @@ const crearSolicitud = async parametros => {
 
       // Obtener productos de la base de datos
       const productos = await obtenerProductosPorSolicitud(idSolicitud);
-      console.log('Productos obtenidos:', productos);
+      // console.log('Productos obtenidos:', productos)
 
       // Crear el arreglo de datos
       const data = [];
@@ -4999,6 +5159,8 @@ class ProduccionModel {
     try {
       if (rol === 'admin') {
         data = await db.query('SELECT * FROM total_precio_cantidad_solicitud');
+      } else if (rol === 'administrativo' && empresa === 'General') {
+        data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`!="Lugar Agricola"');
       } else {
         data = await db.query(`SELECT * FROM total_precio_cantidad_solicitud WHERE empresa="${empresa}"`);
       }
@@ -5156,12 +5318,6 @@ function setupAssociations() {
   SolicitudProductos.belongsTo(Recetas, {
     foreignKey: 'id_receta'
   });
-
-  // Puedes agregar más asociaciones aquí si es necesario
-  // Ejemplo:
-  // Usuario.hasMany(Solicitud, { foreignKey: 'idUsuarioSolicita' })
-  // Centrocoste.hasMany(Solicitud, { foreignKey: 'idCentroCoste' })
-
   console.log('Asociaciones de modelos configuradas');
 }
 ;// CONCATENATED MODULE: ./src/server/server.mjs
@@ -5199,9 +5355,12 @@ function setupAssociations() {
 // Asociaciones
 
 
+// Base de datos
+
 const startServer = async options => {
   const {
-    PORT
+    PORT,
+    MODE
   } = options;
   const app = (0,external_express_namespaceObject["default"])();
   const __filename = (0,external_url_namespaceObject.fileURLToPath)("file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/server/server.mjs");
@@ -5210,9 +5369,18 @@ const startServer = async options => {
   // MOTOR DE PLANTILLAS EJS
   app.set('views', external_path_namespaceObject.resolve(__dirname, '..', 'views'));
   app.set('view engine', 'ejs');
+  app.set('trust proxy', 1);
 
-  // LOGGER
-  app.use((0,external_morgan_namespaceObject["default"])('dev'));
+  // Middlewares
+  if (MODE === 'development') {
+    console.log('🔧 Modo de desarrollo');
+    app.use((0,external_morgan_namespaceObject["default"])('dev'));
+  } else {
+    console.log('📦 Modo de producción');
+    app.use((0,external_morgan_namespaceObject["default"])('combined'));
+  }
+
+  // Configurar middleware para cookies y validar JSON en los request
   app.use((0,external_cookie_parser_namespaceObject["default"])());
   app.use(validateJSON);
   app.use(corsMiddleware());
@@ -5266,10 +5434,12 @@ const startServer = async options => {
     // Configurar asociaciones antes de sincronizar
     setupAssociations();
     await db.sync();
-    console.log('Base de datos sincronizada');
-    app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+    console.log('📦 Base de datos conectada y sincronizada');
+    // Iniciamos el servidor en el puerto especificado
+    app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
   } catch (error) {
-    console.error('Error al sincronizar la base de datos:', error);
+    console.error('❌ Error al iniciar:', error);
+    process.exit(1);
   }
 };
 ;// CONCATENATED MODULE: ./src/app.mjs
@@ -5278,6 +5448,6 @@ const startServer = async options => {
 (async () => {
   startServer({
     PORT: envs.PORT,
-    SECRET_JWT_KEY: envs.SECRET_JWT_KEY
+    MODE: envs.MODE
   });
 })();

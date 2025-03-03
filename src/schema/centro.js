@@ -80,10 +80,6 @@ const centroConfig = {
     validate: {
       notEmpty: {
         msg: 'La variedad es requerida'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'La variedad debe tener entre 3 y 50 caracteres'
       }
     }
   }
@@ -91,5 +87,5 @@ const centroConfig = {
 
 export const Centrocoste = sequelize.define('centrocoste', centroConfig, {
   tableName: 'centrocoste', // Nombre de la tabla en la base de datos
-  timestamps: true // Agrega createdAt y updatedAt automáticamente
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
 })

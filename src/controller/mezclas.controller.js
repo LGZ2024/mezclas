@@ -6,6 +6,7 @@ export class MezclasController {
     this.mezclaModel = mezclaModel
   }
 
+  // crear solicitudes
   create = async (req, res) => {
     let ress
     try {
@@ -20,23 +21,33 @@ export class MezclasController {
       // procesar fecha
       const fechaSolicitud = new Date(result.fechaSolicitud)
       const fechaFormateada = format(fechaSolicitud, 'dd/MM/yyyy HH:mm:ss')
+
+      // estos usuarios les llegaran todas las notificaciones
+      const r2 = await UsuarioModel.getUserEmailEmpresa({ rol: 'administrativo', empresa: 'General' })
+
+      // obtenemos los datos del usuario al que mandaremos el correo
       if (req.body.rancho === 'Atemajac' || req.body.rancho === 'Ahualulco') {
         const r1 = await UsuarioModel.getUserEmailRancho({ rol: 'mezclador', empresa: req.body.empresaPertece, rancho: req.body.rancho })
-        const r2 = await UsuarioModel.getUserEmailEmpresa({ rol: 'mezclador', empresa: 'General' })
         ress = [...r1, ...r2]
       } else if (req.body.rancho === 'Seccion 7 Fresas') {
         const r1 = await UsuarioModel.getUserEmailRancho({ rol: 'mezclador', empresa: 'Bioagricultura', rancho: 'Atemajac' })
-        const r2 = await UsuarioModel.getUserEmailEmpresa({ rol: 'mezclador', empresa: 'General' })
         ress = [...r1, ...r2]
       } else {
       // obtenemos los datos del usuario al que mandaremos el correo
-        ress = await UsuarioModel.getUserEmail({ rol: 'mezclador', empresa: req.body.empresaPertece })
+        const r1 = await UsuarioModel.getUserEmail({ rol: 'mezclador', empresa: req.body.empresaPertece })
+        ress = [...r1, ...r2]
       }
       if (ress && !ress.error) {
         // Usar forEach para mapear los resultados
         ress.forEach(async usuario => {
-          // console.log(`nombre:${usuario.nombre}, correo:${usuario.email}`)
-          await enviarCorreo({ type: 'solicitud', email: usuario.email, nombre: usuario.nombre, solicitudId: result.idSolicitud, fechaSolicitud: fechaFormateada, data: req.body, usuario: user })
+          console.log(`nombre:${usuario.nombre}, correo:${usuario.email}`)
+          const respues = await enviarCorreo({ type: 'solicitud', email: usuario.email, nombre: usuario.nombre, solicitudId: result.idSolicitud, fechaSolicitud: fechaFormateada, data: req.body, usuario: user })
+          // validamos los resultados
+          if (respues.error) {
+            console.error('Error al enviar correo:', respues.error)
+          } else {
+            console.log('Correo enviado:', respues.messageId)
+          }
         })
       } else {
         console.error(ress.error || 'No se encontraron usuarios')
@@ -48,6 +59,32 @@ export class MezclasController {
     }
   }
 
+  // pasar a proceso
+  estadoProceso = async (req, res) => {
+    try {
+      const idSolicitud = req.params.idSolicitud
+      const result = await this.mezclaModel.estadoProceso({ id: idSolicitud, data: req.body })
+      if (result.error) {
+        return res.status(400).json({ error: result.error })
+      }
+      const ress = await UsuarioModel.getOneId({ id: result.idUsuarioSolicita })
+      console.log(`nombre:${ress.nombre}, correo:${ress.email}`)
+      await enviarCorreo({
+        type: 'status',
+        email: ress.email,
+        nombre: ress.nombre,
+        solicitudId: idSolicitud,
+        status: req.body.status
+      })
+
+      return res.json({ message: result.message })
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error)
+      res.status(500).json({ error: 'Ocurrió un error al crear la solicitud' })
+    }
+  }
+
+  // cerrar solicitudes
   cerrarSolicitid = async (req, res) => {
     try {
       // obtenemos los datos de la sesion
@@ -59,7 +96,19 @@ export class MezclasController {
       }
       const ress = await UsuarioModel.getOneId({ id: result.idUsuarioSolicita })
       console.log(`nombre:${ress.nombre}, correo:${ress.email}`)
-      await enviarCorreo({ type: 'status', email: ress.email, nombre: ress.nombre, solicitudId: result.id, status: result.status })
+      await enviarCorreo({
+        type: 'status',
+        email: ress.email,
+        nombre: ress.nombre,
+        solicitudId: result.id,
+        status: result.status,
+        usuario: user,
+        data: {
+          rancho: result.rancho || req.body.rancho, // Usar el rancho del resultado o del body
+          descripcion: result.descripcion || req.body.descripcion,
+          folio: result.folio || req.body.folio
+        }
+      })
 
       return res.json({ message: result.message })
     } catch (error) {
@@ -71,6 +120,7 @@ export class MezclasController {
   obtenerTablaMezclasEmpresa = async (req, res) => {
     try {
       const { user } = req.session
+      console.log('user', user)
       const { status } = req.params
       if (!status) {
         return res.status(400).json({ error: 'El estado es requerido' })
@@ -101,34 +151,38 @@ export class MezclasController {
           result = await this.mezclaModel.getAll()
           break
         case 'administrativo': {
-          const [res2, res1] = await Promise.all([
-            this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: user.empresa }),
-            this.mezclaModel.obtenerTablaMezclasUsuario({ status, idUsuarioSolicita: user.id })
-          ])
-          // Verificar y combinar resultados
-          if (Array.isArray(res2)) {
-            result = result.concat(res2) // Agregar res2 si es un array
-          }
-          if (Array.isArray(res1)) {
-            result = result.concat(res1) // Agregar res1 si es un array
-          }
-          // Eliminar duplicados basados en un campo único, por ejemplo, 'id'
-          const uniqueIds = new Set()
-          const uniqueResults = result.filter(item => {
-            if (!uniqueIds.has(item.id)) { // Cambia 'id' por el campo que identifique de manera única
-              uniqueIds.add(item.id)
-              return true
+          if (user.empresa === 'General' && user.ranchos) {
+            result = await this.mezclaModel.getAllGeneral({ status })
+          } else {
+            const [res2, res1] = await Promise.all([
+              this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: user.empresa }),
+              this.mezclaModel.obtenerTablaMezclasUsuario({ status, idUsuarioSolicita: user.id })
+            ])
+            // Verificar y combinar resultados
+            if (Array.isArray(res2)) {
+              result = result.concat(res2) // Agregar res2 si es un array
             }
-            return false
-          })
+            if (Array.isArray(res1)) {
+              result = result.concat(res1) // Agregar res1 si es un array
+            }
+            // Eliminar duplicados basados en un campo único, por ejemplo, 'id'
+            const uniqueIds = new Set()
+            const uniqueResults = result.filter(item => {
+              if (!uniqueIds.has(item.id)) { // Cambia 'id' por el campo que identifique de manera única
+                uniqueIds.add(item.id)
+                return true
+              }
+              return false
+            })
 
-          // Verificar si hay resultados
-          if (uniqueResults.length === 0) {
-            return res.status(404).json({ message: 'No se encontraron mezclas' })
+            // Verificar si hay resultados
+            if (uniqueResults.length === 0) {
+              return res.status(404).json({ message: 'No se encontraron mezclas' })
+            }
+
+            // Asignar los resultados únicos a result
+            result = uniqueResults
           }
-
-          // Asignar los resultados únicos a result
-          result = uniqueResults
 
           break
         }
@@ -157,23 +211,6 @@ export class MezclasController {
     } catch (error) {
       console.error('Error al crear la solicitud:', error)
       res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
-    }
-  }
-
-  estadoProceso = async (req, res) => {
-    try {
-      const idSolicitud = req.params.idSolicitud
-      const result = await this.mezclaModel.estadoProceso({ id: idSolicitud, data: req.body })
-      if (result.error) {
-        return res.status(400).json({ error: result.error })
-      }
-      const ress = await UsuarioModel.getOneId({ id: result.idUsuarioSolicita })
-      console.log(`nombre:${ress.nombre}, correo:${ress.email}`)
-      await enviarCorreo({ type: 'status', email: ress.email, nombre: ress.nombre, solicitudId: idSolicitud, status: req.body.status })
-      return res.json({ message: result.message })
-    } catch (error) {
-      console.error('Error al crear la solicitud:', error)
-      res.status(500).json({ error: 'Ocurrió un error al crear la solicitud' })
     }
   }
 }

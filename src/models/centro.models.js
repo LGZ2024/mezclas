@@ -60,7 +60,7 @@ export class CentroCosteModel {
         where: {
           id
         },
-        attributes: ['variedad'] // Especifica los atributos que quieres devolver
+        attributes: ['variedad', 'porcentajes'] // Especifica los atributos que quieres devolver
       })
 
       return variedades.length > 0 ? variedades : { message: 'No se encontraron variedades de este centro de coste' }
@@ -83,6 +83,33 @@ export class CentroCosteModel {
     } catch (e) {
       console.error(e.message) // Salida: Error al obtener los variedades de coste
       return { error: 'Error al obtener los variedades de centro de coste' }
+    }
+  }
+
+  static async porcentajeVariedad ({ id, data }) {
+    console.log(id)
+    console.log(data)
+    try {
+      // Verificar si existe el centro de coste
+      const centroCoste = await Centrocoste.findByPk(id)
+      if (!centroCoste) {
+        return {
+          success: false,
+          error: 'Centro de coste no encontrado'
+        }
+      }
+      console.log(centroCoste)
+      // Actualiza solo los campos que se han proporcionado
+      if (data) centroCoste.porcentajes = data
+      await centroCoste.save()
+
+      return {
+        message: 'Porcentajes actualizados correctamente'
+      }
+    } catch (e) {
+      console.error('Error en porcentajeVariedad:', e)
+      console.error(e.message) // Salida: Error la usuario
+      return { error: 'Error al obtener el centro de coste' }
     }
   }
 

@@ -6,92 +6,64 @@ export class CameraHandler {
   }
 
   configurarBotonesCaptura () {
-    // Botón para tomar foto
     const botonCapturar = document.querySelector('.btnTomarFoto')
     if (botonCapturar) {
-      botonCapturar.onclick = () => {
-        this.capturarFoto()
-      }
+      botonCapturar.onclick = () => this.capturarFoto()
     }
 
-    // Botón para tomar otra foto / reiniciar
     const botonReiniciar = document.querySelector('.btnOtraFoto')
     if (botonReiniciar) {
-      botonReiniciar.onclick = () => {
-        this.reiniciarCaptura()
-      }
+      botonReiniciar.onclick = () => this.reiniciarCaptura()
     }
   }
 
-  capturarFoto () {
-    const video = this.elementos.video
-    const canvas = document.getElementById('canvas')
-    const photo = document.querySelector('.photo')
+  async capturarFoto () {
+    const { video, canvas, photo } = this.elementos
     const botonOtraFoto = document.querySelector('.btnOtraFoto')
     const btnTomarFoto = document.querySelector('.btnTomarFoto')
 
     if (video && canvas && photo) {
       const context = canvas.getContext('2d')
-
-      // Establecer el tamaño del canvas igual al video
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
-
-      // Dibujar el frame actual del video en el canvas
       context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-      // Convertir el canvas a una imagen
       const dataUrl = canvas.toDataURL('image/png')
-
-      // Mostrar la imagen capturada
       photo.src = dataUrl
       photo.style.display = 'block'
-
-      // Ocultar video
       video.style.display = 'none'
 
-      // Mostrar botón para tomar otra foto
       if (botonOtraFoto) {
         botonOtraFoto.style.display = 'block'
         btnTomarFoto.style.display = 'none'
       }
 
-      // Guardar la imagen en el campo de entrada
       const fileInput = document.getElementById('fileInput')
       if (fileInput) {
         fileInput.value = dataUrl
       }
 
-      // Detener el stream de video
-      if (this.stream) {
-        this.stream.getTracks().forEach(track => track.stop())
-      }
+      this.detenerStream()
     }
   }
 
   reiniciarCaptura () {
-    const video = this.elementos.video
-    const photo = document.querySelector('.photo')
+    const { video, photo } = this.elementos
     const botonOtraFoto = document.querySelector('.btnOtraFoto')
     const btnTomarFoto = document.querySelector('.btnTomarFoto')
 
     if (video && photo && botonOtraFoto) {
-      // Restablecer la visibilidad
       video.style.display = 'block'
       photo.style.display = 'none'
       botonOtraFoto.style.display = 'none'
       btnTomarFoto.style.display = 'block'
-
-      // Limpiar la imagen
       photo.src = ''
 
-      // Limpiar el campo de entrada
       const fileInput = document.getElementById('fileInput')
       if (fileInput) {
         fileInput.value = ''
       }
 
-      // Reiniciar el stream de video
       this.iniciarCamara()
     }
   }
@@ -113,25 +85,18 @@ export class CameraHandler {
         }
       }
 
-      // Detener el stream anterior si existe
-      if (this.stream) {
-        this.stream.getTracks().forEach(track => track.stop())
-      }
+      this.detenerStream()
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
-
       this.stream = stream
-      const video = this.elementos.video
+      const { video } = this.elementos
 
       if (video) {
         video.srcObject = stream
-        video.play()
+        await video.play()
       }
 
-      // Llenar el select solo si no está lleno
-      if (!this.elementos.listaDispositivos.options.length) {
-        this.llenarSelectDispositivos(dispositivosVideo)
-      }
+      this.llenarSelectDispositivos(dispositivosVideo)
     } catch (error) {
       console.error('Error al iniciar la cámara:', error)
       this.manejarError(error)
@@ -154,7 +119,7 @@ export class CameraHandler {
       dispositivosVideo.forEach((dispositivo, index) => {
         const option = document.createElement('option')
         option.value = dispositivo.deviceId
-        option.text = `Cámara ${index + 1}`
+        option.text = dispositivo.label || `Cámara ${index + 1}`
         select.appendChild(option)
       })
 
@@ -164,6 +129,13 @@ export class CameraHandler {
       }
     } else {
       console.error('Elemento select no encontrado en el DOM')
+    }
+  }
+
+  detenerStream () {
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop())
+      this.stream = null
     }
   }
 

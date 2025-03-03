@@ -7,17 +7,171 @@
     <title>Mezclas</title>
     <link rel="icon" type="image/svg+xml" href="../img/LogoTransp.svg">
     <%- include("../../templates/mezclas/cabecera") %>
+    Z<script src="../vendors/sweetalert/sweetalert.js"> </script>
 </head>
 <style>
-    .producto-item {
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
+    /* Variables CSS */
+    :root {
+        --color-primario: #4a90e2;
+        --color-borde: #ddd;
+        --color-fondo: #fff;
+        --color-hover: #f5f5f5;
+        --borde-radio: 4px;
+        --espaciado: 1rem;
+        --transicion: all 0.3s ease;
     }
 
-    .producto-item select,
-    .producto-item input {
-        margin-right: 10px;
+    /* Contenedor de búsqueda */
+    .busqueda-container {
+        position: relative;
+        width: 100%;
+        margin-bottom: var(--espaciado);
+    }
+
+    /* Estilos de input */
+    .producto-input {
+        width: 100%;
+        padding: var(--espaciado);
+        border: 1px solid var(--color-borde);
+        border-radius: var(--borde-radio);
+        transition: var(--transicion);
+    }
+
+    .producto-input:focus {
+        outline: none;
+        border-color: var(--color-primario);
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+
+    /* Compatibilidad con navegadores */
+    @supports (list-style: none) {
+        .busqueda-container select {
+            display: none;
+        }
+    }
+
+    @supports not (list-style: none) {
+        .busqueda-container input[list] {
+            display: none;
+        }
+
+        .busqueda-container select {
+            width: 100%;
+            padding: var(--espaciado);
+            border: 1px solid var(--color-borde);
+            border-radius: var(--borde-radio);
+        }
+    }
+
+    /* Grid Layout */
+    .producto-item {
+        display: grid;
+        grid-template-columns: minmax(200px, 2fr) minmax(100px, 1fr) minmax(100px, 1fr) auto;
+        gap: var(--espaciado);
+        align-items: center;
+        margin-bottom: var(--espaciado);
+    }
+
+    /* Contenedor del select */
+    .select-container {
+        position: relative;
+    }
+
+    .select-container datalist {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        max-height: 200px;
+        width: 100%;
+        overflow-y: auto;
+        background: var(--color-fondo);
+        border: 1px solid var(--color-borde);
+        border-radius: var(--borde-radio);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transicion);
+    }
+
+    .producto-input:focus+.select-container datalist {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Estilos del select */
+    .select-producto {
+        width: 100%;
+        padding: calc(var(--espaciado) * 0.8);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    /* Grupos y opciones */
+    optgroup {
+        font-weight: bold;
+        padding: calc(var(--espaciado) * 0.5);
+        color: var(--color-primario);
+    }
+
+    option {
+        padding: calc(var(--espaciado) * 0.5);
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    option:hover,
+    option:focus {
+        background-color: var(--color-hover);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .producto-item {
+            grid-template-columns: 1fr;
+            gap: calc(var(--espaciado) * 0.5);
+        }
+
+        .producto-item select,
+        .producto-item input {
+            margin-right: 0;
+            margin-bottom: var(--espaciado);
+        }
+    }
+
+    /* Estilos para el SweetAlert */
+    .swal-wide {
+        width: 850px !important;
+    }
+
+    .swal-large {
+        font-size: 1.2em;
+    }
+
+    .swal2-popup table {
+        width: 100%;
+        margin-bottom: 1rem;
+        background-color: transparent;
+    }
+
+    .swal2-popup th,
+    .swal2-popup td {
+        padding: 0.75rem;
+        vertical-align: middle;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .swal2-popup thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .swal2-popup tbody tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .swal2-popup tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.075);
     }
 </style>
 
@@ -139,28 +293,12 @@
                                     <div class="formulario__campo">
                                         <label class="formulario__label" for="descripcion">Descripción</label>
                                         <textarea id="descripcion" class="formulario__input"
-                                            placeholder="Ingrese una descripción" rows="3" ></textarea>
+                                            placeholder="Ingrese una descripción" rows="3"></textarea>
                                     </div>
                                     <label class="formulario__label">Productos</label>
                                     <div id="productosContainer">
-                                        <!-- Primer campo de producto -->
-                                        <div class="producto-item">
-                                            <select name="producto[]" class="formulario__input select-producto"
-                                                required>
-                                                <option value="">Seleccionar Producto</option>
-                                            </select>
-
-                                            <select name="unidad_medida[]"
-                                                class="formulario__input select-unidad-medida" required disabled>
-                                                <option value="">Unidad de Medida</option>
-                                            </select>
-
-                                            <input class="formulario__input" type="number" name="cantidad[]"
-                                                placeholder="Cantidad" min="0" step="0.01" required>
-
-                                            <button type="button"
-                                                class="eliminar-producto formulario__submit">Eliminar</button>
-                                        </div>
+  
+                                        <!-- Agregar más campos de producto según sea necesario -->
                                     </div>
 
 
@@ -183,9 +321,11 @@
             </div>
         </div>
     </section>
-    <!-- Firebase Configuración y funciones -->
-    <%- include("../../templates/mezclas/scripts") %>
-    <script type="module" src="../../app/solicitud/solicitarMezcla.js"></script>
+    <!-- agrgamos modal -->
+    <%- include("../../templates/mezclas/modalCambioPorcentaje") %>
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/solicitud/solicitarMezcla.js"></script>
 </body>
 
 </html>

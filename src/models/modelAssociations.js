@@ -25,10 +25,5 @@ export function setupAssociations () {
     foreignKey: 'id_receta'
   })
 
-  // Puedes agregar más asociaciones aquí si es necesario
-  // Ejemplo:
-  // Usuario.hasMany(Solicitud, { foreignKey: 'idUsuarioSolicita' })
-  // Centrocoste.hasMany(Solicitud, { foreignKey: 'idCentroCoste' })
-
   console.log('Asociaciones de modelos configuradas')
 }

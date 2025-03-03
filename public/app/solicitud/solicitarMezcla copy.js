@@ -1,4 +1,5 @@
-import { centrosCoste, Variedades } from '../CentrosCoste.js'
+/* eslint-disable no-undef */
+import { centrosCoste, Variedades, cambioSolicitud } from '../CentrosCoste.js'
 import { mostrarMensaje } from '../mensajes.js'
 
 class SolicitudFormulario {
@@ -7,6 +8,7 @@ class SolicitudFormulario {
     this.initElements()
     this.bindEvents()
     this.inicializarFormularioProductos()
+    this.iniciarSelect2()
   }
 
   initElements () {
@@ -14,6 +16,7 @@ class SolicitudFormulario {
       regresar: document.getElementById('regresar'),
       rancho: document.querySelector('#rancho'),
       centroCoste: document.querySelector('#centroCoste'),
+      variedad: document.querySelector('#variedad'),
       unidadMedida: document.querySelector('select[name="unidad_medida[]"]'), // Asegúrate de que este selector sea correcto
       productosContainer: document.getElementById('productosContainer'),
       agregarProductoBtn: document.getElementById('agregarProducto'),
@@ -25,6 +28,7 @@ class SolicitudFormulario {
     this.elementos.regresar.addEventListener('click', this.navegarInicio)
     this.elementos.rancho.addEventListener('change', this.manejarCambioRancho)
     this.elementos.centroCoste.addEventListener('change', this.manejarCambioCentroCoste)
+    this.elementos.variedad.addEventListener('change', this.manejarCambioVariedad)
     // Verifica que this.elementos.unidadMedida sea un elemento válido
     if (this.elementos.unidadMedida) {
       this.elementos.unidadMedida.addEventListener('change', this.manejarCambioUnidadMedida)
@@ -32,6 +36,22 @@ class SolicitudFormulario {
     //
     this.elementos.recetaForm.addEventListener('submit', this.manejarEnvioReceta.bind(this))
     this.elementos.agregarProductoBtn.addEventListener('click', this.agregarNuevoProducto)
+  }
+
+  iniciarSelect2 () {
+    try {
+      if (typeof jQuery === 'undefined') {
+        console.error('jQuery no está cargado')
+        return
+      }
+      if (typeof jQuery.fn.select2 === 'undefined') {
+        console.error('Select2 no está cargado')
+        return
+      }
+      $('.js-example-basic-single').select2()
+    } catch (error) {
+      console.error('Error al inicializar Select2:', error)
+    }
   }
 
   // Método para inicializar los productos
@@ -58,9 +78,22 @@ class SolicitudFormulario {
       primerSelectProducto.appendChild(optgroupProductos)
 
       // Añadir productos al select
-      datos.forEach(producto => {
+      datos.productos.forEach(producto => {
         const option = document.createElement('option')
         option.value = producto.id_producto
+        option.textContent = producto.nombre
+        option.dataset.unidadBase = producto.unidad_medida
+        primerSelectProducto.appendChild(option)
+      })
+      // Añadir productos al select
+      const optgroupReceta = document.createElement('optgroup')
+      optgroupReceta.label = 'Productos Preparados' // Etiqueta para el grupo de productos
+      primerSelectProducto.appendChild(optgroupReceta)
+
+      // Añadir productos al select
+      datos.recetas.forEach(producto => {
+        const option = document.createElement('option')
+        option.value = producto.id_receta
         option.textContent = producto.nombre
         option.dataset.unidadBase = producto.unidad_medida
         primerSelectProducto.appendChild(option)
@@ -74,25 +107,10 @@ class SolicitudFormulario {
       primerSelectUnidad.disabled = true
       primerSelectUnidad.innerHTML = '<option value="">Seleccionar Unidad</option>'
     } catch (error) {
-      this.manejarError(error)
+
     }
   }
 
-  // // Método para obtener productos
-  // async fetchProductos () {
-  //   try {
-  //     const response = await fetch('/api/productos/')
-  //     if (!response.ok) {
-  //       throw new Error('Error al obtener productos')
-  //     }
-  //     const data = await response.json()
-  //     this.productosData = data
-  //     return data
-  //   } catch (error) {
-  //     this.manejarError(error)
-  //     return []
-  //   }
-  // }
   // Método para obtener productos
   async fetchProductos () {
     try {
@@ -112,9 +130,8 @@ class SolicitudFormulario {
   // Métodos de validación
   validarFormulario () {
     const camposRequeridos = [
-      'rancho', 'centroCoste', 'variedad', 'folio',
-      'temporada', 'cantidad', 'presentacion',
-      'metodoAplicacion'
+      'rancho', 'centroCoste', 'variedad',
+      'temporada', 'metodoAplicacion'
     ]
 
     const camposInvalidos = camposRequeridos.filter(campo => {
@@ -370,6 +387,11 @@ class SolicitudFormulario {
     this.ejecutarSeguros(() => Variedades(id))
   }
 
+  manejarCambioVariedad = (evento) => {
+    const selecion = evento.target.value
+    this.ejecutarSeguros(() => cambioSolicitud(selecion))
+  }
+
   manejarCambioUnidadMedida = (evento) => {
     const unidadMedida = evento.target.value
     this.validacionCantidad(unidadMedida)
@@ -425,10 +447,27 @@ class SolicitudFormulario {
     optionDefaultProducto.textContent = 'Seleccionar Producto'
     selectProducto.appendChild(optionDefaultProducto)
 
+    const optgroupProductos = document.createElement('optgroup')
+    optgroupProductos.label = 'Productos' // Etiqueta para el grupo de productos
+    selectProducto.appendChild(optgroupProductos)
+
     // Añadir productos al select
-    datos.forEach(producto => {
+    datos.productos.forEach(producto => {
       const option = document.createElement('option')
       option.value = producto.id_producto
+      option.textContent = producto.nombre
+      option.dataset.unidadBase = producto.unidad_medida
+      selectProducto.appendChild(option)
+    })
+    //
+    const optgroupRecetas = document.createElement('optgroup')
+    optgroupRecetas.label = 'Productos Preparados' // Etiqueta para el grupo de productos
+    selectProducto.appendChild(optgroupRecetas)
+
+    // Añadir productos al select
+    datos.recetas.forEach(producto => {
+      const option = document.createElement('option')
+      option.value = producto.id_receta
       option.textContent = producto.nombre
       option.dataset.unidadBase = producto.unidad_medida
       selectProducto.appendChild(option)

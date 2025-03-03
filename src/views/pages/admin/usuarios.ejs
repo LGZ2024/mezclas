@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <%- include("../../templates/admin/cabecera") %>
 </head>
 
@@ -36,11 +36,13 @@
                                                             <thead>
                                                                 <tr>
                                                                     <th> id# </th>
+                                                                    <th> Usuario</th>
                                                                     <th> Correo</th>
                                                                     <th> Nombre</th>
                                                                     <th> Rol</th>
                                                                     <th> Empresa</th>
                                                                     <th> Ranchos</th>
+                                                                    <th> variedad</th>
                                                                     <th> Acciones</th>
                                                                 </tr>
                                                             </thead>
@@ -54,7 +56,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- content-wrapper ends -->
                         <!-- partial:partials/_footer.html -->
                         <%- include("../../templates/admin/footer") %>
                             <!-- partial -->
@@ -65,10 +66,10 @@
     </div>
     <!-- Modal -->
     <%- include("../../templates/admin/modalUsuarios") %>
-    <%- include("../../templates/admin/modalResetPass") %>
-        <!-- container-scroller -->
-        <%- include("../../templates/admin/scripts") %>
-            <script type="module" src="../../app/usuarios/main.js"></script>
+        <%- include("../../templates/admin/modalResetPass") %>
+            <!-- container-scroller -->
+            <%- include("../../templates/admin/scripts") %>
+                <script type="module" src="../../app/usuarios/main.js"></script>
 </body>
 
 </html>

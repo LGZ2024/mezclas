@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import { fetchApi, showMessage, mostrarMensaje, swalWithBootstrapButtons } from '../funciones.js'
-import { validarContraseña } from './funcionesFormulario.js'
+import FormularioUsuario from './funcionesFormulario.js'
 
 // Funciones para eliminar, editar y agregar registros
 const eliminarRegistro = async (id) => {
@@ -8,12 +8,8 @@ const eliminarRegistro = async (id) => {
     const response = await fetchApi(`/api/usuario/${id}`, 'DELETE')
     await showMessage(response)
     if (response.status === 200) {
-      // Destruir tabla y recargar registros
-      $('#tbUsuarios').DataTable().destroy()
-      setTimeout(async () => {
-        iniciarRegistros()
-        verRegistro()
-      }, 1000)
+      iniciarRegistros()
+      verRegistro()
     }
   } catch (error) {
     console.error('Error al eliminar registro:', error)
@@ -25,11 +21,8 @@ const editarRegistro = async (id, data) => {
     await showMessage(response)
     if (response.status === 200) {
       // Destruir tabla y recargar registros
-      $('#tbUsuarios').DataTable().destroy()
-      setTimeout(async () => {
-        iniciarRegistros()
-        verRegistro()
-      }, 1000)
+      iniciarRegistros()
+      verRegistro()
       return true
     }
   } catch (error) {
@@ -46,23 +39,6 @@ const cambiarContrasena = async (id, data) => {
     console.error('Error al editar registro:', error)
   }
 }
-// const agregarRegistro = async (data) => {
-//   try {
-//     const response = await fetchApi('/api/usuario/', 'POST', data)
-//     await showMessage(response)
-//     if (response.status === 200) {
-//       // Destruir tabla y recargar registros
-//       $('#tbUsuarios').DataTable().destroy()
-//       setTimeout(async () => {
-//         iniciarRegistros()
-//         verRegistro()
-//       }, 1000)
-//       return true
-//     }
-//   } catch (error) {
-//     console.error('Error al agregar registro:', error)
-//   }
-// }
 
 // Funciones para inicializar tabla
 const iniciarRegistros = async () => {
@@ -113,13 +89,15 @@ const verRegistro = async () => {
         columnDefs: [
           // Define el orden de las columnas
           { targets: 0, data: 'id' },
-          { targets: 1, data: 'email' },
-          { targets: 2, data: 'nombre' },
-          { targets: 3, data: 'rol' },
-          { targets: 4, data: 'empresa' },
-          { targets: 5, data: 'ranchos' },
+          { targets: 1, data: 'usuario' },
+          { targets: 2, data: 'email' },
+          { targets: 3, data: 'nombre' },
+          { targets: 4, data: 'rol' },
+          { targets: 5, data: 'empresa' },
+          { targets: 6, data: 'ranchos' },
+          { targets: 7, data: 'variedad' },
           {
-            targets: 6,
+            targets: 8,
             data: 'id',
             render: function (data, type, row) {
               // al boton le pasaremos data para obtenerlo con el evento del botton
@@ -145,6 +123,7 @@ const verRegistro = async () => {
 
 // Exportaciones
 export { iniciarRegistros, verRegistro }
+
 // Abrir modal para agregar usuario
 const agregar = async () => {
   $(document).on('click', '#btnCrear', async function () {
@@ -242,7 +221,8 @@ const actualizarPass = async () => {
       if (contrasena === '' || contrasenaRep === '') {
         mostrarMensaje('Favor de completar todos los campos', 'info')
       }
-      const res = await validarContraseña(contrasena, contrasenaRep)
+      const formularioUsuario = new FormularioUsuario()
+      const res = await formularioUsuario.validarContraseña(contrasena, contrasenaRep)
       if (res === true) {
         const data = {
           newPassword: contrasena

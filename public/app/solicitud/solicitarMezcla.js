@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { centrosCoste, Variedades, cambioSolicitud } from '../CentrosCoste.js'
 import { mostrarMensaje } from '../mensajes.js'
 
@@ -6,7 +7,7 @@ class SolicitudFormulario {
     this.productosData = [] // Variable para almacenar productos
     this.initElements()
     this.bindEvents()
-    this.inicializarFormularioProductos()
+    this.iniciarTipoSolicitud()
   }
 
   initElements () {
@@ -18,7 +19,8 @@ class SolicitudFormulario {
       unidadMedida: document.querySelector('select[name="unidad_medida[]"]'), // Asegúrate de que este selector sea correcto
       productosContainer: document.getElementById('productosContainer'),
       agregarProductoBtn: document.getElementById('agregarProducto'),
-      recetaForm: document.getElementById('recetaForm')
+      recetaForm: document.getElementById('recetaForm'),
+      porcetajeForm: document.getElementById('formPorcentaje')
     }
   }
 
@@ -33,63 +35,89 @@ class SolicitudFormulario {
     }
     //
     this.elementos.recetaForm.addEventListener('submit', this.manejarEnvioReceta.bind(this))
+    this.elementos.porcetajeForm.addEventListener('submit', this.manejarEnvioPorcentajes.bind(this))
     this.elementos.agregarProductoBtn.addEventListener('click', this.agregarNuevoProducto)
   }
 
-  // Método para inicializar los productos
-  async inicializarFormularioProductos () {
+  iniciarSelect2 () {
     try {
-      // Obtener los productos
-      const datos = await this.fetchProductos()
+      if (typeof jQuery === 'undefined') {
+        console.error('jQuery no está cargado')
+        return
+      }
+      if (typeof jQuery.fn.select2 === 'undefined') {
+        console.error('Select2 no está cargado')
+        return
+      }
 
-      // Obtener el select de producto del primer campo
-      const primerSelectProducto = document.querySelector('.select-producto')
-
-      // Limpiar opciones existentes
-      primerSelectProducto.innerHTML = ''
-
-      // Añadir opción por defecto
-      const optionDefault = document.createElement('option')
-      optionDefault.value = ''
-      optionDefault.textContent = 'Seleccionar Producto'
-      primerSelectProducto.appendChild(optionDefault)
-
-      // Añadir productos al select
-      const optgroupProductos = document.createElement('optgroup')
-      optgroupProductos.label = 'Productos' // Etiqueta para el grupo de productos
-      primerSelectProducto.appendChild(optgroupProductos)
-
-      // Añadir productos al select
-      datos.productos.forEach(producto => {
-        const option = document.createElement('option')
-        option.value = producto.id_producto
-        option.textContent = producto.nombre
-        option.dataset.unidadBase = producto.unidad_medida
-        primerSelectProducto.appendChild(option)
+      // Inicializar Select2 con configuración
+      $('.select-producto').select2({
+        placeholder: 'Seleccionar Producto',
+        allowClear: true
+      }).on('select2:select', (e) => {
+        // Obtener el elemento select nativo
+        const selectNativo = e.target
+        // Disparar el evento change nativo
+        const event = new Event('change', { bubbles: true })
+        selectNativo.dispatchEvent(event)
       })
-      // Añadir productos al select
-      const optgroupReceta = document.createElement('optgroup')
-      optgroupReceta.label = 'Productos Preparados' // Etiqueta para el grupo de productos
-      primerSelectProducto.appendChild(optgroupReceta)
-
-      // Añadir productos al select
-      datos.recetas.forEach(producto => {
-        const option = document.createElement('option')
-        option.value = producto.id_receta
-        option.textContent = producto.nombre
-        option.dataset.unidadBase = producto.unidad_medida
-        primerSelectProducto.appendChild(option)
-      })
-
-      // Añadir evento de cambio
-      primerSelectProducto.addEventListener('change', this.handleCambioProducto)
-
-      // Configurar el select de unidad de medida
-      const primerSelectUnidad = document.querySelector('.select-unidad-medida')
-      primerSelectUnidad.disabled = true
-      primerSelectUnidad.innerHTML = '<option value="">Seleccionar Unidad</option>'
     } catch (error) {
+      console.error('Error al inicializar Select2:', error)
+    }
+  }
 
+  // Agregar el método destruirSelect2
+  destruirSelect2 (elemento) {
+    try {
+      $(elemento).select2('destroy')
+    } catch (error) {
+      console.error('Error al destruir Select2:', error)
+    }
+  }
+
+  // iniciar tipo de solicitud fertilizante o mezcla
+  async iniciarTipoSolicitud () {
+    const inputOptions = new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          Mezcla: 'Mezcla',
+          Fertilizantes: 'Fertilizantes'
+        })
+      }, 500)
+    })
+    const { value: tipo } = await Swal.fire({
+      title: 'Seleciona el tipo de solicitud',
+      input: 'radio',
+      inputOptions,
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debe seleccionar una opcionar el tipo de solicitud'
+        }
+      },
+      allowOutsideClick: false, // No permitir cerrar al hacer clic fuera
+      allowEscapeKey: false, // No permitir cerrar con la tecla Escape
+      showCancelButton: false // No mostrar botón de cancelar
+    })
+    if (tipo) {
+      Swal.fire({ html: `Seleccionastes: ${tipo}` })
+      if (tipo === 'Mezcla') {
+        folio.disabled = false
+        folio.required = true
+        cantidad.disabled = false
+        cantidad.required = true
+        presentacion.disabled = false
+        presentacion.required = true
+      } else if (tipo === 'Fertilizantes') {
+        folio.disabled = true
+        folio.required = false
+        folio.value = ''
+        cantidad.disabled = true
+        cantidad.required = false
+        cantidad.value = ''
+        presentacion.disabled = true
+        presentacion.required = false
+        presentacion.value = ''
+      }
     }
   }
 
@@ -130,7 +158,7 @@ class SolicitudFormulario {
   }
 
   validarProductos () {
-    const productos = document.querySelectorAll('select[name="producto[]"]')
+    const productos = document.querySelectorAll('.select-producto')
     const unidadesMedida = document.querySelectorAll('select[name="unidad_medida[]"]')
     const cantidades = document.querySelectorAll('input[name="cantidad[]"]')
 
@@ -139,13 +167,17 @@ class SolicitudFormulario {
     const errores = []
 
     productos.forEach((productoSelect, index) => {
-      const producto = productoSelect.value
+      // Obtener el valor del select
+      const selectedOption = productoSelect.options[productoSelect.selectedIndex]
+      const producto = selectedOption ? selectedOption.value : ''
       const unidad = unidadesMedida[index].value
       const cantidad = cantidades[index].value
 
       if (!producto) {
         errores.push('Debe seleccionar un producto')
         productoSelect.classList.add('input-error')
+        // Agregar clase de error al contenedor de Select2
+        $(productoSelect).next('.select2-container').addClass('input-error')
       }
 
       if (!unidad) {
@@ -162,11 +194,18 @@ class SolicitudFormulario {
         if (productosUnicos.has(producto)) {
           errores.push('No se pueden agregar productos duplicados')
           productoSelect.classList.add('input-error')
+          $(productoSelect).next('.select2-container').addClass('input-error')
         } else {
           productosUnicos.add(producto)
         }
       }
     })
+
+    // Limpiar errores previos
+    document.querySelectorAll('.input-error').forEach(element => {
+      element.classList.remove('input-error')
+    })
+    $('.select2-container.input-error').removeClass('input-error')
 
     if (errores.length > 0) {
       const erroresUnicos = [...new Set(errores)]
@@ -198,14 +237,54 @@ class SolicitudFormulario {
     }
   }
 
-  // Métodos de manejo de eventos
+  validadPorcentajes () {
+    const porcentajes = document.querySelectorAll('input[name="porcentaje[]"]')
+    const errores = []
+    let sumaTotal = 0
+
+    // Validar cada campo de porcentaje
+    porcentajes.forEach((input, index) => {
+      const valor = parseFloat(input.value)
+
+      // Validar que el campo no esté vacío
+      if (!input.value.trim()) {
+        errores.push(`El porcentaje ${index + 1} es requerido`)
+        return
+      }
+
+      // Validar que sea un número válido
+      if (isNaN(valor)) {
+        errores.push(`El porcentaje ${index + 1} debe ser un número`)
+        return
+      }
+
+      // Validar rango del porcentaje (0-100)
+      if (valor < 0 || valor > 100) {
+        errores.push(`El porcentaje ${index + 1} debe estar entre 0 y 100`)
+        return
+      }
+
+      // Sumar al total
+      sumaTotal += valor
+    })
+
+    // Validar que la suma sea 100%
+    if (Math.abs(sumaTotal - 100) > 0.01) {
+      errores.push(`La suma de los porcentajes debe ser 100%. Suma actual: ${sumaTotal}%`)
+    }
+
+    // Mostrar errores si existen
+    if (errores.length > 0) {
+      const erroresUnicos = [...new Set(errores)]
+      this.mostrarError(erroresUnicos.join('\n'))
+      return false
+    }
+    return true
+  }
+
+  // Métodos para enviar formulario
   manejarEnvioReceta = async (e) => {
     e.preventDefault()
-
-    // Limpiar errores previos
-    document.querySelectorAll('.input-error').forEach(el => {
-      el.classList.remove('input-error')
-    })
 
     // Validación general del formulario
     if (!this.validarFormulario()) {
@@ -231,34 +310,57 @@ class SolicitudFormulario {
     }
   }
 
+  manejarEnvioPorcentajes = async (e) => {
+    e.preventDefault()
+
+    try {
+      // Validación de porcentajes
+      if (!this.validadPorcentajes()) {
+        return
+      }
+
+      // Recopilación de datos
+      const datosPorcentaje = this.recopilarDatosPorcentaje()
+
+      // Envío de datos al servidor
+      const respuesta = await this.enviarPorcentaje(datosPorcentaje)
+
+      // Procesar respuesta exitosa
+      this.procesarRespuestaPorcentajes(respuesta)
+    } catch (error) {
+      console.error('Error en manejarEnvioPorcentajes:', error)
+      this.mostrarError(error.message || 'Error al guardar los porcentajes')
+    }
+  }
+
   // Métodos de procesamiento de datos
   recopilarDatosReceta () {
     // OBTENEMOS DATOS DEL CENTRO DE COTE PARA SABER LA EMPRESA A LA QUE PERTENECE
     const centroCosteSelect = document.getElementById('centroCoste')
     const selectedIndex = centroCosteSelect.selectedIndex
     const selectedOption = centroCosteSelect.options[selectedIndex]
-    const selectedText = selectedOption.text
+    const selectedText = selectedOption.text.trim()
     let empresaPertece = ''
 
-    if (selectedText.substring(0, 4) === 'MFIM') {
+    if (selectedText.substring(0, 3) === 'MFI') {
       empresaPertece = 'Moras Finas'
-    } else if (selectedText.substring(0, 4) === 'BCEM') {
+    } else if (selectedText.substring(0, 3) === 'BCE') {
       empresaPertece = 'Bayas del Centro'
-    } else if (selectedText.substring(0, 4) === 'BIOJ') {
+    } else if (selectedText.substring(0, 3) === 'BIO') {
       empresaPertece = 'Bioagricultura'
-    } else if (selectedText.substring(0, 4) === 'EPAJ') {
+    } else if (selectedText.substring(0, 3) === 'EPA') {
       empresaPertece = 'Lugar Agricola'
     }
     const receta = {
-      rancho: document.getElementById('rancho').value,
-      centroCoste: document.getElementById('centroCoste').value,
-      variedad: document.getElementById('variedad').value,
-      folio: document.getElementById('folio').value,
-      temporada: document.getElementById('temporada').value,
-      cantidad: document.getElementById('cantidad').value,
-      presentacion: document.getElementById('presentacion').value,
-      metodoAplicacion: document.getElementById('metodoAplicacion').value,
-      descripcion: document.getElementById('descripcion').value,
+      rancho: document.getElementById('rancho').value.trim(),
+      centroCoste: document.getElementById('centroCoste').value.trim(),
+      variedad: document.getElementById('variedad').value.trim(),
+      folio: document.getElementById('folio').value.trim(),
+      temporada: document.getElementById('temporada').value.trim(),
+      cantidad: document.getElementById('cantidad').value.trim(),
+      presentacion: document.getElementById('presentacion').value.trim(),
+      metodoAplicacion: document.getElementById('metodoAplicacion').value.trim(),
+      descripcion: document.getElementById('descripcion').value.trim(),
       productos: this.recopilarProductos(),
       empresaPertece
     }
@@ -268,20 +370,60 @@ class SolicitudFormulario {
 
   recopilarProductos () {
     const productos = []
-    const productosSeleccionados = document.querySelectorAll('select[name="producto[]"]')
-    const unidadesMedida = document.querySelectorAll('select[name="unidad_medida[]"]')
-    const cantidades = document.querySelectorAll('input[name="cantidad[]"]')
+    const productosItems = document.querySelectorAll('.producto-item')
 
-    productosSeleccionados.forEach((producto, index) => {
-      console.log(producto.value)
-      productos.push({
-        id_producto: producto.value,
-        unidad_medida: unidadesMedida[index].value,
-        cantidad: parseFloat(cantidades[index].value)
-      })
+    productosItems.forEach(item => {
+      // Obtener elementos del item
+      const select = item.querySelector('.select-producto')
+      const selectUnidadMedida = item.querySelector('select[name="unidad_medida[]"]')
+      const inputCantidad = item.querySelector('input[name="cantidad[]"]')
+
+      if (select && selectUnidadMedida && inputCantidad) {
+        // Obtener la opción seleccionada del select
+        const selectedOption = select.options[select.selectedIndex]
+
+        if (selectedOption && (selectedOption.dataset.idProducto || selectedOption.dataset.idReceta)) {
+          productos.push({
+            id_producto: selectedOption.dataset.idProducto || selectedOption.dataset.idReceta,
+            unidad_medida: selectUnidadMedida.value,
+            cantidad: parseFloat(inputCantidad.value)
+          })
+        }
+      }
     })
-
+    console.log('Productos recopilados:', productos) // Debug
     return productos
+  }
+
+  recopilarDatosPorcentaje () {
+    try {
+      const centroCoste = document.getElementById('centroCoste').value
+      const porcentajes = []
+      const porcentajeItems = document.querySelectorAll('input[name="porcentaje[]"]')
+
+      // Asegurarse de que todos los valores sean números
+      porcentajeItems.forEach(item => {
+        const valor = parseFloat(item.value) || 0
+        porcentajes.push(valor)
+      })
+
+      // Validar que haya datos
+      if (porcentajes.length === 0) {
+        throw new Error('No hay porcentajes para enviar')
+      }
+
+      // Crear el objeto de datos
+      const data = {
+        porcentajes: porcentajes.join(','), // Convertir array a string
+        centroCoste: parseInt(centroCoste)
+      }
+
+      console.log('Datos a enviar:', data) // Debug
+      return data
+    } catch (error) {
+      console.error('Error en recopilarDatosPorcentaje:', error)
+      throw error
+    }
   }
 
   // Métodos de envío
@@ -302,6 +444,39 @@ class SolicitudFormulario {
     return await respuesta.json()
   }
 
+  enviarPorcentaje = async (datosPorcentaje) => {
+    try {
+      // Validar datos antes de enviar
+      if (!datosPorcentaje.centroCoste) {
+        throw new Error('Centro de coste no válido')
+      }
+
+      if (!datosPorcentaje.porcentajes) {
+        throw new Error('No hay porcentajes para enviar')
+      }
+
+      const respuesta = await fetch('/api/porcentajeVariedad/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(datosPorcentaje)
+      })
+
+      if (!respuesta.ok) {
+        const errorDetallado = await respuesta.json()
+        throw new Error(errorDetallado.message || 'Error al guardar los porcentajes')
+      }
+
+      const resultado = await respuesta.json()
+      console.log('Respuesta del servidor:', resultado) // Debug
+      return resultado
+    } catch (error) {
+      console.error('Error en enviarPorcentaje:', error)
+      throw error
+    }
+  }
+
   // Métodos de respuesta
   procesarRespuestaReceta (respuesta) {
     // Resetear formulario
@@ -311,7 +486,19 @@ class SolicitudFormulario {
     this.reiniciarCamposProductos()
 
     // Mostrar mensaje de éxito
-    this.mostrarExito(respuesta.message || 'Receta guardada exitosamente')
+    this.mostrarExito(respuesta.message || 'Receta guardada exitosamente', '/protected/admin')
+  }
+
+  // Agregar método para procesar respuesta de porcentajes
+  procesarRespuestaPorcentajes (respuesta) {
+  // Cerrar el modal si existe
+    const modal = document.querySelector('#ModalEditar')
+    if (modal) {
+      $(modal).modal('hide')
+    }
+
+    // Mostrar mensaje de éxito
+    this.mostrarExito(respuesta.message || 'Porcentajes actualizados correctamente')
   }
 
   // Métodos de UI
@@ -321,6 +508,10 @@ class SolicitudFormulario {
 
     // Mantener solo el primer campo, eliminar el resto
     for (let i = 1; i < productosActuales.length; i++) {
+      const selectToDestroy = productosActuales[i].querySelector('.select-producto')
+      if (selectToDestroy) {
+        this.destruirSelect2(selectToDestroy)
+      }
       productosActuales[i].remove()
     }
 
@@ -332,12 +523,11 @@ class SolicitudFormulario {
     primerProducto.querySelector('input[name="cantidad[]"]').value = ''
   }
 
-  mostrarExito (mensaje) {
-    console.log(mensaje)
+  mostrarExito (mensaje, redirectUrl) {
     mostrarMensaje({
       msg: mensaje,
       type: 'success',
-      redirectUrl: '/protected/admin'
+      redirectUrl
     })
   }
 
@@ -371,7 +561,10 @@ class SolicitudFormulario {
 
   manejarCambioVariedad = (evento) => {
     const selecion = evento.target.value
-    this.ejecutarSeguros(() => cambioSolicitud(selecion))
+    // obtener el valor de la variedad y porcentaje de dataset
+    const variedad = evento.target.dataset.variedad
+    const porcentaje = evento.target.dataset.porcentajes
+    this.ejecutarSeguros(() => cambioSolicitud({ selecion, variedad, porcentaje }))
   }
 
   manejarCambioUnidadMedida = (evento) => {
@@ -398,6 +591,7 @@ class SolicitudFormulario {
       // Agregar al contenedor
       this.elementos.productosContainer.appendChild(nuevoCampo)
 
+      this.iniciarSelect2()
       // Configurar evento de cambio para el nuevo select de producto
       const nuevoSelectProducto = nuevoCampo.querySelector('.select-producto')
       nuevoSelectProducto.addEventListener('change', this.handleCambioProducto)
@@ -410,102 +604,107 @@ class SolicitudFormulario {
     const nuevoItem = document.createElement('div')
     nuevoItem.classList.add('producto-item')
 
-    // Crear select de producto
-    const selectProducto = document.createElement('select')
-    selectProducto.name = 'producto[]'
-    selectProducto.classList.add('formulario__input', 'select-producto')
-    selectProducto.required = true
+    // Crear contenedor para el select
+    const contenedorSelect = document.createElement('div')
+    contenedorSelect.classList.add('select-container')
+
+    // Crear select para productos
+    const select = document.createElement('select')
+    select.name = 'producto[]'
+    select.classList.add('select-producto', 'formulario__input')
+    select.required = true
+
+    // Opción por defecto
+    const defaultOption = document.createElement('option')
+    defaultOption.value = ''
+    defaultOption.textContent = 'Seleccionar producto'
+    select.appendChild(defaultOption)
+
+    // Agregar productos al select
+    if (datos.productos && datos.productos.length > 0) {
+      const groupProductos = document.createElement('optgroup')
+      groupProductos.label = 'Productos'
+
+      datos.productos.forEach(producto => {
+        const option = document.createElement('option')
+        option.value = producto.nombre
+        option.textContent = producto.nombre
+        option.dataset.unidadBase = producto.unidad_medida
+        option.dataset.idProducto = producto.id_producto
+        groupProductos.appendChild(option)
+      })
+
+      select.appendChild(groupProductos)
+    }
+
+    // Agregar recetas al select si existen
+    if (datos.recetas && datos.recetas.length > 0) {
+      const groupRecetas = document.createElement('optgroup')
+      groupRecetas.label = 'Recetas'
+
+      datos.recetas.forEach(receta => {
+        const option = document.createElement('option')
+        option.value = receta.nombre
+        option.textContent = receta.nombre
+        option.dataset.unidadBase = receta.unidad_medida
+        option.dataset.idReceta = receta.id_receta
+        groupRecetas.appendChild(option)
+      })
+
+      select.appendChild(groupRecetas)
+    }
 
     // Crear select de unidad de medida
     const selectUnidadMedida = document.createElement('select')
     selectUnidadMedida.name = 'unidad_medida[]'
     selectUnidadMedida.classList.add('formulario__input', 'select-unidad-medida')
     selectUnidadMedida.required = true
-    selectUnidadMedida.disabled = true // Inicialmente deshabilitado
+    selectUnidadMedida.disabled = true
+    selectUnidadMedida.innerHTML = '<option value="">Unidad de Medida</option>'
 
-    // Opción por defecto para producto
-    const optionDefaultProducto = document.createElement('option')
-    optionDefaultProducto.value = ''
-    optionDefaultProducto.textContent = 'Seleccionar Producto'
-    selectProducto.appendChild(optionDefaultProducto)
+    // Crear campo de cantidad
+    const inputCantidad = document.createElement('input')
+    inputCantidad.classList.add('formulario__input')
+    inputCantidad.type = 'number'
+    inputCantidad.name = 'cantidad[]'
+    inputCantidad.placeholder = 'Cantidad'
+    inputCantidad.min = '0'
+    inputCantidad.step = '0.01'
+    inputCantidad.required = true
 
-    const optgroupProductos = document.createElement('optgroup')
-    optgroupProductos.label = 'Productos' // Etiqueta para el grupo de productos
-    selectProducto.appendChild(optgroupProductos)
+    // Crear botón de eliminar
+    const botonEliminar = document.createElement('button')
+    botonEliminar.type = 'button'
+    botonEliminar.classList.add('eliminar-producto', 'formulario__submit')
+    botonEliminar.innerHTML = '<i class="fas fa-trash"></i> Eliminar'
 
-    // Añadir productos al select
-    datos.productos.forEach(producto => {
-      const option = document.createElement('option')
-      option.value = producto.id_producto
-      option.textContent = producto.nombre
-      option.dataset.unidadBase = producto.unidad_medida
-      selectProducto.appendChild(option)
+    // Agregar elementos al contenedor
+    contenedorSelect.appendChild(select)
+    nuevoItem.appendChild(contenedorSelect)
+    nuevoItem.appendChild(selectUnidadMedida)
+    nuevoItem.appendChild(inputCantidad)
+    nuevoItem.appendChild(botonEliminar)
+
+    // Después de agregar el nuevo campo al DOM
+    $(select).select2({
+      placeholder: 'Seleccionar Producto',
+      allowClear: true
+    }).on('select2:select', (e) => {
+      const event = new Event('change', { bubbles: true })
+      e.target.dispatchEvent(event)
     })
-    //
-    const optgroupRecetas = document.createElement('optgroup')
-    optgroupRecetas.label = 'Productos Preparados' // Etiqueta para el grupo de productos
-    selectProducto.appendChild(optgroupRecetas)
+    // Manejar evento de cambio del select
+    select.addEventListener('change', this.handleCambioProducto.bind(this))
 
-    // Añadir productos al select
-    datos.recetas.forEach(producto => {
-      const option = document.createElement('option')
-      option.value = producto.id_receta
-      option.textContent = producto.nombre
-      option.dataset.unidadBase = producto.unidad_medida
-      selectProducto.appendChild(option)
-    })
-
-    // Crear estructura HTML del nuevo campo
-    nuevoItem.innerHTML = `
-          ${selectProducto.outerHTML}
-          ${selectUnidadMedida.outerHTML}
-          <input
-            class="formulario__input" 
-            type="number" 
-            name="cantidad[]" 
-            placeholder="Cantidad" 
-            min="0" 
-            step="0.01" 
-            required
-          >
-        <div class="acciones-producto">
-          <button type="button" class="eliminar-producto formulario__submit btn-eliminar">
-            <i class="fas fa-trash"></i> Eliminar
-          </button>
-        </div>
-    `
-    // Obtener referencias a los elementos creados
-    // Añadir evento de cambio para el select de producto
-    selectProducto.addEventListener('change', (evento) => {
-      const selectedOption = evento.target.options[evento.target.selectedIndex]
-      const unidadBase = selectedOption.dataset.unidadBase
-
-      // Habilitar el select de unidad de medida y establecer las opciones
-      selectUnidadMedida.disabled = false
-      selectUnidadMedida.innerHTML = '' // Limpiar opciones anteriores
-
-      // Agregar opciones de unidad de medida basadas en la unidad base del producto
-      if (unidadBase) {
-        const option = document.createElement('option')
-        option.value = unidadBase
-        option.textContent = unidadBase.charAt(0).toUpperCase() + unidadBase.slice(1)
-        selectUnidadMedida.appendChild(option)
-      }
-
-      // Llamar a la validación de cantidad
-      this.validacionCantidad(selectUnidadMedida)
-    })
-
-    // Añadir evento de cambio para el select de unidad de medida
-    selectUnidadMedida.addEventListener('change', (evento) => {
-      this.validacionCantidad(evento.target) // Llamar a la validación de cantidad
-    })
-
-    // Añadir evento de cambio para el select de producto
-    const botonEliminar = nuevoItem.querySelector('.eliminar-producto')
+    // Configurar evento de eliminación
     botonEliminar.addEventListener('click', () => {
       const productosActuales = document.querySelectorAll('.producto-item')
       if (productosActuales.length > 1) {
+        // Destruir Select2 antes de eliminar el elemento
+        const selectToDestroy = nuevoItem.querySelector('.select-producto')
+        if (selectToDestroy) {
+          this.destruirSelect2(selectToDestroy)
+        }
         nuevoItem.remove()
       } else {
         this.mostrarError('Debe haber al menos un producto')
@@ -516,11 +715,21 @@ class SolicitudFormulario {
   }
 
   handleCambioProducto = (event) => {
+    console.log('Evento change disparado')
+
     // Encontrar el contenedor del producto
     const contenedorProducto = event.target.closest('.producto-item')
+    if (!contenedorProducto) {
+      console.error('No se encontró el contenedor del producto')
+      return
+    }
 
     // Encontrar el select de unidad de medida
     const selectUnidadMedida = contenedorProducto.querySelector('.select-unidad-medida')
+    if (!selectUnidadMedida) {
+      console.error('No se encontró el select de unidad de medida')
+      return
+    }
 
     // Limpiar select de unidad de medida
     selectUnidadMedida.innerHTML = ''
@@ -528,11 +737,13 @@ class SolicitudFormulario {
 
     // Obtener el producto seleccionado
     const productoSeleccionado = event.target.options[event.target.selectedIndex]
+    console.log('Producto seleccionado:', productoSeleccionado)
 
     // Si se ha seleccionado un producto
     if (productoSeleccionado.value) {
       // Obtener la unidad base del producto
       const unidadBase = productoSeleccionado.dataset.unidadBase
+      console.log('Unidad base:', unidadBase)
 
       // Generar unidades
       const unidades = this.generarUnidades(unidadBase)
@@ -557,6 +768,8 @@ class SolicitudFormulario {
   }
 
   generarUnidades (unidadBase) {
+    if (!unidadBase) return []
+    // Mapa de unidades equivalentes para litro y kilogramo
     const unidadesMap = {
       litro: ['Litro', 'Mililitro'],
       kilogramo: ['Kilogramo', 'Gramo']

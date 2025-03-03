@@ -54,4 +54,18 @@ export class CentroController {
       res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
     }
   }
+
+  // actualizar porcentajes de las variedades
+  porcentajeVariedad = async (req, res) => {
+    try {
+      const result = await this.centroModel.porcentajeVariedad({ id: req.body.centroCoste, data: req.body.porcentajes })
+      if (result.error) {
+        res.status(404).json({ error: `${result.error}` })
+      }
+      return res.json({ message: result.message })
+    } catch (error) {
+      console.error({ error: `${error}` })
+      return res.status(500).render('500', { error: 'Error interno del servidor' })
+    }
+  }
 }

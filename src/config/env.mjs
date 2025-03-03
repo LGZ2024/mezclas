@@ -10,5 +10,6 @@ export const envs = {
   DB_NAME: process.env.DB_NAME || 'viajes',
   SECRET_JWT_KEY: process.env.SECRET_JWT_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpeXF5bmhhcXF5am1peHdtYWtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTgzMzc5MjEsImV4cCI6MjAzMzkxMzkyMX0.9g4wlyxPa9KFzfsjhl0ty_GCNpvrP_4nxvi2ctEdP1M',
   EMAIL_USER: process.env.EMAIL_USER,
-  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
+  MODE: process.env.MODE || 'development'
 }

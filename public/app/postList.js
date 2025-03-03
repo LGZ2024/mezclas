@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const setPost = (data) => {
   const centroCoste = document.getElementById('centroCoste')
   centroCoste.innerHTML = ''
@@ -18,10 +19,15 @@ const setPostVariedad = (data) => {
     variedades.append(new Option('Seleccione una variedad', 0))
 
     // Definir la cadena de datos
-    const cadena = data[0].variedad
+    const variedad = data[0].variedad
+    const porcentajes = data[0].porcentajes
 
-    // Separar los elementos de la cadena en un array
-    const elementos = cadena.split(',')
+    // agrgamos dataset a option para todas las variedades
+    variedades.dataset.variedad = variedad
+    variedades.dataset.porcentajes = porcentajes
+
+    // Separar los elementos de la variedad en un array
+    const elementos = variedad.split(',')
 
     // Recorrer el array e imprimir cada elemento
     elementos.forEach(function (elemento) {

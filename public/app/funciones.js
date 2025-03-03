@@ -46,7 +46,7 @@ export const swalWithBootstrapButtons = Swal.mixin({
 })
 
 // mensaje de sucess
-export function mostrarMensaje (msg, type, buton) {
+export async function mostrarMensaje (msg, type, buton) {
   return Swal.fire({
     position: 'center',
     icon: type,

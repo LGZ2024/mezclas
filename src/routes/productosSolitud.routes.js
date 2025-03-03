@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { ProductosController } from '../controller/productosSolicitud.controller.js'
-import { isAdmin } from '../middlewares/authMiddleware.js'
 
 export const createProductosSoliRouter = ({ productossModel }) => {
   const router = Router()
@@ -11,6 +10,6 @@ export const createProductosSoliRouter = ({ productossModel }) => {
   router.get('/mezclasId/:id', productossController.obtenerTablaMezclasId)
   router.post('/productoSoli', productossController.create)
   router.post('/actualizarEstadoProductos', productossController.actulizarEstado)
-  router.delete('/eliminarProducto/:id', isAdmin, productossController.EliminarPorducto)
+  router.delete('/eliminarProducto/:id', productossController.EliminarPorducto)
   return router
 }

@@ -9,6 +9,167 @@
     <%- include("../../templates/mezclas/cabecera") %>
 
 </head>
+<style>
+    /* Variables CSS */
+:root {
+  --color-primario: #4a90e2;
+  --color-borde: #ddd;
+  --color-fondo: #fff;
+  --color-hover: #f5f5f5;
+  --borde-radio: 4px;
+  --espaciado: 1rem;
+  --transicion: all 0.3s ease;
+  --modal-z-index: 1050;
+  --dropdown-z-index: 2051;
+  --backdrop-z-index: 1040;
+}
+
+/* Reset y estilos base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Contenedor de búsqueda */
+.busqueda-container {
+  position: relative;
+  width: 100%;
+  margin-bottom: var(--espaciado);
+}
+
+/* Estilos de input y selects */
+.producto-input,
+.select-producto {
+  width: 100%;
+  padding: var(--espaciado);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--borde-radio);
+  transition: var(--transicion);
+}
+
+.producto-input:focus {
+  outline: none;
+  border-color: var(--color-primario);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Grid Layout */
+.producto-item {
+  display: grid;
+  grid-template-columns: minmax(200px, 2fr) repeat(2, minmax(100px, 1fr)) auto;
+  gap: var(--espaciado);
+  align-items: center;
+  margin-bottom: var(--espaciado);
+}
+
+/* Select2 y Modal */
+.modal-backdrop {
+  z-index: var(--backdrop-z-index) !important;
+}
+
+.modal {
+  z-index: var(--modal-z-index) !important;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.select2-container {
+  width: 100% !important;
+}
+
+.select2-container--open {
+  z-index: var(--dropdown-z-index) !important;
+}
+
+/* Ajustes Select2 en modal */
+.modal .select2-container {
+  width: 100% !important;
+}
+
+.modal .select2-container .select2-selection--single {
+  height: 38px;
+}
+
+.modal .select2-container--default .select2-selection--single {
+  .select2-selection__rendered {
+    line-height: 38px;
+  }
+  
+  .select2-selection__arrow {
+    height: 36px;
+  }
+}
+
+/* SweetAlert2 personalización */
+.swal2-popup {
+  &.swal-wide {
+    width: 850px !important;
+  }
+
+  &.swal-large {
+    font-size: 1.2em;
+  }
+
+  table {
+    width: 100%;
+    margin-bottom: 1rem;
+    background-color: transparent;
+    
+    th, td {
+      padding: 0.75rem;
+      vertical-align: middle;
+      border-top: 1px solid var(--color-borde);
+    }
+    
+    thead th {
+      background-color: var(--color-hover);
+      border-bottom: 2px solid var(--color-borde);
+    }
+    
+    tbody {
+      tr:nth-of-type(odd) {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+      
+      tr:hover {
+        background-color: rgba(0, 0, 0, 0.075);
+      }
+    }
+  }
+}
+
+/* Manejo de modales */
+body.modal-open {
+  overflow: hidden;
+  padding-right: 0 !important;
+}
+
+/* Ajustes para el modal y tabla */
+.modal-dialog.modal-lg {
+    max-width: 90%;
+    margin: 1.75rem auto;
+}
+
+@media (min-width: 992px) {
+    .modal-dialog.modal-lg {
+        max-width: 800px;
+    }
+}
+
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .producto-item {
+    grid-template-columns: 1fr;
+    gap: calc(var(--espaciado) * 0.5);
+    
+    select, input {
+      margin-bottom: var(--espaciado);
+    }
+  }
+}
+
+</style>
 
 
 <body>
@@ -88,7 +249,7 @@
                                     </div>
                                     <hr>
                                     <input type="text" id="idSolicitud" disabled hidden>
-                                    <% if (rol==="mezclador" ) { %>
+                                    <% if (rol==="mezclador" || rol==="administrativo" ) { %>
                                         <div class="formulario__campo"
                                             style="display: flex; flex-direction: column; align-items: center;">
                                             <label class="formulario__label" for="folioi">Descargar Solicitud</label>
@@ -183,52 +344,16 @@
 
     </section>
 
-    <!-- Button trigger modal -->
-
     <!-- Modal mostar receta -->
     <%- include("../../templates/mezclas/mostrarReceta") %>
 
-        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Agregar Producto</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form class="form" id="productoForm">
-                            <div class="card">
-                                <div class="producto-item">
-                                    <select id="producto" name="producto[]" class="formulario__input select-producto"
-                                        required>
-                                        <option value="">Seleccionar Producto</option>
-                                    </select>
+        <!-- Modal nuevo producto -->
+        <%- include("../../templates/mezclas/modalNuevoProducto") %>
 
-                                    <select id="unidad_medida" name="unidad_medida[]"
-                                        class="formulario__input select-unidad-medida" required disabled>
-                                        <option value="">Unidad de Medida</option>
-                                    </select>
-
-                                    <input id="cantidad" class="formulario__input" type="number" name="cantidad[]"
-                                        placeholder="Cantidad" min="0" step="0.01" required>
-                                </div>
-                                <div class="formulario__campo">
-                                    <button class="formulario__submit" type="submit">Guardar Producto</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" id="cerrarNuevoProducto">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Firebase Configuración y funciones -->
-        <%- include("../../templates/mezclas/scripts") %>
-            <script type="module" src="../../app/pendientes/funcionesAlmacen.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <!-- Firebase Configuración y funciones -->
+            <%- include("../../templates/mezclas/scripts") %>
+                <script type="module" src="../../app/pendientes/funcionesAlmacen.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
 

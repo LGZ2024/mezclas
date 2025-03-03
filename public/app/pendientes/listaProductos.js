@@ -1,15 +1,5 @@
+/* eslint-disable no-undef */
 import { mostrarMensaje } from '../mensajes.js'
-// Función para generar unidades
-function generarUnidades (unidadBase) {
-  const unidadesMap = {
-    litro: ['Litro', 'Mililitro'],
-    kilogramo: ['Kilogramo', 'Gramo']
-    // Añadir más unidades según sea necesario
-  }
-
-  const unidadNormalizada = unidadBase.toLowerCase().trim()
-  return unidadesMap[unidadNormalizada] || [unidadBase]
-}
 
 // Función para obtener productos
 async function fetchProductos () {
@@ -28,35 +18,47 @@ async function fetchProductos () {
 }
 
 // Función para manejar el cambio de producto
-function handleCambioProducto (event) {
+const handleCambioProducto = async (event) => {
+  console.log('Evento change disparado')
+
   // Encontrar el contenedor del producto
-  const contenedorProducto = event.target.closest('.producto-item')
+  const contenedorProducto = event.target.closest('.producto-itemm')
+  if (!contenedorProducto) {
+    console.error('No se encontró el contenedor del producto')
+    return
+  }
 
-  // Buscar los selects dentro de este contenedor
+  // Encontrar el select de unidad de medida
   const selectUnidadMedida = contenedorProducto.querySelector('.select-unidad-medida')
+  if (!selectUnidadMedida) {
+    console.error('No se encontró el select de unidad de medida')
+    return
+  }
 
-  // Limpiar select de unidades
+  // Limpiar select de unidad de medida
   selectUnidadMedida.innerHTML = ''
   selectUnidadMedida.disabled = false
 
   // Obtener el producto seleccionado
   const productoSeleccionado = event.target.options[event.target.selectedIndex]
+  console.log('Producto seleccionado:', productoSeleccionado)
 
-  // Verificar si se ha seleccionado un producto válido
+  // Si se ha seleccionado un producto
   if (productoSeleccionado.value) {
     // Obtener la unidad base del producto
     const unidadBase = productoSeleccionado.dataset.unidadBase
+    console.log('Unidad base:', unidadBase)
 
     // Generar unidades
     const unidades = generarUnidades(unidadBase)
 
-    // Agregar opción por defecto
+    // Añadir opción por defecto
     const optionDefault = document.createElement('option')
     optionDefault.value = ''
     optionDefault.textContent = 'Seleccionar Unidad'
     selectUnidadMedida.appendChild(optionDefault)
 
-    // Agregar unidades al select
+    // Añadir unidades
     unidades.forEach(unidad => {
       const option = document.createElement('option')
       option.value = unidad.toLowerCase()
@@ -64,9 +66,19 @@ function handleCambioProducto (event) {
       selectUnidadMedida.appendChild(option)
     })
   } else {
-    // Deshabilitar select de unidades si no hay producto seleccionado
+    // Si no hay producto seleccionado, deshabilitar select de unidad
     selectUnidadMedida.disabled = true
   }
+}
+const generarUnidades = (unidadBase) => {
+  if (!unidadBase) return []
+  // Mapa de unidades equivalentes para litro y kilogramo
+  const unidadesMap = {
+    litro: ['Litro', 'Mililitro'],
+    kilogramo: ['Kilogramo', 'Gramo']
+  }
+  const unidadNormalizada = unidadBase.toLowerCase().trim()
+  return unidadesMap[unidadNormalizada] || [unidadBase]
 }
 
 // Función para inicializar el formulario con productos
@@ -105,6 +117,8 @@ async function inicializarFormulario () {
         option.dataset.unidadBase = producto.unidad_medida
         selectProducto.appendChild(option)
       })
+      // Después de agregar el nuevo campo al DOM
+      iniciarSelect2()
       // Añadir evento de cambio
       selectProducto.removeEventListener('change', handleCambioProducto)
       selectProducto.addEventListener('change', handleCambioProducto)
@@ -115,4 +129,63 @@ async function inicializarFormulario () {
   }
 }
 
-export { inicializarFormulario }
+const iniciarSelect2 = async () => {
+  try {
+    if (typeof jQuery === 'undefined') {
+      console.error('jQuery no está cargado')
+      return
+    }
+    if (typeof jQuery.fn.select2 === 'undefined') {
+      console.error('Select2 no está cargado')
+      return
+    }
+
+    // Inicializar Select2 con configuración actualizada
+    $('.select-producto').select2({
+      placeholder: 'Seleccionar Producto',
+      allowClear: true,
+      dropdownParent: $('#exampleModal'), // Agregar esta línea
+      width: '100%' // Opcional: para mejor responsividad
+    }).on('select2:select', (e) => {
+      const selectNativo = e.target
+      const event = new Event('change', { bubbles: true })
+      selectNativo.dispatchEvent(event)
+    })
+  } catch (error) {
+    console.error('Error al inicializar Select2:', error)
+  }
+}
+// Agregar el método destruirSelect2
+const destruirSelect2 = (elemento) => {
+  try {
+    $(elemento).select2('destroy')
+  } catch (error) {
+    console.error('Error al destruir Select2:', error)
+  }
+}
+
+export const handleModals = async (modalToHide, modalToShow, callback) => {
+  try {
+    // Cerrar primer modal
+    const firstModal = bootstrap.Modal.getInstance(document.getElementById(modalToHide))
+    if (firstModal) {
+      firstModal.hide()
+    }
+
+    // Esperar a que se cierre
+    await new Promise(resolve => setTimeout(resolve, 150))
+
+    // Abrir segundo modal
+    const secondModal = new bootstrap.Modal(document.getElementById(modalToShow))
+    secondModal.show()
+
+    // Ejecutar callback si existe
+    if (typeof callback === 'function') {
+      callback()
+    }
+  } catch (error) {
+    console.error('Error al manejar modales:', error)
+    throw error
+  }
+}
+export { inicializarFormulario, destruirSelect2 }

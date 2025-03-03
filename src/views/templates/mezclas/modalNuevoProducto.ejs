@@ -1,0 +1,41 @@
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Agregar Producto</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form class="form" id="productoForm">
+                        <div class="producto-itemm">
+                            <div class="fomulario__campo">
+                                <label class="formulario__label" for="producto">Producto</label>
+                                <select id="producto" name="producto[]"
+                                    class="form-select select-producto" required>
+                                </select>
+                            </div>
+                            <div class="fomulario__campo">
+                                <label class="formulario__label" for="unidad_medida">Unidad de Medida</label>
+                                <select id="unidad_medida" name="unidad_medida[]"
+                                    class="formulario__input select-unidad-medida" required disabled>
+                                    <option value="">Unidad de Medida</option>
+                                </select>
+                            </div>
+                            <div class="fomulario__campo">
+                                <label class="formulario__label" for="cantidad">Cantidad</label>
+                                <input id="cantidad" class="formulario__input" type="number" name="cantidad[]"
+                                    placeholder="Cantidad" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="formulario__campo">
+                            <button class="formulario__submit" type="submit">Guardar Producto</button>
+                        </div>
+                
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cerrarNuevoProducto">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>

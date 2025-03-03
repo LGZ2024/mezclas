@@ -32,6 +32,10 @@ export class ProduccionModel {
         data = await sequelize.query(
           'SELECT * FROM total_precio_cantidad_solicitud'
         )
+      } else if (rol === 'administrativo' && empresa === 'General') {
+        data = await sequelize.query(
+          'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`!="Lugar Agricola"'
+        )
       } else {
         data = await sequelize.query(
           `SELECT * FROM total_precio_cantidad_solicitud WHERE empresa="${empresa}"`

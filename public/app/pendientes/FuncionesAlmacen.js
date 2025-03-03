@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cantidad = document.getElementById('cantidad').value
     const unidadMedida = document.getElementById('unidad_medida').value
     // convertimos entero
-    const cantidadNum = parseFloat(cantidad)
+    // const cantidadNum = parseFloat(cantidad)
     // Validar que todos los campos requeridos estén llenos
     if (!producto) {
       mostrarMensaje({
@@ -65,24 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'error'
       })
       return // Salir de la función si hay un error
-    }
-    // Validar cantidad según la unidad de medida
-    if (unidadMedida === 'litro' || unidadMedida === 'kilogramo') {
-      if (!Number.isInteger(cantidadNum) && (cantidadNum * 10) % 5 !== 0) {
-        mostrarMensaje({
-          msg: 'Por favor, ingresa un número entero o medio (ej. 1 o 1.5).',
-          type: 'error'
-        })
-        return // Salir de la función si hay un error
-      }
-    } else {
-      if (!Number.isInteger(cantidadNum)) {
-        mostrarMensaje({
-          msg: 'Por favor, ingresa un número enteros',
-          type: 'error'
-        })
-        return // Salir de la función si hay un error
-      }
     }
 
     // creamos array para mandar datos
@@ -128,6 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   $(document).on('click', '#cerrarNuevoProducto', () => {
+    // Destruir todas las instancias de Select2 dentro del modal
+    $(this).find('.select-producto').each(function () {
+      if ($(this).data('select2')) {
+        $(this).select2('destroy')
+      }
+    })
+
     $('#exampleModal').modal('hide')
     $('#staticBackdrop').modal('show')
   })
@@ -166,9 +155,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (nuevoProducto) {
     nuevoProducto.addEventListener('click', async () => {
-      $('#exampleModal').modal('show')
-      $('#staticBackdrop').modal('hide')
-      inicializarFormulario()
+      try {
+        // Cerrar el primer modal de forma segura
+        const staticBackdropModal = bootstrap.Modal.getInstance(document.getElementById('staticBackdrop'))
+        if (staticBackdropModal) {
+          staticBackdropModal.hide()
+        }
+
+        // Esperar un momento antes de mostrar el segundo modal
+        setTimeout(() => {
+          // Mostrar el segundo modal
+          const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'))
+          exampleModal.show()
+
+          // Inicializar formulario después de que el modal esté visible
+          inicializarFormulario()
+        }, 150)
+      } catch (error) {
+        console.error('Error al manejar modales:', error)
+        mostrarMensaje({
+          msg: 'Error al abrir el formulario',
+          type: 'error'
+        })
+      }
     })
   } else {
     console.warn('Button with ID "nuevoProducto" not found.')

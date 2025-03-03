@@ -8,7 +8,7 @@ export class UsuarioModel {
   static async getAll () {
     try {
       const usuario = await Usuario.findAll({
-        attributes: ['id', 'nombre', 'email', 'rol', 'empresa', 'ranchos']
+        attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
       })
       return usuario
     } catch (e) {
@@ -62,6 +62,7 @@ export class UsuarioModel {
           empresa // Se filtra por empresa
         }
       })
+      console.log(usuario)
       return usuario
     } catch (e) {
       console.error(e.message) // Salida: Error la usuario

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // Función para consultar IDs de transportistas en la base de datos
 async function fetchViviendas () {
   const options = {
