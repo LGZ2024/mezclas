@@ -487,72 +487,60 @@ export const reporteSolicitudV2 = async (parametros) => {
   }
   // varialbles globales
   let variedades
-  const data = []
-  const data2 = []
+  const dataMescla = []
+  // const dataFertilizante = []
   try {
     // Extraer los datos correctamente
     const datos = Array.isArray(parametros)
       ? parametros
       : parametros.datos || []
 
-    console.log('Datos a procesar:', datos)
+    // console.log('Datos a procesar:', datos)
 
     // Crear un nuevo libro de Excel
     const workbook = new ExcelJS.Workbook()
 
-    // Cabecera de la tabla
-    const cabecera = ['Id Solicitud',
+    // Cabecera de la tabla mezclas
+    const cabeceraMezclas = [
+      'Id Solicitud',
       'Folio de Receta',
       'Solicita',
       'Fecha Solicitud',
       'Fecha Entrega',
       'Rancho',
       'Centro de Coste',
-      'Variedad Fruta',
       'Empresa',
       'Temporada',
+      'Variedad Fruta',
       'Cantidad de Mezcla',
       'Presentacion de la Mezcla',
       'Metodo de aplicacion',
       'Productos',
       'Unidad',
-      'Cantidad Solicitada']
-    const cabecera2 = ['Id Solicitud',
-      'Solicita',
-      'Fecha Solicitud',
-      'Fecha Entrega',
-      'Rancho',
-      'Centro de Coste',
-      'Variedad Fruta',
-      'Empresa',
-      'Temporada',
-      'Metodo de aplicacion',
-      'Productos',
-      'Unidad',
       'Cantidad Solicitada',
       'Porcentaje Correspondiente',
-      'Cantidad Correspondiente']
+      'Cantidad Correspondiente'
+    ]
 
     try {
       // Crear una hoja para esta solicitud
-      const hojaGeneral = workbook.addWorksheet('Datos de Mezclas')
-      hojaGeneral.addRow(cabecera).eachCell((cell) => { cell.style = headerStyle })
+      const hojaGeneral = workbook.addWorksheet('Datos Generales')
+      hojaGeneral.addRow(cabeceraMezclas).eachCell((cell) => { cell.style = headerStyle })
 
       // obtenemos datos de la variedad
       for (const dato of datos) {
-        variedades = await obtenerVariedades(dato.centroCoste)
-        console.log('Variedades obtenidas:', variedades)
-        // obtenemos datos faltantes de la solicitud
+        // // obtenemos datos faltantes de la solicitud
         const datosF = await obtenerDatosSolicitud(dato.id_solicitud)
-        console.log('Datos de la solicitud:', datosF)
+        // console.log('Datos de la solicitud:', datosF)
 
-        // Obtener productos de la base de datos
+        // // Obtener productos de la base de datos
         const productos = await obtenerProductosPorSolicitud(dato.id_solicitud)
-        console.log('Productos obtenidos:', productos)
+        // console.log('Productos obtenidos:', productos)
 
         // Crear el arreglo de datos
-
         if (dato.variedad === 'todo') {
+          variedades = await obtenerVariedades(dato.centroCoste)
+          // console.log('Variedades obtenidas:', variedades)
           if (variedades && variedades.length > 0) {
             for (const variedad of variedades) {
               const porcentajeSplit = variedad.porcentajes.split(',')
@@ -562,6 +550,7 @@ export const reporteSolicitudV2 = async (parametros) => {
                   for (const producto of productos) {
                     const fila = [
                       dato.id_solicitud,
+                      dato.folio ? dato.folio : 'No aplica',
                       dato.usuario,
                       dato.fechaSolicitud,
                       dato.fechaEntrega,
@@ -569,15 +558,17 @@ export const reporteSolicitudV2 = async (parametros) => {
                       dato.centroCoste,
                       dato.empresa,
                       dato.temporada,
-                      datosF[0].metodoAplicacion,
                       variedadSplit[i],
+                      datosF[0].cantidad ? datosF[0].cantidad : 'No aplica',
+                      datosF[0].presentacion ? datosF[0].presentacion : 'No aplica',
+                      datosF[0].metodoAplicacion,
                       producto.nombre,
                       producto.unidad_medida,
                       producto.cantidad,
                       '%' + porcentajeSplit[i],
                       (producto.cantidad * porcentajeSplit[i]) / 100
                     ]
-                    data2.push(fila)
+                    dataMescla.push(fila)
                   }
                 } else {
                   console.error('No se encontraron productos o la estructura es incorrecta')
@@ -588,52 +579,38 @@ export const reporteSolicitudV2 = async (parametros) => {
             console.error('No se encontraron productos o la estructura es incorrecta')
           }
         } else {
-          if (productos && productos.length > 0) {
-            for (const producto of productos) {
-              const fila = [
-                dato.id_solicitud,
-                dato.folio,
-                dato.usuario,
-                dato.fechaSolicitud,
-                dato.fechaEntrega,
-                dato.rancho,
-                dato.centroCoste,
-                dato.variedad,
-                dato.empresa,
-                dato.temporada,
-                datosF[0].cantidad,
-                datosF[0].presentacion,
-                datosF[0].metodoAplicacion,
-                producto.nombre,
-                producto.unidad_medida,
-                producto.cantidad
-              ]
-              data.push(fila)
-            }
-          } else {
-            console.error('No se encontraron productos o la estructura es incorrecta')
+          console.log('folio lleno esta es una solicitud de mezclas')
+          for (const producto of productos) {
+            const fila = [
+              dato.id_solicitud,
+              dato.folio ? dato.folio : 'No aplica',
+              dato.usuario,
+              dato.fechaSolicitud,
+              dato.fechaEntrega,
+              dato.rancho,
+              dato.centroCoste,
+              dato.empresa,
+              dato.temporada,
+              dato.variedad,
+              datosF[0].cantidad ? datosF[0].cantidad : 'No aplica',
+              datosF[0].presentacion ? datosF[0].presentacion : 'No aplica',
+              datosF[0].metodoAplicacion,
+              producto.nombre,
+              producto.unidad_medida,
+              producto.cantidad,
+              '% 100',
+              producto.cantidad
+            ]
+            dataMescla.push(fila)
           }
         }
       }
-      // Agregar los datos a la hoja
-      data.forEach(row => {
+      // Agregar los datos a la hoja de mezclas
+      dataMescla.forEach(row => {
         hojaGeneral.addRow(row).eachCell((cell) => { cell.style = cellStyle })
-      })
-      // creamos la sugunda hoja
-      const hojaSolicitud = workbook.addWorksheet('Datos de Fertilizantes')
-
-      hojaSolicitud.addRow(cabecera2).eachCell((cell) => { cell.style = headerStyle })
-      data2.forEach(row => {
-        hojaSolicitud.addRow(row).eachCell((cell) => { cell.style = cellStyle })
       })
       // Ajustar el ancho de las columnas
       hojaGeneral.columns.forEach(column => {
-        const maxLength = column.values.reduce((max, value) => {
-          return Math.max(max, (value ? value.toString().length : 0))
-        }, 0)
-        column.width = maxLength + 2 // Añadir un poco de espacio extra
-      })
-      hojaSolicitud.columns.forEach(column => {
         const maxLength = column.values.reduce((max, value) => {
           return Math.max(max, (value ? value.toString().length : 0))
         }, 0)

@@ -8,7 +8,27 @@
   <script src="https://cdn.jsdelivr.net/npm/luxon@2.3.1/build/global/luxon.min.js"></script>
   <%- include("../../templates/admin/cabecera") %>
 </head>
+<style>
+  .button-container {
+    display: flex;
+    /* Utiliza flexbox para alinear los botones */
+    flex-wrap: wrap;
+    /* Permite que los botones se envuelvan en múltiples líneas si es necesario */
+    justify-content: space-between;
+    /* Espacia los botones uniformemente */
+    margin: 10px;
+    /* Espaciado alrededor del contenedor */
+  }
 
+  .button-container .btn {
+    flex: 1 1 150px;
+    /* Permite que los botones crezcan y se encojan, con un ancho base de 150px */
+    margin: 5px;
+    /* Espaciado entre los botones */
+    min-width: 120px;
+    /* Ancho mínimo para los botones */
+  }
+</style>
 <body>
   <div class="container-scroller ">
     <!-- navcabecera -->
@@ -23,27 +43,7 @@
                   <%= titulo %>
                 </h2>
               </div>
-              <style>
-                .button-container {
-                  display: flex;
-                  /* Utiliza flexbox para alinear los botones */
-                  flex-wrap: wrap;
-                  /* Permite que los botones se envuelvan en múltiples líneas si es necesario */
-                  justify-content: space-between;
-                  /* Espacia los botones uniformemente */
-                  margin: 10px;
-                  /* Espaciado alrededor del contenedor */
-                }
-
-                .button-container .btn {
-                  flex: 1 1 150px;
-                  /* Permite que los botones crezcan y se encojan, con un ancho base de 150px */
-                  margin: 5px;
-                  /* Espaciado entre los botones */
-                  min-width: 120px;
-                  /* Ancho mínimo para los botones */
-                }
-              </style>
+   
               <div class="button-container">
                 <button type="button" class="btn btn-inverse-light btn-fw col" id="usuario">Usuarios</button>
                 <button type="button" class="btn btn-inverse-primary btn-fw col" id="temporada">Temporada</button>
