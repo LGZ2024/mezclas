@@ -196,7 +196,7 @@ export class MezclaModel {
       })
 
       // Devolver los resultados validar si hay resultados mandar vacio
-      return resultadosFormateados || []
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
       return {
@@ -277,7 +277,7 @@ export class MezclaModel {
       })
 
       // Devolver los resultados
-      return resultadosFormateados
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
       return {
@@ -357,7 +357,7 @@ export class MezclaModel {
       })
 
       // Devolver los resultados
-      return resultadosFormateados
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
       return {
@@ -433,7 +433,8 @@ export class MezclaModel {
       // Devolver los resultados
       return {
         message: 'Mezclas obtenidas correctamente',
-        data: resultadosFormateados
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+
       }
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
@@ -530,7 +531,7 @@ export class MezclaModel {
       // Devolver los resultados
       return {
         message: 'Mezclas obtenidas correctamente',
-        data: resultadosFormateados
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
       }
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
@@ -611,7 +612,8 @@ export class MezclaModel {
       // Devolver los resultados
       return {
         message: 'Mezclas obtenidas correctamente',
-        data: resultadosFormateados
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+
       }
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
@@ -643,7 +645,7 @@ export class MezclaModel {
         }
       }
       // Devolver los resultados
-      return mezclas
+      return Array.isArray(mezclas) ? mezclas : []
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
       return {

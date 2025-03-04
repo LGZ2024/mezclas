@@ -135,9 +135,25 @@ export class MezclasController {
           if (user.ranchos === 'General') {
             result = await this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: user.empresa })
           } else if (user.ranchos === 'Atemajac') {
-            const r1 = await this.mezclaModel.obtenerTablaMezclasRancho({ status, ranchoDestino: user.ranchos })
-            const r2 = await this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: 'Lugar Agricola' }) ? await this.mezclaModel.obtenerTablaMezclasEmpresa({ status, empresa: 'Lugar Agricola' }) : []
-            result = [...r1, ...r2]
+            const r1 = await this.mezclaModel.obtenerTablaMezclasRancho({
+              status,
+              ranchoDestino: user.ranchos
+            }) || []
+            const r2 = await this.mezclaModel.obtenerTablaMezclasEmpresa({
+              status,
+              empresa: 'Lugar Agricola'
+            }) || []
+
+            result = [
+              ...(Array.isArray(r1) ? r1 : []),
+              ...(Array.isArray(r2) ? r2 : [])
+            ]
+
+            // Validar si hay resultados
+            if (result.length === 0) {
+              console.log('No se encontraron registros para Atemajac')
+              result = [] // Asegurar que retornamos un array vacío
+            }
           } else {
             result = await this.mezclaModel.obtenerTablaMezclasRancho({ status, ranchoDestino: user.ranchos })
           }
