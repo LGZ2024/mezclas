@@ -44,6 +44,24 @@ async function obtenerVariedades (centroCoste) {
     return [] // O puedes lanzar el error si prefieres manejarlo en otro lugar
   }
 }
+async function obtenerPorcentajes (id) {
+  try {
+    // Asumiendo que este método existe en tu modelo
+    const variedades = await MezclaModel.obtenerPorcentajes({ id })
+
+    // Verificar si se obtuvieron variedades
+    if (variedades && variedades.length > 0) {
+      return variedades
+    } else {
+      // Si no hay productos, puedes devolver un array vacío o productos por defecto
+      return []
+    }
+  } catch (error) {
+    console.error('Error al consultar productos para la solicitud', error)
+    // Puedes lanzar el error o devolver un array vacío o productos por defecto
+    return [] // O puedes lanzar el error si prefieres manejarlo en otro lugar
+  }
+}
 async function obtenerDatosSolicitud (idSolicitud) {
   try {
     // Asumiendo que este método existe en tu modelo
@@ -472,6 +490,7 @@ export const reporteSolicitud = async (parametros) => {
   }
 }
 export const reporteSolicitudV2 = async (parametros) => {
+  console.log(parametros)
   // Definir estilos
   const headerStyle = {
     font: { bold: true, color: { argb: 'FFFFFFFF' } },
@@ -536,15 +555,14 @@ export const reporteSolicitudV2 = async (parametros) => {
         // // Obtener productos de la base de datos
         const productos = await obtenerProductosPorSolicitud(dato.id_solicitud)
         // console.log('Productos obtenidos:', productos)
-
         // Crear el arreglo de datos
-        if (dato.variedad === 'todo') {
-          variedades = await obtenerVariedades(dato.centroCoste)
+        if (dato.variedad.split(',').length > 1) {
+          variedades = await obtenerPorcentajes(dato.id_solicitud)
           // console.log('Variedades obtenidas:', variedades)
           if (variedades && variedades.length > 0) {
             for (const variedad of variedades) {
-              const porcentajeSplit = variedad.porcentajes.split(',')
-              const variedadSplit = variedad.variedad.split(',')
+              const porcentajeSplit = variedad.dataValues.porcentajes.split(',')
+              const variedadSplit = dato.variedad.split(',')
               for (let i = 0; i < variedadSplit.length; i++) {
                 if (productos && productos.length > 0) {
                   for (const producto of productos) {
@@ -651,7 +669,6 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
 
     // Cabecera de la tabla
     let cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada']
-    let porcentaje = ['', '', '']
 
     // preparamos datos
     const idSolicitud = parametros.id_solicitud
@@ -668,72 +685,69 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
     const metodoAplicacion = parametros.metodo_aplicacion
     const descripcion = parametros.descripcion
 
+    const varie = variedad.split(',')
+    // console.log(varie)
     try {
       // Crear una hoja para esta solicitud
       const hojaGeneral = workbook.addWorksheet('Datos Generales')
       // obtenemos datos de la variedad
-      if (variedad === 'todo') {
-        // Obtener variedades
-        variedades = await obtenerVariedades(centroCoste)
-        // Agregar nombres de variedades a la cabecera
+      // Modificación del manejo de variedades múltiples
+      if (varie.length > 1) {
+        variedades = await obtenerPorcentajes(idSolicitud)
+
         if (variedades && variedades.length > 0) {
-          for (const variedad of variedades) {
-            const variedadSplit = variedad.variedad.split(',')
-            const porcentajeSplit = variedad.porcentajes.split(',')
-            for (const item of variedadSplit) {
-              if (!cabecera.includes(item)) {
-                cabecera.push(item)
+          // Arrays para almacenar todas las variedades y porcentajes únicos
+          const todasVariedades = []
+          const todosPorcentajes = []
+
+          // Primero recolectamos todas las variedades y porcentajes
+          variedades.forEach(variedad => {
+            const variedadSplit = varie
+            const porcentajeSplit = variedad.dataValues.porcentajes.split(',')
+
+            variedadSplit.forEach((v, index) => {
+              if (!todasVariedades.includes(v)) {
+                todasVariedades.push(v + ' ' + '%' + porcentajeSplit[index])
+                todosPorcentajes.push(porcentajeSplit[index])
               }
+            })
+          })
+
+          // Ahora agregamos a las cabeceras
+          todasVariedades.forEach(v => {
+            if (!cabecera.includes(v)) {
+              cabecera.push(v)
             }
-            for (const item of porcentajeSplit) {
-              if (!porcentaje.includes(item)) {
-                porcentaje.push(item)
-              }
-            }
-          }
+          })
         }
       } else {
         cabecera.push(variedad)
       }
 
-      if (variedad === 'todo') {
-        hojaGeneral.addRow(['Datos Generales Fertilizantes']).eachCell((cell) => { cell.style = headerStyle }) // Encabezado de la hoja
+      hojaGeneral.addRow(['Datos Generales Mezclas']).eachCell((cell) => { cell.style = headerStyle }) // Encabezado de la hoja
 
-        hojaGeneral.addRow(['ID Solicitud', idSolicitud]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Solicita', usuario]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Fecha Solicitud', fechaSolicitud]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Rancho', rancho]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Centro de Coste', centroCoste]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Variedad Fruta', variedad !== 'todo' ? variedad : variedades[0].variedad]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Empresa', empresa]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Temporada', temporada]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Descripcion', descripcion]).eachCell((cell) => { cell.style = cellStyle })
-      } else {
-        hojaGeneral.addRow(['Datos Generales Mezclas']).eachCell((cell) => { cell.style = headerStyle }) // Encabezado de la hoja
+      hojaGeneral.addRow(['ID Solicitud', idSolicitud]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Folio de Receta', folio === '' ? 'No aplica' : folio]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Solicita', usuario]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Fecha Solicitud', fechaSolicitud]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Rancho', rancho]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Centro de Coste', centroCoste]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Variedad Fruta', variedad]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Empresa', empresa]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Temporada', temporada]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Cantidad de Mezcla', cantidad === '' ? 'No aplica' : cantidad]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Presentacion de la Mezcla', presentacion === '' ? 'No aplica' : presentacion]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Metodo de aplicacion', metodoAplicacion]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Descripcion', descripcion]).eachCell((cell) => { cell.style = cellStyle })
 
-        hojaGeneral.addRow(['ID Solicitud', idSolicitud]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Folio de Receta', folio]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Solicita', usuario]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Fecha Solicitud', fechaSolicitud]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Rancho', rancho]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Centro de Coste', centroCoste]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Variedad Fruta', variedad !== 'todo' ? variedad : variedades[0].variedad]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Empresa', empresa]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Temporada', temporada]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Cantidad de Mezcla', cantidad]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Presentacion de la Mezcla', presentacion]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Metodo de aplicacion', metodoAplicacion]).eachCell((cell) => { cell.style = cellStyle })
-        hojaGeneral.addRow(['Descripcion', descripcion]).eachCell((cell) => { cell.style = cellStyle })
-      }
       // Agregar información de la solicitud
       hojaGeneral.addRow([]) // Espacio vacío con estilo
 
       // Agregar la cabecera a la hoja
-      hojaGeneral.addRow(porcentaje)
+
       hojaGeneral.addRow(cabecera).eachCell((cell) => { cell.style = headerStyle })
       // limpiamos cabeceras
       cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada']
-      porcentaje = ['', '', '']
 
       // Obtener productos de la base de datos
       const productos = await obtenerProductosPorSolicitud(idSolicitud)
@@ -742,29 +756,27 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
       // Crear el arreglo de datos
       const data = []
       if (productos && productos.length > 0) {
-        for (const producto of productos) {
+        productos.forEach(producto => {
           const fila = [
             producto.nombre,
             producto.unidad_medida,
             producto.cantidad
           ]
 
-          // Calcular porcentajes de variedades
-          if (variedad === 'todo') {
-            if (variedades && variedades.length > 0) {
-              for (const variedad of variedades) {
-                const variedadSplit = variedad.porcentajes.split(',')
-                for (const item of variedadSplit) {
-                  const porcentajeVariedad = (producto.cantidad * item) / 100
-                  fila.push(porcentajeVariedad)
-                }
-              }
-            }
+          if (varie.length > 1 && variedades && variedades.length > 0) {
+            const porcentajesSplit = variedades[0].dataValues.porcentajes.split(',')
+
+            // Agregamos un valor para cada variedad
+            porcentajesSplit.forEach(porcentaje => {
+              const cantidadPorcentaje = (producto.cantidad * parseFloat(porcentaje)) / 100
+              fila.push(Number(cantidadPorcentaje.toFixed(2))) // Redondear a 2 decimales
+            })
           } else {
             fila.push(producto.cantidad)
           }
+
           data.push(fila)
-        }
+        })
       } else {
         console.error('No se encontraron productos o la estructura es incorrecta')
       }

@@ -72,6 +72,7 @@ export class ProduccionModel {
   }
 
   static async descargarSolicitud ({ datos }) {
+    console.log(datos)
     try {
       if (!datos || Array.isArray(datos)) {
         throw new Error('datos invalidos, se requiere un arreglo de datos filtrados.')

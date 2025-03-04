@@ -3,12 +3,23 @@ import { SolicitudProductos } from '../schema/solicitud_receta.js'
 import { Usuario } from '../schema/usuarios.js' // Asegúrate de importar el modelo de Usuario
 import { Centrocoste } from '../schema/centro.js' // Asegúrate de importar el modelo de CentroCoste
 import { guardarImagen } from '../config/foto.mjs'
+import { CentroCosteModel } from '../models/centro.models.js'
 import sequelize from '../db/db.js'
 export class MezclaModel {
   // crear asistencia
   static async create ({ data, idUsuario }) {
     const transaction = await sequelize.transaction()
+    let variedades
     try {
+      // validamos variedad si viene todo
+      if (data.variedad === 'todo') {
+        try {
+          // Asumiendo que este método existe en tu modelo
+          variedades = await CentroCosteModel.getVariedadPorCentroCoste({ id: data.centroCoste })
+        } catch (error) {
+          console.error('Error al consultar productos para la solicitud', error)
+        }
+      }
       // Creamos nueva solicitud con transacción
       const solicitud = await Solicitud.create({
         folio: data.folio,
@@ -19,9 +30,10 @@ export class MezclaModel {
         idUsuarioSolicita: idUsuario,
         metodoAplicacion: data.metodoAplicacion,
         temporada: data.temporada,
-        variedad: data.variedad,
+        variedad: data.variedad === 'todo' ? variedades[0].dataValues.variedad : data.variedad,
         presentacion: data.presentacion,
-        ranchoDestino: data.rancho
+        ranchoDestino: data.rancho,
+        porcentajes: data.variedad === 'todo' ? variedades[0].dataValues.porcentajes : '100'
       }, { transaction })
 
       // Verificar si hay productos y procesar cada uno
@@ -436,6 +448,36 @@ export class MezclaModel {
         data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
 
       }
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message)
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      }
+    }
+  }
+
+  static async obtenerPorcentajes ({ id }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          id
+        },
+        attributes: [
+          'porcentajes'
+        ]
+      })
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        }
+      }
+      // Devolver los resultados
+      return Array.isArray(mezclas) ? mezclas : []
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message)
       return {

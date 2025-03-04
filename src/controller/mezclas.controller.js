@@ -120,7 +120,7 @@ export class MezclasController {
   obtenerTablaMezclasEmpresa = async (req, res) => {
     try {
       const { user } = req.session
-      console.log('user', user)
+      // console.log('user', user)
       const { status } = req.params
 
       if (!status) {

@@ -164,6 +164,19 @@ const solicitudConfig = {
     type: DataTypes.DATEONLY,
     field: 'fechaEntrega', // Nombre de columna en la base de datos
     allowNull: true
+  },
+  porcentajes: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El porcentaje es requerido'
+      },
+      len: {
+        args: [3, 100],
+        msg: 'El porcentaje debe tener entre 3 y 100 caracteres'
+      }
+    }
   }
 }
 
