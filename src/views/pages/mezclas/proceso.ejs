@@ -145,11 +145,11 @@
                                         <label class="formulario__label" for="notaMezcla">Nota de mezclador</label>
                                         <textarea id="notaMezcla" class="formulario__input" disabled></textarea>
                                     </div>
-                                    <% if (rol==="mezclador" ) { %>
+                                    <% if (rol==="mezclador" || rol==="administrativo" ) { %>
                                         <div class="formulario__campo">
                                             <button type="button" class="formulario__submit" id="btnCerrarMescla" >Cerrar
                                                 mezcla</button>
-                                        </div>
+                                        </div> 
                                         <% } %>
                                 </div>
                             </div>

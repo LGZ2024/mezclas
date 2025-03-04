@@ -17,11 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('receta').addEventListener('click', async () => {
     const idSolicitud = document.getElementById('idSolicitud').value
     const rol = document.getElementById('rol').value
+    console.log(rol)
     $('#staticBackdrop').modal('show')
     // iniciamos tabla
     iniciarProductosReceta(idSolicitud)
     // iniciamos rol
-    if (rol === 'mezclador') {
+    if (rol === 'mezclador' || rol === 'administrativo') {
       await verProductosReceta({
         eliminarUltimaColumna: false,
         depuracion: true
