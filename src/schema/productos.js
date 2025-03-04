@@ -7,6 +7,19 @@ const productosConfig = {
     primaryKey: true,
     autoIncrement: true
   },
+  id_sap: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El id del Sap es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El id del Sap es requerido'
+      }
+    }
+  },
   nombre: {
     type: DataTypes.STRING,
     allowNull: false,
