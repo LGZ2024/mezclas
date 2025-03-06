@@ -5,6 +5,7 @@ export class ProductosController {
   }
 
   obtenerProductosSolicitud = async (req, res) => {
+    console.log('si llego')
     try {
       const result = await this.productossModel.obtenerProductosSolicitud({ idSolicitud: req.params.idSolicitud })
       if (result.error) {

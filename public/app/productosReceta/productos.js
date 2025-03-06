@@ -73,11 +73,12 @@ const verProductosReceta = async (configuracion = {}) => {
   // Preparar definición de columnas
   const columnDefs = [
     { targets: 0, data: 'id_receta' },
-    { targets: 1, data: 'nombre_producto' },
-    { targets: 2, data: 'unidad_medida' },
-    { targets: 3, data: 'cantidad' },
+    { targets: 1, data: 'id_sap' },
+    { targets: 2, data: 'nombre_producto' },
+    { targets: 3, data: 'unidad_medida' },
+    { targets: 4, data: 'cantidad' },
     {
-      targets: 4,
+      targets: 5,
       data: 'id_receta',
       render: function (data, type, row) {
         return `

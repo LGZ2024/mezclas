@@ -263,6 +263,19 @@ const productosConfig = {
     primaryKey: true,
     autoIncrement: true
   },
+  id_sap: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El id del Sap es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El id del Sap es requerido'
+      }
+    }
+  },
   nombre: {
     type: external_sequelize_namespaceObject.DataTypes.STRING,
     allowNull: false,
@@ -865,7 +878,7 @@ const enviarCorreo = async params => {
     }
     const message = {
       ...template,
-      to: email // Reemplazar con el correo del cliente
+      to: 'zaqeza@gmail.com' // Reemplazar con el correo del cliente
     };
     const result = await sendMail(message);
     return {
@@ -1862,7 +1875,7 @@ class MezclasController {
       const {
         user
       } = req.session;
-      console.log('user', user);
+      // console.log('user', user)
       const {
         status
       } = req.params;
@@ -1881,16 +1894,22 @@ class MezclasController {
               status,
               empresa: user.empresa
             });
-          } else if (user.ranchos === 'Atemajac' && user.rol === 'mezclador') {
-            const r1 = await this.mezclaModel.obtenerTablaMezclasRancho({
+          } else if (user.ranchos === 'Atemajac') {
+            const r1 = (await this.mezclaModel.obtenerTablaMezclasRancho({
               status,
               ranchoDestino: user.ranchos
-            });
-            const r2 = await this.mezclaModel.obtenerTablaMezclasEmpresa({
+            })) || [];
+            const r2 = (await this.mezclaModel.obtenerTablaMezclasEmpresa({
               status,
               empresa: 'Lugar Agricola'
-            });
-            result = [...r1, ...r2];
+            })) || [];
+            result = [...(Array.isArray(r1) ? r1 : []), ...(Array.isArray(r2) ? r2 : [])];
+
+            // Validar si hay resultados
+            if (result.length === 0) {
+              console.log('No se encontraron registros para Atemajac');
+              result = []; // Asegurar que retornamos un array vacío
+            }
           } else {
             result = await this.mezclaModel.obtenerTablaMezclasRancho({
               status,
@@ -2269,6 +2288,7 @@ class productosSolicitud_controller_ProductosController {
     this.productossModel = productossModel;
   }
   obtenerProductosSolicitud = async (req, res) => {
+    console.log('si llego');
     try {
       const result = await this.productossModel.obtenerProductosSolicitud({
         idSolicitud: req.params.idSolicitud
@@ -3064,6 +3084,19 @@ const solicitudConfig = {
     field: 'fechaEntrega',
     // Nombre de columna en la base de datos
     allowNull: true
+  },
+  porcentajes: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El porcentaje es requerido'
+      },
+      len: {
+        args: [3, 100],
+        msg: 'El porcentaje debe tener entre 3 y 100 caracteres'
+      }
+    }
   }
 };
 const Solicitud = db.define('solicitud', solicitudConfig, {
@@ -3271,6 +3304,7 @@ const guardarImagen = async ({
  // Asegúrate de importar el modelo de CentroCoste
 
 
+
 class MezclaModel {
   // crear asistencia
   static async create({
@@ -3278,7 +3312,19 @@ class MezclaModel {
     idUsuario
   }) {
     const transaction = await db.transaction();
+    let variedades;
     try {
+      // validamos variedad si viene todo
+      if (data.variedad === 'todo') {
+        try {
+          // Asumiendo que este método existe en tu modelo
+          variedades = await CentroCosteModel.getVariedadPorCentroCoste({
+            id: data.centroCoste
+          });
+        } catch (error) {
+          console.error('Error al consultar productos para la solicitud', error);
+        }
+      }
       // Creamos nueva solicitud con transacción
       const solicitud = await Solicitud.create({
         folio: data.folio,
@@ -3289,9 +3335,10 @@ class MezclaModel {
         idUsuarioSolicita: idUsuario,
         metodoAplicacion: data.metodoAplicacion,
         temporada: data.temporada,
-        variedad: data.variedad,
+        variedad: data.variedad === 'todo' ? variedades[0].dataValues.variedad : data.variedad,
         presentacion: data.presentacion,
-        ranchoDestino: data.rancho
+        ranchoDestino: data.rancho,
+        porcentajes: data.variedad === 'todo' ? variedades[0].dataValues.porcentajes : '100'
       }, {
         transaction
       });
@@ -3458,8 +3505,8 @@ class MezclaModel {
         };
       });
 
-      // Devolver los resultados
-      return resultadosFormateados;
+      // Devolver los resultados validar si hay resultados mandar vacio
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message);
       return {
@@ -3525,7 +3572,7 @@ class MezclaModel {
       });
 
       // Devolver los resultados
-      return resultadosFormateados;
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message);
       return {
@@ -3590,7 +3637,7 @@ class MezclaModel {
       });
 
       // Devolver los resultados
-      return resultadosFormateados;
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message);
       return {
@@ -3653,8 +3700,37 @@ class MezclaModel {
       // Devolver los resultados
       return {
         message: 'Mezclas obtenidas correctamente',
-        data: resultadosFormateados
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
       };
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async obtenerPorcentajes({
+    id
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          id
+        },
+        attributes: ['porcentajes']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+      // Devolver los resultados
+      return Array.isArray(mezclas) ? mezclas : [];
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message);
       return {
@@ -3739,7 +3815,7 @@ class MezclaModel {
       // Devolver los resultados
       return {
         message: 'Mezclas obtenidas correctamente',
-        data: resultadosFormateados
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
       };
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message);
@@ -3804,7 +3880,7 @@ class MezclaModel {
       // Devolver los resultados
       return {
         message: 'Mezclas obtenidas correctamente',
-        data: resultadosFormateados
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
       };
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message);
@@ -3833,7 +3909,7 @@ class MezclaModel {
         };
       }
       // Devolver los resultados
-      return mezclas;
+      return Array.isArray(mezclas) ? mezclas : [];
     } catch (e) {
       console.error('Error al obtener mezclas:', e.message);
       return {
@@ -3864,13 +3940,13 @@ class SolicitudRecetaModel {
         include: [{
           model: Productos,
           // producto
-          attributes: ['nombre'] // Campos que quieres obtener del usuario
+          attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario
         }, {
           model: Recetas,
           // Modelo de Recetas
           attributes: ['nombre'] // Campos que quieres obtener del modelo Recetas
         }],
-        attributes: ['id_receta', 'id_solicitud', 'id_producto', 'id_receta', 'unidad_medida', 'cantidad']
+        attributes: ['id_receta', 'id_solicitud', 'id_producto', 'unidad_medida', 'cantidad']
       });
 
       // Verificar si se encontraron resultados
@@ -3887,6 +3963,7 @@ class SolicitudRecetaModel {
         return {
           id_receta: m.id_receta,
           id_solicitud: m.id_solicitud,
+          id_sap: m.producto.id_sap,
           nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : m.receta ? m.receta.nombre : 'Producto y receta no encontrados',
           unidad_medida: m.unidad_medida,
           cantidad: m.cantidad
@@ -4211,6 +4288,26 @@ async function obtenerVariedades(centroCoste) {
         // Asegúrate de que este campo existe en tu modelo
         porcentajes: variedad.porcentajes
       }));
+    } else {
+      // Si no hay productos, puedes devolver un array vacío o productos por defecto
+      return [];
+    }
+  } catch (error) {
+    console.error('Error al consultar productos para la solicitud', error);
+    // Puedes lanzar el error o devolver un array vacío o productos por defecto
+    return []; // O puedes lanzar el error si prefieres manejarlo en otro lugar
+  }
+}
+async function obtenerPorcentajes(id) {
+  try {
+    // Asumiendo que este método existe en tu modelo
+    const variedades = await MezclaModel.obtenerPorcentajes({
+      id
+    });
+
+    // Verificar si se obtuvieron variedades
+    if (variedades && variedades.length > 0) {
+      return variedades;
     } else {
       // Si no hay productos, puedes devolver un array vacío o productos por defecto
       return [];
@@ -4770,6 +4867,7 @@ const reporteSolicitud = async parametros => {
   }
 };
 const reporteSolicitudV2 = async parametros => {
+  console.log(parametros);
   // Definir estilos
   const headerStyle = {
     font: {
@@ -4831,50 +4929,48 @@ const reporteSolicitudV2 = async parametros => {
   };
   // varialbles globales
   let variedades;
-  const data = [];
-  const data2 = [];
+  const dataMescla = [];
+  // const dataFertilizante = []
   try {
     // Extraer los datos correctamente
     const datos = Array.isArray(parametros) ? parametros : parametros.datos || [];
-    console.log('Datos a procesar:', datos);
+
+    // console.log('Datos a procesar:', datos)
 
     // Crear un nuevo libro de Excel
     const workbook = new external_exceljs_namespaceObject["default"].Workbook();
 
-    // Cabecera de la tabla
-    const cabecera = ['Id Solicitud', 'Folio de Receta', 'Solicita', 'Fecha Solicitud', 'Fecha Entrega', 'Rancho', 'Centro de Coste', 'Variedad Fruta', 'Empresa', 'Temporada', 'Cantidad de Mezcla', 'Presentacion de la Mezcla', 'Metodo de aplicacion', 'Productos', 'Unidad', 'Cantidad Solicitada'];
-    const cabecera2 = ['Id Solicitud', 'Solicita', 'Fecha Solicitud', 'Fecha Entrega', 'Rancho', 'Centro de Coste', 'Variedad Fruta', 'Empresa', 'Temporada', 'Metodo de aplicacion', 'Productos', 'Unidad', 'Cantidad Solicitada', 'Porcentaje Correspondiente', 'Cantidad Correspondiente'];
+    // Cabecera de la tabla mezclas
+    const cabeceraMezclas = ['Id Solicitud', 'Folio de Receta', 'Solicita', 'Fecha Solicitud', 'Fecha Entrega', 'Rancho', 'Centro de Coste', 'Empresa', 'Temporada', 'Variedad Fruta', 'Cantidad de Mezcla', 'Presentacion de la Mezcla', 'Metodo de aplicacion', 'Productos', 'Unidad', 'Cantidad Solicitada', 'Porcentaje Correspondiente', 'Cantidad Correspondiente'];
     try {
       // Crear una hoja para esta solicitud
-      const hojaGeneral = workbook.addWorksheet('Datos de Mezclas');
-      hojaGeneral.addRow(cabecera).eachCell(cell => {
+      const hojaGeneral = workbook.addWorksheet('Datos Generales');
+      hojaGeneral.addRow(cabeceraMezclas).eachCell(cell => {
         cell.style = headerStyle;
       });
 
       // obtenemos datos de la variedad
       for (const dato of datos) {
-        variedades = await obtenerVariedades(dato.centroCoste);
-        console.log('Variedades obtenidas:', variedades);
-        // obtenemos datos faltantes de la solicitud
+        // // obtenemos datos faltantes de la solicitud
         const datosF = await obtenerDatosSolicitud(dato.id_solicitud);
-        console.log('Datos de la solicitud:', datosF);
+        // console.log('Datos de la solicitud:', datosF)
 
-        // Obtener productos de la base de datos
+        // // Obtener productos de la base de datos
         const productos = await obtenerProductosPorSolicitud(dato.id_solicitud);
-        console.log('Productos obtenidos:', productos);
-
+        // console.log('Productos obtenidos:', productos)
         // Crear el arreglo de datos
-
-        if (dato.variedad === 'todo') {
+        if (dato.variedad.split(',').length > 1) {
+          variedades = await obtenerPorcentajes(dato.id_solicitud);
+          // console.log('Variedades obtenidas:', variedades)
           if (variedades && variedades.length > 0) {
             for (const variedad of variedades) {
-              const porcentajeSplit = variedad.porcentajes.split(',');
-              const variedadSplit = variedad.variedad.split(',');
+              const porcentajeSplit = variedad.dataValues.porcentajes.split(',');
+              const variedadSplit = dato.variedad.split(',');
               for (let i = 0; i < variedadSplit.length; i++) {
                 if (productos && productos.length > 0) {
                   for (const producto of productos) {
-                    const fila = [dato.id_solicitud, dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, datosF[0].metodoAplicacion, variedadSplit[i], producto.nombre, producto.unidad_medida, producto.cantidad, '%' + porcentajeSplit[i], producto.cantidad * porcentajeSplit[i] / 100];
-                    data2.push(fila);
+                    const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, variedadSplit[i], datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.nombre, producto.unidad_medida, producto.cantidad, '%' + porcentajeSplit[i], producto.cantidad * porcentajeSplit[i] / 100];
+                    dataMescla.push(fila);
                   }
                 } else {
                   console.error('No se encontraron productos o la estructura es incorrecta');
@@ -4885,40 +4981,21 @@ const reporteSolicitudV2 = async parametros => {
             console.error('No se encontraron productos o la estructura es incorrecta');
           }
         } else {
-          if (productos && productos.length > 0) {
-            for (const producto of productos) {
-              const fila = [dato.id_solicitud, dato.folio, dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.variedad, dato.empresa, dato.temporada, datosF[0].cantidad, datosF[0].presentacion, datosF[0].metodoAplicacion, producto.nombre, producto.unidad_medida, producto.cantidad];
-              data.push(fila);
-            }
-          } else {
-            console.error('No se encontraron productos o la estructura es incorrecta');
+          console.log('folio lleno esta es una solicitud de mezclas');
+          for (const producto of productos) {
+            const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, dato.variedad, datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.nombre, producto.unidad_medida, producto.cantidad, '% 100', producto.cantidad];
+            dataMescla.push(fila);
           }
         }
       }
-      // Agregar los datos a la hoja
-      data.forEach(row => {
+      // Agregar los datos a la hoja de mezclas
+      dataMescla.forEach(row => {
         hojaGeneral.addRow(row).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-      });
-      // creamos la sugunda hoja
-      const hojaSolicitud = workbook.addWorksheet('Datos de Fertilizantes');
-      hojaSolicitud.addRow(cabecera2).eachCell(cell => {
-        cell.style = headerStyle;
-      });
-      data2.forEach(row => {
-        hojaSolicitud.addRow(row).eachCell(cell => {
           cell.style = cellStyle;
         });
       });
       // Ajustar el ancho de las columnas
       hojaGeneral.columns.forEach(column => {
-        const maxLength = column.values.reduce((max, value) => {
-          return Math.max(max, value ? value.toString().length : 0);
-        }, 0);
-        column.width = maxLength + 2; // Añadir un poco de espacio extra
-      });
-      hojaSolicitud.columns.forEach(column => {
         const maxLength = column.values.reduce((max, value) => {
           return Math.max(max, value ? value.toString().length : 0);
         }, 0);
@@ -5005,7 +5082,6 @@ const crearSolicitud = async parametros => {
 
     // Cabecera de la tabla
     let cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada'];
-    let porcentaje = ['', '', ''];
 
     // preparamos datos
     const idSolicitud = parametros.id_solicitud;
@@ -5021,121 +5097,96 @@ const crearSolicitud = async parametros => {
     const presentacion = parametros.presentacion;
     const metodoAplicacion = parametros.metodo_aplicacion;
     const descripcion = parametros.descripcion;
+    const varie = variedad.split(',');
+    // console.log(varie)
     try {
       // Crear una hoja para esta solicitud
       const hojaGeneral = workbook.addWorksheet('Datos Generales');
       // obtenemos datos de la variedad
-      if (variedad === 'todo') {
-        // Obtener variedades
-        variedades = await obtenerVariedades(centroCoste);
-        // Agregar nombres de variedades a la cabecera
+      // Modificación del manejo de variedades múltiples
+      if (varie.length > 1) {
+        variedades = await obtenerPorcentajes(idSolicitud);
         if (variedades && variedades.length > 0) {
-          for (const variedad of variedades) {
-            const variedadSplit = variedad.variedad.split(',');
-            const porcentajeSplit = variedad.porcentajes.split(',');
-            for (const item of variedadSplit) {
-              if (!cabecera.includes(item)) {
-                cabecera.push(item);
+          // Arrays para almacenar todas las variedades y porcentajes únicos
+          const todasVariedades = [];
+          const todosPorcentajes = [];
+
+          // Primero recolectamos todas las variedades y porcentajes
+          variedades.forEach(variedad => {
+            const variedadSplit = varie;
+            const porcentajeSplit = variedad.dataValues.porcentajes.split(',');
+            variedadSplit.forEach((v, index) => {
+              if (!todasVariedades.includes(v)) {
+                todasVariedades.push(v + ' ' + '%' + porcentajeSplit[index]);
+                todosPorcentajes.push(porcentajeSplit[index]);
               }
+            });
+          });
+
+          // Ahora agregamos a las cabeceras
+          todasVariedades.forEach(v => {
+            if (!cabecera.includes(v)) {
+              cabecera.push(v);
             }
-            for (const item of porcentajeSplit) {
-              if (!porcentaje.includes(item)) {
-                porcentaje.push(item);
-              }
-            }
-          }
+          });
         }
       } else {
         cabecera.push(variedad);
       }
-      if (variedad === 'todo') {
-        hojaGeneral.addRow(['Datos Generales Fertilizantes']).eachCell(cell => {
-          cell.style = headerStyle;
-        }); // Encabezado de la hoja
+      hojaGeneral.addRow(['Datos Generales Mezclas']).eachCell(cell => {
+        cell.style = headerStyle;
+      }); // Encabezado de la hoja
 
-        hojaGeneral.addRow(['ID Solicitud', idSolicitud]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Solicita', usuario]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Fecha Solicitud', fechaSolicitud]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Rancho', rancho]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Centro de Coste', centroCoste]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Variedad Fruta', variedad !== 'todo' ? variedad : variedades[0].variedad]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Empresa', empresa]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Temporada', temporada]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Descripcion', descripcion]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-      } else {
-        hojaGeneral.addRow(['Datos Generales Mezclas']).eachCell(cell => {
-          cell.style = headerStyle;
-        }); // Encabezado de la hoja
+      hojaGeneral.addRow(['ID Solicitud', idSolicitud]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Folio de Receta', folio === '' ? 'No aplica' : folio]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Solicita', usuario]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Fecha Solicitud', fechaSolicitud]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Rancho', rancho]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Centro de Coste', centroCoste]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Variedad Fruta', variedad]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Empresa', empresa]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Temporada', temporada]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Cantidad de Mezcla', cantidad === '' ? 'No aplica' : cantidad]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Presentacion de la Mezcla', presentacion === '' ? 'No aplica' : presentacion]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Metodo de aplicacion', metodoAplicacion]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
+      hojaGeneral.addRow(['Descripcion', descripcion]).eachCell(cell => {
+        cell.style = cellStyle;
+      });
 
-        hojaGeneral.addRow(['ID Solicitud', idSolicitud]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Folio de Receta', folio]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Solicita', usuario]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Fecha Solicitud', fechaSolicitud]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Rancho', rancho]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Centro de Coste', centroCoste]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Variedad Fruta', variedad !== 'todo' ? variedad : variedades[0].variedad]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Empresa', empresa]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Temporada', temporada]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Cantidad de Mezcla', cantidad]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Presentacion de la Mezcla', presentacion]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Metodo de aplicacion', metodoAplicacion]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-        hojaGeneral.addRow(['Descripcion', descripcion]).eachCell(cell => {
-          cell.style = cellStyle;
-        });
-      }
       // Agregar información de la solicitud
       hojaGeneral.addRow([]); // Espacio vacío con estilo
 
       // Agregar la cabecera a la hoja
-      hojaGeneral.addRow(porcentaje);
+
       hojaGeneral.addRow(cabecera).eachCell(cell => {
         cell.style = headerStyle;
       });
       // limpiamos cabeceras
       cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada'];
-      porcentaje = ['', '', ''];
 
       // Obtener productos de la base de datos
       const productos = await obtenerProductosPorSolicitud(idSolicitud);
@@ -5144,25 +5195,21 @@ const crearSolicitud = async parametros => {
       // Crear el arreglo de datos
       const data = [];
       if (productos && productos.length > 0) {
-        for (const producto of productos) {
+        productos.forEach(producto => {
           const fila = [producto.nombre, producto.unidad_medida, producto.cantidad];
+          if (varie.length > 1 && variedades && variedades.length > 0) {
+            const porcentajesSplit = variedades[0].dataValues.porcentajes.split(',');
 
-          // Calcular porcentajes de variedades
-          if (variedad === 'todo') {
-            if (variedades && variedades.length > 0) {
-              for (const variedad of variedades) {
-                const variedadSplit = variedad.porcentajes.split(',');
-                for (const item of variedadSplit) {
-                  const porcentajeVariedad = producto.cantidad * item / 100;
-                  fila.push(porcentajeVariedad);
-                }
-              }
-            }
+            // Agregamos un valor para cada variedad
+            porcentajesSplit.forEach(porcentaje => {
+              const cantidadPorcentaje = producto.cantidad * parseFloat(porcentaje) / 100;
+              fila.push(Number(cantidadPorcentaje.toFixed(2))); // Redondear a 2 decimales
+            });
           } else {
             fila.push(producto.cantidad);
           }
           data.push(fila);
-        }
+        });
       } else {
         console.error('No se encontraron productos o la estructura es incorrecta');
       }
@@ -5267,6 +5314,7 @@ class ProduccionModel {
   static async descargarSolicitud({
     datos
   }) {
+    console.log(datos);
     try {
       if (!datos || Array.isArray(datos)) {
         throw new Error('datos invalidos, se requiere un arreglo de datos filtrados.');

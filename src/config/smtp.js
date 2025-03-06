@@ -241,7 +241,7 @@ export const enviarCorreo = async (params) => {
 
     const message = {
       ...template,
-      to: 'zaqeza@gmail.com'// Reemplazar con el correo del cliente
+      to: 'zaqeza@.com'// Reemplazar con el correo del cliente
     }
 
     const result = await sendMail(message)

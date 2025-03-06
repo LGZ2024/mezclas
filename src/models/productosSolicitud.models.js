@@ -16,7 +16,7 @@ export class SolicitudRecetaModel {
         include: [
           {
             model: Productos, // producto
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
+            attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario
           },
           {
             model: Recetas, // Modelo de Recetas
@@ -27,7 +27,6 @@ export class SolicitudRecetaModel {
           'id_receta',
           'id_solicitud',
           'id_producto',
-          'id_receta',
           'unidad_medida',
           'cantidad'
         ]
@@ -47,6 +46,7 @@ export class SolicitudRecetaModel {
         return {
           id_receta: m.id_receta,
           id_solicitud: m.id_solicitud,
+          id_sap: m.producto.id_sap,
           nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : (m.receta ? m.receta.nombre : 'Producto y receta no encontrados'),
           unidad_medida: m.unidad_medida,
           cantidad: m.cantidad
