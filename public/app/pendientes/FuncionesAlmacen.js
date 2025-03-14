@@ -5,16 +5,18 @@ import { inicializarFormulario } from './listaProductos.js'
 import { mostrarMensaje } from '../mensajes.js'
 import { enviarEstadoProductos } from './enviarEstado.js'
 import { descargarExcel } from './reporte.js'
+import { closeNotification } from '../notificacion.js'
 
 document.addEventListener('DOMContentLoaded', () => {
   const btnGuardarMezcla = document.getElementById('btnGuardarMescla')
   const nuevoProducto = document.getElementById('nuevoProducto')
   const btnEnviarEstado = document.getElementById('btnEnviarEstado')
   const btnDescargarExcel = document.getElementById('descargar')
-  // descargar solicitud
+  const tabla = document.getElementById('tbSolicitadas')
 
   // metodo boton receta
-  document.getElementById('receta').addEventListener('click', async () => {
+  document.getElementById('receta').addEventListener('click', async (e) => {
+    e.preventDefault()
     const idSolicitud = document.getElementById('idSolicitud').value
     const rol = document.getElementById('rol').value
     console.log(rol)
@@ -106,8 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 
   $(document).on('click', '#regresatabla', () => {
-    document.getElementById('tablaFuciones').style.display = 'block'
-    document.getElementById('formPreparadas').style.display = 'none'
+    const tabla = document.getElementById('tablaFuciones')
+    const form = document.getElementById('formPreparadas')
+    if (tabla || form) {
+      tabla.style.display = 'block'
+      form.style.display = 'none'
+    } else {
+      window.location.href = '/protected/solicitudes'
+    }
+    closeNotification()
   })
 
   $(document).on('click', '#cerrarNuevoProducto', () => {
@@ -121,6 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#exampleModal').modal('hide')
     $('#staticBackdrop').modal('show')
   })
+
+  $(document).on('click', '#closeNotification', () => closeNotification())
 
   // verificamos si el boton para guardar mezcla esta abilitado
   if (btnGuardarMezcla) {
@@ -196,6 +207,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // metodo de eliminacion de productos de la tabla de producto
 
-  iniciarSolicitudes()
-  verSolicitud()
+  if (tabla) {
+    iniciarSolicitudes()
+    verSolicitud()
+  } else {
+    console.warn('Tabla with ID "tbSolicitadas" not found.')
+  }
 })

@@ -1,4 +1,5 @@
 import { enviarCorreo } from '../config/smtp.js'
+
 export class ProductosController {
   constructor ({ productossModel }) {
     this.productossModel = productossModel
@@ -49,18 +50,37 @@ export class ProductosController {
   actulizarEstado = async (req, res) => {
     const { user } = req.session
     try {
-      const result = await this.productossModel.actulizarEstado({ data: req.body })
+      const result = await this.productossModel.actualizarEstado({
+        data: req.body,
+        idUsuarioMezcla: user.id
+      })
 
       if (result.error) {
         res.status(404).json({ error: `${result.error}` })
       }
+
+      // creamos la notificacion
+      // const notificacion = await NotificacionModel.create({ idSolicitud: req.body.id_solicitud, mensaje: req.body.mensaje })
+      // console.log(notificacion)
+
       if (result.productos.length > 0) {
-        await enviarCorreo({ type: 'notificacion', email: result.data[0].email, nombre: result.data[0].nombre, solicitudId: req.body.id_solicitud, data: result.productos, usuario: user })
+        await enviarCorreo({
+          type: 'notificacion',
+          email: result.data[0].email,
+          nombre: result.data[0].nombre,
+          solicitudId: req.body.id_solicitud,
+          data: result.productos,
+          usuario: user
+        })
       }
+
       return res.json({ message: result.message })
     } catch (error) {
-      console.error({ error: `${error}` })
-      return res.status(500).render('500', { error: 'Error interno del servidor' })
+      console.error('Error en actualizarEstado:', error)
+      return res.status(500).json({
+        error: 'Error interno del servidor',
+        message: error.message
+      })
     }
   }
 

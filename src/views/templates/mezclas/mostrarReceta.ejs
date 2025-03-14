@@ -14,7 +14,7 @@
                                 <h3>Receta</h3>
                             </div>
                         </div>
-                        <% if ( rol==="mezclador" || rol==="administrativo") { %>
+                        <% if ( rol==="mezclador" || rol==="administrativo" ) { %>
                             <button id="nuevoProducto" type="button" class="btn formulario__submit mb-3 w-100">
                                 <i class="mdi mdi-plus-circle"></i>Agregar Producto
                             </button>
@@ -22,7 +22,8 @@
                                 <hr>
                                 <div class="table-container">
                                     <div class="table-responsive">
-                                        <table class="table table-striped tanle table-bordered table-hover align-middle mobile-table w-100 table-sm"
+                                        <table
+                                            class="table table-striped tanle table-bordered table-hover align-middle mobile-table w-100 table-sm"
                                             id="tbReceta">
                                             <thead class="bg-primary">
                                                 <tr class="bg-primary">
@@ -40,13 +41,19 @@
                                         </table>
                                     </div>
                                 </div>
+                                <hr>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold align-middle text-center w-100" for="mensaje">Notificacion para solicitante</label>
+                                    <textarea class="form-control" name="mensaje" id="mensaje" rows="4" 
+                                    placeholder="Agregar detalles para solicitante"></textarea>
+                                </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <div class="d-flex gap-2 w-100 justify-content-end">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <% if ( rol==="mezclador" || rol==="administrativo") { %>
+                    <% if ( rol==="mezclador" || rol==="administrativo" ) { %>
                         <button type="button" class="btn btn-primary" id="btnEnviarEstado">Guardar</button>
                         <% } %>
                 </div>

@@ -6,7 +6,8 @@ export const enviarEstadoProductos = async () => {
   const idSolicitud = document.getElementById('idSolicitud').value
   const estados = {
     id_solicitud: idSolicitud,
-    estados: [] // Inicializa el array de estados
+    estados: [], // Inicializa el array de estados
+    mensaje: '' // Inicializamos el campo mensaje
   }
   let todosSeleccionados = true // Variable para verificar si todos los radios están seleccionados
 
@@ -43,6 +44,27 @@ export const enviarEstadoProductos = async () => {
     }
   })
 
+  // Validación de productos no disponibles
+  const hayProductosNoDisponibles = estados.estados.some(estado => estado.existe === false)
+  const mensajeMezclador = document.getElementById('mensaje')
+
+  if (hayProductosNoDisponibles) {
+    mensajeMezclador.setAttribute('required', 'required')
+
+    // Validar si el mensaje está vacío
+    if (!mensajeMezclador.value.trim()) {
+      mostrarMensaje({
+        msg: 'Debe ingresar un mensaje cuando hay productos no disponibles',
+        type: 'warning'
+      })
+      return
+    }
+    // Agregar el mensaje al objeto estados
+    estados.mensaje = mensajeMezclador.value.trim()
+  } else {
+    mensajeMezclador.removeAttribute('required')
+  }
+
   // Si no todos los radios están seleccionados, mostrar un mensaje y salir
   if (!todosSeleccionados) {
     mostrarMensaje({
@@ -60,6 +82,8 @@ export const enviarEstadoProductos = async () => {
     })
     return // Salir de la función
   }
+
+  console.log(estados)
 
   // Continuar con la lógica de envío...
   try {

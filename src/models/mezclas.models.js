@@ -4,6 +4,7 @@ import { Usuario } from '../schema/usuarios.js' // Asegúrate de importar el mod
 import { Centrocoste } from '../schema/centro.js' // Asegúrate de importar el modelo de CentroCoste
 import { guardarImagen } from '../config/foto.mjs'
 import { CentroCosteModel } from '../models/centro.models.js'
+import { NotificacionModel } from '../models/notificaciones.models.js'
 import sequelize from '../db/db.js'
 export class MezclaModel {
   // crear asistencia
@@ -170,7 +171,8 @@ export class MezclaModel {
           'empresa',
           'fechaSolicitud',
           'imagenEntrega',
-          'fechaEntrega'
+          'fechaEntrega',
+          'respuestaSolicitud'
         ]
       })
 
@@ -203,7 +205,8 @@ export class MezclaModel {
           imagenEntrega: m.imagenEntrega,
           descripcion: m.descripcion,
           fechaEntrega: m.fechaEntrega,
-          status: m.status
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud
         }
       })
 
@@ -251,7 +254,8 @@ export class MezclaModel {
           'empresa',
           'fechaSolicitud',
           'imagenEntrega',
-          'fechaEntrega'
+          'fechaEntrega',
+          'respuestaSolicitud'
         ]
       })
 
@@ -284,7 +288,8 @@ export class MezclaModel {
           imagenEntrega: m.imagenEntrega,
           descripcion: m.descripcion,
           fechaEntrega: m.fechaEntrega,
-          status: m.status
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud
         }
       })
 
@@ -332,7 +337,8 @@ export class MezclaModel {
           'empresa',
           'fechaSolicitud',
           'imagenEntrega',
-          'fechaEntrega'
+          'fechaEntrega',
+          'respuestaSolicitud'
         ]
       })
 
@@ -364,7 +370,8 @@ export class MezclaModel {
           imagenEntrega: m.imagenEntrega,
           descripcion: m.descripcion,
           fechaEntrega: m.fechaEntrega,
-          status: m.status
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud
         }
       })
 
@@ -506,6 +513,28 @@ export class MezclaModel {
     }
   }
 
+  static async mensajeSolicita ({ id, mensajes }) {
+    try {
+      // Verificamos si existe la solicitud con el id proporcionado
+      const solicitud = await Solicitud.findByPk(id)
+      if (!solicitud) return { error: 'Solicitud no encontrada' }
+
+      // Actualiza solo los campos que se han proporcionado
+      if (mensajes) solicitud.respuestaSolicitud = mensajes
+
+      await solicitud.save()
+
+      // creamos la notificacion para mostrarla a los usuarios
+      const notificacion = await NotificacionModel.create({ idSolicitud: id, mensaje: mensajes })
+      if (!notificacion) return { error: 'Error al crear la notificacion' }
+
+      return true
+    } catch (e) {
+      console.error(e.message) // Salida: Error la usuario
+      return { error: 'Error al guardar el mensaje de solicitante' }
+    }
+  }
+
   static async getAll () {
     try {
       // Consulta para obtener las mezclas filtradas por empresa y status
@@ -581,6 +610,98 @@ export class MezclaModel {
         error: 'Error al obtener las mezclas',
         detalle: e.message
       }
+    }
+  }
+
+  static async getOneSolicita ({ id, idSolicita }) {
+    try {
+      const solicitud = await Solicitud.findOne({
+        where: {
+          id,
+          idUsuarioSolicita: idSolicita
+        },
+        attributes: [
+          'idUsuarioMezcla',
+          'respuestaMezclador'
+        ]
+      })
+      return solicitud || { error: 'Error al obtener la solicitud o No está autorizado' }
+    } catch (e) {
+      console.error(e.message)
+      return { error: 'Error al obtener la solicitud o No está autorizado' }
+    }
+  }
+
+  static async getOneMesclador ({ id, idSolicita }) {
+    try {
+      const solicitud = await Solicitud.findOne({
+        where: {
+          id,
+          idUsuarioMezcla: idSolicita
+        },
+        include: [
+          {
+            model: Usuario, // Modelo de Usuario
+            attributes: ['nombre'] // Campos que quieres obtener del usuario
+          },
+          {
+            model: Centrocoste, // Modelo de CentroCoste
+            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+          }
+        ],
+        attributes: [
+          'id',
+          'folio',
+          'ranchoDestino',
+          'variedad',
+          'temporada',
+          'cantidad',
+          'presentacion',
+          'metodoAplicacion',
+          'descripcion',
+          'empresa',
+          'fechaSolicitud',
+          'respuestaSolicitud',
+          'respuestaMezclador'
+        ]
+      })
+
+      // Verificar si se encontraron resultados
+      if (!solicitud) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        }
+      }
+
+      // Transformar el resultado
+      const m = solicitud.toJSON()
+      const resultadoFormateado = {
+        id: m.id,
+        Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+        fechaSolicitud: m.fechaSolicitud,
+        ranchoDestino: m.ranchoDestino,
+        empresa: m.empresa,
+        centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+        variedad: m.variedad,
+        FolioReceta: m.folio,
+        temporada: m.temporada,
+        cantidad: m.cantidad,
+        prensetacion: m.presentacion,
+        metodoAplicacion: m.metodoAplicacion,
+        descripcion: m.descripcion,
+        respuestaSolicitud: m.respuestaSolicitud,
+        respuestaMezclador: m.respuestaMezclador
+      }
+
+      // Devolver los resultados
+      return {
+        message: 'Mezcla obtenida correctamente',
+        data: resultadoFormateado
+      }
+    } catch (e) {
+      console.error(e.message)
+      return { error: 'Error al obtener la solicitud o No está autorizado' }
     }
   }
 

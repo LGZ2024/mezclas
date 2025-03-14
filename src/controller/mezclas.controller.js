@@ -84,6 +84,41 @@ export class MezclasController {
     }
   }
 
+  notificacion = async (req, res) => {
+    try {
+      const { user } = req.session
+      const idSolicitud = req.params.idSolicitud
+      const { mensajes, idMesclador } = req.body
+      const result = await this.mezclaModel.mensajeSolicita({ id: idSolicitud, mensajes })
+      if (result.error) {
+        return res.status(400).json({ error: result.error })
+      }
+
+      // OBTENEMOS LOS DATOS DEL MEZCLADOR A QUE SE LE MANDARA EL CORRE
+      const mezclador = await UsuarioModel.getOneId({ id: idMesclador })
+
+      console.log(`nombre:${mezclador.nombre}, correo:${mezclador.email}`)
+
+      await enviarCorreo({
+        type: 'respuestaSolicitante',
+        email: mezclador.email,
+        nombre: user.nombre,
+        solicitudId: idSolicitud,
+        usuario: {
+          empresa: user.empresa,
+          ranchos: user.ranchos
+        },
+        data: {
+          mensaje: mensajes
+        }
+      })
+      return res.json({ message: result.message })
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error)
+      res.status(500).json({ error: 'Ocurrió un error al crear la solicitud' })
+    }
+  }
+
   // cerrar solicitudes
   cerrarSolicitid = async (req, res) => {
     try {

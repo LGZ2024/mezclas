@@ -11,6 +11,7 @@ export const createMezclasRouter = ({ mezclaModel }) => {
   router.get('/mezclasSolicitadas/:status', mezclasController.obtenerTablaMezclasEmpresa)
   router.get('/mezclasId/:id', mezclasController.obtenerTablaMezclasId)
   router.patch('/solicitudProceso/:idSolicitud', mezclasController.estadoProceso)
+  router.patch('/notificacion/:idSolicitud', mezclasController.notificacion)
 
   return router
 }

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>
+        <%= titulo %>
+    </title>
+    <%- include("../../templates/mezclas/cabeceraNotificacion") %>
+</head>
+<style>
+    /* Variables CSS */
+:root {
+    --color-primario: #4a90e2;
+    --color-borde: #ddd;
+    --color-fondo: #fff;
+    --color-hover: #f5f5f5;
+    --borde-radio: 4px;
+    --espaciado: 1rem;
+    --transicion: all 0.3s ease;
+    --modal-z-index: 1050;
+    --dropdown-z-index: 2051;
+    --backdrop-z-index: 1040;
+}
+
+/* Reset y estilos base */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+.notification-card-body {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.header-section {
+    border-left: 4px solid #007bff;
+    padding-left: 1rem;
+    margin-bottom: 2rem;
+}
+
+.products-list {
+    display: grid;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.product-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: transform 0.2s;
+}
+
+.product-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.message-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.footer-section {
+    border-top: 1px solid #dee2e6;
+    margin-top: 2rem;
+    padding-top: 1rem;
+}
+
+.btn-custom {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 2rem;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.btn-custom:hover {
+    background: #0056b3;
+}
+
+/* Estilos para las notificaciones */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 350px;
+    display: none;
+}
+
+.notification-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.notification-header {
+    background: var(--color-primario);
+    color: white;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.notification-body {
+    padding: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.notification-footer {
+    padding: 8px 15px;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Animación de entrada */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification-show {
+    display: block;
+    animation: slideIn 0.3s ease forwards;
+}
+</style>
+
+<body>
+    <header>
+        <div class="barra contenedor">
+            <div class="barra__logo">
+                <img src="../../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
+            </div>
+
+            <nav class="barra__navegacion">
+                <a class="barra__link" id="inicio"></a>
+            </nav>
+
+            <nav class="barra__login">
+                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
+            </nav>
+        </div>
+    </header>
+  
+    <section class="tablas">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="titulo">
+                                <div class="col">
+                                    <button class="formulario__submit" id="regresar"><span
+                                            class="mdi mdi-arrow-left-bold"></span></button>
+                                </div>
+                            </div>
+                            <div class="notification-card-body">
+                                <div class="header-section">
+                                    <h4 class="mb-0">Notificación de Productos No Disponibles</h4>
+                                    <p class="text-muted mt-2">Solicitud #<%= idSolicitud %>
+                                    </p>
+                                </div>
+
+                                <p class="lead">Estimado(a) <strong>
+                                        <%= nombre %>
+                                    </strong>,</p>
+                                <p>Le informamos que algunos productos de su solicitud no están disponibles en este
+                                    momento. A continuación el detalle:</p>
+
+                            <% if (Array.isArray(productos) && productos.length> 0) { %>
+                                <div class="products-list">
+                                        <% productos.forEach(producto=> { %>
+                                            <div class="product-item">
+                                                <div class="product-grid">
+                                                    <div>
+                                                        <small class="text-muted">ID SAP</small>
+                                                        <p class="mb-2"><strong>
+                                                                <%= producto.id_sap %>
+                                                            </strong></p>
+                                                    </div>
+                                                    <div>
+                                                        <small class="text-muted">Cantidad</small>
+                                                        <p class="mb-2"><strong>
+                                                                <%= producto.cantidad %>
+                                                                    <%= producto.unidad_medida %>
+                                                            </strong></p>
+                                                    </div>
+                                                    <div class="col-span-2">
+                                                        <small class="text-muted">Producto</small>
+                                                        <p class="mb-0"><strong>
+                                                                <%= producto.nombre_producto %>
+                                                            </strong></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <% }); %>
+                                </div>
+
+                                <div class="message-section">
+                                    <form id="formMensaje">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold" for="mensaje">¿Cómo desea proceder?</label>
+                                            <textarea class="form-control" name="mensaje" id="mensaje" rows="4"
+                                                placeholder="Indique si desea alternativas similares o prefiere omitir estos productos..." required></textarea>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit">Enviar
+                                                Respuesta</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                            <% } else { %>
+                                    <div class="product-item">
+                                        <p>No hay productos no disponibles para mostrar</p>
+                                    </div>
+                            <% } %>
+
+                                        <div class="footer-section">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">Encargado de almacén</small>
+                                                    <p class="mb-2"><strong>
+                                                            <%= nombreMezclador %>
+                                                        </strong></p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted">Empresa</small>
+                                                    <p class="mb-2"><strong>
+                                                            <%= empresa %>
+                                                        </strong></p>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted mt-3 mb-0">
+                                                Si tiene alguna pregunta, no dude en contactar a nuestro equipo de
+                                                almacén.<br>
+                                                <small>Atentamente, El equipo de Grupo LG</small>
+                                            </p>
+                                        </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+                <!--notificaion-->
+                <%- include("../../templates/mezclas/notificacion") %>
+
+    <!-- Firebase Configuración y funciones -->
+    <%- include("../../templates/mezclas/scripts") %>
+    <script type="module" src="../../app/notificaciones/main.js"></script>
+        <script>
+        const idSolicitud = <%- JSON.stringify(idSolicitud) %>
+        const idMezclador = <%- JSON.stringify(idMezclador) %>
+        const mensaje=<%- JSON.stringify(respuestaMezclador) %>
+    </script>
+</body>
+
+</html>

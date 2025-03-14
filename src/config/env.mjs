@@ -11,5 +11,9 @@ export const envs = {
   SECRET_JWT_KEY: process.env.SECRET_JWT_KEY,
   EMAIL_USER: process.env.EMAIL_USER,
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
-  MODE: process.env.MODE
+  MODE: process.env.MODE,
+  PUBLIC_KEY: process.env.PUBLIC_KEY,
+  PRIVATE_KEY: process.env.PRIVATE_KEY,
+  MAILTO: process.env.MAILTO,
+  NOTIFICATION_ICON: process.env.NOTIFICATION_ICON
 }

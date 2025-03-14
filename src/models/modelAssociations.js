@@ -12,6 +12,10 @@ export function setupAssociations () {
     foreignKey: 'idUsuarioSolicita'
   })
 
+  // Solicitud.belongsTo(Usuario, {
+  //   foreignKey: 'idUsuarioMezcla'
+  // })
+
   Solicitud.belongsTo(Centrocoste, {
     foreignKey: 'idCentroCoste'
   })
@@ -24,6 +28,8 @@ export function setupAssociations () {
   SolicitudProductos.belongsTo(Recetas, {
     foreignKey: 'id_receta'
   })
+
+  // Asociaciones para productos Solicitud
 
   console.log('Asociaciones de modelos configuradas')
 }

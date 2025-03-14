@@ -167,7 +167,71 @@ body.modal-open {
     }
   }
 }
+/* Estilos para las notificaciones */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 350px;
+    display: none;
+}
 
+.notification-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.notification-header {
+    background: var(--color-primario);
+    color: white;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.notification-body {
+    padding: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.notification-footer {
+    padding: 8px 15px;
+    background: #f8f9fa;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Animación de entrada */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification-show {
+    display: block;
+    animation: slideIn 0.3s ease forwards;
+}
 </style>
 
 
@@ -349,6 +413,9 @@ body.modal-open {
         <!-- Modal nuevo producto -->
         <%- include("../../templates/mezclas/modalNuevoProducto") %>
 
+
+        <%- include("../../templates/mezclas/notificacion") %>
+
             <!-- Firebase Configuración y funciones -->
             <%- include("../../templates/mezclas/scripts") %>
                 <script type="module" src="../../app/pendientes/FuncionesAlmacen.js"></script>
@@ -357,7 +424,3 @@ body.modal-open {
 </body>
 
 </html>
-<script>
-
-
-</script>

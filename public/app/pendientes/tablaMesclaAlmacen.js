@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+import { mostrarNotificacion } from '../notificacion.js'
 // Funciones de fetch con mejor manejo de errores
 async function fechTbSolicitadas (status) {
   try {
@@ -147,6 +148,8 @@ const establecerValoresSolicitud = ({ data }) => {
   document.getElementById('presentacioni').value = data.prensetacion
   document.getElementById('metodoi').value = data.metodoAplicacion
   document.getElementById('descripcioni').value = data.descripcion
+  const mensaje = data.respuestaSolicitud
+  if (mensaje) mostrarNotificacion(mensaje, new Date())
 }
 
 // Exportar funciones

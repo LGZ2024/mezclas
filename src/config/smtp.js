@@ -80,7 +80,8 @@ const validateEmailData = (type, data) => {
     status: ['email', 'nombre', 'solicitudId', 'status'],
     solicitud: ['email', 'nombre', 'solicitudId', 'fechaSolicitud', 'usuario', 'data'],
     notificacion: ['email', 'nombre', 'solicitudId', 'data'],
-    usuario: ['email', 'password']
+    usuario: ['email', 'password'],
+    respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario']
   }
 
   const fields = requiredFields[type] || []
@@ -222,7 +223,12 @@ export const enviarCorreo = async (params) => {
                    </ul>
       
                    <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
-      
+                  <div style="text-align: center; margin-top: 20px;">
+                      <a href="http://localhost:3000/protected/notificacion/${solicitudId}" 
+                        style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Ver Solicitud
+                      </a>
+                  </div>
                    <p>Si tiene alguna pregunta o necesita más información, no dude en contactar a nuestro equipo de almacen.</p>
                    <p><strong>Encargado de almacen:</strong> ${usuario?.nombre || 'No especificado'}<br></p>
                    <p><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}<br></p>
@@ -230,6 +236,51 @@ export const enviarCorreo = async (params) => {
                    <p>Atentamente,<br>El equipo de Grupo LG</p>
                </div>
              </body>`
+    },
+    respuestaSolicitante: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Respuesta de Solicitante - Solicitud ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Respuesta de Solicitante</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Nueva Respuesta del Solicitante</h2>
+          
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Ranchos:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Mensaje del Solicitante:</h4>
+            <p style="margin-bottom: 0;">${data.mensaje}</p>
+          </div>
+  
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="http://localhost:3000/protected/notificacion/${solicitudId}" 
+               style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver Solicitud
+            </a>
+          </div>
+  
+          <p style="margin-top: 20px;">Por favor, revise la respuesta y tome las acciones necesarias.</p>
+          
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Este es un mensaje automático. Si necesita ayuda adicional, contacte al departamento de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
     }
   }
 
@@ -241,7 +292,7 @@ export const enviarCorreo = async (params) => {
 
     const message = {
       ...template,
-      to: 'zaqeza@.com'// Reemplazar con el correo del cliente
+      to: 'zaragoza051@lgfrutas.com.mx'// Reemplazar con el correo del cliente
     }
 
     const result = await sendMail(message)

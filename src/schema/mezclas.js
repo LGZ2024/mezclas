@@ -177,6 +177,16 @@ const solicitudConfig = {
         msg: 'El porcentaje debe tener entre 3 y 100 caracteres'
       }
     }
+  },
+  respuestaSolicitud: {
+    type: DataTypes.STRING,
+    field: 'respuestaSolicitud', // Nombre de columna en la base de datos
+    allowNull: true
+  },
+  respuestaMezclador: {
+    type: DataTypes.STRING,
+    field: 'respuestaMezclador', // Nombre de columna en la base de datos
+    allowNull: true
   }
 }
 

@@ -1,4 +1,7 @@
 import { ProductosModel } from '../models/productos.models.js'
+import { SolicitudRecetaModel } from '../models/productosSolicitud.models.js'
+import { MezclaModel } from '../models/mezclas.models.js'
+import { UsuarioModel } from '../models/usuario.models.js'
 export class ProtetedController {
   // ruta Protegida
   protected = async (req, res) => {
@@ -77,6 +80,85 @@ export class ProtetedController {
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
 
     res.render('pages/admin/centrosCoste', { user, titulo: 'hola' })
+  }
+
+  notificacion = async (req, res) => {
+    const { user } = req.session
+    const { idSolicitud } = req.params
+    let result
+
+    // verificamos si existe un usuario
+    if (!user) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: 'Acceso no utorizado'
+      })
+    }
+
+    try {
+      // validamos el rol de usuario
+      switch (user.rol) {
+        case 'mezclador': {
+          result = await MezclaModel.getOneMesclador({
+            id: idSolicitud,
+            idSolicita: user.id
+          })
+
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          return res.render('pages/mezclas/notificacionesMesclador', {
+            rol: user.rol,
+            idSolicitud,
+            data: result.data
+          })
+        }
+        case 'solicita': {
+          result = await MezclaModel.getOneSolicita({
+            id: idSolicitud,
+            idSolicita: user.id
+          })
+
+          if (result.error) {
+            throw new Error(result.error)
+          }
+          // obtenemos los datos de la solicitud
+          console.log(result)
+          // si existe alguna solicitud con el mismo usuario pasamos a obtener los productos
+          const productos = await SolicitudRecetaModel.obtenerProductoNoDisponibles({ idSolicitud })
+
+          // obtenemos los datos del mezclador que proceso la solicitud
+          const mezclador = await UsuarioModel.getOneId({
+            id: result.dataValues.idUsuarioMezcla
+          })
+
+          return res.render('pages/mezclas/notificaciones', {
+            nombre: user.nombre,
+            idSolicitud,
+            titulo: 'Cambio productos',
+            productos,
+            nombreMezclador: mezclador.nombre,
+            idMezclador: result.dataValues.idUsuarioMezcla,
+            empresa: mezclador.empresa,
+            respuestaMezclador: result.dataValues.respuestaMezclador
+          })
+        }
+        default:
+          return res.status(403).render('errorPage', {
+            title: '403 - Sin Autorisacion',
+            codeError: '403',
+            errorMsg: 'Acceso no utorizado'
+          })
+      }
+    } catch (error) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: error.message
+      })
+    }
   }
 
   // cerras sesion

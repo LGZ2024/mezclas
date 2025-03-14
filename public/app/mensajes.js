@@ -37,7 +37,20 @@ export function mostrarMensaje (config) {
     }
   }).showToast()
 }
-
+export async function fetchApi (url, method, data) {
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+    return response
+  } catch (error) {
+    console.error('Error:', error.message)
+  }
+}
 // Ejemplos de uso
 // mostrarMensaje({
 //   msg: 'Operación exitosa',

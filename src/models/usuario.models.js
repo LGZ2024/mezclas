@@ -88,7 +88,7 @@ export class UsuarioModel {
     try {
       const usuario = await Usuario.findOne({
         where: { id },
-        attributes: ['nombre', 'email', 'rol']
+        attributes: ['nombre', 'email', 'rol', 'empresa']
       })
       return usuario || { error: 'usuario no encontrada' }
     } catch (e) {

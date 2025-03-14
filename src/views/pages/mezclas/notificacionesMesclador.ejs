@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Mezclas</title>
+    <%- include("../../templates/mezclas/cabeceraNotificacion") %>
+
+</head>
+<style>
+    /* Variables CSS */
+    :root {
+        --color-primario: #4a90e2;
+        --color-borde: #ddd;
+        --color-fondo: #fff;
+        --color-hover: #f5f5f5;
+        --borde-radio: 4px;
+        --espaciado: 1rem;
+        --transicion: all 0.3s ease;
+        --modal-z-index: 1050;
+        --dropdown-z-index: 2051;
+        --backdrop-z-index: 1040;
+    }
+
+    /* Reset y estilos base */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Contenedor de búsqueda */
+    .busqueda-container {
+        position: relative;
+        width: 100%;
+        margin-bottom: var(--espaciado);
+    }
+
+    /* Estilos de input y selects */
+    .producto-input,
+    .select-producto {
+        width: 100%;
+        padding: var(--espaciado);
+        border: 1px solid var(--color-borde);
+        border-radius: var(--borde-radio);
+        transition: var(--transicion);
+    }
+
+    .producto-input:focus {
+        outline: none;
+        border-color: var(--color-primario);
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+    }
+
+    /* Grid Layout */
+    .producto-item {
+        display: grid;
+        grid-template-columns: minmax(200px, 2fr) repeat(2, minmax(100px, 1fr)) auto;
+        gap: var(--espaciado);
+        align-items: center;
+        margin-bottom: var(--espaciado);
+    }
+
+    /* Select2 y Modal */
+    .modal-backdrop {
+        z-index: var(--backdrop-z-index) !important;
+    }
+
+    .modal {
+        z-index: var(--modal-z-index) !important;
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    .select2-container {
+        width: 100% !important;
+    }
+
+    .select2-container--open {
+        z-index: var(--dropdown-z-index) !important;
+    }
+
+    /* Ajustes Select2 en modal */
+    .modal .select2-container {
+        width: 100% !important;
+    }
+
+    .modal .select2-container .select2-selection--single {
+        height: 38px;
+    }
+
+    .modal .select2-container--default .select2-selection--single {
+        .select2-selection__rendered {
+            line-height: 38px;
+        }
+
+        .select2-selection__arrow {
+            height: 36px;
+        }
+    }
+
+    /* SweetAlert2 personalización */
+    .swal2-popup {
+        &.swal-wide {
+            width: 850px !important;
+        }
+
+        &.swal-large {
+            font-size: 1.2em;
+        }
+
+        table {
+            width: 100%;
+            margin-bottom: 1rem;
+            background-color: transparent;
+
+            th,
+            td {
+                padding: 0.75rem;
+                vertical-align: middle;
+                border-top: 1px solid var(--color-borde);
+            }
+
+            thead th {
+                background-color: var(--color-hover);
+                border-bottom: 2px solid var(--color-borde);
+            }
+
+            tbody {
+                tr:nth-of-type(odd) {
+                    background-color: rgba(0, 0, 0, 0.05);
+                }
+
+                tr:hover {
+                    background-color: rgba(0, 0, 0, 0.075);
+                }
+            }
+        }
+    }
+
+    /* Manejo de modales */
+    body.modal-open {
+        overflow: hidden;
+        padding-right: 0 !important;
+    }
+
+    /* Ajustes para el modal y tabla */
+    .modal-dialog.modal-lg {
+        max-width: 90%;
+        margin: 1.75rem auto;
+    }
+
+    @media (min-width: 992px) {
+        .modal-dialog.modal-lg {
+            max-width: 800px;
+        }
+    }
+
+
+    /* Media Queries */
+    @media (max-width: 768px) {
+        .producto-item {
+            grid-template-columns: 1fr;
+            gap: calc(var(--espaciado) * 0.5);
+
+            select,
+            input {
+                margin-bottom: var(--espaciado);
+            }
+        }
+    }
+
+    /* Estilos para las notificaciones */
+    .notification-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 350px;
+        display: none;
+    }
+
+    .notification-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .notification-header {
+        background: var(--color-primario);
+        color: white;
+        padding: 12px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notification-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0 5px;
+    }
+
+    .notification-body {
+        padding: 15px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .notification-footer {
+        padding: 8px 15px;
+        background: #f8f9fa;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    /* Animación de entrada */
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .notification-show {
+        display: block;
+        animation: slideIn 0.3s ease forwards;
+    }
+
+
+    .header-section {
+        border-left: 4px solid #007bff;
+        padding-left: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .products-list {
+        display: grid;
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    .product-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        transition: transform 0.2s;
+    }
+
+    .product-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+
+    .message-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .footer-section {
+        border-top: 1px solid #dee2e6;
+        margin-top: 2rem;
+        padding-top: 1rem;
+    }
+
+    .btn-custom {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 0.5rem 2rem;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+
+    .btn-custom:hover {
+        background: #0056b3;
+    }
+</style>
+
+
+<body>
+    <header>
+        <div class="barra contenedor">
+            <div class="barra__logo">
+                <img src="../../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
+            </div>
+
+            <nav class="barra__navegacion">
+                <a class="barra__link" id="inicio"></a>
+            </nav>
+
+            <nav class="barra__login">
+                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
+            </nav>
+        </div>
+    </header>
+    <input type="hidden" value="<%= rol %>" id="rol">
+
+
+    <section id="formPreparadas" class="formularios">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="form">
+                                <div class="card">
+                                    <div class="titulo">
+                                        <div class="col">
+                                            <button class="formulario__submit" id="regresatabla"><span
+                                                    class="mdi mdi-arrow-left-bold"></span></button>
+                                        </div>
+                                        <div class="text-center">
+                                            <h3>Solicitud</h3>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <input type="text" id="idSolicitud" value="<%= data.id %>" disabled hidden>
+                                    <% if (rol==="mezclador" || rol==="administrativo" ) { %>
+                                        <div class="formulario__campo"
+                                            style="display: flex; flex-direction: column; align-items: center;">
+                                            <label class="formulario__label" for="folioi">Descargar Solicitud</label>
+                                            <button type="button" class="btn btn-primary formulario__submit"
+                                                id="descargar" style="width: 20vw;">
+                                                Descargar
+                                            </button>
+                                        </div>
+                                        <% } %>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="folioi">Folio de Receta</label>
+                                                <input type="text" class="formulario__input" id="folioi"
+                                                    value="<%= data.FolioReceta %>" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="solicitai">Solicita</label>
+                                                <input type="text" class="formulario__input" id="solicitai"
+                                                    value="<%= data.Solicita %>" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="fechai">Fecha de Solicitud</label>
+                                                <input type="text" class="formulario__input" id="fechai"
+                                                    value="<%= data.fechaSolicitud %>" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="ranchoi">Rancho Destino</label>
+                                                <input type="text" class="formulario__input"
+                                                    value="<%= data.ranchoDestino %>" id="ranchoi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="centroCostei">Centro de
+                                                    coste</label>
+                                                <input type="text" class="formulario__input"
+                                                    value="<%= data.centroCoste %>" id="centroCostei" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="variedadi">Variedad</label>
+                                                <input type="text" class="formulario__input"
+                                                    value="<%= data.variedad %>" id="variedadi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="empresai">Empresa</label>
+                                                <input type="text" class="formulario__input" value="<%= data.empresa %>"
+                                                    id="empresai" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="temporadai">Temporada</label>
+                                                <input type="text" class="formulario__input"
+                                                    value="<%= data.temporada %>" id="temporadai" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="cantidadi">Cantidad de
+                                                    producto</label>
+                                                <input type="text" class="formulario__input"
+                                                    value="<%= data.cantidad %>" id="cantidadi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label"
+                                                    for="presentacioni">Presentacion</label>
+                                                <input type="text" class="formulario__input"
+                                                    value="<%= data.prensetacion %>" id="presentacioni" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="metodoi">Metodo de
+                                                    aplicacion</label>
+                                                <input type="text" class="formulario__input"
+                                                    value="<%= data.metodoAplicacion %>" id="metodoi" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label" for="descripcioni">Descripcion</label>
+                                                <input type="text" class="formulario__input"
+                                                    value="<%= data.descripcion %>" id="descripcioni" disabled>
+                                            </div>
+                                            <div class="formulario__campo">
+                                                <label class="formulario__label">Productos</label>
+                                                <button type="button" class="btn btn-primary formulario__submit"
+                                                    id="receta" data-bs-toggle="modal">
+                                                    Mostrar Receta
+                                                </button>
+                                            </div>
+                                            <% if (rol==="mezclador" || rol==="administrativo" ) { %>
+                                                <form id="formSolicutudes">
+                                                    <div class="formulario__campo">
+                                                        <label class="formulario__label" for="notaMezcla">Nota de
+                                                            mezclador</label>
+                                                        <textarea id="notaMezcla" class="formulario__input"></textarea>
+                                                    </div>
+                                                    <div class="formulario__campo">
+                                                        <button type="submit" class="formulario__submit"
+                                                            id="btnGuardarMescla" style="display: none;">Guardar
+                                                            mezcla</button>
+                                                    </div>
+                                                </form>
+                                                <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal mostar receta -->
+    <%- include("../../templates/mezclas/mostrarReceta") %>
+
+        <!-- Modal nuevo producto -->
+        <%- include("../../templates/mezclas/modalNuevoProducto") %>
+
+            <!--notificaion-->
+            <%- include("../../templates/mezclas/notificacion") %>
+
+
+            <!-- Firebase Configuración y funciones -->
+            <%- include("../../templates/mezclas/scripts") %>
+                <script type="module" src="../../app/pendientes/FuncionesAlmacen.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</body>
+
+</html>
+<script>
+    const mensajess=<%- JSON.stringify(data.respuestaSolicitud) %>
+  const mostrarNotificacion = (mensaje, fecha) => {
+  const container = document.getElementById('notificationContainer')
+  const mensajeEl = document.getElementById('mensajeNotificacion')
+  const fechaEl = document.getElementById('fechaNotificacion')
+
+  const mensajeString = String(mensaje || '')
+
+  mensajeEl.textContent = mensajeString
+  fechaEl.textContent = new Date(fecha).toLocaleString()
+
+  container.classList.add('notification-show')
+}
+
+    
+  const closeNotification = () => {
+  const container = document.getElementById('notificationContainer')
+  container.classList.remove('notification-show')
+}
+ mostrarNotificacion(mensajess,new Date())
+</script>

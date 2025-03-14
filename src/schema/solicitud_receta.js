@@ -51,7 +51,7 @@ const productosConfig = {
   status: {
     type: DataTypes.BOOLEAN,
     allowNull: true,
-    defaultValue: 0
+    defaultValue: 1
   }
 }
 

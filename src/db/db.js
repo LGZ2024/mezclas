@@ -15,12 +15,15 @@ const sequelizeConfig = {
     underscored: true
   },
   pool: {
-    max: 5,
+    max: 10,
     min: 0,
-    acquire: 30000,
-    idle: 10000
+    acquire: 60000,
+    idle: 20000
+  },
+  dialectOptions: {
+    connectTimeout: 60000 // Aumenta el timeout de conexión
   }
 }
 const sequelize = new Sequelize(sequelizeConfig)
 
-export default sequelize // Exporta el módulo de Sequelize como valor por defecto
+export default sequelize
