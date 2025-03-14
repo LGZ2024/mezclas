@@ -10,6 +10,7 @@ async function obtenerProductosPorSolicitud (idSolicitud) {
     // Verificar si se obtuvieron productos
     if (productos && productos.length > 0) {
       return productos.map(producto => ({
+        id_sap: producto.id_sap, // Asegúrate de que este campo existe en tu modelo
         nombre: producto.nombre_producto, // Asegúrate de que este campo existe en tu modelo
         unidad_medida: producto.unidad_medida,
         cantidad: producto.cantidad
@@ -177,12 +178,13 @@ export const crearExcel = async (parametros) => {
         // Agregar encabezados para los productos en la segunda tabla
         hojaSolicitud.addRow(['Datos de los productos solicitados']) // Encabezados de la segunda tabla
         hojaSolicitud.getCell('A12').font = font
-        hojaSolicitud.addRow(['Producto', 'Unidad Medida', 'Cantidad Solicitada']) // Encabezados de la segunda tabla
+        hojaSolicitud.addRow(['id_sap', 'Producto', 'Unidad Medida', 'Cantidad Solicitada']) // Encabezados de la segunda tabla
 
         // Agregar productos a la hoja
         if (productos && productos.length > 0) {
           for (let i = 0; i < productos.length; i++) {
             hojaSolicitud.addRow([
+              productos[i].id_sap,
               productos[i].nombre,
               productos[i].unidad_medida,
               productos[i].cantidad
@@ -272,12 +274,13 @@ export const crearSolicitudV2 = async (parametros) => {
       // Agregar encabezados para los productos en la segunda tabla
       hojaGeneral.addRow(['Datos de los productos solicitados']) // Encabezados de la segunda tabla
       hojaGeneral.getCell('A16').font = font
-      hojaGeneral.addRow(['Producto', 'Unidad Medida', 'Cantidad Solicitada']) // Encabezados de la segunda tabla
+      hojaGeneral.addRow(['id_sap', 'Producto', 'Unidad Medida', 'Cantidad Solicitada']) // Encabezados de la segunda tabla
 
       // Agregar productos a la hoja
       if (productos && productos.length > 0) {
         for (let i = 0; i < productos.length; i++) {
           hojaGeneral.addRow([
+            productos[i].id_sap,
             productos[i].nombre,
             productos[i].unidad_medida,
             productos[i].cantidad
@@ -337,7 +340,7 @@ export const reporteSolicitud = async (parametros) => {
     const workbook = new ExcelJS.Workbook()
 
     // Cabecera de la tabla
-    let cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada']
+    let cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada']
     let porcentaje = ['', '', '']
 
     try {
@@ -413,7 +416,7 @@ export const reporteSolicitud = async (parametros) => {
         hojaGeneral.addRow(porcentaje)
         hojaGeneral.addRow(cabecera).eachCell((cell) => { cell.style = headerStyle })
         // limpiamos cabeceras
-        cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada']
+        cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada']
         porcentaje = ['', '', '']
 
         // Obtener productos de la base de datos
@@ -425,6 +428,7 @@ export const reporteSolicitud = async (parametros) => {
         if (productos && productos.length > 0) {
           for (const producto of productos) {
             const fila = [
+              producto.id_sap,
               producto.nombre,
               producto.unidad_medida,
               producto.cantidad
@@ -534,6 +538,7 @@ export const reporteSolicitudV2 = async (parametros) => {
       'Cantidad de Mezcla',
       'Presentacion de la Mezcla',
       'Metodo de aplicacion',
+      'id_sap',
       'Productos',
       'Unidad',
       'Cantidad Solicitada',
@@ -580,6 +585,7 @@ export const reporteSolicitudV2 = async (parametros) => {
                       datosF[0].cantidad ? datosF[0].cantidad : 'No aplica',
                       datosF[0].presentacion ? datosF[0].presentacion : 'No aplica',
                       datosF[0].metodoAplicacion,
+                      producto.id_sap,
                       producto.nombre,
                       producto.unidad_medida,
                       producto.cantidad,
@@ -613,6 +619,7 @@ export const reporteSolicitudV2 = async (parametros) => {
               datosF[0].cantidad ? datosF[0].cantidad : 'No aplica',
               datosF[0].presentacion ? datosF[0].presentacion : 'No aplica',
               datosF[0].metodoAplicacion,
+              producto.id_sap,
               producto.nombre,
               producto.unidad_medida,
               producto.cantidad,
@@ -668,7 +675,7 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
     const workbook = new ExcelJS.Workbook()
 
     // Cabecera de la tabla
-    let cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada']
+    let cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada']
 
     // preparamos datos
     const idSolicitud = parametros.id_solicitud
@@ -747,7 +754,7 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
 
       hojaGeneral.addRow(cabecera).eachCell((cell) => { cell.style = headerStyle })
       // limpiamos cabeceras
-      cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada']
+      cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada']
 
       // Obtener productos de la base de datos
       const productos = await obtenerProductosPorSolicitud(idSolicitud)
@@ -758,6 +765,7 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
       if (productos && productos.length > 0) {
         productos.forEach(producto => {
           const fila = [
+            producto.id_sap,
             producto.nombre,
             producto.unidad_medida,
             producto.cantidad
