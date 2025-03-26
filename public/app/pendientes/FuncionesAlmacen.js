@@ -4,7 +4,7 @@ import { iniciarProductosReceta, verProductosReceta } from '../productosReceta/p
 import { inicializarFormulario } from './listaProductos.js'
 import { mostrarMensaje } from '../mensajes.js'
 import { enviarEstadoProductos } from './enviarEstado.js'
-import { descargarExcel } from './reporte.js'
+import { descargarExcel, descargarReporte } from './reporte.js'
 import { closeNotification } from '../notificacion.js'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnEnviarEstado = document.getElementById('btnEnviarEstado')
   const btnDescargarExcel = document.getElementById('descargar')
   const tabla = document.getElementById('tbSolicitadas')
+  const reporte = document.getElementById('reporte')
+  const formEmpresa = document.getElementById('empresaForm')
 
   // metodo boton receta
   document.getElementById('receta').addEventListener('click', async (e) => {
@@ -110,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $(document).on('click', '#regresatabla', () => {
     const tabla = document.getElementById('tablaFuciones')
     const form = document.getElementById('formPreparadas')
-    if (tabla || form) {
+    if (tabla && form) {
       tabla.style.display = 'block'
       form.style.display = 'none'
     } else {
@@ -135,7 +137,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // verificamos si el boton para guardar mezcla esta abilitado
   if (btnGuardarMezcla) {
-    document.getElementById('formSolicutudes').addEventListener('submit', async () => {
+    document.getElementById('formSolicutudes').addEventListener('submit', async (e) => {
+      e.preventDefault()
       const idSolicitud = document.getElementById('idSolicitud').value
       const notaMezcla = document.getElementById('notaMezcla').value
       const data = {
@@ -144,18 +147,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       try {
         const response = await fechSolicitudProceso({ data, id: idSolicitud })
-        console.log(response)
         if (response.error) {
           return mostrarMensaje({
             msg: response.error,
             type: 'error'
           })
         }
-
         mostrarMensaje({
           msg: response.message,
           type: 'success',
-          redirectUrl: '/protected/admin'
+          redirectUrl: '/protected/solicitudes'
         })
       } catch (error) {
         console.log(error)
@@ -212,5 +213,45 @@ document.addEventListener('DOMContentLoaded', () => {
     verSolicitud()
   } else {
     console.warn('Tabla with ID "tbSolicitadas" not found.')
+  }
+
+  if (reporte) {
+    reporte.addEventListener('click', async (e) => {
+      const rol = document.getElementById('rol').value
+      if (rol === 'mezclador') {
+        const url = '/api/reporte-pendientes'
+        await descargarReporte(url)
+      } else if (rol === 'administrativo') {
+        $('#empresasModal').modal('show')
+
+        formEmpresa.addEventListener('submit', async (e) => {
+          e.preventDefault()
+          // Obtener el radio button seleccionado
+          const radioSeleccionado = document.querySelector('input[name="inlineRadioOptions"]:checked')
+
+          if (!radioSeleccionado) {
+            mostrarMensaje({
+              msg: 'Por favor, selecciona una empresa',
+              type: 'error'
+            })
+          }
+
+          const empresa = radioSeleccionado.value
+          const url = `/api/reporte-pendientes/${empresa}`
+
+          try {
+            await descargarReporte(url)
+            $('#empresasModal').modal('hide') // Cerrar modal después de descargar
+          } catch (error) {
+            mostrarMensaje({
+              msg: 'Error al descargar el reporte',
+              type: 'error'
+            })
+          }
+        })
+      }
+    })
+  } else {
+    console.warn('Button with ID "reporte" not found.')
   }
 })

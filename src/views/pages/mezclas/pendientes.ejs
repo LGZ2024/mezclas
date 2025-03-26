@@ -263,6 +263,9 @@ body.modal-open {
                                     <button class="formulario__submit" id="regresarInicio"><span
                                             class="mdi mdi-arrow-left-bold"></span></button>
                                 </div>
+                                <div class="col-md-12 d-flex justify-content-end">
+                                    <button class="btn btn-primary" id="reporte">Descargar Solicitudes</button>
+                                </div>
                                 <div class="text-center">
                                     <h3>Solicitudes</h3>
                                 </div>
@@ -415,7 +418,9 @@ body.modal-open {
 
 
         <%- include("../../templates/mezclas/notificacion") %>
-
+        
+        <!-- formularios para seleciona empresa -->
+        <%- include("../../templates/mezclas/modalSelecionEmpresa") %>
             <!-- Firebase Configuración y funciones -->
             <%- include("../../templates/mezclas/scripts") %>
                 <script type="module" src="../../app/pendientes/FuncionesAlmacen.js"></script>

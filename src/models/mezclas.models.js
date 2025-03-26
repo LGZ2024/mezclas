@@ -338,7 +338,8 @@ export class MezclaModel {
           'fechaSolicitud',
           'imagenEntrega',
           'fechaEntrega',
-          'respuestaSolicitud'
+          'respuestaSolicitud',
+          'respuestaMezclador'
         ]
       })
 
@@ -371,7 +372,8 @@ export class MezclaModel {
           descripcion: m.descripcion,
           fechaEntrega: m.fechaEntrega,
           status: m.status,
-          respuestaSolicitud: m.respuestaSolicitud
+          respuestaSolicitud: m.respuestaSolicitud,
+          respuestaMezclador: m.respuestaMezclador
         }
       })
 
@@ -513,7 +515,7 @@ export class MezclaModel {
     }
   }
 
-  static async mensajeSolicita ({ id, mensajes }) {
+  static async mensajeSolicita ({ id, mensajes, idUsuario }) {
     try {
       // Verificamos si existe la solicitud con el id proporcionado
       const solicitud = await Solicitud.findByPk(id)
@@ -525,10 +527,10 @@ export class MezclaModel {
       await solicitud.save()
 
       // creamos la notificacion para mostrarla a los usuarios
-      const notificacion = await NotificacionModel.create({ idSolicitud: id, mensaje: mensajes })
+      const notificacion = await NotificacionModel.create({ idSolicitud: id, mensaje: mensajes, idUsuario })
       if (!notificacion) return { error: 'Error al crear la notificacion' }
 
-      return true
+      return { message: 'Notificacion Guadada Correctamente' }
     } catch (e) {
       console.error(e.message) // Salida: Error la usuario
       return { error: 'Error al guardar el mensaje de solicitante' }

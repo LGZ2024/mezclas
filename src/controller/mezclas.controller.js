@@ -76,7 +76,6 @@ export class MezclasController {
         solicitudId: idSolicitud,
         status: req.body.status
       })
-
       return res.json({ message: result.message })
     } catch (error) {
       console.error('Error al crear la solicitud:', error)
@@ -89,7 +88,7 @@ export class MezclasController {
       const { user } = req.session
       const idSolicitud = req.params.idSolicitud
       const { mensajes, idMesclador } = req.body
-      const result = await this.mezclaModel.mensajeSolicita({ id: idSolicitud, mensajes })
+      const result = await this.mezclaModel.mensajeSolicita({ id: idSolicitud, mensajes, idUsuario: idMesclador })
       if (result.error) {
         return res.status(400).json({ error: result.error })
       }

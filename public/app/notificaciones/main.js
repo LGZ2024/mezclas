@@ -3,9 +3,8 @@ import { mostrarMensaje, fetchApi } from '../mensajes.js'
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('formMensaje')
-  // alert(idSolicitud)
-  // alert(idMezclador)
-  // alert(mensaje)
+  const regresar = document.getElementById('regresar')
+
   function mostrarNotificacion (mensaje, fecha) {
     const container = document.getElementById('notificationContainer')
     const mensajeEl = document.getElementById('mensajeNotificacion')
@@ -24,9 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetchApi(`/api/notificacion/${idSolicitud}`, 'PATCH', { mensajes, idMesclador: idMezclador })
       const respuesta = response.json()
+      console.log(respuesta)
       mostrarMensaje({
         msg: respuesta,
-        type: 'success'
+        type: 'success',
+        redirectUrl: '/protected/admin'
       })
     } catch (error) {
       console.error(error)
@@ -38,5 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
     container.classList.remove('notification-show')
   }
 
-  mostrarNotificacion(mensaje, new Date())
+  regresar.addEventListener('click', () => {
+    window.location.href = '/protected/admin'
+  })
+
+  document.getElementById('closeNotification').addEventListener('click', closeNotification)
+
+  if (mensaje) mostrarNotificacion(mensaje, new Date())
 })

@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+import { mostrarMensaje } from '../mensajes.js'
 export async function descargarExcel () {
   try {
     // Obtener datos filtrados desde DataTable
@@ -25,6 +26,7 @@ export async function descargarExcel () {
   } catch (error) {
     console.error('Error al descargar Excel:', error)
     alert('Ocurrió un error al intentar descargar el archivo Excel. Verifique la consola para más detalles.')
+    mostrarMensaje({ msg: error.message, type: 'error' })
   }
 }
 
@@ -45,4 +47,32 @@ const obtenerDatosSolicitud = async () => {
     descripcion: document.getElementById('descripcioni').value
   }
   return data
+}
+
+export async function descargarReporte (urls) {
+  try {
+    // Obtener datos filtrados desde DataTable
+    const response = await fetch(urls, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(`${error.error}`)
+    }
+
+    const blob = await response.blob()
+
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'solicitudes.xlsx'
+    a.click()
+  } catch (error) {
+    console.error('Error al descargar Excel:', error)
+    mostrarMensaje({ msg: error.message, type: 'error' })
+  }
 }

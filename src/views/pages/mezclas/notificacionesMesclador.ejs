@@ -457,8 +457,12 @@
 
 </html>
 <script>
-    const mensajess=<%- JSON.stringify(data.respuestaSolicitud) %>
-  const mostrarNotificacion = (mensaje, fecha) => {
+  const mensajess=<%- JSON.stringify(data.respuestaSolicitud) %>
+  const idSolicitud=<%- JSON.stringify(idSolicitud) %>
+  
+  
+
+  const mostrarNotificacion =async (mensaje, fecha, id_Solicitud) => {
   const container = document.getElementById('notificationContainer')
   const mensajeEl = document.getElementById('mensajeNotificacion')
   const fechaEl = document.getElementById('fechaNotificacion')
@@ -469,12 +473,32 @@
   fechaEl.textContent = new Date(fecha).toLocaleString()
 
   container.classList.add('notification-show')
+  
+  //cabiar estatus de la notificacion
+    // await cambiarEstado(id_Solicitud)
+  
 }
 
     
   const closeNotification = () => {
   const container = document.getElementById('notificationContainer')
   container.classList.remove('notification-show')
-}
- mostrarNotificacion(mensajess,new Date())
+  }
+
+  const cambiarEstado = async(idSolicitud) => {
+    const url = `/api/notificaciones/${idSolicitud}`
+    try {
+        const response=await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            const data = await response.json()
+            return data
+    } catch (error) {
+        console.error(error)
+    }
+  }
+    mostrarNotificacion(mensajess,new Date(),idSolicitud)
 </script>

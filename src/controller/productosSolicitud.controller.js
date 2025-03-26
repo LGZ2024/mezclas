@@ -1,12 +1,10 @@
 import { enviarCorreo } from '../config/smtp.js'
-
 export class ProductosController {
   constructor ({ productossModel }) {
     this.productossModel = productossModel
   }
 
   obtenerProductosSolicitud = async (req, res) => {
-    console.log('si llego')
     try {
       const result = await this.productossModel.obtenerProductosSolicitud({ idSolicitud: req.params.idSolicitud })
       if (result.error) {
@@ -60,8 +58,8 @@ export class ProductosController {
       }
 
       // creamos la notificacion
-      // const notificacion = await NotificacionModel.create({ idSolicitud: req.body.id_solicitud, mensaje: req.body.mensaje })
-      // console.log(notificacion)
+      // const notificacion = await NotificacionModel.create({ idSolicitud: req.body.id_solicitud, mensaje: req.body.mensaje, idUsuario: user.id })
+      // if (!notificacion) return { error: 'Error al crear la notificacion' }
 
       if (result.productos.length > 0) {
         await enviarCorreo({

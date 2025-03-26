@@ -8,7 +8,6 @@ async function fechTbSolicitadas (status) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    console.log(data)
     return data
   } catch (error) {
     console.error('Error fetching solicitudes:', error)
@@ -37,10 +36,18 @@ async function fechSolicitudProceso ({ data, id }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-    return await response.json()
+
+    // Convertir la respuesta a JSON una sola vez
+    const responseData = await response.json()
+
+    // Para debugging (opcional)
+    console.log('Respuesta del servidor:', responseData)
+
+    return responseData
   } catch (error) {
     console.error('Error updating solicitud proceso:', error)
     throw error
@@ -51,6 +58,7 @@ async function fechSolicitudProceso ({ data, id }) {
 const iniciarSolicitudes = async () => {
   try {
     const data = await obtenerSolicitudes()
+    console.log(data)
     const table = $('#tbSolicitadas').DataTable()
     table.clear().rows.add(data).draw()
   } catch (error) {
@@ -77,7 +85,7 @@ const verSolicitud = () => {
     order: [[0, 'desc']],
     responsive: true,
     pageLength: -1,
-    searching: false,
+    searching: true,
     language: {
       lengthMenu: 'Mostrar _MENU_ registros',
       zeroRecords: 'No se encontraron resultados',
@@ -148,8 +156,15 @@ const establecerValoresSolicitud = ({ data }) => {
   document.getElementById('presentacioni').value = data.prensetacion
   document.getElementById('metodoi').value = data.metodoAplicacion
   document.getElementById('descripcioni').value = data.descripcion
-  const mensaje = data.respuestaSolicitud
-  if (mensaje) mostrarNotificacion(mensaje, new Date())
+
+  const rol = document.getElementById('rol').value
+  if (rol === 'mezclador') {
+    const mensaje = data.respuestaSolicitud
+    if (mensaje) mostrarNotificacion(mensaje, new Date())
+  } else if (rol === 'solicita') {
+    const mensaje = data.respuestaMezclador
+    if (mensaje) mostrarNotificacion(mensaje, new Date())
+  }
 }
 
 // Exportar funciones

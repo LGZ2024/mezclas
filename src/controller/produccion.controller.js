@@ -95,6 +95,33 @@ export class ProduccionController {
     }
   }
 
+  descargarReportePendientes = async (req, res) => {
+    const { user } = req.session
+    const { empresa } = req.params
+    let buffer
+    try {
+      if (empresa === 'todo') {
+        buffer = await this.produccionModel.descargarReportePendientesCompleto()
+      } else {
+        buffer = await this.produccionModel.descargarReportePendientes({ empresa: empresa || user.empresa })
+      }
+      // Si hay un error, enviamos la respuesta de error y retornamos
+      if (buffer.status === 'error') {
+        return res.status(404).json({
+          error: buffer.message
+        })
+      }
+
+      // Configurar las cabeceras para la descarga del archivo
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+      res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx')
+      res.send(buffer)
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error)
+      res.status(500).json({ mensaje: 'Ocurrió un error al generar el reporte', error: error.message })
+    }
+  }
+
   ObtenerReceta = async (req, res) => {
     try {
       const buffer = await this.produccionModel.ObtenerReceta()

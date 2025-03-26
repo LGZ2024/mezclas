@@ -12,6 +12,28 @@ export class NotificacionModel {
     }
   }
 
+  static async getAllIdUsuario ({ idUsuario }) {
+    try {
+      const notificacion = await Notificaciones.findAll({
+        where: {
+          id_usuario: idUsuario,
+          status: 1
+        },
+        attributes: [
+          'id',
+          'id_solicitud',
+          'id_usuario',
+          'mensaje',
+          'status'
+        ]
+      })
+      return notificacion
+    } catch (e) {
+      console.error(e.message) // Salida: Error la notificacion
+      return { error: 'Error al obtener los viviendas' }
+    }
+  }
+
   // obtener todos los un ato por id
   static async getOne ({ id }) {
     try {
@@ -37,11 +59,10 @@ export class NotificacionModel {
     }
   }
 
-  static async create ({ idSolicitud, mensaje }) {
-    console.log(mensaje)
+  static async create ({ idSolicitud, mensaje, idUsuario }) {
     try {
       // creamos el notificacion
-      await Notificaciones.create({ id_solicitud: idSolicitud, mensaje })
+      await Notificaciones.create({ id_solicitud: idSolicitud, mensaje, id_usuario: idUsuario })
       return { message: `notificacion registrado exitosamente ${idSolicitud}` }
     } catch (e) {
       console.error(e.message) // Salida: Error la notificacion
@@ -66,6 +87,23 @@ export class NotificacionModel {
     } catch (e) {
       console.error(e.message) // Salida: Error la notificacion
       return { error: 'Error al obtener las viviendas' }
+    }
+  }
+
+  // para actualizar status de notificacion
+  static async updateStatus ({ id }) {
+    try {
+      // verificamos si existe alguna empresa con el id proporcionado
+      const notificacion = await Notificaciones.findByPk(id)
+      if (!notificacion) return { error: 'notificacion no encontrado' }
+      // Actualiza solo los campos que se han proporcionado
+      if (id) notificacion.status = 0
+      await notificacion.save()
+
+      return { message: 'notificacion actualizada correctamente' }
+    } catch (e) {
+      console.error(e.message) // Salida: Error la notificacion
+      return { error: 'Error al obtener las status de notificacion' }
     }
   }
 }

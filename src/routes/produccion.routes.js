@@ -13,6 +13,8 @@ export const createProduccionRouter = ({ produccionModel }) => {
   router.get('/obetenerReceta', produccionController.ObtenerReceta)
   router.post('/descargarReporte', produccionController.descargarReporte)
   router.post('/descargarReporte-v2', produccionController.descargarReporteV2)
+  router.get('/reporte-pendientes', produccionController.descargarReportePendientes)
+  router.get('/reporte-pendientes/:empresa', produccionController.descargarReportePendientes)
 
   return router
 }

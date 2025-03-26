@@ -238,7 +238,9 @@ export class SolicitudRecetaModel {
    * @param {Object} params.data - Datos de los productos y mensaje
    * @param {string} params.idUsuarioMezcla - ID del mezclador
    * @returns {Promise<Object>} Resultado de la actualización
-   */static async actualizarEstado ({ data, idUsuarioMezcla }) {
+   */
+
+  static async actualizarEstado ({ data, idUsuarioMezcla }) {
     let transaction
     const noExistencia = []
     const estados = {
@@ -270,10 +272,14 @@ export class SolicitudRecetaModel {
         transaction
       })
 
+      // Obtener datos del usuario solicitante
+      const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud)
+
       // crear notificacion
       await this.crearNotificacion({
         id: receta.dataValues.id_solicitud,
         mensaje: data.mensaje,
+        idUsuario: datosUsuario[0].idUsuarioSolicita,
         transaction
       })
 
@@ -284,9 +290,6 @@ export class SolicitudRecetaModel {
         const productosNoDisponibles = await this.obtenerProductosNoDisponibles(noExistencia)
         estados.estados.push(...productosNoDisponibles)
       }
-
-      // Obtener datos del usuario solicitante
-      const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud)
 
       return {
         data: datosUsuario,
@@ -343,12 +346,13 @@ export class SolicitudRecetaModel {
     }
   }
 
-  static async crearNotificacion ({ id, mensaje, transaction }) {
+  static async crearNotificacion ({ id, mensaje, idUsuario, transaction }) {
     try {
       if (mensaje) {
         const notificacionData = {
           id_solicitud: id,
-          mensaje
+          mensaje,
+          id_usuario: idUsuario
         }
         const notificacion = await Notificaciones.create(notificacionData, { transaction })
 
@@ -390,12 +394,13 @@ export class SolicitudRecetaModel {
         model: Usuario,
         attributes: ['nombre', 'email']
       }],
-      attributes: ['folio']
+      attributes: ['folio', 'idUsuarioSolicita']
     })
 
     return usuarios.map(item => ({
       nombre: item.usuario?.nombre || 'No se encontró Nombre',
-      email: item.usuario?.email || 'No se encontró Correo'
+      email: item.usuario?.email || 'No se encontró Correo',
+      idUsuarioSolicita: item.idUsuarioSolicita
     }))
   }
 } // fin modelo

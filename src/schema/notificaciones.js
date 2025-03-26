@@ -17,6 +17,15 @@ const notificacionesConfig = {
       }
     }
   },
+  id_usuario: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'El Id de la usuario en nesesario'
+      }
+    }
+  },
   mensaje: {
     type: DataTypes.STRING,
     allowNull: false,

@@ -1,5 +1,6 @@
 import sequelize from '../db/db.js'
 import { crearExcel, crearSolicitud, reporteSolicitud, reporteSolicitudV2 } from '../config/excel.js'
+import { MezclaModel } from '../models/mezclas.models.js'
 export class ProduccionModel {
   static async ObtenerGastoUsuario ({ tipo }) {
     // comprobar que el objeto tipo tenga alguno de los siguientes datos Usuario,temporada, empresa entre otros antes de proceder a la consulta
@@ -112,6 +113,77 @@ export class ProduccionModel {
         throw new Error('datos invalidos, se requiere un arreglo de datos filtrados.')
       }
       const excel = await reporteSolicitudV2(datos)
+      return excel
+    } catch (error) {
+      // Manejo de errores
+      console.error('Error al procesar producto:', error)
+      return {
+        status: 'error',
+        message: error.message || 'Error desconocido'
+      }
+    }
+  }
+
+  static async descargarReportePendientes ({ empresa }) {
+    try {
+      if (!empresa) {
+        return {
+          status: 'error',
+          message: 'Se requiere especificar una empresa'
+        }
+      }
+
+      const datos = await MezclaModel.obtenerTablaMezclasEmpresa({ status: 'Pendiente', empresa })
+
+      // Validar que hay datos para procesar
+      if (!datos) {
+        return {
+          status: 'error',
+          message: 'No se encontraron datos válidos'
+        }
+      }
+
+      if (datos.length === 0) {
+        return {
+          status: 'error',
+          message: 'No hay mezclas pendientes para esta empresa'
+        }
+      }
+
+      const excel = await reporteSolicitud(datos)
+
+      return excel
+    } catch (error) {
+      // Manejo de errores
+      console.error('Error al procesar producto:', error)
+      return {
+        status: 'error',
+        message: error.message || 'Error desconocido'
+      }
+    }
+  }
+
+  static async descargarReportePendientesCompleto () {
+    try {
+      const datos = await MezclaModel.getAllGeneral({ status: 'Pendiente' })
+      console.log(datos)
+      // Validar que hay datos para procesar
+      if (!datos) {
+        return {
+          status: 'error',
+          message: 'No se encontraron datos válidos'
+        }
+      }
+
+      if (datos.length === 0) {
+        return {
+          status: 'error',
+          message: 'No hay mezclas pendientes para esta empresa'
+        }
+      }
+
+      const excel = await reporteSolicitud(datos.data)
+
       return excel
     } catch (error) {
       // Manejo de errores

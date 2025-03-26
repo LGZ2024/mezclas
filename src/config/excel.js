@@ -336,6 +336,11 @@ export const reporteSolicitud = async (parametros) => {
 
     console.log('Datos a procesar:', datos)
 
+    // Verificar si hay datos
+    if (!datos || datos.length === 0) {
+      throw new Error('No hay datos para generar el Excel')
+    }
+
     // Crear un nuevo libro de Excel
     const workbook = new ExcelJS.Workbook()
 
@@ -377,7 +382,7 @@ export const reporteSolicitud = async (parametros) => {
         if (dato.variedad === 'todo') {
           hojaGeneral.addRow(['Datos Generales Fertilizantes']).eachCell((cell) => { cell.style = headerStyle }) // Encabezado de la hoja
 
-          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud]).eachCell((cell) => { cell.style = cellStyle })
+          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.id_solicitud : dato.id]).eachCell((cell) => { cell.style = cellStyle })
           hojaGeneral.addRow(['Solicita', dato.usuario]).eachCell((cell) => { cell.style = cellStyle })
           hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell((cell) => { cell.style = cellStyle })
           hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega]).eachCell((cell) => { cell.style = cellStyle })
@@ -391,15 +396,15 @@ export const reporteSolicitud = async (parametros) => {
           hojaGeneral.addRow(['Datos Generales Mezclas']).eachCell((cell) => { cell.style = headerStyle }) // Encabezado de la hoja
 
           // obtenemos datos faltantes de la solicitud
-          const datosF = await obtenerDatosSolicitud(dato.id_solicitud)
+          const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id)
           console.log('Datos de la solicitud:', datosF)
 
-          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud]).eachCell((cell) => { cell.style = cellStyle })
-          hojaGeneral.addRow(['Folio de Receta', dato.folio]).eachCell((cell) => { cell.style = cellStyle })
-          hojaGeneral.addRow(['Solicita', dato.usuario]).eachCell((cell) => { cell.style = cellStyle })
+          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.idSolicitud : dato.id]).eachCell((cell) => { cell.style = cellStyle })
+          hojaGeneral.addRow(['Folio de Receta', dato.folio ? dato.folio : dato.FolioReceta]).eachCell((cell) => { cell.style = cellStyle })
+          hojaGeneral.addRow(['Solicita', dato.usuario ? dato.usuario : dato.Solicita]).eachCell((cell) => { cell.style = cellStyle })
           hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell((cell) => { cell.style = cellStyle })
-          hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega]).eachCell((cell) => { cell.style = cellStyle })
-          hojaGeneral.addRow(['Rancho', dato.rancho]).eachCell((cell) => { cell.style = cellStyle })
+          hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega ? dato.fechaEntrega : 'No aplica']).eachCell((cell) => { cell.style = cellStyle })
+          hojaGeneral.addRow(['Rancho', dato.rancho ? dato.rancho : dato.ranchoDestino]).eachCell((cell) => { cell.style = cellStyle })
           hojaGeneral.addRow(['Centro de Coste', dato.centroCoste || dato.centro_coste]).eachCell((cell) => { cell.style = cellStyle })
           hojaGeneral.addRow(['Variedad Fruta', dato.variedad !== 'todo' ? dato.variedad : variedades[0].variedad]).eachCell((cell) => { cell.style = cellStyle })
           hojaGeneral.addRow(['Empresa', dato.empresa]).eachCell((cell) => { cell.style = cellStyle })
@@ -420,7 +425,7 @@ export const reporteSolicitud = async (parametros) => {
         porcentaje = ['', '', '']
 
         // Obtener productos de la base de datos
-        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud)
+        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id)
         console.log('Productos obtenidos:', productos)
 
         // Crear el arreglo de datos
@@ -494,7 +499,7 @@ export const reporteSolicitud = async (parametros) => {
   }
 }
 export const reporteSolicitudV2 = async (parametros) => {
-  console.log(parametros)
+  // console.log(parametros)
   // Definir estilos
   const headerStyle = {
     font: { bold: true, color: { argb: 'FFFFFFFF' } },
@@ -518,7 +523,7 @@ export const reporteSolicitudV2 = async (parametros) => {
       ? parametros
       : parametros.datos || []
 
-    // console.log('Datos a procesar:', datos)
+    console.log('Datos a procesar:', datos)
 
     // Crear un nuevo libro de Excel
     const workbook = new ExcelJS.Workbook()
@@ -554,15 +559,15 @@ export const reporteSolicitudV2 = async (parametros) => {
       // obtenemos datos de la variedad
       for (const dato of datos) {
         // // obtenemos datos faltantes de la solicitud
-        const datosF = await obtenerDatosSolicitud(dato.id_solicitud)
+        const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id)
         // console.log('Datos de la solicitud:', datosF)
 
         // // Obtener productos de la base de datos
-        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud)
+        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id)
         // console.log('Productos obtenidos:', productos)
         // Crear el arreglo de datos
         if (dato.variedad.split(',').length > 1) {
-          variedades = await obtenerPorcentajes(dato.id_solicitud)
+          variedades = await obtenerPorcentajes(dato.id_solicitud ? dato.id_solicitud : dato.id)
           // console.log('Variedades obtenidas:', variedades)
           if (variedades && variedades.length > 0) {
             for (const variedad of variedades) {

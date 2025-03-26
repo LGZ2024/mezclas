@@ -20,6 +20,7 @@ import { createMezclasRouter } from '../routes/mezclas.routes.js'
 import { createProductosRouter } from '../routes/productos.routes.js'
 import { createProductosSoliRouter } from '../routes/productosSolitud.routes.js'
 import { createProduccionRouter } from '../routes/produccion.routes.js'
+import { createNotificacionesRouter } from '../routes/notificaciones.routes.js'
 
 // Models
 import { UsuarioModel } from '../models/usuario.models.js'
@@ -27,6 +28,7 @@ import { CentroCosteModel } from '../models/centro.models.js'
 import { MezclaModel } from '../models/mezclas.models.js'
 import { ProductosModel } from '../models/productos.models.js'
 import { SolicitudRecetaModel } from '../models/productosSolicitud.models.js'
+import { NotificacionModel } from '../models/notificaciones.models.js'
 import { ProduccionModel } from '../models/produccion.models.js'
 
 // Asociaciones
@@ -76,6 +78,7 @@ export const startServer = async (options) => {
   app.use('/api/', authenticate, createMezclasRouter({ mezclaModel: MezclaModel }))
   app.use('/api/', authenticate, createProductosRouter({ productosModel: ProductosModel })) // Autentificacion general
   app.use('/api/', authenticate, createProductosSoliRouter({ productossModel: SolicitudRecetaModel }))
+  app.use('/api/', authenticate, createNotificacionesRouter({ notificacionModel: NotificacionModel }))
   app.use('/api/', authenticate, createProduccionRouter({ produccionModel: ProduccionModel }))
 
   // rutas Protegidas
