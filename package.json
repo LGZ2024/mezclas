@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node _passenger.cjs",
-    "dev": "node --watch src/app.mjs",
+    "dev": "console-ninja node --watch src/app.mjs",
     "build": "webpack --config webpack.config.mjs --mode production",
     "buildD": "webpack --config webpack.config.mjs --mode development --stats-error-details"
   },

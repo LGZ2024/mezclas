@@ -5,7 +5,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <script src="https://cdn.jsdelivr.net/npm/luxon@2.3.1/build/global/luxon.min.js"></script>
+    
     <%- include("../../templates/admin/cabecera") %>
 </head>
 
@@ -29,13 +29,11 @@
                                     <div class="card">
                                         <div class="card-body">
                                             <h4 class="card-title">Solicitudes Completadas</h4>
-                                            <div class="row mb-5 justify-content-between">
-                                                <div class="col-md-2">
-                                                    <button type="button" class="btn btn-inverse-primary btn-fw col"
-                                                        id="descargar">Descargar Reporte</button>
-                                                    <button type="button" class="btn btn-inverse-primary btn-fw col"
-                                                        id="descargarReporte">Descargar Reporte completo</button>
-                                                    <button type="button" class="btn btn-inverse-primary btn-fw col"
+                                            <div class="row mb-7 ">
+                                                <div class="col-md-6 d-flex gap-2">
+                                                    <button type="button" class="btn btn-inverse-secondary btn-fw"
+                                                        id="descargarReporte">Descargar Reporte</button>
+                                                    <button type="button" class="btn btn-inverse-primary btn-fw"
                                                         id="descargarReporteV2">Descargar Reporte completo</button>
                                                 </div>
                                             </div>

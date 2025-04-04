@@ -4,12 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="../css/spinner.css">
     <title>Mezclas</title>
     <%- include("../../templates/mezclas/cabecera") %>
 </head>
 
 
 <body>
+     <!-- Spinner de carga -->
+     <div class="spinner-overlay" id="spinner" style="display: none;">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <p class="spinner-text">Procesando...</p>
+        </div>
+    </div>
     <header>
         <div class="barra contenedor">
             <div class="barra__logo">

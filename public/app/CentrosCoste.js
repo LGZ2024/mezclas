@@ -11,8 +11,12 @@ async function Variedades (id) {
 }
 async function cambioSolicitud ({ selecion, variedad, porcentaje }) {
   // Validar y separar datos
-  const variedades = variedad.split(',')
-  const porcentajes = porcentaje.split(',')
+  let variedades = variedad.split(',')
+  let porcentajes = porcentaje.split(',')
+
+  // Eliminar el último elemento de ambos arrays
+  variedades = variedades.slice(0, -1)
+  porcentajes = porcentajes.slice(0, -1)
 
   if (variedades.length !== porcentajes.length) {
     Swal.fire({
@@ -56,6 +60,7 @@ async function cambioSolicitud ({ selecion, variedad, porcentaje }) {
     return html
   }
 
+  // aqui se muestra la tabla de porcentajes si se selecciona la opcion 'todo'
   if (selecion === 'todo') {
     const tablaHTML = crearTablaHTML()
 
@@ -87,6 +92,16 @@ async function cambioSolicitud ({ selecion, variedad, porcentaje }) {
         crearFormulario({ variedades, porcentajes })
       }
     })
+  }
+  // aqui selecionamos select option con id='metodoAplicacion' con value 'Preparacion de Tierras'.  si la seleccion es === 'NSC' y desabilitar el select
+  if (selecion === 'NSC') {
+    const select = document.getElementById('metodoAplicacion')
+    select.disabled = true
+    select.value = 'Preparacion de Tierras'
+  } else {
+    // habilitar el select
+    const select = document.getElementById('metodoAplicacion')
+    select.disabled = false
   }
 }
 

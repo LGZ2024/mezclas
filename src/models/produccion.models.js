@@ -1,5 +1,5 @@
 import sequelize from '../db/db.js'
-import { crearExcel, crearSolicitud, reporteSolicitud, reporteSolicitudV2 } from '../config/excel.js'
+import { crearExcel, crearSolicitud, reporteSolicitudV2, reporteSolicitudv3 } from '../config/excel.js'
 import { MezclaModel } from '../models/mezclas.models.js'
 export class ProduccionModel {
   static async ObtenerGastoUsuario ({ tipo }) {
@@ -26,7 +26,7 @@ export class ProduccionModel {
     }
   }
 
-  static async solicitudReporte ({ empresa, rol }) {
+  static async solicitudReporte ({ empresa, rol, idUsuario }) {
     let data
     try {
       if (rol === 'admin') {
@@ -36,6 +36,14 @@ export class ProduccionModel {
       } else if (rol === 'administrativo' && empresa === 'General') {
         data = await sequelize.query(
           'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`!="Lugar Agricola"'
+        )
+      } else if (rol === 'administrativo' && idUsuario === 33) { // admin de Bioagricultura id usuario 33 de francisco alvarez
+        data = await sequelize.query(
+          'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bioagricultura" OR `empresa`="Moras Finas"'
+        )
+      } else if (rol === 'administrativo' && idUsuario === 49) { // admin de general id usuario 49 de janet medina
+        data = await sequelize.query(
+          'SELECT * FROM `total_precio_cantidad_solicitud`"'
         )
       } else {
         data = await sequelize.query(
@@ -73,7 +81,6 @@ export class ProduccionModel {
   }
 
   static async descargarSolicitud ({ datos }) {
-    console.log(datos)
     try {
       if (!datos || Array.isArray(datos)) {
         throw new Error('datos invalidos, se requiere un arreglo de datos filtrados.')
@@ -95,7 +102,7 @@ export class ProduccionModel {
       if (!datos || Array.isArray(datos)) {
         throw new Error('datos invalidos, se requiere un arreglo de datos filtrados.')
       }
-      const excel = await reporteSolicitud(datos)
+      const excel = await reporteSolicitudv3(datos)
       return excel
     } catch (error) {
       // Manejo de errores
@@ -150,7 +157,7 @@ export class ProduccionModel {
         }
       }
 
-      const excel = await reporteSolicitud(datos)
+      const excel = await reporteSolicitudv3(datos)
 
       return excel
     } catch (error) {
@@ -182,7 +189,7 @@ export class ProduccionModel {
         }
       }
 
-      const excel = await reporteSolicitud(datos.data)
+      const excel = await reporteSolicitudv3(datos.data)
 
       return excel
     } catch (error) {

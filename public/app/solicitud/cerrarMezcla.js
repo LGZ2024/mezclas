@@ -1,6 +1,6 @@
 import { CameraHandler } from '../camara.js'
 import { mostrarMensaje } from '../mensajes.js'
-
+import { showSpinner, hideSpinner } from '../spinner.js'
 export class SolicitudFormulario {
   constructor () {
     this.initElements()
@@ -147,6 +147,7 @@ export class SolicitudFormulario {
   }
 
   realizarEnvio (datosFormulario) {
+    showSpinner()
     fetch('/api/CerrarSolicitud', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -157,12 +158,14 @@ export class SolicitudFormulario {
         if (datos.message) {
           this.mostrarExito(datos.message)
         } else {
+          hideSpinner()
           this.mostrarError(datos.error)
         }
       })
       .catch(error => {
+        hideSpinner()
         this.manejarError(error)
-      })
+      }).finally(() => hideSpinner())
   }
 
   mostrarExito (mensaje) {

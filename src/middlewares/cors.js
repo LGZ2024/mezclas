@@ -2,7 +2,8 @@ import cors from 'cors'
 
 const ACCEPTED_ORIGINS = [
   'http://localhost:3000',
-  'https://solicitudmezclas.portalrancho.com.mx'
+  'https://solicitudmezclas.portalrancho.com.mx',
+  'https://mezclas.portalrancho.com.mx'
 ]
 
 export const corsMiddleware = ({ acceptedOrigins = ACCEPTED_ORIGINS } = {}) => cors({

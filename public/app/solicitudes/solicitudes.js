@@ -18,7 +18,7 @@ const obtenerRegistro = async () => {
   try {
     const response = await fetchApi('/api/solicitudReporte', 'GET') // cambiar a GET
     const data = await response.json()
-    console.log(data[0])
+
     return data[0]
   } catch (error) {
     console.error('Error:', error)

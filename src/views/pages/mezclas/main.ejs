@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../css/headerNotificaciones.css">
     <title>Mezclas</title>
     <%- include("../../templates/mezclas/cabecera") %>
 </head>
@@ -35,27 +36,7 @@
             </div>
         </section>
         <%- include("../../templates/mezclas/scripts") %>
+        <script type="module" src="../app/main.js"></script>
 </body>
 
 </html>
-<script>
-
-    const btnSolicitar = document.getElementById('solicitar')
-    if (btnSolicitar) {
-        btnSolicitar.addEventListener('click', () => {
-            window.location.href = '/protected/solicitud';
-        })
-    } else {
-        console.log('No se encontró el botón')
-    }
-
-    document.getElementById('solicitud').addEventListener('click', () => {
-        window.location.href = '/protected/solicitudes';
-    })
-    document.getElementById('preparadas').addEventListener('click', () => {
-        window.location.href = '/protected/proceso';
-    })
-    document.getElementById('entregadas').addEventListener('click', () => {
-        window.location.href = '/protected/completadas';
-    })
-</script>

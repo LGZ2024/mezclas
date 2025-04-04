@@ -132,7 +132,7 @@ export const enviarCorreo = async (params) => {
                 <h4>Detalles de la Solicitud:</h4>
                 ${getAdditionalDetails(status)}
       
-               <a href="https://solicitudmezclas.portalrancho.com.mx/protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
+               <a href="https://mezclas.portalrancho.com.mx//protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
       
                <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
                <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -155,7 +155,7 @@ export const enviarCorreo = async (params) => {
                 <li>Nombre de usuario:<b>${email}</b></li>
                 <li>Contraseña temporal:<b>${password}</b></li>
             </ul>
-             <a href="https://solicitudmezclas.portalrancho.com.mx/" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
+             <a href="https://mezclas.portalrancho.com.mx/ style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
             <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>
             <p>¡Gracias por unirte a nosotros!</p>
             <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -188,7 +188,7 @@ export const enviarCorreo = async (params) => {
                 <li><strong>Folio Receta:</strong> ${data.folio}</li>
             </ul>
 
-            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
+            <a href="https://mezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
 
             <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
             <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -224,7 +224,7 @@ export const enviarCorreo = async (params) => {
       
                    <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
                   <div style="text-align: center; margin-top: 20px;">
-                      <a href="http://localhost:3000/protected/notificacion/${solicitudId}" 
+                      <a href="https://mezclas.portalrancho.com.mx/protected/notificacion/${solicitudId}" 
                         style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                         Ver Solicitud
                       </a>
@@ -264,7 +264,7 @@ export const enviarCorreo = async (params) => {
           </div>
   
           <div style="text-align: center; margin-top: 20px;">
-            <a href="http://localhost:3000/protected/notificacion/${solicitudId}" 
+            <a href="https://mezclas.portalrancho.com.mx/protected/notificacion/${solicitudId}" 
                style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                Ver Solicitud
             </a>

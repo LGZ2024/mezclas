@@ -98,15 +98,25 @@ export class NotificacionesController {
 
   updateStatus = async (req, res) => {
     const { id } = req.params
+
     try {
       const result = await this.notificacionModel.updateStatus({ id })
+
       if (result.error) {
-        res.status(404).json({ error: `${result.error}` })
+        return res.status(404).json({
+          error: result.error
+        })
       }
-      return res.json({ message: result.message })
+
+      return res.json({
+        status: 'success',
+        message: result.message
+      })
     } catch (error) {
-      console.error({ error: `${error}` })
-      return res.status(500).render('500', { error: 'Error interno del servidor' })
+      console.error('Error en updateStatus:', error)
+      return res.status(500).json({
+        error: 'Error al actualizar el estado de la notificación'
+      })
     }
   }
 }

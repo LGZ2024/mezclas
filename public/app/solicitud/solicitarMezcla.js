@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 import { centrosCoste, Variedades, cambioSolicitud } from '../CentrosCoste.js'
 import { mostrarMensaje } from '../mensajes.js'
-
+import { showSpinner, hideSpinner } from '../spinner.js'
 class SolicitudFormulario {
   constructor () {
     this.productosData = [] // Variable para almacenar productos
@@ -99,8 +99,16 @@ class SolicitudFormulario {
       showCancelButton: false // No mostrar botón de cancelar
     })
     if (tipo) {
+      const titulo = document.getElementById('titulo')
+      const campofolio = document.getElementById('campoFolio')
+      const campoCantidad = document.getElementById('campoCantidad')
+      const campoPresentacion = document.getElementById('campoUnidad')
       Swal.fire({ html: `Seleccionastes: ${tipo}` })
       if (tipo === 'Mezcla') {
+        titulo.innerHTML = 'Solicitud de Mezcla'
+        campofolio.style.display = 'block'
+        campoCantidad.style.display = 'block'
+        campoPresentacion.style.display = 'block'
         folio.disabled = false
         folio.required = true
         cantidad.disabled = false
@@ -108,12 +116,18 @@ class SolicitudFormulario {
         presentacion.disabled = false
         presentacion.required = true
       } else if (tipo === 'Fertilizantes') {
+        titulo.innerHTML = 'Solicitud de Fertilizantes'
+        campofolio.style.display = 'none'
+        campoCantidad.style.display = 'none'
+        campoPresentacion.style.display = 'none'
         folio.disabled = true
         folio.required = false
         folio.value = ''
+
         cantidad.disabled = true
         cantidad.required = false
         cantidad.value = ''
+
         presentacion.disabled = true
         presentacion.required = false
         presentacion.value = ''
@@ -285,34 +299,37 @@ class SolicitudFormulario {
   // Métodos para enviar formulario
   manejarEnvioReceta = async (e) => {
     e.preventDefault()
-
-    // Validación general del formulario
-    if (!this.validarFormulario()) {
-      return
-    }
-
-    // Validación específica de productos
-    if (!this.validarProductos()) {
-      return
-    }
-
-    // Recopilación de datos
-    const datosReceta = this.recopilarDatosReceta()
-
+    showSpinner()
     try {
+    // Validación general del formulario
+      if (!this.validarFormulario()) {
+        return
+      }
+
+      // Validación específica de productos
+      if (!this.validarProductos()) {
+        return
+      }
+
+      // Recopilación de datos
+      const datosReceta = this.recopilarDatosReceta()
+
       // Envío de datos al servidor
       const respuesta = await this.enviarReceta(datosReceta)
 
       // Procesar respuesta
       this.procesarRespuestaReceta(respuesta)
     } catch (error) {
+      hideSpinner()
       this.manejarErrorReceta(error)
+    } finally {
+      hideSpinner()
     }
   }
 
   manejarEnvioPorcentajes = async (e) => {
     e.preventDefault()
-
+    showSpinner()
     try {
       // Validación de porcentajes
       if (!this.validadPorcentajes()) {
@@ -328,8 +345,11 @@ class SolicitudFormulario {
       // Procesar respuesta exitosa
       this.procesarRespuestaPorcentajes(respuesta)
     } catch (error) {
+      hideSpinner()
       console.error('Error en manejarEnvioPorcentajes:', error)
       this.mostrarError(error.message || 'Error al guardar los porcentajes')
+    } finally {
+      hideSpinner()
     }
   }
 
@@ -392,6 +412,7 @@ class SolicitudFormulario {
       }
     })
     console.log('Productos recopilados:', productos) // Debug
+
     return productos
   }
 
@@ -411,6 +432,9 @@ class SolicitudFormulario {
       if (porcentajes.length === 0) {
         throw new Error('No hay porcentajes para enviar')
       }
+
+      // AGREGAMOS UN PÓRCENTAJE EXTRA PARA EL CENTRO DE COSTA
+      porcentajes.push(0)
 
       // Crear el objeto de datos
       const data = {
@@ -638,21 +662,21 @@ class SolicitudFormulario {
     }
 
     // Agregar recetas al select si existen
-    if (datos.recetas && datos.recetas.length > 0) {
-      const groupRecetas = document.createElement('optgroup')
-      groupRecetas.label = 'Recetas'
+    // if (datos.recetas && datos.recetas.length > 0) {
+    //   const groupRecetas = document.createElement('optgroup')
+    //   groupRecetas.label = 'Recetas'
 
-      datos.recetas.forEach(receta => {
-        const option = document.createElement('option')
-        option.value = receta.nombre
-        option.textContent = receta.nombre
-        option.dataset.unidadBase = receta.unidad_medida
-        option.dataset.idReceta = receta.id_receta
-        groupRecetas.appendChild(option)
-      })
+    //   datos.recetas.forEach(receta => {
+    //     const option = document.createElement('option')
+    //     option.value = receta.nombre
+    //     option.textContent = receta.nombre
+    //     option.dataset.unidadBase = receta.unidad_medida
+    //     option.dataset.idReceta = receta.id_receta
+    //     groupRecetas.appendChild(option)
+    //   })
 
-      select.appendChild(groupRecetas)
-    }
+    //   select.appendChild(groupRecetas)
+    // }
 
     // Crear select de unidad de medida
     const selectUnidadMedida = document.createElement('select')
@@ -772,7 +796,8 @@ class SolicitudFormulario {
     // Mapa de unidades equivalentes para litro y kilogramo
     const unidadesMap = {
       litro: ['Litro', 'Mililitro'],
-      kilogramo: ['Kilogramo', 'Gramo']
+      kilogramo: ['Kilogramo', 'Gramo'],
+      Unidad: ['Unidad']
     }
     const unidadNormalizada = unidadBase.toLowerCase().trim()
     return unidadesMap[unidadNormalizada] || [unidadBase]

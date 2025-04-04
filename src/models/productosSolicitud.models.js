@@ -278,7 +278,7 @@ export class SolicitudRecetaModel {
       // crear notificacion
       await this.crearNotificacion({
         id: receta.dataValues.id_solicitud,
-        mensaje: data.mensaje,
+        mensaje: `Productos no disponibles para la solicitud ${receta.dataValues.id_solicitud}`,
         idUsuario: datosUsuario[0].idUsuarioSolicita,
         transaction
       })

@@ -8,10 +8,10 @@ import * as __WEBPACK_EXTERNAL_MODULE_cors__ from "cors";
 import * as __WEBPACK_EXTERNAL_MODULE_jsonwebtoken__ from "jsonwebtoken";
 import * as __WEBPACK_EXTERNAL_MODULE_dotenv__ from "dotenv";
 import * as __WEBPACK_EXTERNAL_MODULE_sequelize__ from "sequelize";
-import * as __WEBPACK_EXTERNAL_MODULE_nodemailer__ from "nodemailer";
 import * as __WEBPACK_EXTERNAL_MODULE_bcryptjs__ from "bcryptjs";
-import * as __WEBPACK_EXTERNAL_MODULE_date_fns_f4130be9__ from "date-fns";
 import * as __WEBPACK_EXTERNAL_MODULE_fs_promises_f8dae9d1__ from "fs/promises";
+import * as __WEBPACK_EXTERNAL_MODULE_nodemailer__ from "nodemailer";
+import * as __WEBPACK_EXTERNAL_MODULE_date_fns_f4130be9__ from "date-fns";
 import * as __WEBPACK_EXTERNAL_MODULE_exceljs__ from "exceljs";
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -79,7 +79,7 @@ var external_cors_y = (x) => (() => (x))
 const external_cors_namespaceObject = external_cors_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_cors__["default"]) });
 ;// CONCATENATED MODULE: ./src/middlewares/cors.js
 
-const ACCEPTED_ORIGINS = ['http://localhost:3000', 'https://solicitudmezclas.portalrancho.com.mx'];
+const ACCEPTED_ORIGINS = ['http://localhost:3000', 'https://solicitudmezclas.portalrancho.com.mx', 'https://mezclas.portalrancho.com.mx'];
 const corsMiddleware = ({
   acceptedOrigins = ACCEPTED_ORIGINS
 } = {}) => (0,external_cors_namespaceObject["default"])({
@@ -145,7 +145,11 @@ const envs = {
   SECRET_JWT_KEY: process.env.SECRET_JWT_KEY,
   EMAIL_USER: process.env.EMAIL_USER,
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
-  MODE: process.env.MODE
+  MODE: process.env.MODE,
+  PUBLIC_KEY: process.env.PUBLIC_KEY,
+  PRIVATE_KEY: process.env.PRIVATE_KEY,
+  MAILTO: process.env.MAILTO,
+  NOTIFICATION_ICON: process.env.NOTIFICATION_ICON
 };
 ;// CONCATENATED MODULE: ./src/middlewares/authMiddleware.js
 
@@ -246,14 +250,17 @@ const sequelizeConfig = {
     underscored: true
   },
   pool: {
-    max: 5,
+    max: 10,
     min: 0,
-    acquire: 30000,
-    idle: 10000
+    acquire: 60000,
+    idle: 20000
+  },
+  dialectOptions: {
+    connectTimeout: 60000 // Aumenta el timeout de conexión
   }
 };
 const sequelize = new external_sequelize_namespaceObject.Sequelize(sequelizeConfig);
-/* harmony default export */ const db = (sequelize); // Exporta el módulo de Sequelize como valor por defecto
+/* harmony default export */ const db = (sequelize);
 ;// CONCATENATED MODULE: ./src/schema/productos.js
 
 
@@ -457,7 +464,2586 @@ class ProductosModel {
     }
   }
 }
+;// CONCATENATED MODULE: ./src/schema/solicitud_receta.js
+
+
+const solicitud_receta_productosConfig = {
+  id: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    field: 'id_receta',
+    // Nombre de columna en la base de datos
+    primaryKey: true,
+    autoIncrement: true
+  },
+  id_solicitud: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'El Id de la solicitud en nesesario'
+      }
+    }
+  },
+  id_producto: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'El Id del producto en nesesario'
+      }
+    }
+  },
+  unidad_medida: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'La unidad de medida es necesaria'
+      }
+    }
+  },
+  cantidad: {
+    type: external_sequelize_namespaceObject.DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La cantidad es requerida'
+      },
+      min: {
+        args: [0],
+        msg: 'La cantidad debe ser mayor a 0'
+      }
+    }
+  },
+  status: {
+    type: external_sequelize_namespaceObject.DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: 1
+  }
+};
+const SolicitudProductos = db.define('solicitud_receta ', solicitud_receta_productosConfig, {
+  tableName: 'solicitud_receta',
+  // Nombre de la tabla en la base de datos
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
+});
+;// CONCATENATED MODULE: ./src/schema/mezclas.js
+
+
+const solicitudConfig = {
+  id: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  folio: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: {
+        args: [0, 50],
+        msg: 'El folio debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  cantidad: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: {
+        args: [0, 10],
+        msg: 'la cantidad debe tener entre 1 y 10 caracteres'
+      }
+    }
+  },
+  idCentroCoste: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    allowNull: false,
+    field: 'idCentroCoste',
+    // Nombre de columna en la base de datos
+    validate: {
+      notNull: {
+        msg: 'El centro de coste es requerido'
+      }
+    }
+  },
+  descripcion: {
+    type: external_sequelize_namespaceObject.DataTypes.TEXT,
+    allowNull: true
+  },
+  empresa: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La empresa'
+      },
+      len: {
+        args: [3, 100],
+        msg: 'El nombre de la empresa debe tener entre 3 y 100 caracteres'
+      }
+    }
+  },
+  fechaSolicitud: {
+    type: external_sequelize_namespaceObject.DataTypes.DATEONLY,
+    allowNull: true,
+    field: 'fechaSolicitud',
+    // Nombre de columna en la base de datos
+    defaultValue: external_sequelize_namespaceObject.DataTypes.NOW
+  },
+  idUsuarioSolicita: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    allowNull: false,
+    field: 'idUsuarioSolicita',
+    // Nombre de columna en la base de datos
+    validate: {
+      notNull: {
+        msg: 'El ID de usuario en nesesario'
+      }
+    }
+  },
+  idUsuarioMezcla: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    field: 'idUsuarioMezcla',
+    // Nombre de columna en la base de datos
+    allowNull: true
+  },
+  imagenEntrega: {
+    type: external_sequelize_namespaceObject.DataTypes.TEXT,
+    field: 'imagenEntrega',
+    // Nombre de columna en la base de datos
+    allowNull: true
+  },
+  metodoAplicacion: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    field: 'metodoAplicacion',
+    // Nombre de columna en la base de datos
+    validate: {
+      notEmpty: {
+        msg: 'El método de aplicación es requerido'
+      },
+      len: {
+        args: [3, 100],
+        msg: 'El método de aplicación debe tener entre 3 y 100 caracteres'
+      }
+    }
+  },
+  notaMezcla: {
+    type: external_sequelize_namespaceObject.DataTypes.TEXT,
+    allowNull: true,
+    field: 'notaMezcla',
+    // Nombre de columna en la base de datos
+    validate: {
+      len: {
+        args: [0, 500],
+        msg: 'La nota de mezcla no puede exceder 500 caracteres'
+      }
+    }
+  },
+  presentacion: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: {
+        args: [0, 100],
+        msg: 'La presentación debe tener entre 3 y 100 caracteres'
+      }
+    }
+  },
+  ranchoDestino: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    field: 'ranchoDestino',
+    // Nombre de columna en la base de datos
+    validate: {
+      notEmpty: {
+        msg: 'El rancho es requerido'
+      },
+      len: {
+        args: [3, 100],
+        msg: 'El rancho destino debe tener entre 3 y 100 caracteres'
+      }
+    }
+  },
+  status: {
+    type: external_sequelize_namespaceObject.DataTypes.ENUM('Pendiente', 'Proceso', 'Completada', 'Cancelada'),
+    allowNull: true,
+    defaultValue: 'Pendiente'
+  },
+  temporada: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La temporada es requerida'
+      },
+      len: {
+        args: [4, 20],
+        msg: 'La temporada debe tener entre 4 y 20 caracteres'
+      }
+    }
+  },
+  variedad: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La variedad es requerida'
+      },
+      len: {
+        args: [3, 100],
+        msg: 'La variedad debe tener entre 3 y 100 caracteres'
+      }
+    }
+  },
+  fechaEntrega: {
+    type: external_sequelize_namespaceObject.DataTypes.DATEONLY,
+    field: 'fechaEntrega',
+    // Nombre de columna en la base de datos
+    allowNull: true
+  },
+  porcentajes: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El porcentaje es requerido'
+      },
+      len: {
+        args: [3, 100],
+        msg: 'El porcentaje debe tener entre 3 y 100 caracteres'
+      }
+    }
+  },
+  respuestaSolicitud: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    field: 'respuestaSolicitud',
+    // Nombre de columna en la base de datos
+    allowNull: true
+  },
+  respuestaMezclador: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    field: 'respuestaMezclador',
+    // Nombre de columna en la base de datos
+    allowNull: true
+  }
+};
+const Solicitud = db.define('solicitud', solicitudConfig, {
+  tableName: 'solicitudes',
+  timestamps: false,
+  hooks: {
+    beforeValidate: solicitud => {
+      // Transformaciones antes de validar
+      if (solicitud.folio) {
+        solicitud.folio = solicitud.folio.trim().toUpperCase();
+      }
+
+      // Generar fecha de solicitud si no se proporciona
+      if (!solicitud.fechaSolicitud) {
+        solicitud.fechaSolicitud = new Date();
+      }
+    },
+    afterCreate: solicitud => {
+      console.log(`Nueva solicitud creada: ${solicitud.folio}`);
+    }
+  }
+});
+Solicitud.associate = models => {
+  Solicitud.belongsTo(models.Usuario, {
+    foreignKey: 'idUsuarioSolicita',
+    as: 'usuarioSolicita'
+  });
+  Solicitud.belongsTo(models.Centrocoste, {
+    foreignKey: 'idCentroCoste',
+    as: 'centroCosto'
+  });
+};
+;// CONCATENATED MODULE: external "bcryptjs"
+var external_bcryptjs_x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var external_bcryptjs_y = (x) => (() => (x))
+const external_bcryptjs_namespaceObject = external_bcryptjs_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_bcryptjs__["default"]) });
+;// CONCATENATED MODULE: ./src/schema/usuarios.js
+
+
+
+const usuarioConfig = {
+  nombre: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El nombre es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El nombre debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  usuario: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'El Usuario es obligatorio'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El nombre debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  email: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'El email es requerido'
+      },
+      isEmail: {
+        msg: 'El email debe ser válido'
+      }
+    }
+  },
+  password: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La contraseña es requerida'
+      },
+      len: {
+        args: [8, 100],
+        msg: 'La contraseña debe tener al menos 8 caracteres'
+      }
+    }
+  },
+  rol: {
+    type: external_sequelize_namespaceObject.DataTypes.ENUM('admin', 'supervisor', 'mezclador', 'solicita', 'administrativo'),
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El rol es requerido'
+      }
+    }
+  },
+  empresa: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'Sin empresa asignada',
+    validate: {
+      len: {
+        args: [0, 50],
+        msg: 'La empresa debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  ranchos: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'General',
+    validate: {
+      len: {
+        args: [0, 80],
+        msg: 'El rancho debe tener entre 0 y 50 caracteres'
+      }
+    }
+  },
+  variedad: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'General',
+    validate: {
+      len: {
+        args: [0, 50],
+        msg: 'La variedad debe tener entre 0 y 50 caracteres'
+      }
+    }
+  }
+};
+const Usuario = db.define('usuarios', usuarioConfig, {
+  timestamps: false,
+  hooks: {
+    beforeCreate: async (usuario, options) => {
+      const salt = await external_bcryptjs_namespaceObject["default"].genSalt(10);
+      usuario.password = await external_bcryptjs_namespaceObject["default"].hash(usuario.password, salt);
+    },
+    beforeUpdate: async (usuario, options) => {
+      if (usuario.changed('password')) {
+        const salt = await external_bcryptjs_namespaceObject["default"].genSalt(10);
+        usuario.password = await external_bcryptjs_namespaceObject["default"].hash(usuario.password, salt);
+      }
+    }
+  }
+});
+;// CONCATENATED MODULE: ./src/schema/recetas.js
+
+
+const recetaConfig = {
+  id_receta: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  nombre: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El nombre del producto es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El nombre del producto debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  descripcion: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      notEmpty: {
+        msg: 'La presentacion del producto es requerido'
+      },
+      len: {
+        args: [0, 50],
+        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  presentacion: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      notEmpty: {
+        msg: 'La presentacion del producto es requerido'
+      },
+      len: {
+        args: [0, 50],
+        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  unidad_medida: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'La unidad de medida es necesaria'
+      }
+    }
+  }
+};
+const Recetas = db.define('recetas', recetaConfig, {
+  tableName: 'recetas',
+  // Nombre de la tabla en la base de datos
+  timestamps: true // Agrega createdAt y updatedAt automáticamente
+});
+;// CONCATENATED MODULE: ./src/schema/notificaciones.js
+
+
+const notificacionesConfig = {
+  id: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    field: 'id_notificacion',
+    // Nombre de columna en la base de datos
+    primaryKey: true,
+    autoIncrement: true
+  },
+  id_solicitud: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'El Id de la solicitud en nesesario'
+      }
+    }
+  },
+  id_usuario: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'El Id de la usuario en nesesario'
+      }
+    }
+  },
+  mensaje: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notNull: {
+        msg: 'El mensaje es requerido para mostrar la notificacion'
+      }
+    }
+  },
+  status: {
+    type: external_sequelize_namespaceObject.DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: 1
+  }
+};
+const Notificaciones = db.define('notificaciones', notificacionesConfig, {
+  tableName: 'notificaciones',
+  // Nombre de la tabla en la base de datos
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
+});
+;// CONCATENATED MODULE: ./src/models/productosSolicitud.models.js
+
+
+
+ // Asegúrate de importar el modelo de Usuario
+ // Asegúrate de importar el modelo de Usuario
+ // Asegúrate de importar el modelo de Usuario
+
+class SolicitudRecetaModel {
+  // crear asistencia
+
+  static async obtenerProductosSolicitud({
+    idSolicitud
+  }) {
+    try {
+      const productosSolicitud = await SolicitudProductos.findAll({
+        where: {
+          id_solicitud: idSolicitud
+        },
+        include: [{
+          model: Productos,
+          // producto
+          attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario
+        }, {
+          model: Recetas,
+          // Modelo de Recetas
+          attributes: ['nombre'] // Campos que quieres obtener del modelo Recetas
+        }],
+        attributes: ['id_receta', 'id_solicitud', 'id_producto', 'unidad_medida', 'cantidad']
+      });
+
+      // Verificar si se encontraron resultados
+      if (productosSolicitud.length === 0) {
+        return {
+          message: 'No se encontraron productos para los criterios especificados',
+          data: []
+        };
+      }
+
+      // Transformar los resultados
+      const resultadosFormateados = productosSolicitud.map(productos => {
+        const m = productos.toJSON();
+        return {
+          id_receta: m.id_receta,
+          id_solicitud: m.id_solicitud,
+          id_sap: m.producto.id_sap,
+          nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : m.receta ? m.receta.nombre : 'Producto y receta no encontrados',
+          unidad_medida: m.unidad_medida,
+          cantidad: m.cantidad
+        };
+      });
+
+      // Devolver los resultados
+      return resultadosFormateados;
+    } catch (e) {
+      console.error('Error al obtener productos:', e.message);
+      return {
+        error: 'Error al obtener las productos',
+        detalle: e.message
+      };
+    }
+  }
+  static async obtenerTablaMezclasId({
+    id
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await SolicitudProductos.findAll({
+        where: {
+          id
+        },
+        include: [{
+          model: Productos,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenSolicitud']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+
+      // Transformar los resultados
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagen: m.imagenSolicitud,
+          descripcion: m.descripcion,
+          status: m.status
+        };
+      });
+
+      // Devolver los resultados
+      return {
+        message: 'Mezclas obtenidas correctamente',
+        data: resultadosFormateados
+      };
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async obtenerProductoNoDisponibles({
+    idSolicitud
+  }) {
+    try {
+      const productoSolicitud = await SolicitudProductos.findAll({
+        where: {
+          id_solicitud: idSolicitud,
+          status: 0
+        },
+        include: [{
+          model: Productos,
+          // producto
+          attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario
+        }],
+        attributes: ['id_solicitud', 'id_producto', 'unidad_medida', 'cantidad']
+      });
+
+      // Verificar si se encontraron resultados
+      if (productoSolicitud.length === 0) {
+        return {
+          message: 'No se encontraron productos para los criterios especificados',
+          data: []
+        };
+      }
+
+      // Transformar los resultados
+      const resultadosFormateados = productoSolicitud.map(productos => {
+        const m = productos.toJSON();
+        return {
+          id_solicitud: m.id_solicitud,
+          id_sap: m.producto.id_sap,
+          nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : m.receta ? m.receta.nombre : 'Producto y receta no encontrados',
+          unidad_medida: m.unidad_medida,
+          cantidad: m.cantidad
+        };
+      });
+
+      // Devolver los resultados
+      return resultadosFormateados;
+    } catch (e) {
+      console.error(e.message); // Salida: Error la productoSolicitud
+      return {
+        error: 'Error al obtener los producto solicitud'
+      };
+    }
+  }
+  static async create({
+    data
+  }) {
+    try {
+      // Verificar si el usuario ya existe
+      const producto = await SolicitudProductos.findOne({
+        where: {
+          id_solicitud: data.idSolicitud,
+          id_producto: data.producto
+        }
+      });
+      if (producto) {
+        return {
+          error: 'producto ya existe en la solicitud'
+        };
+      }
+      // Llamar al procedimiento almacenado
+      await SolicitudProductos.create({
+        id_solicitud: data.idSolicitud,
+        id_producto: data.producto,
+        unidad_medida: data.unidadMedida,
+        cantidad: data.cantidad
+      });
+
+      // Si llegamos aquí, la ejecución fue exitosa
+      return {
+        status: 'success',
+        message: `Producto procesado exitosamente: ${data.producto}`
+      };
+    } catch (error) {
+      // Manejo de errores
+      console.error(`Error al procesar producto ${data.producto}:`, error);
+      return {
+        status: 'error',
+        message: error.message || 'Error desconocido'
+      };
+    }
+  }
+  static async EliminarPorducto({
+    id
+  }) {
+    try {
+      // Comprobar que el producto exista
+      const producto = await SolicitudProductos.findByPk(id); // Usar findByPk correctamente
+      if (!producto) return {
+        error: 'Producto no encontrado'
+      };
+
+      // Eliminar el producto
+      await producto.destroy();
+      return {
+        message: `Producto eliminado correctamente con id ${id}`
+      };
+    } catch (e) {
+      console.error('Error al eliminar el producto:', e.message); // Registrar el error
+      return {
+        error: 'Error al eliminar el producto'
+      };
+    }
+  }
+
+  /**
+   * Actualiza el estado de los productos y crea notificaciones relacionadas
+   * @param {Object} params - Parámetros de actualización
+   * @param {Object} params.data - Datos de los productos y mensaje
+   * @param {string} params.idUsuarioMezcla - ID del mezclador
+   * @returns {Promise<Object>} Resultado de la actualización
+   */
+
+  static async actualizarEstado({
+    data,
+    idUsuarioMezcla
+  }) {
+    let transaction;
+    const noExistencia = [];
+    const estados = {
+      estados: []
+    };
+    try {
+      // Validaciones iniciales
+      if (!data?.estados?.length || !idUsuarioMezcla) {
+        throw new Error('Datos requeridos no proporcionados');
+      }
+
+      // Iniciar transacción
+      transaction = await db.transaction();
+
+      // Procesar estados de productos
+      const receta = await this.procesarEstadosProductos(data, noExistencia, transaction);
+      console.log('datos de la receta');
+      console.log(receta.dataValues);
+      if (!receta || !receta.dataValues?.id) {
+        throw new Error('No se pudo obtener el ID de la solicitud');
+      }
+
+      // // Actualizar solicitud y crear notificación
+      await this.actualizarSolicitudYNotificacion({
+        id: receta.dataValues.id_solicitud,
+        idUsuarioMezcla,
+        mensaje: data.mensaje,
+        transaction
+      });
+
+      // Obtener datos del usuario solicitante
+      const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud);
+
+      // crear notificacion
+      await this.crearNotificacion({
+        id: receta.dataValues.id_solicitud,
+        mensaje: `Productos no disponibles para la solicitud ${receta.dataValues.id_solicitud}`,
+        idUsuario: datosUsuario[0].idUsuarioSolicita,
+        transaction
+      });
+      await transaction.commit();
+
+      // Procesar productos no existentes
+      if (noExistencia.length > 0) {
+        const productosNoDisponibles = await this.obtenerProductosNoDisponibles(noExistencia);
+        estados.estados.push(...productosNoDisponibles);
+      }
+      return {
+        data: datosUsuario,
+        productos: estados.estados,
+        message: 'Solicitud de mezcla registrada correctamente'
+      };
+    } catch (error) {
+      if (transaction) await transaction.rollback();
+      console.error('Error al registrar solicitud:', error);
+      return {
+        error: 'Error al registrar solicitud',
+        detalle: error.message
+      };
+    }
+  }
+
+  // Métodos auxiliares
+  static async procesarEstadosProductos(data, noExistencia, transaction) {
+    let ultimaReceta = null;
+    const estadosPromesas = data.estados.map(async estado => {
+      if (!estado.existe) {
+        noExistencia.push({
+          id_receta: estado.id_receta
+        });
+      }
+      const receta = await SolicitudProductos.findByPk(estado.id_receta, {
+        transaction
+      });
+      if (!receta) {
+        throw new Error(`Producto ${estado.id_receta} no encontrado`);
+      }
+      receta.status = estado.existe;
+      await receta.save({
+        transaction
+      });
+      ultimaReceta = receta;
+    });
+    await Promise.all(estadosPromesas);
+    return ultimaReceta;
+  }
+  static async actualizarSolicitudYNotificacion({
+    id,
+    idUsuarioMezcla,
+    mensaje,
+    transaction
+  }) {
+    try {
+      const solicitud = await Solicitud.findByPk(id, {
+        transaction,
+        lock: true // Bloqueo explícito
+      });
+      if (!solicitud) throw new Error('No se encontró la solicitud');
+      solicitud.idUsuarioMezcla = idUsuarioMezcla;
+      if (mensaje) solicitud.respuestaMezclador = mensaje;
+      await solicitud.save({
+        transaction
+      });
+    } catch (error) {
+      throw new Error(`Error en actualizarSolicitudYNotificacion: ${error.message}`);
+    }
+  }
+  static async crearNotificacion({
+    id,
+    mensaje,
+    idUsuario,
+    transaction
+  }) {
+    try {
+      if (mensaje) {
+        const notificacionData = {
+          id_solicitud: id,
+          mensaje,
+          id_usuario: idUsuario
+        };
+        const notificacion = await Notificaciones.create(notificacionData, {
+          transaction
+        });
+        if (!notificacion) throw new Error('Error al crear la notificación');
+      } else {
+        console.log(`mensaje vacio:${mensaje}`);
+      }
+    } catch (error) {
+      console.error('Error al registrar solicitud:', error);
+    }
+  }
+  static async obtenerProductosNoDisponibles(noExistencia) {
+    const idsRecetas = noExistencia.map(item => item.id_receta);
+    const productos = await SolicitudProductos.findAll({
+      where: {
+        id_receta: idsRecetas
+      },
+      include: [{
+        model: Productos,
+        attributes: ['nombre']
+      }],
+      attributes: ['id_producto', 'unidad_medida', 'cantidad']
+    });
+    return productos.map(item => ({
+      id_producto: item.id_producto,
+      nombre_producto: item.producto?.nombre || 'Producto no encontrado',
+      unidad_medida: item.unidad_medida,
+      cantidad: item.cantidad
+    }));
+  }
+  static async obtenerDatosUsuarioSolicitante(idSolicitud) {
+    const usuarios = await Solicitud.findAll({
+      where: {
+        id: idSolicitud
+      },
+      include: [{
+        model: Usuario,
+        attributes: ['nombre', 'email']
+      }],
+      attributes: ['folio', 'idUsuarioSolicita']
+    });
+    return usuarios.map(item => ({
+      nombre: item.usuario?.nombre || 'No se encontró Nombre',
+      email: item.usuario?.email || 'No se encontró Correo',
+      idUsuarioSolicita: item.idUsuarioSolicita
+    }));
+  }
+} // fin modelo
+;// CONCATENATED MODULE: ./src/schema/centro.js
+
+
+const centroConfig = {
+  id: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  centroCoste: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    field: 'centroCoste',
+    // Nombre de columna en la base de datos
+    validate: {
+      notEmpty: {
+        msg: 'El centro de coste es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  empresa: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'Empresa pertenece es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'La Empresa debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  rancho: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'El rancho es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El rancho debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  cultivo: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El cultivo es requerido'
+      },
+      len: {
+        args: [8, 100],
+        msg: 'El cultivo debe tener al menos 8 caracteres'
+      }
+    }
+  },
+  variedad: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La variedad es requerida'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'La variedad debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  porcentajes: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La variedad es requerida'
+      }
+    }
+  }
+};
+const Centrocoste = db.define('centrocoste', centroConfig, {
+  tableName: 'centrocoste',
+  // Nombre de la tabla en la base de datos
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
+});
+;// CONCATENATED MODULE: external "fs/promises"
+var promises_x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var promises_y = (x) => (() => (x))
+const promises_namespaceObject = promises_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_fs_promises_f8dae9d1__["default"]) });
+;// CONCATENATED MODULE: ./src/config/foto.mjs
+
+
+
+const foto_filename = (0,external_url_namespaceObject.fileURLToPath)("file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/config/foto.mjs");
+const foto_dirname = (0,external_path_namespaceObject.dirname)(foto_filename);
+
+// Configuración
+const CONFIG = {
+  maxSize: 5 * 1024 * 1024,
+  // 5MB
+  allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  uploadDir: external_path_namespaceObject.join(foto_dirname, '../../public/uploads')
+};
+const guardarImagen = async ({
+  imagen
+}) => {
+  try {
+    if (!imagen) {
+      throw new Error('No se ha enviado ninguna imagen');
+    }
+
+    // Validar formato base64
+    const matches = imagen.match(/^data:image\/([A-Za-z-+/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      throw new Error('Formato de imagen no válido');
+    }
+
+    // Validar tipo de imagen
+    const mimeType = `image/${matches[1]}`;
+    if (!CONFIG.allowedTypes.includes(mimeType)) {
+      throw new Error('Tipo de imagen no permitido');
+    }
+
+    // Validar tamaño
+    const buffer = Buffer.from(matches[2], 'base64');
+    if (buffer.length > CONFIG.maxSize) {
+      throw new Error('Imagen demasiado grande');
+    }
+
+    // Verificar y crear directorio
+    try {
+      const stats = await promises_namespaceObject["default"].stat(CONFIG.uploadDir);
+      if (!stats.isDirectory()) {
+        throw new Error('La ruta de uploads no es un directorio');
+      }
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        // console.log('Creando directorio de uploads...')
+        await promises_namespaceObject["default"].mkdir(CONFIG.uploadDir, {
+          recursive: true
+        });
+      } else {
+        throw error;
+      }
+    }
+
+    // Generar nombre único
+    const imageExtension = `.${matches[1]}`;
+    const imageName = `image_${Date.now()}_${Math.random().toString(36).substring(2)}${imageExtension}`;
+    const imagePath = external_path_namespaceObject.join(CONFIG.uploadDir, imageName);
+
+    // Debug: Mostrar ruta completa
+    // console.log('Ruta completa de la imagen:', imagePath)
+
+    // Guardar imagen con manejo de errores específico
+    try {
+      await promises_namespaceObject["default"].writeFile(imagePath, buffer);
+      // console.log('Imagen guardada exitosamente')
+    } catch (writeError) {
+      console.error('Error al escribir el archivo:', writeError);
+      throw new Error(`Error al guardar la imagen: ${writeError.message}`);
+    }
+
+    // Verificar que el archivo se haya creado
+    try {
+      await promises_namespaceObject["default"].access(imagePath);
+      // console.log('Archivo verificado correctamente')
+    } catch (accessError) {
+      console.error('El archivo no se creó correctamente:', accessError);
+      throw new Error('No se pudo verificar la creación del archivo');
+    }
+
+    // Formatear fecha
+    const fechaActual = new Date();
+    const fechaFormateada = fechaActual.toISOString().split('T')[0];
+    console.log('ruta absoluta:', imagePath);
+    return {
+      relativePath: `../uploads/${imageName}`,
+      fecha: fechaFormateada,
+      success: true
+    };
+  } catch (error) {
+    console.error('Error en guardarImagen:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+;// CONCATENATED MODULE: ./src/models/centro.models.js
+
+class CentroCosteModel {
+  // obtener todos los datos
+  static async getAll() {
+    try {
+      const usuario = await Centrocoste.findAll({
+        attributes: ['id', 'centroCoste', 'empresa', 'rancho', 'cultivo', 'variedad']
+      });
+      return usuario;
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener los usuarios'
+      };
+    }
+  }
+
+  // obtener todos los un ato por id
+  static async getOne({
+    id
+  }) {
+    try {
+      const usuario = await Centrocoste.findByPk(id);
+      return usuario || {
+        error: 'usuario no encontrada'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener al usuario'
+      };
+    }
+  }
+
+  // Obtener todos los centros de coste que pertenecen a un rancho
+  static async getCentrosPorRancho({
+    rancho,
+    cultivo
+  }) {
+    let centros;
+    try {
+      if (cultivo === 'General') {
+        centros = await Centrocoste.findAll({
+          where: {
+            rancho
+          },
+          attributes: ['id', 'centroCoste'] // Especifica los atributos que quieres devolver
+        });
+      } else {
+        centros = await Centrocoste.findAll({
+          where: {
+            rancho,
+            cultivo
+          },
+          attributes: ['id', 'centroCoste'] // Especifica los atributos que quieres devolver
+        });
+      }
+      return centros.length > 0 ? centros : {
+        message: 'No se encontraron centros de coste para este rancho'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error al obtener los centros de coste
+      return {
+        error: 'Error al obtener los centros de coste'
+      };
+    }
+  }
+
+  // Obtener todos los centros de coste que pertenecen a un rancho
+  static async getVariedadPorCentroCoste({
+    id
+  }) {
+    try {
+      const variedades = await Centrocoste.findAll({
+        where: {
+          id
+        },
+        attributes: ['variedad', 'porcentajes'] // Especifica los atributos que quieres devolver
+      });
+      return variedades.length > 0 ? variedades : {
+        message: 'No se encontraron variedades de este centro de coste'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error al obtener los variedades de coste
+      return {
+        error: 'Error al obtener los variedades de centro de coste'
+      };
+    }
+  }
+  static async getVariedadPorCentroCosteNombre({
+    centroCoste
+  }) {
+    try {
+      const variedades = await Centrocoste.findAll({
+        where: {
+          centroCoste
+        },
+        attributes: ['variedad', 'porcentajes'] // Especifica los atributos que quieres devolver
+      });
+      return variedades.length > 0 ? variedades : {
+        message: 'No se encontraron variedades de este centro de coste'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error al obtener los variedades de coste
+      return {
+        error: 'Error al obtener los variedades de centro de coste'
+      };
+    }
+  }
+  static async porcentajeVariedad({
+    id,
+    data
+  }) {
+    console.log(id);
+    console.log(data);
+    try {
+      // Verificar si existe el centro de coste
+      const centroCoste = await Centrocoste.findByPk(id);
+      if (!centroCoste) {
+        return {
+          success: false,
+          error: 'Centro de coste no encontrado'
+        };
+      }
+      console.log(centroCoste);
+      // Actualiza solo los campos que se han proporcionado
+      if (data) centroCoste.porcentajes = data;
+      await centroCoste.save();
+      return {
+        message: 'Porcentajes actualizados correctamente'
+      };
+    } catch (e) {
+      console.error('Error en porcentajeVariedad:', e);
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener el centro de coste'
+      };
+    }
+  }
+
+  // eliminar usuario
+  static async delete({
+    id
+  }) {
+    try {
+      const usuario = await Centrocoste.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      await usuario.destroy();
+      return {
+        message: `usuario eliminada correctamente con id ${id}`
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al elimiar el usuario'
+      };
+    }
+  }
+
+  // crear usuario
+  static async create({
+    data
+  }) {
+    try {
+      // verificamos que no exista el usuario
+      const usuario = await Centrocoste.findOne({
+        where: {
+          usuario: data.usuario
+        }
+      });
+      if (usuario) return {
+        error: 'usuario ya existe'
+      };
+      // creamos el usuario
+      await Centrocoste.create({
+        ...data
+      });
+      return {
+        message: `usuario registrado exitosamente ${data.nombre}`
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al crear al usuario'
+      };
+    }
+  }
+
+  // para actualizar datos de usuario
+  static async update({
+    id,
+    data
+  }) {
+    try {
+      // verificamos si existe alguna empresa con el id proporcionado
+      const usuario = await Centrocoste.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      // Actualiza solo los campos que se han proporcionado
+      if (data.nombre) usuario.nombre = data.nombre;
+      if (data.email) usuario.email = data.email;
+      if (data.rol) usuario.rol = data.rol;
+      if (data.empresa) usuario.empresa = data.empresa;
+      await usuario.save();
+      return {
+        message: 'usuario actualizada correctamente',
+        rol: data.rol
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener las usuarios'
+      };
+    }
+  }
+}
+;// CONCATENATED MODULE: ./src/models/notificaciones.models.js
+
+class NotificacionModel {
+  // obtener todos los datos
+  static async getAll() {
+    try {
+      const notificacion = await Notificaciones.findAll();
+      return notificacion;
+    } catch (e) {
+      console.error(e.message); // Salida: Error la notificacion
+      return {
+        error: 'Error al obtener los viviendas'
+      };
+    }
+  }
+  static async getAllIdUsuario({
+    idUsuario
+  }) {
+    try {
+      const notificacion = await Notificaciones.findAll({
+        where: {
+          id_usuario: idUsuario,
+          status: 1
+        },
+        attributes: ['id', 'id_solicitud', 'id_usuario', 'mensaje', 'status']
+      });
+      return notificacion;
+    } catch (e) {
+      console.error(e.message); // Salida: Error la notificacion
+      return {
+        error: 'Error al obtener los viviendas'
+      };
+    }
+  }
+
+  // obtener todos los un ato por id
+  static async getOne({
+    id
+  }) {
+    try {
+      const notificacion = await Notificaciones.findByPk(id);
+      return notificacion || {
+        error: 'Notificacion no encontrada'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la notificacion
+      return {
+        error: 'Error al obtener al notificacion'
+      };
+    }
+  }
+
+  // eliminar usuario
+  static async delete({
+    id
+  }) {
+    try {
+      const notificacion = await Notificaciones.findByPk(id);
+      if (!notificacion) return {
+        error: 'notificacion no encontrado'
+      };
+      await notificacion.destroy();
+      return {
+        message: `notificacion eliminada correctamente con id ${id}`
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la notificacion
+      return {
+        error: 'Error al elimiar el notificacion'
+      };
+    }
+  }
+  static async create({
+    idSolicitud,
+    mensaje,
+    idUsuario
+  }) {
+    try {
+      // creamos el notificacion
+      await Notificaciones.create({
+        id_solicitud: idSolicitud,
+        mensaje,
+        id_usuario: idUsuario
+      });
+      return {
+        message: `notificacion registrado exitosamente ${idSolicitud}`
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la notificacion
+      return {
+        error: 'Error al crear al notificacion'
+      };
+    }
+  }
+
+  // para actualizar datos de usuario
+  static async update({
+    id,
+    data
+  }) {
+    try {
+      // verificamos si existe alguna empresa con el id proporcionado
+      const notificacion = await Notificaciones.findByPk(id);
+      if (!notificacion) return {
+        error: 'notificacion no encontrado'
+      };
+      // Actualiza solo los campos que se han proporcionado
+      if (data.nombre) notificacion.nombre = data.nombre;
+      if (data.descripcion) notificacion.descripcion = data.descripcion;
+      if (data.ubicacion) notificacion.ubicacion = data.ubicacion;
+      await notificacion.save();
+      return {
+        message: 'usuario actualizada correctamente'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la notificacion
+      return {
+        error: 'Error al obtener las viviendas'
+      };
+    }
+  }
+
+  // para actualizar status de notificacion
+  static async updateStatus({
+    id
+  }) {
+    try {
+      // verificamos si existe alguna empresa con el id proporcionado
+      const notificacion = await Notificaciones.findByPk(id);
+      if (!notificacion) return {
+        error: 'notificacion no encontrado'
+      };
+      // Actualiza solo los campos que se han proporcionado
+      if (id) notificacion.status = 0;
+      await notificacion.save();
+      return {
+        message: 'notificacion actualizada correctamente'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la notificacion
+      return {
+        error: 'Error al obtener las status de notificacion'
+      };
+    }
+  }
+}
+;// CONCATENATED MODULE: ./src/models/mezclas.models.js
+
+
+ // Asegúrate de importar el modelo de Usuario
+ // Asegúrate de importar el modelo de CentroCoste
+
+
+
+
+class MezclaModel {
+  // crear asistencia
+  static async create({
+    data,
+    idUsuario
+  }) {
+    const transaction = await db.transaction();
+    let variedad, porcentajes, variedades;
+    try {
+      // validamos variedad si viene todo
+      if (data.variedad === 'todo') {
+        try {
+          // Asumiendo que este método existe en tu modelo
+          variedades = await CentroCosteModel.getVariedadPorCentroCoste({
+            id: data.centroCoste
+          });
+          // Convertir a array, eliminar último elemento y volver a string
+          const variedadesArray = variedades[0].dataValues.variedad.split(',').slice(0, -1);
+          const porcentajesArray = variedades[0].dataValues.porcentajes.split(',').slice(0, -1);
+
+          // Filtrar ambos arrays en paralelo
+          const filtrados = variedadesArray.reduce((acc, variedad, index) => {
+            if (parseInt(porcentajesArray[index].trim()) !== 0) {
+              acc.variedades.push(variedad);
+              acc.porcentajes.push(porcentajesArray[index]);
+            }
+            return acc;
+          }, {
+            variedades: [],
+            porcentajes: []
+          });
+
+          // Convertir de vuelta a strings
+          variedad = filtrados.variedades.join(',');
+          porcentajes = filtrados.porcentajes.join(',');
+        } catch (error) {
+          console.error('Error al consultar productos para la solicitud', error);
+        }
+      }
+      // Creamos nueva solicitud con transacción
+      const solicitud = await Solicitud.create({
+        folio: data.folio,
+        cantidad: data.cantidad,
+        idCentroCoste: data.centroCoste,
+        descripcion: data.descripcion,
+        empresa: data.empresaPertece,
+        idUsuarioSolicita: idUsuario,
+        metodoAplicacion: data.metodoAplicacion,
+        temporada: data.temporada,
+        variedad: data.variedad === 'todo' ? variedad : data.variedad,
+        presentacion: data.presentacion,
+        ranchoDestino: data.rancho,
+        porcentajes: data.variedad === 'todo' ? porcentajes : '100'
+      }, {
+        transaction
+      });
+
+      // Verificar si hay productos y procesar cada uno
+      if (data.productos && Array.isArray(data.productos)) {
+        // Filtrar productos válidos
+        const productosValidos = data.productos.filter(producto => producto.id_producto && producto.unidad_medida && producto.cantidad);
+
+        // Validar que haya productos
+        if (productosValidos.length === 0) {
+          throw new Error('No hay productos válidos para registrar');
+        }
+
+        // Procesar productos con manejo de errores mejorado
+        const productosPromesas = productosValidos.map(async producto => {
+          // comprobaramos si el id_producto es numero
+          try {
+            await SolicitudProductos.create({
+              id_solicitud: solicitud.id,
+              id_producto: parseInt(producto.id_producto),
+              unidad_medida: producto.unidad_medida,
+              cantidad: producto.cantidad
+            }, {
+              transaction
+            });
+            return {
+              idProducto: producto.id_producto,
+              status: 'success'
+            };
+          } catch (errorProducto) {
+            console.error(`Error al procesar producto ${producto.id_producto}:`, errorProducto);
+            return {
+              idProducto: producto.id_producto,
+              status: 'error',
+              message: errorProducto.message
+            };
+          }
+        });
+
+        // Esperar a que se procesen todos los productos
+        const resultadosProductos = await Promise.all(productosPromesas);
+
+        // Verificar si hubo errores en los productos
+        const productosConError = resultadosProductos.filter(resultado => resultado.status === 'error');
+        if (productosConError.length > 0) {
+          // Si hay errores, lanzar una excepción con detalles
+          throw new Error(`Errores al procesar productos: ${JSON.stringify(productosConError)}`);
+        }
+      }
+
+      // Confirmar transacción
+      await transaction.commit();
+      // Retornar mensaje de éxito con ID de solicitud
+      return {
+        message: 'Solicitud de mezcla registrada correctamente',
+        idSolicitud: solicitud.id,
+        fechaSolicitud: solicitud.fechaSolicitud
+      };
+    } catch (error) {
+      // Revertir transacción en caso de error
+      if (transaction) await transaction.rollback();
+
+      // Loguear error detallado
+      console.error('Error al registrar solicitud:', error);
+
+      // Retornar mensaje de error más descriptivo
+      return {
+        error: 'Error al registrar solicitud',
+        detalle: error.message
+      };
+    }
+  }
+  static async cerrarSolicitid({
+    data,
+    idUsuario
+  }) {
+    const id = data.idSolicitud;
+    const status = 'Completada';
+    try {
+      // Verificamos si existe la solicitud con el id proporcionado
+      const solicitud = await Solicitud.findByPk(id);
+      if (!solicitud) return {
+        error: 'Solicitud no encontrada'
+      };
+
+      // Guardar imagen
+      const response = await guardarImagen({
+        imagen: data.imagen
+      });
+
+      // Actualiza solo los campos que se han proporcionado
+      if (response.relativePath) solicitud.imagenEntrega = response.relativePath;
+      if (status) solicitud.status = status;
+      if (idUsuario) solicitud.idUsuarioMezcla = idUsuario;
+      if (response.fecha) solicitud.fechaEntrega = response.fecha;
+      await solicitud.save();
+      return {
+        message: 'Solicitud actualizada correctamente',
+        status,
+        idUsuarioSolicita: solicitud.idUsuarioSolicita,
+        id
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener las solicitudes'
+      };
+    }
+  }
+  static async obtenerTablaMezclasEmpresa({
+    status,
+    empresa
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          empresa,
+          status
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+
+      // Transformar los resultados
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud
+        };
+      });
+
+      // Devolver los resultados validar si hay resultados mandar vacio
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async obtenerTablaMezclasRancho({
+    status,
+    ranchoDestino
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          ranchoDestino,
+          status
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+
+      // Transformar los resultados
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud
+        };
+      });
+
+      // Devolver los resultados
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async obtenerTablaMezclasUsuario({
+    status,
+    idUsuarioSolicita
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          idUsuarioSolicita,
+          status
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud', 'respuestaMezclador']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud,
+          respuestaMezclador: m.respuestaMezclador
+        };
+      });
+
+      // Devolver los resultados
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async obtenerTablaMezclasId({
+    id
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          id
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagen: m.imagenSolicitud,
+          descripcion: m.descripcion,
+          status: m.status
+        };
+      });
+
+      // Devolver los resultados
+      return {
+        message: 'Mezclas obtenidas correctamente',
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+      };
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async obtenerPorcentajes({
+    id
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          id
+        },
+        attributes: ['porcentajes', 'variedad']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+      // Devolver los resultados
+      return Array.isArray(mezclas) ? mezclas : [];
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async estadoProceso({
+    id,
+    data
+  }) {
+    try {
+      // Verificamos si existe la solicitud con el id proporcionado
+      const solicitud = await Solicitud.findByPk(id);
+      if (!solicitud) return {
+        error: 'Solicitud no encontrada'
+      };
+
+      // Actualiza solo los campos que se han proporcionado
+      if (data.notaMezcla) solicitud.notaMezcla = data.notaMezcla;
+      if (data.status) solicitud.status = data.status;
+      await solicitud.save();
+      return {
+        message: 'Solicitud actualizada correctamente',
+        idUsuarioSolicita: solicitud.idUsuarioSolicita
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener las solicitudes'
+      };
+    }
+  }
+  static async mensajeSolicita({
+    id,
+    mensajes,
+    idUsuario
+  }) {
+    try {
+      // Verificamos si existe la solicitud con el id proporcionado
+      const solicitud = await Solicitud.findByPk(id);
+      if (!solicitud) return {
+        error: 'Solicitud no encontrada'
+      };
+
+      // Actualiza solo los campos que se han proporcionado
+      if (mensajes) solicitud.respuestaSolicitud = mensajes;
+      await solicitud.save();
+
+      // creamos la notificacion para mostrarla a los usuarios
+      const notificacion = await NotificacionModel.create({
+        idSolicitud: id,
+        mensaje: `Respuesta para solicitud:${id}`,
+        idUsuario
+      });
+      if (!notificacion) return {
+        error: 'Error al crear la notificacion'
+      };
+      return {
+        message: 'Notificacion Guadada Correctamente'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al guardar el mensaje de solicitante'
+      };
+    }
+  }
+  static async getAll() {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status
+        };
+      });
+
+      // Devolver los resultados
+      return {
+        message: 'Mezclas obtenidas correctamente',
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+      };
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async getOneSolicita({
+    id,
+    idSolicita
+  }) {
+    try {
+      const solicitud = await Solicitud.findOne({
+        where: {
+          id,
+          idUsuarioSolicita: idSolicita
+        },
+        attributes: ['idUsuarioMezcla', 'respuestaMezclador']
+      });
+      return solicitud || {
+        error: 'Error al obtener la solicitud o No está autorizado'
+      };
+    } catch (e) {
+      console.error(e.message);
+      return {
+        error: 'Error al obtener la solicitud o No está autorizado'
+      };
+    }
+  }
+  static async getOneMesclador({
+    id,
+    idSolicita
+  }) {
+    try {
+      const solicitud = await Solicitud.findOne({
+        where: {
+          id,
+          idUsuarioMezcla: idSolicita
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'folio', 'ranchoDestino', 'variedad', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'empresa', 'fechaSolicitud', 'respuestaSolicitud', 'respuestaMezclador']
+      });
+
+      // Verificar si se encontraron resultados
+      if (!solicitud) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+
+      // Transformar el resultado
+      const m = solicitud.toJSON();
+      const resultadoFormateado = {
+        id: m.id,
+        Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+        fechaSolicitud: m.fechaSolicitud,
+        ranchoDestino: m.ranchoDestino,
+        empresa: m.empresa,
+        centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+        variedad: m.variedad,
+        FolioReceta: m.folio,
+        temporada: m.temporada,
+        cantidad: m.cantidad,
+        prensetacion: m.presentacion,
+        metodoAplicacion: m.metodoAplicacion,
+        descripcion: m.descripcion,
+        respuestaSolicitud: m.respuestaSolicitud,
+        respuestaMezclador: m.respuestaMezclador
+      };
+
+      // Devolver los resultados
+      return {
+        message: 'Mezcla obtenida correctamente',
+        data: resultadoFormateado
+      };
+    } catch (e) {
+      console.error(e.message);
+      return {
+        error: 'Error al obtener la solicitud o No está autorizado'
+      };
+    }
+  }
+  static async getAllGeneral({
+    status
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          status
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status
+        };
+      });
+
+      // Devolver los resultados
+      return {
+        message: 'Mezclas obtenidas correctamente',
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+      };
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+  static async obtenerDatosSolicitud({
+    id
+  }) {
+    try {
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          id
+        },
+        attributes: ['cantidad', 'presentacion', 'metodoAplicacion']
+      });
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        return {
+          message: 'No se encontraron mezclas para los criterios especificados',
+          data: []
+        };
+      }
+      // Devolver los resultados
+      return Array.isArray(mezclas) ? mezclas : [];
+    } catch (e) {
+      console.error('Error al obtener mezclas:', e.message);
+      return {
+        error: 'Error al obtener las mezclas',
+        detalle: e.message
+      };
+    }
+  }
+} // fin modelo
+;// CONCATENATED MODULE: ./src/models/usuario.models.js
+
+
+
+
+
+class UsuarioModel {
+  // obtener todos los datos
+  static async getAll() {
+    try {
+      const usuario = await Usuario.findAll({
+        attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
+      });
+      return usuario;
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener los usuarios'
+      };
+    }
+  }
+  static async getUserEmail({
+    rol,
+    empresa
+  }) {
+    try {
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          [external_sequelize_namespaceObject.Op.or]: [{
+            empresa
+          }, {
+            empresa: 'General'
+          }]
+        }
+      });
+      return usuario;
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener los usuarios'
+      };
+    }
+  }
+  static async getUserEmailRancho({
+    rol,
+    empresa,
+    rancho
+  }) {
+    try {
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          empresa,
+          // Se filtra por empresa
+          ranchos: rancho // Se filtra por rancho
+        }
+      });
+      return usuario;
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener los usuarios'
+      };
+    }
+  }
+  static async getUserEmailEmpresa({
+    rol,
+    empresa
+  }) {
+    try {
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          empresa // Se filtra por empresa
+        }
+      });
+      console.log(usuario);
+      return usuario;
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener los usuarios'
+      };
+    }
+  }
+
+  // obtener todos los un ato por id
+  static async getOne({
+    rol,
+    empresa
+  }) {
+    try {
+      const usuario = await Usuario.findOne({
+        where: {
+          rol,
+          empresa
+        },
+        attributes: ['nombre', 'email', 'rol']
+      });
+      return usuario || {
+        error: 'usuario no encontrada'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener al usuario'
+      };
+    }
+  }
+  static async getOneId({
+    id
+  }) {
+    try {
+      const usuario = await Usuario.findOne({
+        where: {
+          id
+        },
+        attributes: ['nombre', 'email', 'rol', 'empresa']
+      });
+      return usuario || {
+        error: 'usuario no encontrada'
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener al usuario'
+      };
+    }
+  }
+
+  // eliminar usuario
+  static async delete({
+    id
+  }) {
+    try {
+      const usuario = await Usuario.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      await usuario.destroy();
+      return {
+        message: `usuario eliminada correctamente con id ${id}`
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al elimiar el usuario'
+      };
+    }
+  }
+
+  // crear usuario
+  static async create({
+    data
+  }) {
+    try {
+      // verificamos que no exista el usuario
+      const usuario = await Usuario.findOne({
+        where: {
+          usuario: data.usuario,
+          email: data.email
+        }
+      });
+      if (usuario) return {
+        error: 'usuario ya existe'
+      };
+      // creamos el usuario
+      await Usuario.create({
+        ...data
+      });
+      return {
+        message: `usuario registrado exitosamente ${data.nombre}`
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al crear al usuario'
+      };
+    }
+  }
+
+  // para actualizar datos de usuario
+  static async update({
+    id,
+    data
+  }) {
+    try {
+      // verificamos si existe alguna empresa con el id proporcionado
+      const usuario = await Usuario.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      // Actualiza solo los campos que se han proporcionado
+      if (data.nombre) usuario.nombre = data.nombre;
+      if (data.email) usuario.email = data.email;
+      if (data.rol) usuario.rol = data.rol;
+      if (data.empresa) usuario.empresa = data.empresa;
+      await usuario.save();
+      return {
+        message: 'usuario actualizada correctamente',
+        rol: data.rol
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al obtener las usuarios'
+      };
+    }
+  }
+
+  // funcion login
+  static async login({
+    user,
+    password
+  }) {
+    try {
+      const usuario = await Usuario.findOne({
+        where: {
+          usuario: user
+        }
+      });
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      const isValidPassword = await external_bcryptjs_namespaceObject["default"].compare(password, usuario.password);
+      if (!isValidPassword) return {
+        error: 'contraseña incorrecta'
+      };
+      // creamos jwt
+      const token = external_jsonwebtoken_namespaceObject["default"].sign({
+        id: usuario.id,
+        nombre: usuario.nombre,
+        rol: usuario.rol,
+        empresa: usuario.empresa,
+        ranchos: usuario.ranchos,
+        cultivo: usuario.variedad
+      }, envs.SECRET_JWT_KEY, {
+        expiresIn: '24h'
+      });
+      return {
+        message: 'usuario logueado correctamente',
+        token,
+        rol: usuario.rol
+      };
+    } catch (e) {
+      console.error(e.message);
+      return {
+        error: 'Error al iniciar sesión'
+      };
+    }
+  }
+
+  // funcion cambiar contraseña usuario
+  static async changePassword({
+    id,
+    oldPassword,
+    newPassword
+  }) {
+    try {
+      const usuario = await Usuario.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      const isValidPassword = await external_bcryptjs_namespaceObject["default"].compare(oldPassword, usuario.password);
+      if (!isValidPassword) return {
+        error: 'contraseña actual incorrecta'
+      };
+      usuario.password = newPassword;
+      await usuario.save();
+      return {
+        message: 'contraseña cambiada correctamente'
+      };
+    } catch (e) {
+      console.error(e.message);
+      return {
+        error: 'Error al cambiar contraseña'
+      };
+    }
+  }
+
+  // funcion cambiar contraseña Admin
+  static async changePasswordAdmin({
+    id,
+    newPassword
+  }) {
+    try {
+      const usuario = await Usuario.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      usuario.password = newPassword;
+      await usuario.save();
+      return {
+        message: 'contraseña cambiada correctamente'
+      };
+    } catch (e) {
+      console.error(e.message);
+      return {
+        error: 'Error al cambiar contraseña'
+      };
+    }
+  }
+}
 ;// CONCATENATED MODULE: ./src/controller/proteted.controller.js
+
+
+
 
 class ProtetedController {
   // ruta Protegida
@@ -596,6 +3182,120 @@ class ProtetedController {
       titulo: 'hola'
     });
   };
+  notificacion = async (req, res) => {
+    const {
+      user
+    } = req.session;
+    const {
+      idSolicitud
+    } = req.params;
+    let result;
+
+    // verificamos si existe un usuario
+    if (!user) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: 'Acceso no utorizado'
+      });
+    }
+    try {
+      // validamos el rol de usuario
+      switch (user.rol) {
+        case 'mezclador':
+          {
+            result = await MezclaModel.getOneMesclador({
+              id: idSolicitud,
+              idSolicita: user.id
+            });
+            if (result.error) {
+              throw new Error(result.error);
+            }
+            return res.render('pages/mezclas/notificacionesMesclador', {
+              rol: user.rol,
+              idSolicitud,
+              data: result.data
+            });
+          }
+        case 'solicita':
+          {
+            result = await MezclaModel.getOneSolicita({
+              id: idSolicitud,
+              idSolicita: user.id
+            });
+            if (result.error) {
+              throw new Error(result.error);
+            }
+            // obtenemos los datos de la solicitud
+            console.log(result);
+            // si existe alguna solicitud con el mismo usuario pasamos a obtener los productos
+            const productos = await SolicitudRecetaModel.obtenerProductoNoDisponibles({
+              idSolicitud
+            });
+
+            // obtenemos los datos del mezclador que proceso la solicitud
+            const mezclador = await UsuarioModel.getOneId({
+              id: result.dataValues.idUsuarioMezcla
+            });
+            return res.render('pages/mezclas/notificaciones', {
+              nombre: user.nombre,
+              idSolicitud,
+              titulo: 'Cambio productos',
+              productos,
+              nombreMezclador: mezclador.nombre,
+              idMezclador: result.dataValues.idUsuarioMezcla,
+              empresa: mezclador.empresa,
+              respuestaMezclador: result.dataValues.respuestaMezclador
+            });
+          }
+        case 'administrativo':
+          {
+            // validamos que el usuario sea fransico ya que es el que procesa la solicitud siendo administrativo
+            if (user.nombre.trim() !== 'Francisco Alvarez') {
+              throw new Error(result.error);
+            }
+            result = await MezclaModel.getOneSolicita({
+              id: idSolicitud,
+              idSolicita: user.id
+            });
+            if (result.error) {
+              throw new Error(result.error);
+            }
+            // si existe alguna solicitud con el mismo usuario pasamos a obtener los productos
+            const productos = await SolicitudRecetaModel.obtenerProductoNoDisponibles({
+              idSolicitud
+            });
+
+            // obtenemos los datos del mezclador que proceso la solicitud
+            const mezclador = await UsuarioModel.getOneId({
+              id: result.dataValues.idUsuarioMezcla
+            });
+            return res.render('pages/mezclas/notificaciones', {
+              nombre: user.nombre,
+              idSolicitud,
+              titulo: 'Cambio productos',
+              productos,
+              nombreMezclador: mezclador.nombre,
+              idMezclador: result.dataValues.idUsuarioMezcla,
+              empresa: mezclador.empresa,
+              respuestaMezclador: result.dataValues.respuestaMezclador
+            });
+          }
+        default:
+          return res.status(403).render('errorPage', {
+            title: '403 - Sin Autorisacion',
+            codeError: '403',
+            errorMsg: 'Acceso no utorizado'
+          });
+      }
+    } catch (error) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: error.message
+      });
+    }
+  };
 
   // cerras sesion
   logout = async (req, res) => {
@@ -628,6 +3328,7 @@ const createProtetedRouter = () => {
   router.get('/usuarios', asistenciaController.usuarios);
   router.get('/productos', asistenciaController.productos);
   router.get('/centroCoste', asistenciaController.centroCoste);
+  router.get('/notificacion/:idSolicitud', asistenciaController.notificacion);
 
   // cerrar sesion
   router.get('/cerrarSesion', asistenciaController.logout); // logear usuario
@@ -723,7 +3424,8 @@ const validateEmailData = (type, data) => {
     status: ['email', 'nombre', 'solicitudId', 'status'],
     solicitud: ['email', 'nombre', 'solicitudId', 'fechaSolicitud', 'usuario', 'data'],
     notificacion: ['email', 'nombre', 'solicitudId', 'data'],
-    usuario: ['email', 'password']
+    usuario: ['email', 'password'],
+    respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario']
   };
   const fields = requiredFields[type] || [];
   const missing = fields.filter(field => !data[field]);
@@ -772,7 +3474,7 @@ const enviarCorreo = async params => {
                 <h4>Detalles de la Solicitud:</h4>
                 ${getAdditionalDetails(status)}
       
-               <a href="https://solicitudmezclas.portalrancho.com.mx/protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
+               <a href="https://mezclas.portalrancho.com.mx//protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
       
                <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
                <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -795,7 +3497,7 @@ const enviarCorreo = async params => {
                 <li>Nombre de usuario:<b>${email}</b></li>
                 <li>Contraseña temporal:<b>${password}</b></li>
             </ul>
-             <a href="https://solicitudmezclas.portalrancho.com.mx/" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
+             <a href="https://mezclas.portalrancho.com.mx/ style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
             <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>
             <p>¡Gracias por unirte a nosotros!</p>
             <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -828,7 +3530,7 @@ const enviarCorreo = async params => {
                 <li><strong>Folio Receta:</strong> ${data.folio}</li>
             </ul>
 
-            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
+            <a href="https://mezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
 
             <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
             <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -861,7 +3563,12 @@ const enviarCorreo = async params => {
                    </ul>
       
                    <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
-      
+                  <div style="text-align: center; margin-top: 20px;">
+                      <a href="https://mezclas.portalrancho.com.mx/protected/notificacion/${solicitudId}" 
+                        style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Ver Solicitud
+                      </a>
+                  </div>
                    <p>Si tiene alguna pregunta o necesita más información, no dude en contactar a nuestro equipo de almacen.</p>
                    <p><strong>Encargado de almacen:</strong> ${usuario?.nombre || 'No especificado'}<br></p>
                    <p><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}<br></p>
@@ -869,6 +3576,51 @@ const enviarCorreo = async params => {
                    <p>Atentamente,<br>El equipo de Grupo LG</p>
                </div>
              </body>`
+    },
+    respuestaSolicitante: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Respuesta de Solicitante - Solicitud ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Respuesta de Solicitante</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Nueva Respuesta del Solicitante</h2>
+          
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Ranchos:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Mensaje del Solicitante:</h4>
+            <p style="margin-bottom: 0;">${data.mensaje}</p>
+          </div>
+  
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://mezclas.portalrancho.com.mx/protected/notificacion/${solicitudId}" 
+               style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver Solicitud
+            </a>
+          </div>
+  
+          <p style="margin-top: 20px;">Por favor, revise la respuesta y tome las acciones necesarias.</p>
+          
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Este es un mensaje automático. Si necesita ayuda adicional, contacte al departamento de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
     }
   };
   try {
@@ -878,7 +3630,7 @@ const enviarCorreo = async params => {
     }
     const message = {
       ...template,
-      to: 'zaqeza@gmail.com' // Reemplazar con el correo del cliente
+      to: 'zaragoza051@lgfrutas.com.mx' // Reemplazar con el correo del cliente
     };
     const result = await sendMail(message);
     return {
@@ -1256,437 +4008,6 @@ const createCentroCosteRouter = ({
   router.post('/porcentajeVariedad', centroController.porcentajeVariedad);
   return router;
 };
-;// CONCATENATED MODULE: external "bcryptjs"
-var external_bcryptjs_x = (y) => {
-	var x = {}; __webpack_require__.d(x, y); return x
-} 
-var external_bcryptjs_y = (x) => (() => (x))
-const external_bcryptjs_namespaceObject = external_bcryptjs_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_bcryptjs__["default"]) });
-;// CONCATENATED MODULE: ./src/schema/usuarios.js
-
-
-
-const usuarioConfig = {
-  nombre: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El nombre es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El nombre debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  usuario: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      notEmpty: {
-        msg: 'El Usuario es obligatorio'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El nombre debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  email: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      notEmpty: {
-        msg: 'El email es requerido'
-      },
-      isEmail: {
-        msg: 'El email debe ser válido'
-      }
-    }
-  },
-  password: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La contraseña es requerida'
-      },
-      len: {
-        args: [8, 100],
-        msg: 'La contraseña debe tener al menos 8 caracteres'
-      }
-    }
-  },
-  rol: {
-    type: external_sequelize_namespaceObject.DataTypes.ENUM('admin', 'supervisor', 'mezclador', 'solicita', 'administrativo'),
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El rol es requerido'
-      }
-    }
-  },
-  empresa: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    defaultValue: 'Sin empresa asignada',
-    validate: {
-      len: {
-        args: [0, 50],
-        msg: 'La empresa debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  ranchos: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    defaultValue: 'General',
-    validate: {
-      len: {
-        args: [0, 80],
-        msg: 'El rancho debe tener entre 0 y 50 caracteres'
-      }
-    }
-  },
-  variedad: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    defaultValue: 'General',
-    validate: {
-      len: {
-        args: [0, 50],
-        msg: 'La variedad debe tener entre 0 y 50 caracteres'
-      }
-    }
-  }
-};
-const Usuario = db.define('usuarios', usuarioConfig, {
-  timestamps: false,
-  hooks: {
-    beforeCreate: async (usuario, options) => {
-      const salt = await external_bcryptjs_namespaceObject["default"].genSalt(10);
-      usuario.password = await external_bcryptjs_namespaceObject["default"].hash(usuario.password, salt);
-    },
-    beforeUpdate: async (usuario, options) => {
-      if (usuario.changed('password')) {
-        const salt = await external_bcryptjs_namespaceObject["default"].genSalt(10);
-        usuario.password = await external_bcryptjs_namespaceObject["default"].hash(usuario.password, salt);
-      }
-    }
-  }
-});
-;// CONCATENATED MODULE: ./src/models/usuario.models.js
-
-
-
-
-
-class UsuarioModel {
-  // obtener todos los datos
-  static async getAll() {
-    try {
-      const usuario = await Usuario.findAll({
-        attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
-      });
-      return usuario;
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener los usuarios'
-      };
-    }
-  }
-  static async getUserEmail({
-    rol,
-    empresa
-  }) {
-    try {
-      const usuario = await Usuario.findAll({
-        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
-        where: {
-          rol,
-          [external_sequelize_namespaceObject.Op.or]: [{
-            empresa
-          }, {
-            empresa: 'General'
-          }]
-        }
-      });
-      return usuario;
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener los usuarios'
-      };
-    }
-  }
-  static async getUserEmailRancho({
-    rol,
-    empresa,
-    rancho
-  }) {
-    try {
-      const usuario = await Usuario.findAll({
-        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
-        where: {
-          rol,
-          // Se filtra por rol
-          empresa,
-          // Se filtra por empresa
-          ranchos: rancho // Se filtra por rancho
-        }
-      });
-      return usuario;
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener los usuarios'
-      };
-    }
-  }
-  static async getUserEmailEmpresa({
-    rol,
-    empresa
-  }) {
-    try {
-      const usuario = await Usuario.findAll({
-        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
-        where: {
-          rol,
-          // Se filtra por rol
-          empresa // Se filtra por empresa
-        }
-      });
-      console.log(usuario);
-      return usuario;
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener los usuarios'
-      };
-    }
-  }
-
-  // obtener todos los un ato por id
-  static async getOne({
-    rol,
-    empresa
-  }) {
-    try {
-      const usuario = await Usuario.findOne({
-        where: {
-          rol,
-          empresa
-        },
-        attributes: ['nombre', 'email', 'rol']
-      });
-      return usuario || {
-        error: 'usuario no encontrada'
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener al usuario'
-      };
-    }
-  }
-  static async getOneId({
-    id
-  }) {
-    try {
-      const usuario = await Usuario.findOne({
-        where: {
-          id
-        },
-        attributes: ['nombre', 'email', 'rol']
-      });
-      return usuario || {
-        error: 'usuario no encontrada'
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener al usuario'
-      };
-    }
-  }
-
-  // eliminar usuario
-  static async delete({
-    id
-  }) {
-    try {
-      const usuario = await Usuario.findByPk(id);
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      await usuario.destroy();
-      return {
-        message: `usuario eliminada correctamente con id ${id}`
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al elimiar el usuario'
-      };
-    }
-  }
-
-  // crear usuario
-  static async create({
-    data
-  }) {
-    try {
-      // verificamos que no exista el usuario
-      const usuario = await Usuario.findOne({
-        where: {
-          usuario: data.usuario,
-          email: data.email
-        }
-      });
-      if (usuario) return {
-        error: 'usuario ya existe'
-      };
-      // creamos el usuario
-      await Usuario.create({
-        ...data
-      });
-      return {
-        message: `usuario registrado exitosamente ${data.nombre}`
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al crear al usuario'
-      };
-    }
-  }
-
-  // para actualizar datos de usuario
-  static async update({
-    id,
-    data
-  }) {
-    try {
-      // verificamos si existe alguna empresa con el id proporcionado
-      const usuario = await Usuario.findByPk(id);
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      // Actualiza solo los campos que se han proporcionado
-      if (data.nombre) usuario.nombre = data.nombre;
-      if (data.email) usuario.email = data.email;
-      if (data.rol) usuario.rol = data.rol;
-      if (data.empresa) usuario.empresa = data.empresa;
-      await usuario.save();
-      return {
-        message: 'usuario actualizada correctamente',
-        rol: data.rol
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener las usuarios'
-      };
-    }
-  }
-
-  // funcion login
-  static async login({
-    user,
-    password
-  }) {
-    try {
-      const usuario = await Usuario.findOne({
-        where: {
-          usuario: user
-        }
-      });
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      const isValidPassword = await external_bcryptjs_namespaceObject["default"].compare(password, usuario.password);
-      if (!isValidPassword) return {
-        error: 'contraseña incorrecta'
-      };
-      // creamos jwt
-      const token = external_jsonwebtoken_namespaceObject["default"].sign({
-        id: usuario.id,
-        nombre: usuario.nombre,
-        rol: usuario.rol,
-        empresa: usuario.empresa,
-        ranchos: usuario.ranchos,
-        cultivo: usuario.variedad
-      }, envs.SECRET_JWT_KEY, {
-        expiresIn: '24h'
-      });
-      return {
-        message: 'usuario logueado correctamente',
-        token,
-        rol: usuario.rol
-      };
-    } catch (e) {
-      console.error(e.message);
-      return {
-        error: 'Error al iniciar sesión'
-      };
-    }
-  }
-
-  // funcion cambiar contraseña usuario
-  static async changePassword({
-    id,
-    oldPassword,
-    newPassword
-  }) {
-    try {
-      const usuario = await Usuario.findByPk(id);
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      const isValidPassword = await external_bcryptjs_namespaceObject["default"].compare(oldPassword, usuario.password);
-      if (!isValidPassword) return {
-        error: 'contraseña actual incorrecta'
-      };
-      usuario.password = newPassword;
-      await usuario.save();
-      return {
-        message: 'contraseña cambiada correctamente'
-      };
-    } catch (e) {
-      console.error(e.message);
-      return {
-        error: 'Error al cambiar contraseña'
-      };
-    }
-  }
-
-  // funcion cambiar contraseña Admin
-  static async changePasswordAdmin({
-    id,
-    newPassword
-  }) {
-    try {
-      const usuario = await Usuario.findByPk(id);
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      usuario.password = newPassword;
-      await usuario.save();
-      return {
-        message: 'contraseña cambiada correctamente'
-      };
-    } catch (e) {
-      console.error(e.message);
-      return {
-        error: 'Error al cambiar contraseña'
-      };
-    }
-  }
-}
 ;// CONCATENATED MODULE: external "date-fns"
 var external_date_fns_x = (y) => {
 	var x = {}; __webpack_require__.d(x, y); return x
@@ -1740,14 +4061,24 @@ class MezclasController {
           empresa: req.body.empresaPertece,
           rancho: req.body.rancho
         });
-        ress = [...r1, ...r2];
+        const r3 = await UsuarioModel.getUserEmailRancho({
+          rol: 'administrativo',
+          empresa: 'Bioagricultura',
+          rancho: 'General'
+        });
+        ress = [...r1, ...r2, ...r3];
       } else if (req.body.rancho === 'Seccion 7 Fresas') {
         const r1 = await UsuarioModel.getUserEmailRancho({
           rol: 'mezclador',
           empresa: 'Bioagricultura',
           rancho: 'Atemajac'
         });
-        ress = [...r1, ...r2];
+        const r3 = await UsuarioModel.getUserEmailRancho({
+          rol: 'administrativo',
+          empresa: 'Lugar Agricola',
+          rancho: 'Seccion 7 Fresas'
+        });
+        ress = [...r1, ...r2, ...r3];
       } else {
         // obtenemos los datos del usuario al que mandaremos el correo
         const r1 = await UsuarioModel.getUserEmail({
@@ -1813,6 +4144,55 @@ class MezclasController {
         nombre: ress.nombre,
         solicitudId: idSolicitud,
         status: req.body.status
+      });
+      return res.json({
+        message: result.message
+      });
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error);
+      res.status(500).json({
+        error: 'Ocurrió un error al crear la solicitud'
+      });
+    }
+  };
+  notificacion = async (req, res) => {
+    try {
+      const {
+        user
+      } = req.session;
+      const idSolicitud = req.params.idSolicitud;
+      const {
+        mensajes,
+        idMesclador
+      } = req.body;
+      const result = await this.mezclaModel.mensajeSolicita({
+        id: idSolicitud,
+        mensajes,
+        idUsuario: idMesclador
+      });
+      if (result.error) {
+        return res.status(400).json({
+          error: result.error
+        });
+      }
+
+      // OBTENEMOS LOS DATOS DEL MEZCLADOR A QUE SE LE MANDARA EL CORRE
+      const mezclador = await UsuarioModel.getOneId({
+        id: idMesclador
+      });
+      console.log(`nombre:${mezclador.nombre}, correo:${mezclador.email}`);
+      await enviarCorreo({
+        type: 'respuestaSolicitante',
+        email: mezclador.email,
+        nombre: user.nombre,
+        solicitudId: idSolicitud,
+        usuario: {
+          empresa: user.empresa,
+          ranchos: user.ranchos
+        },
+        data: {
+          mensaje: mensajes
+        }
       });
       return res.json({
         message: result.message
@@ -2031,71 +4411,9 @@ const createMezclasRouter = ({
   router.get('/mezclasSolicitadas/:status', mezclasController.obtenerTablaMezclasEmpresa);
   router.get('/mezclasId/:id', mezclasController.obtenerTablaMezclasId);
   router.patch('/solicitudProceso/:idSolicitud', mezclasController.estadoProceso);
+  router.patch('/notificacion/:idSolicitud', mezclasController.notificacion);
   return router;
 };
-;// CONCATENATED MODULE: ./src/schema/recetas.js
-
-
-const recetaConfig = {
-  id_receta: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  nombre: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El nombre del producto es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El nombre del producto debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  descripcion: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    validate: {
-      notEmpty: {
-        msg: 'La presentacion del producto es requerido'
-      },
-      len: {
-        args: [0, 50],
-        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  presentacion: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    validate: {
-      notEmpty: {
-        msg: 'La presentacion del producto es requerido'
-      },
-      len: {
-        args: [0, 50],
-        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  unidad_medida: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notNull: {
-        msg: 'La unidad de medida es necesaria'
-      }
-    }
-  }
-};
-const Recetas = db.define('recetas', recetaConfig, {
-  tableName: 'recetas',
-  // Nombre de la tabla en la base de datos
-  timestamps: true // Agrega createdAt y updatedAt automáticamente
-});
 ;// CONCATENATED MODULE: ./src/models/recetas.models.js
 
 class RecetasModel {
@@ -2288,7 +4606,6 @@ class productosSolicitud_controller_ProductosController {
     this.productossModel = productossModel;
   }
   obtenerProductosSolicitud = async (req, res) => {
-    console.log('si llego');
     try {
       const result = await this.productossModel.obtenerProductosSolicitud({
         idSolicitud: req.params.idSolicitud
@@ -2351,8 +4668,9 @@ class productosSolicitud_controller_ProductosController {
       user
     } = req.session;
     try {
-      const result = await this.productossModel.actulizarEstado({
-        data: req.body
+      const result = await this.productossModel.actualizarEstado({
+        data: req.body,
+        idUsuarioMezcla: user.id
       });
       if (result.error) {
         res.status(404).json({
@@ -2373,11 +4691,10 @@ class productosSolicitud_controller_ProductosController {
         message: result.message
       });
     } catch (error) {
-      console.error({
-        error: `${error}`
-      });
-      return res.status(500).render('500', {
-        error: 'Error interno del servidor'
+      console.error('Error en actualizarEstado:', error);
+      return res.status(500).json({
+        error: 'Error interno del servidor',
+        message: error.message
       });
     }
   };
@@ -2457,10 +4774,12 @@ class ProduccionController {
     const {
       user
     } = req.session;
+    console.log('user', user);
     try {
       const centroCoste = await this.produccionModel.solicitudReporte({
         empresa: user.empresa,
-        rol: user.rol
+        rol: user.rol,
+        idUsuario: user.id
       });
       if (centroCoste.error) {
         res.status(404).json({
@@ -2559,6 +4878,41 @@ class ProduccionController {
       });
     }
   };
+  descargarReportePendientes = async (req, res) => {
+    const {
+      user
+    } = req.session;
+    const {
+      empresa
+    } = req.params;
+    let buffer;
+    try {
+      if (empresa === 'todo') {
+        buffer = await this.produccionModel.descargarReportePendientesCompleto();
+      } else {
+        buffer = await this.produccionModel.descargarReportePendientes({
+          empresa: empresa || user.empresa
+        });
+      }
+      // Si hay un error, enviamos la respuesta de error y retornamos
+      if (buffer.status === 'error') {
+        return res.status(404).json({
+          error: buffer.message
+        });
+      }
+
+      // Configurar las cabeceras para la descarga del archivo
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx');
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error al crear la solicitud:', error);
+      res.status(500).json({
+        mensaje: 'Ocurrió un error al generar el reporte',
+        error: error.message
+      });
+    }
+  };
   ObtenerReceta = async (req, res) => {
     try {
       const buffer = await this.produccionModel.ObtenerReceta();
@@ -2595,1651 +4949,212 @@ const createProduccionRouter = ({
   router.get('/obetenerReceta', produccionController.ObtenerReceta);
   router.post('/descargarReporte', produccionController.descargarReporte);
   router.post('/descargarReporte-v2', produccionController.descargarReporteV2);
+  router.get('/reporte-pendientes', produccionController.descargarReportePendientes);
+  router.get('/reporte-pendientes/:empresa', produccionController.descargarReportePendientes);
   return router;
 };
-;// CONCATENATED MODULE: ./src/schema/centro.js
-
-
-const centroConfig = {
-  id: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  centroCoste: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    field: 'centroCoste',
-    // Nombre de columna en la base de datos
-    validate: {
-      notEmpty: {
-        msg: 'El centro de coste es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  empresa: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'Empresa pertenece es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'La Empresa debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  rancho: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-    validate: {
-      notEmpty: {
-        msg: 'El rancho es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El rancho debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  cultivo: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El cultivo es requerido'
-      },
-      len: {
-        args: [8, 100],
-        msg: 'El cultivo debe tener al menos 8 caracteres'
-      }
-    }
-  },
-  variedad: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La variedad es requerida'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'La variedad debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  porcentajes: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La variedad es requerida'
-      }
-    }
-  }
-};
-const Centrocoste = db.define('centrocoste', centroConfig, {
-  tableName: 'centrocoste',
-  // Nombre de la tabla en la base de datos
-  timestamps: false // Agrega createdAt y updatedAt automáticamente
-});
-;// CONCATENATED MODULE: ./src/models/centro.models.js
-
-class CentroCosteModel {
-  // obtener todos los datos
-  static async getAll() {
-    try {
-      const usuario = await Centrocoste.findAll({
-        attributes: ['id', 'centroCoste', 'empresa', 'rancho', 'cultivo', 'variedad']
-      });
-      return usuario;
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener los usuarios'
-      };
-    }
-  }
-
-  // obtener todos los un ato por id
-  static async getOne({
-    id
+;// CONCATENATED MODULE: ./src/controller/notificaciones.controller.js
+class NotificacionesController {
+  constructor({
+    notificacionModel
   }) {
-    try {
-      const usuario = await Centrocoste.findByPk(id);
-      return usuario || {
-        error: 'usuario no encontrada'
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener al usuario'
-      };
-    }
+    this.notificacionModel = notificacionModel;
   }
 
-  // Obtener todos los centros de coste que pertenecen a un rancho
-  static async getCentrosPorRancho({
-    rancho,
-    cultivo
-  }) {
-    let centros;
+  // borra usuario
+  delete = async (req, res) => {
+    const {
+      id
+    } = req.params;
     try {
-      if (cultivo === 'General') {
-        centros = await Centrocoste.findAll({
-          where: {
-            rancho
-          },
-          attributes: ['id', 'centroCoste'] // Especifica los atributos que quieres devolver
-        });
-      } else {
-        centros = await Centrocoste.findAll({
-          where: {
-            rancho,
-            cultivo
-          },
-          attributes: ['id', 'centroCoste'] // Especifica los atributos que quieres devolver
-        });
-      }
-      return centros.length > 0 ? centros : {
-        message: 'No se encontraron centros de coste para este rancho'
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error al obtener los centros de coste
-      return {
-        error: 'Error al obtener los centros de coste'
-      };
-    }
-  }
-
-  // Obtener todos los centros de coste que pertenecen a un rancho
-  static async getVariedadPorCentroCoste({
-    id
-  }) {
-    try {
-      const variedades = await Centrocoste.findAll({
-        where: {
-          id
-        },
-        attributes: ['variedad', 'porcentajes'] // Especifica los atributos que quieres devolver
-      });
-      return variedades.length > 0 ? variedades : {
-        message: 'No se encontraron variedades de este centro de coste'
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error al obtener los variedades de coste
-      return {
-        error: 'Error al obtener los variedades de centro de coste'
-      };
-    }
-  }
-  static async getVariedadPorCentroCosteNombre({
-    centroCoste
-  }) {
-    try {
-      const variedades = await Centrocoste.findAll({
-        where: {
-          centroCoste
-        },
-        attributes: ['variedad', 'porcentajes'] // Especifica los atributos que quieres devolver
-      });
-      return variedades.length > 0 ? variedades : {
-        message: 'No se encontraron variedades de este centro de coste'
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error al obtener los variedades de coste
-      return {
-        error: 'Error al obtener los variedades de centro de coste'
-      };
-    }
-  }
-  static async porcentajeVariedad({
-    id,
-    data
-  }) {
-    console.log(id);
-    console.log(data);
-    try {
-      // Verificar si existe el centro de coste
-      const centroCoste = await Centrocoste.findByPk(id);
-      if (!centroCoste) {
-        return {
-          success: false,
-          error: 'Centro de coste no encontrado'
-        };
-      }
-      console.log(centroCoste);
-      // Actualiza solo los campos que se han proporcionado
-      if (data) centroCoste.porcentajes = data;
-      await centroCoste.save();
-      return {
-        message: 'Porcentajes actualizados correctamente'
-      };
-    } catch (e) {
-      console.error('Error en porcentajeVariedad:', e);
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener el centro de coste'
-      };
-    }
-  }
-
-  // eliminar usuario
-  static async delete({
-    id
-  }) {
-    try {
-      const usuario = await Centrocoste.findByPk(id);
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      await usuario.destroy();
-      return {
-        message: `usuario eliminada correctamente con id ${id}`
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al elimiar el usuario'
-      };
-    }
-  }
-
-  // crear usuario
-  static async create({
-    data
-  }) {
-    try {
-      // verificamos que no exista el usuario
-      const usuario = await Centrocoste.findOne({
-        where: {
-          usuario: data.usuario
-        }
-      });
-      if (usuario) return {
-        error: 'usuario ya existe'
-      };
-      // creamos el usuario
-      await Centrocoste.create({
-        ...data
-      });
-      return {
-        message: `usuario registrado exitosamente ${data.nombre}`
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al crear al usuario'
-      };
-    }
-  }
-
-  // para actualizar datos de usuario
-  static async update({
-    id,
-    data
-  }) {
-    try {
-      // verificamos si existe alguna empresa con el id proporcionado
-      const usuario = await Centrocoste.findByPk(id);
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      // Actualiza solo los campos que se han proporcionado
-      if (data.nombre) usuario.nombre = data.nombre;
-      if (data.email) usuario.email = data.email;
-      if (data.rol) usuario.rol = data.rol;
-      if (data.empresa) usuario.empresa = data.empresa;
-      await usuario.save();
-      return {
-        message: 'usuario actualizada correctamente',
-        rol: data.rol
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener las usuarios'
-      };
-    }
-  }
-}
-;// CONCATENATED MODULE: ./src/schema/mezclas.js
-
-
-const solicitudConfig = {
-  id: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  folio: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    validate: {
-      len: {
-        args: [0, 50],
-        msg: 'El folio debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  cantidad: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    validate: {
-      len: {
-        args: [0, 10],
-        msg: 'la cantidad debe tener entre 1 y 10 caracteres'
-      }
-    }
-  },
-  idCentroCoste: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    allowNull: false,
-    field: 'idCentroCoste',
-    // Nombre de columna en la base de datos
-    validate: {
-      notNull: {
-        msg: 'El centro de coste es requerido'
-      }
-    }
-  },
-  descripcion: {
-    type: external_sequelize_namespaceObject.DataTypes.TEXT,
-    allowNull: true
-  },
-  empresa: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La empresa'
-      },
-      len: {
-        args: [3, 100],
-        msg: 'El nombre de la empresa debe tener entre 3 y 100 caracteres'
-      }
-    }
-  },
-  fechaSolicitud: {
-    type: external_sequelize_namespaceObject.DataTypes.DATEONLY,
-    allowNull: true,
-    field: 'fechaSolicitud',
-    // Nombre de columna en la base de datos
-    defaultValue: external_sequelize_namespaceObject.DataTypes.NOW
-  },
-  idUsuarioSolicita: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    allowNull: false,
-    field: 'idUsuarioSolicita',
-    // Nombre de columna en la base de datos
-    validate: {
-      notNull: {
-        msg: 'El ID de usuario en nesesario'
-      }
-    }
-  },
-  idUsuarioMezcla: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    field: 'idUsuarioMezcla',
-    // Nombre de columna en la base de datos
-    allowNull: true
-  },
-  imagenEntrega: {
-    type: external_sequelize_namespaceObject.DataTypes.TEXT,
-    field: 'imagenEntrega',
-    // Nombre de columna en la base de datos
-    allowNull: true
-  },
-  metodoAplicacion: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    field: 'metodoAplicacion',
-    // Nombre de columna en la base de datos
-    validate: {
-      notEmpty: {
-        msg: 'El método de aplicación es requerido'
-      },
-      len: {
-        args: [3, 100],
-        msg: 'El método de aplicación debe tener entre 3 y 100 caracteres'
-      }
-    }
-  },
-  notaMezcla: {
-    type: external_sequelize_namespaceObject.DataTypes.TEXT,
-    allowNull: true,
-    field: 'notaMezcla',
-    // Nombre de columna en la base de datos
-    validate: {
-      len: {
-        args: [0, 500],
-        msg: 'La nota de mezcla no puede exceder 500 caracteres'
-      }
-    }
-  },
-  presentacion: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    validate: {
-      len: {
-        args: [0, 100],
-        msg: 'La presentación debe tener entre 3 y 100 caracteres'
-      }
-    }
-  },
-  ranchoDestino: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    field: 'ranchoDestino',
-    // Nombre de columna en la base de datos
-    validate: {
-      notEmpty: {
-        msg: 'El rancho es requerido'
-      },
-      len: {
-        args: [3, 100],
-        msg: 'El rancho destino debe tener entre 3 y 100 caracteres'
-      }
-    }
-  },
-  status: {
-    type: external_sequelize_namespaceObject.DataTypes.ENUM('Pendiente', 'Proceso', 'Completada', 'Cancelada'),
-    allowNull: true,
-    defaultValue: 'Pendiente'
-  },
-  temporada: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La temporada es requerida'
-      },
-      len: {
-        args: [4, 20],
-        msg: 'La temporada debe tener entre 4 y 20 caracteres'
-      }
-    }
-  },
-  variedad: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La variedad es requerida'
-      },
-      len: {
-        args: [3, 100],
-        msg: 'La variedad debe tener entre 3 y 100 caracteres'
-      }
-    }
-  },
-  fechaEntrega: {
-    type: external_sequelize_namespaceObject.DataTypes.DATEONLY,
-    field: 'fechaEntrega',
-    // Nombre de columna en la base de datos
-    allowNull: true
-  },
-  porcentajes: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El porcentaje es requerido'
-      },
-      len: {
-        args: [3, 100],
-        msg: 'El porcentaje debe tener entre 3 y 100 caracteres'
-      }
-    }
-  }
-};
-const Solicitud = db.define('solicitud', solicitudConfig, {
-  tableName: 'solicitudes',
-  timestamps: false,
-  hooks: {
-    beforeValidate: solicitud => {
-      // Transformaciones antes de validar
-      if (solicitud.folio) {
-        solicitud.folio = solicitud.folio.trim().toUpperCase();
-      }
-
-      // Generar fecha de solicitud si no se proporciona
-      if (!solicitud.fechaSolicitud) {
-        solicitud.fechaSolicitud = new Date();
-      }
-    },
-    afterCreate: solicitud => {
-      console.log(`Nueva solicitud creada: ${solicitud.folio}`);
-    }
-  }
-});
-Solicitud.associate = models => {
-  Solicitud.belongsTo(models.Usuario, {
-    foreignKey: 'idUsuarioSolicita',
-    as: 'usuarioSolicita'
-  });
-  Solicitud.belongsTo(models.Centrocoste, {
-    foreignKey: 'idCentroCoste',
-    as: 'centroCosto'
-  });
-};
-;// CONCATENATED MODULE: ./src/schema/solicitud_receta.js
-
-
-const solicitud_receta_productosConfig = {
-  id: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    field: 'id_receta',
-    // Nombre de columna en la base de datos
-    primaryKey: true,
-    autoIncrement: true
-  },
-  id_solicitud: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    allowNull: false,
-    validate: {
-      notNull: {
-        msg: 'El Id de la solicitud en nesesario'
-      }
-    }
-  },
-  id_producto: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    allowNull: false,
-    validate: {
-      notNull: {
-        msg: 'El Id del producto en nesesario'
-      }
-    }
-  },
-  unidad_medida: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notNull: {
-        msg: 'La unidad de medida es necesaria'
-      }
-    }
-  },
-  cantidad: {
-    type: external_sequelize_namespaceObject.DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La cantidad es requerida'
-      },
-      min: {
-        args: [0],
-        msg: 'La cantidad debe ser mayor a 0'
-      }
-    }
-  },
-  status: {
-    type: external_sequelize_namespaceObject.DataTypes.BOOLEAN,
-    allowNull: true,
-    defaultValue: 0
-  }
-};
-const SolicitudProductos = db.define('solicitud_receta ', solicitud_receta_productosConfig, {
-  tableName: 'solicitud_receta',
-  // Nombre de la tabla en la base de datos
-  timestamps: false // Agrega createdAt y updatedAt automáticamente
-});
-;// CONCATENATED MODULE: external "fs/promises"
-var promises_x = (y) => {
-	var x = {}; __webpack_require__.d(x, y); return x
-} 
-var promises_y = (x) => (() => (x))
-const promises_namespaceObject = promises_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_fs_promises_f8dae9d1__["default"]) });
-;// CONCATENATED MODULE: ./src/config/foto.mjs
-
-
-
-const foto_filename = (0,external_url_namespaceObject.fileURLToPath)("file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/config/foto.mjs");
-const foto_dirname = (0,external_path_namespaceObject.dirname)(foto_filename);
-
-// Configuración
-const CONFIG = {
-  maxSize: 5 * 1024 * 1024,
-  // 5MB
-  allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-  uploadDir: external_path_namespaceObject.join(foto_dirname, '../../public/uploads')
-};
-const guardarImagen = async ({
-  imagen
-}) => {
-  try {
-    if (!imagen) {
-      throw new Error('No se ha enviado ninguna imagen');
-    }
-
-    // Validar formato base64
-    const matches = imagen.match(/^data:image\/([A-Za-z-+/]+);base64,(.+)$/);
-    if (!matches || matches.length !== 3) {
-      throw new Error('Formato de imagen no válido');
-    }
-
-    // Validar tipo de imagen
-    const mimeType = `image/${matches[1]}`;
-    if (!CONFIG.allowedTypes.includes(mimeType)) {
-      throw new Error('Tipo de imagen no permitido');
-    }
-
-    // Validar tamaño
-    const buffer = Buffer.from(matches[2], 'base64');
-    if (buffer.length > CONFIG.maxSize) {
-      throw new Error('Imagen demasiado grande');
-    }
-
-    // Verificar y crear directorio
-    try {
-      const stats = await promises_namespaceObject["default"].stat(CONFIG.uploadDir);
-      if (!stats.isDirectory()) {
-        throw new Error('La ruta de uploads no es un directorio');
-      }
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        // console.log('Creando directorio de uploads...')
-        await promises_namespaceObject["default"].mkdir(CONFIG.uploadDir, {
-          recursive: true
-        });
-      } else {
-        throw error;
-      }
-    }
-
-    // Generar nombre único
-    const imageExtension = `.${matches[1]}`;
-    const imageName = `image_${Date.now()}_${Math.random().toString(36).substring(2)}${imageExtension}`;
-    const imagePath = external_path_namespaceObject.join(CONFIG.uploadDir, imageName);
-
-    // Debug: Mostrar ruta completa
-    // console.log('Ruta completa de la imagen:', imagePath)
-
-    // Guardar imagen con manejo de errores específico
-    try {
-      await promises_namespaceObject["default"].writeFile(imagePath, buffer);
-      // console.log('Imagen guardada exitosamente')
-    } catch (writeError) {
-      console.error('Error al escribir el archivo:', writeError);
-      throw new Error(`Error al guardar la imagen: ${writeError.message}`);
-    }
-
-    // Verificar que el archivo se haya creado
-    try {
-      await promises_namespaceObject["default"].access(imagePath);
-      // console.log('Archivo verificado correctamente')
-    } catch (accessError) {
-      console.error('El archivo no se creó correctamente:', accessError);
-      throw new Error('No se pudo verificar la creación del archivo');
-    }
-
-    // Formatear fecha
-    const fechaActual = new Date();
-    const fechaFormateada = fechaActual.toISOString().split('T')[0];
-    console.log('ruta absoluta:', imagePath);
-    return {
-      relativePath: `../uploads/${imageName}`,
-      fecha: fechaFormateada,
-      success: true
-    };
-  } catch (error) {
-    console.error('Error en guardarImagen:', error);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-};
-;// CONCATENATED MODULE: ./src/models/mezclas.models.js
-
-
- // Asegúrate de importar el modelo de Usuario
- // Asegúrate de importar el modelo de CentroCoste
-
-
-
-class MezclaModel {
-  // crear asistencia
-  static async create({
-    data,
-    idUsuario
-  }) {
-    const transaction = await db.transaction();
-    let variedades;
-    try {
-      // validamos variedad si viene todo
-      if (data.variedad === 'todo') {
-        try {
-          // Asumiendo que este método existe en tu modelo
-          variedades = await CentroCosteModel.getVariedadPorCentroCoste({
-            id: data.centroCoste
-          });
-        } catch (error) {
-          console.error('Error al consultar productos para la solicitud', error);
-        }
-      }
-      // Creamos nueva solicitud con transacción
-      const solicitud = await Solicitud.create({
-        folio: data.folio,
-        cantidad: data.cantidad,
-        idCentroCoste: data.centroCoste,
-        descripcion: data.descripcion,
-        empresa: data.empresaPertece,
-        idUsuarioSolicita: idUsuario,
-        metodoAplicacion: data.metodoAplicacion,
-        temporada: data.temporada,
-        variedad: data.variedad === 'todo' ? variedades[0].dataValues.variedad : data.variedad,
-        presentacion: data.presentacion,
-        ranchoDestino: data.rancho,
-        porcentajes: data.variedad === 'todo' ? variedades[0].dataValues.porcentajes : '100'
-      }, {
-        transaction
-      });
-
-      // Verificar si hay productos y procesar cada uno
-      if (data.productos && Array.isArray(data.productos)) {
-        // Filtrar productos válidos
-        const productosValidos = data.productos.filter(producto => producto.id_producto && producto.unidad_medida && producto.cantidad);
-
-        // Validar que haya productos
-        if (productosValidos.length === 0) {
-          throw new Error('No hay productos válidos para registrar');
-        }
-
-        // Procesar productos con manejo de errores mejorado
-        const productosPromesas = productosValidos.map(async producto => {
-          // comprobaramos si el id_producto es numero
-          try {
-            await SolicitudProductos.create({
-              id_solicitud: solicitud.id,
-              id_producto: parseInt(producto.id_producto),
-              unidad_medida: producto.unidad_medida,
-              cantidad: producto.cantidad
-            }, {
-              transaction
-            });
-            return {
-              idProducto: producto.id_producto,
-              status: 'success'
-            };
-          } catch (errorProducto) {
-            console.error(`Error al procesar producto ${producto.id_producto}:`, errorProducto);
-            return {
-              idProducto: producto.id_producto,
-              status: 'error',
-              message: errorProducto.message
-            };
-          }
-        });
-
-        // Esperar a que se procesen todos los productos
-        const resultadosProductos = await Promise.all(productosPromesas);
-
-        // Verificar si hubo errores en los productos
-        const productosConError = resultadosProductos.filter(resultado => resultado.status === 'error');
-        if (productosConError.length > 0) {
-          // Si hay errores, lanzar una excepción con detalles
-          throw new Error(`Errores al procesar productos: ${JSON.stringify(productosConError)}`);
-        }
-      }
-
-      // Confirmar transacción
-      await transaction.commit();
-      // Retornar mensaje de éxito con ID de solicitud
-      return {
-        message: 'Solicitud de mezcla registrada correctamente',
-        idSolicitud: solicitud.id,
-        fechaSolicitud: solicitud.fechaSolicitud
-      };
-    } catch (error) {
-      // Revertir transacción en caso de error
-      if (transaction) await transaction.rollback();
-
-      // Loguear error detallado
-      console.error('Error al registrar solicitud:', error);
-
-      // Retornar mensaje de error más descriptivo
-      return {
-        error: 'Error al registrar solicitud',
-        detalle: error.message
-      };
-    }
-  }
-  static async cerrarSolicitid({
-    data,
-    idUsuario
-  }) {
-    const id = data.idSolicitud;
-    const status = 'Completada';
-    try {
-      // Verificamos si existe la solicitud con el id proporcionado
-      const solicitud = await Solicitud.findByPk(id);
-      if (!solicitud) return {
-        error: 'Solicitud no encontrada'
-      };
-
-      // Guardar imagen
-      const response = await guardarImagen({
-        imagen: data.imagen
-      });
-
-      // Actualiza solo los campos que se han proporcionado
-      if (response.relativePath) solicitud.imagenEntrega = response.relativePath;
-      if (status) solicitud.status = status;
-      if (idUsuario) solicitud.idUsuarioMezcla = idUsuario;
-      if (response.fecha) solicitud.fechaEntrega = response.fecha;
-      await solicitud.save();
-      return {
-        message: 'Solicitud actualizada correctamente',
-        status,
-        idUsuarioSolicita: solicitud.idUsuarioSolicita,
+      const result = await this.notificacionModel.delete({
         id
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener las solicitudes'
-      };
-    }
-  }
-  static async obtenerTablaMezclasEmpresa({
-    status,
-    empresa
-  }) {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          empresa,
-          status
-        },
-        include: [{
-          model: Usuario,
-          // Modelo de Usuario
-          attributes: ['nombre'] // Campos que quieres obtener del usuario
-        }, {
-          model: Centrocoste,
-          // Modelo de CentroCoste
-          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-        }],
-        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
       });
-
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
+      if (result.error) {
+        res.status(404).json({
+          error: `${result.error}`
+        });
       }
-
-      // Transformar los resultados
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON();
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status
-        };
+      res.json({
+        message: `${result.message}`
       });
-
-      // Devolver los resultados validar si hay resultados mandar vacio
-      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
+    } catch (error) {
+      console.error({
+        error: `${error}`
+      });
+      res.status(500).json({
+        error: 'Error de Servidor'
+      });
     }
-  }
-  static async obtenerTablaMezclasRancho({
-    status,
-    ranchoDestino
-  }) {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          ranchoDestino,
-          status
-        },
-        include: [{
-          model: Usuario,
-          // Modelo de Usuario
-          attributes: ['nombre'] // Campos que quieres obtener del usuario
-        }, {
-          model: Centrocoste,
-          // Modelo de CentroCoste
-          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-        }],
-        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
-      });
+  };
 
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
+  // obtener  usuario
+  getAll = async (req, res) => {
+    try {
+      // obetenmos todos las usuario
+      const result = await this.notificacionModel.getAll();
+      if (result.error) {
+        res.status(404).json({
+          error: `${result.error}`
+        });
       }
-
-      // Transformar los resultados
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON();
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status
-        };
+      res.json(result);
+    } catch (error) {
+      console.error({
+        error: `${error}`
       });
-
-      // Devolver los resultados
-      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
+      res.status(500).json({
+        error: 'Error de Servidor'
+      });
     }
-  }
-  static async obtenerTablaMezclasUsuario({
-    status,
-    idUsuarioSolicita
-  }) {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          idUsuarioSolicita,
-          status
-        },
-        include: [{
-          model: Usuario,
-          // Modelo de Usuario
-          attributes: ['nombre'] // Campos que quieres obtener del usuario
-        }, {
-          model: Centrocoste,
-          // Modelo de CentroCoste
-          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-        }],
-        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
-      });
+  };
 
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
+  // obtener  usuario
+  getAllIdUsuario = async (req, res) => {
+    // ontenerdatso de sesion
+    const {
+      user
+    } = req.session;
+    console.log(user);
+    try {
+      // obetenmos todos las usuario
+      const result = await this.notificacionModel.getAllIdUsuario({
+        idUsuario: user.id
+      });
+      if (result.error) {
+        res.status(404).json({
+          error: `${result.error}`
+        });
       }
-
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON();
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status
-        };
+      res.json(result);
+    } catch (error) {
+      console.error({
+        error: `${error}`
       });
-
-      // Devolver los resultados
-      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
+      res.status(500).json({
+        error: 'Error de Servidor'
+      });
     }
-  }
-  static async obtenerTablaMezclasId({
-    id
-  }) {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          id
-        },
-        include: [{
-          model: Usuario,
-          // Modelo de Usuario
-          attributes: ['nombre'] // Campos que quieres obtener del usuario
-        }, {
-          model: Centrocoste,
-          // Modelo de CentroCoste
-          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-        }],
-        attributes: ['id', 'ranchoDestino', 'variedad', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud']
-      });
+  };
 
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
+  // obtener una empresa
+  getOne = async (req, res) => {
+    const {
+      id
+    } = req.params;
+    try {
+      const result = await this.notificacionModel.getOne({
+        id
+      });
+      if (result.error) {
+        return res.status(404).json({
+          error: result.error
+        }); // Asegúrate de usar return aquí
+      } else {
+        return res.json(result); // Asegúrate de usar return aquí también
       }
-
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON();
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagen: m.imagenSolicitud,
-          descripcion: m.descripcion,
-          status: m.status
-        };
+    } catch (error) {
+      console.error({
+        error: `${error}`
       });
-
-      // Devolver los resultados
-      return {
-        message: 'Mezclas obtenidas correctamente',
-        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-      };
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
+      return res.status(500).json({
+        error: 'Error de Servidor'
+      }); // Asegúrate de usar return aquí
     }
-  }
-  static async obtenerPorcentajes({
-    id
-  }) {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          id
-        },
-        attributes: ['porcentajes']
-      });
+  };
 
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
+  // crear nuevo Usuario
+  create = async (req, res) => {
+    try {
+      const result = await this.notificacionModel.create({
+        data: req.body
+      });
+      if (result.error) {
+        return res.status(400).json({
+          error: result.error
+        });
       }
-      // Devolver los resultados
-      return Array.isArray(mezclas) ? mezclas : [];
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
-    }
-  }
-  static async estadoProceso({
-    id,
-    data
-  }) {
-    try {
-      // Verificamos si existe la solicitud con el id proporcionado
-      const solicitud = await Solicitud.findByPk(id);
-      if (!solicitud) return {
-        error: 'Solicitud no encontrada'
-      };
-
-      // Actualiza solo los campos que se han proporcionado
-      if (data.notaMezcla) solicitud.notaMezcla = data.notaMezcla;
-      if (data.status) solicitud.status = data.status;
-      await solicitud.save();
-      return {
-        message: 'Solicitud actualizada correctamente',
-        idUsuarioSolicita: solicitud.idUsuarioSolicita
-      };
-    } catch (e) {
-      console.error(e.message); // Salida: Error la usuario
-      return {
-        error: 'Error al obtener las solicitudes'
-      };
-    }
-  }
-  static async getAll() {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        include: [{
-          model: Usuario,
-          // Modelo de Usuario
-          attributes: ['nombre'] // Campos que quieres obtener del usuario
-        }, {
-          model: Centrocoste,
-          // Modelo de CentroCoste
-          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-        }],
-        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
+      return res.json({
+        message: result.message
       });
+    } catch (error) {
+      console.error({
+        error: `${error}`
+      });
+      return res.status(500).render('500', {
+        error: 'Error interno del servidor'
+      });
+    }
+  };
 
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
+  // actualizar datos del usuario
+  update = async (req, res) => {
+    const {
+      id
+    } = req.params;
+    try {
+      const result = await this.notificacionModel.update({
+        id,
+        data: req.body
+      });
+      if (result.error) {
+        res.status(404).json({
+          error: `${result.error}`
+        });
       }
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON();
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status
-        };
+      return res.json({
+        message: result.message
       });
-
-      // Devolver los resultados
-      return {
-        message: 'Mezclas obtenidas correctamente',
-        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-      };
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
+    } catch (error) {
+      console.error({
+        error: `${error}`
+      });
+      return res.status(500).render('500', {
+        error: 'Error interno del servidor'
+      });
     }
-  }
-  static async getAllGeneral({
-    status
-  }) {
+  };
+  updateStatus = async (req, res) => {
+    const {
+      id
+    } = req.params;
     try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          status
-        },
-        include: [{
-          model: Usuario,
-          // Modelo de Usuario
-          attributes: ['nombre'] // Campos que quieres obtener del usuario
-        }, {
-          model: Centrocoste,
-          // Modelo de CentroCoste
-          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-        }],
-        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
+      const result = await this.notificacionModel.updateStatus({
+        id
       });
-
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
+      if (result.error) {
+        return res.status(404).json({
+          error: result.error
+        });
       }
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON();
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status
-        };
-      });
-
-      // Devolver los resultados
-      return {
-        message: 'Mezclas obtenidas correctamente',
-        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-      };
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
-    }
-  }
-  static async obtenerDatosSolicitud({
-    id
-  }) {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          id
-        },
-        attributes: ['cantidad', 'presentacion', 'metodoAplicacion']
-      });
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
-      }
-      // Devolver los resultados
-      return Array.isArray(mezclas) ? mezclas : [];
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
-    }
-  }
-} // fin modelo
-;// CONCATENATED MODULE: ./src/models/productosSolicitud.models.js
-
-
-
- // Asegúrate de importar el modelo de Usuario
- // Asegúrate de importar el modelo de Usuario
-
-class SolicitudRecetaModel {
-  // crear asistencia
-
-  static async obtenerProductosSolicitud({
-    idSolicitud
-  }) {
-    try {
-      const productosSolicitud = await SolicitudProductos.findAll({
-        where: {
-          id_solicitud: idSolicitud
-        },
-        include: [{
-          model: Productos,
-          // producto
-          attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario
-        }, {
-          model: Recetas,
-          // Modelo de Recetas
-          attributes: ['nombre'] // Campos que quieres obtener del modelo Recetas
-        }],
-        attributes: ['id_receta', 'id_solicitud', 'id_producto', 'unidad_medida', 'cantidad']
-      });
-
-      // Verificar si se encontraron resultados
-      if (productosSolicitud.length === 0) {
-        return {
-          message: 'No se encontraron productos para los criterios especificados',
-          data: []
-        };
-      }
-
-      // Transformar los resultados
-      const resultadosFormateados = productosSolicitud.map(productos => {
-        const m = productos.toJSON();
-        return {
-          id_receta: m.id_receta,
-          id_solicitud: m.id_solicitud,
-          id_sap: m.producto.id_sap,
-          nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : m.receta ? m.receta.nombre : 'Producto y receta no encontrados',
-          unidad_medida: m.unidad_medida,
-          cantidad: m.cantidad
-        };
-      });
-
-      // Devolver los resultados
-      return resultadosFormateados;
-    } catch (e) {
-      console.error('Error al obtener productos:', e.message);
-      return {
-        error: 'Error al obtener las productos',
-        detalle: e.message
-      };
-    }
-  }
-  static async obtenerTablaMezclasId({
-    id
-  }) {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await SolicitudProductos.findAll({
-        where: {
-          id
-        },
-        include: [{
-          model: Productos,
-          // Modelo de Usuario
-          attributes: ['nombre'] // Campos que quieres obtener del usuario
-        }],
-        attributes: ['id', 'ranchoDestino', 'variedad', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenSolicitud']
-      });
-
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        };
-      }
-
-      // Transformar los resultados
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON();
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagen: m.imagenSolicitud,
-          descripcion: m.descripcion,
-          status: m.status
-        };
-      });
-
-      // Devolver los resultados
-      return {
-        message: 'Mezclas obtenidas correctamente',
-        data: resultadosFormateados
-      };
-    } catch (e) {
-      console.error('Error al obtener mezclas:', e.message);
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      };
-    }
-  }
-  static async create({
-    data
-  }) {
-    try {
-      // Verificar si el usuario ya existe
-      const producto = await SolicitudProductos.findOne({
-        where: {
-          id_solicitud: data.idSolicitud,
-          id_producto: data.producto
-        }
-      });
-      if (producto) {
-        return {
-          error: 'producto ya existe en la solicitud'
-        };
-      }
-      // Llamar al procedimiento almacenado
-      await SolicitudProductos.create({
-        id_solicitud: data.idSolicitud,
-        id_producto: data.producto,
-        unidad_medida: data.unidadMedida,
-        cantidad: data.cantidad
-      });
-
-      // Si llegamos aquí, la ejecución fue exitosa
-      return {
+      return res.json({
         status: 'success',
-        message: `Producto procesado exitosamente: ${data.producto}`
-      };
-    } catch (error) {
-      // Manejo de errores
-      console.error(`Error al procesar producto ${data.producto}:`, error);
-      return {
-        status: 'error',
-        message: error.message || 'Error desconocido'
-      };
-    }
-  }
-  static async actulizarEstado({
-    data
-  }) {
-    let transaction;
-    const noExistencia = [];
-    const estados = {
-      estados: [] // Inicializa el array de estados
-    };
-    try {
-      // Iniciar transacción
-      transaction = await db.transaction();
-
-      // Verificar si hay productos y procesar cada uno
-      if (data && Array.isArray(data.estados)) {
-        // Validar que haya estados
-        if (data.estados.length === 0) {
-          throw new Error('No hay estados válidos para registrar');
-        }
-
-        // Procesar estados
-        const estadosPromesas = data.estados.map(async estado => {
-          if (estado.existe === false) {
-            noExistencia.push({
-              id_receta: estado.id_receta
-            });
-          }
-          try {
-            const receta = await SolicitudProductos.findByPk(estado.id_receta, {
-              transaction
-            });
-            if (!receta) return {
-              status: 'error',
-              message: 'Producto no encontrado'
-            };
-
-            // Actualiza el estado si existe
-            receta.status = estado.existe;
-            await receta.save({
-              transaction
-            });
-            return {
-              message: 'Producto actualizado correctamente'
-            };
-          } catch (errorProducto) {
-            console.error('Error al procesar producto', errorProducto);
-            return {
-              status: 'error',
-              message: errorProducto.message
-            };
-          }
-        });
-
-        // Esperar a que se procesen todos los productos
-        const resultadosProductos = await Promise.all(estadosPromesas);
-
-        // Verificar si hubo errores en los productos
-        const productosConError = resultadosProductos.filter(resultado => resultado.status === 'error');
-        if (productosConError.length > 0) {
-          throw new Error(`Errores al procesar productos: ${JSON.stringify(productosConError)}`);
-        }
-      }
-
-      // Confirmar transacción
-      await transaction.commit();
-
-      // Si hay productos que no existen, buscar información sobre ellos
-      if (noExistencia.length > 0) {
-        const idsRecetas = noExistencia.map(item => item.id_receta);
-        const datosUsuariSolicita = await SolicitudProductos.findAll({
-          where: {
-            id_receta: idsRecetas // Obtener todos los id_receta
-          },
-          include: [{
-            model: Productos,
-            // producto
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
-          }],
-          attributes: ['id_producto', 'unidad_medida', 'cantidad']
-        });
-
-        // Verificar si se encontraron resultados
-        if (datosUsuariSolicita.length === 0) {
-          return {
-            message: 'No se encontraron productos para los criterios especificados',
-            data: []
-          };
-        }
-
-        // Transformar los resultados
-        const resultadosFormateados = datosUsuariSolicita.map(item => {
-          const m = item.toJSON();
-          return {
-            id_producto: m.id_producto,
-            nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : 'Producto no encontrado',
-            unidad_medida: m.unidad_medida,
-            cantidad: m.cantidad
-          };
-        });
-        estados.estados.push(...resultadosFormateados); // Agregar todos los resultados formateados a estados.estados
-      }
-      // Retornar mensaje de éxito
-      const UsuariSolicita = await Solicitud.findAll({
-        where: {
-          id: data.id_solicitud // Obtener todos los id_receta
-        },
-        include: [{
-          model: Usuario,
-          // producto
-          attributes: ['nombre', 'email'] // Campos que quieres obtener del usuario
-        }],
-        attributes: ['folio']
+        message: result.message
       });
-      const resultadosFormateado = UsuariSolicita.map(item => {
-        const m = item.toJSON();
-        return {
-          nombre: m.usuario && m.usuario.nombre ? m.usuario.nombre : 'No se encontro Nombre',
-          email: m.usuario && m.usuario.email ? m.usuario.email : 'No se encontro Correo'
-        };
-      });
-      return {
-        data: resultadosFormateado,
-        productos: estados.estados,
-        message: 'Solicitud de mezcla registrada correctamente'
-      };
     } catch (error) {
-      // Revertir transacción en caso de error
-      if (transaction) await transaction.rollback();
-
-      // Loguear error detallado
-      console.error('Error al registrar solicitud:', error);
-
-      // Retornar mensaje de error más descriptivo
-      return {
-        error: 'Error al registrar solicitud',
-        detalle: error.message
-      };
+      console.error('Error en updateStatus:', error);
+      return res.status(500).json({
+        error: 'Error al actualizar el estado de la notificación'
+      });
     }
-  }
-  static async EliminarPorducto({
-    id
-  }) {
-    try {
-      // Comprobar que el producto exista
-      const producto = await SolicitudProductos.findByPk(id); // Usar findByPk correctamente
-      if (!producto) return {
-        error: 'Producto no encontrado'
-      };
+  };
+}
+;// CONCATENATED MODULE: ./src/routes/notificaciones.routes.js
 
-      // Eliminar el producto
-      await producto.destroy();
-      return {
-        message: `Producto eliminado correctamente con id ${id}`
-      };
-    } catch (e) {
-      console.error('Error al eliminar el producto:', e.message); // Registrar el error
-      return {
-        error: 'Error al eliminar el producto'
-      };
-    }
-  }
-} // fin modelo
+
+const createNotificacionesRouter = ({
+  notificacionModel
+}) => {
+  const router = (0,external_express_namespaceObject.Router)();
+  const notificacionController = new NotificacionesController({
+    notificacionModel
+  });
+
+  // Obtener todas las notificaciones
+  router.get('/notificaciones', notificacionController.getAllIdUsuario);
+  router.put('/notificaciones/:id', notificacionController.updateStatus);
+  return router;
+};
 ;// CONCATENATED MODULE: external "exceljs"
 var external_exceljs_x = (y) => {
 	var x = {}; __webpack_require__.d(x, y); return x
@@ -4247,7 +5162,6 @@ var external_exceljs_x = (y) => {
 var external_exceljs_y = (x) => (() => (x))
 const external_exceljs_namespaceObject = external_exceljs_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_exceljs__["default"]) });
 ;// CONCATENATED MODULE: ./src/config/excel.js
-
 
 
 
@@ -4260,6 +5174,8 @@ async function obtenerProductosPorSolicitud(idSolicitud) {
     // Verificar si se obtuvieron productos
     if (productos && productos.length > 0) {
       return productos.map(producto => ({
+        id_sap: producto.id_sap,
+        // Asegúrate de que este campo existe en tu modelo
         nombre: producto.nombre_producto,
         // Asegúrate de que este campo existe en tu modelo
         unidad_medida: producto.unidad_medida,
@@ -4275,11 +5191,12 @@ async function obtenerProductosPorSolicitud(idSolicitud) {
     return []; // O puedes lanzar el error si prefieres manejarlo en otro lugar
   }
 }
-async function obtenerVariedades(centroCoste) {
+async function obtenerVariedades(idSolicitud) {
   try {
     // Asumiendo que este método existe en tu modelo
-    const variedades = await CentroCosteModel.getVariedadPorCentroCosteNombre({
-      centroCoste
+    // const variedades = await CentroCosteModel.getVariedadPorCentroCoste({ centroCoste })
+    const variedades = await MezclaModel.obtenerPorcentajes({
+      id: idSolicitud
     });
     // Verificar si se obtuvieron variedades
     if (variedades && variedades.length > 0) {
@@ -4461,12 +5378,12 @@ const crearExcel = async parametros => {
         // Agregar encabezados para los productos en la segunda tabla
         hojaSolicitud.addRow(['Datos de los productos solicitados']); // Encabezados de la segunda tabla
         hojaSolicitud.getCell('A12').font = font;
-        hojaSolicitud.addRow(['Producto', 'Unidad Medida', 'Cantidad Solicitada']); // Encabezados de la segunda tabla
+        hojaSolicitud.addRow(['id_sap', 'Producto', 'Unidad Medida', 'Cantidad Solicitada']); // Encabezados de la segunda tabla
 
         // Agregar productos a la hoja
         if (productos && productos.length > 0) {
           for (let i = 0; i < productos.length; i++) {
-            hojaSolicitud.addRow([productos[i].nombre, productos[i].unidad_medida, productos[i].cantidad]);
+            hojaSolicitud.addRow([productos[i].id_sap, productos[i].nombre, productos[i].unidad_medida, productos[i].cantidad]);
           }
         } else {
           console.error('No se encontraron productos o la estructura es incorrecta');
@@ -4495,7 +5412,7 @@ const crearExcel = async parametros => {
 };
 const crearSolicitudV2 = async parametros => {
   try {
-    console.log('Datos a procesar:', parametros);
+    // console.log('Datos a procesar:', parametros)
     // Verificar si hay datos
     if (!parametros || parametros.length === 0) {
       throw new Error('No hay datos para generar el Excel');
@@ -4552,12 +5469,12 @@ const crearSolicitudV2 = async parametros => {
       // Agregar encabezados para los productos en la segunda tabla
       hojaGeneral.addRow(['Datos de los productos solicitados']); // Encabezados de la segunda tabla
       hojaGeneral.getCell('A16').font = font;
-      hojaGeneral.addRow(['Producto', 'Unidad Medida', 'Cantidad Solicitada']); // Encabezados de la segunda tabla
+      hojaGeneral.addRow(['id_sap', 'Producto', 'Unidad Medida', 'Cantidad Solicitada']); // Encabezados de la segunda tabla
 
       // Agregar productos a la hoja
       if (productos && productos.length > 0) {
         for (let i = 0; i < productos.length; i++) {
-          hojaGeneral.addRow([productos[i].nombre, productos[i].unidad_medida, productos[i].cantidad]);
+          hojaGeneral.addRow([productos[i].id_sap, productos[i].nombre, productos[i].unidad_medida, productos[i].cantidad]);
         }
       } else {
         console.error('No se encontraron productos o la estructura es incorrecta');
@@ -4646,33 +5563,51 @@ const reporteSolicitud = async parametros => {
   };
   // varialbles globales
   let variedades;
+  let filtrados = [];
   try {
     // Extraer los datos correctamente
     const datos = Array.isArray(parametros) ? parametros : parametros.datos || [];
-    console.log('Datos a procesar:', datos);
+
+    // console.log('Datos a procesar:', datos)
+
+    // Verificar si hay datos
+    if (!datos || datos.length === 0) {
+      throw new Error('No hay datos para generar el Excel');
+    }
 
     // Crear un nuevo libro de Excel
-    const workbook = new external_exceljs_namespaceObject["default"].Workbook();
+    const workbook = new ExcelJS.Workbook();
 
     // Cabecera de la tabla
-    let cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada'];
+    let cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];
     let porcentaje = ['', '', ''];
     try {
       // Crear una hoja para esta solicitud
       const hojaGeneral = workbook.addWorksheet('Datos Generales');
       // obtenemos datos de la variedad
       for (const dato of datos) {
-        if (dato.variedad === 'todo') {
+        if (dato.variedad.split(',').length > 1) {
           // Obtener variedades
-          variedades = await obtenerVariedades(dato.centroCoste);
-          console.log('Variedades obtenidas:', variedades);
+          variedades = await obtenerVariedades(dato.id);
+          // console.log('Variedades obtenidas:', variedades)
 
           // Agregar nombres de variedades a la cabecera
           if (variedades && variedades.length > 0) {
             for (const variedad of variedades) {
               const variedadSplit = variedad.variedad.split(',');
               const porcentajeSplit = variedad.porcentajes.split(',');
-              for (const item of variedadSplit) {
+              // Filtrar ambos arrays en paralelo
+              filtrados = variedadSplit.reduce((acc, variedad, index) => {
+                if (parseInt(porcentajeSplit[index].trim()) !== 0) {
+                  acc.variedades.push(variedad);
+                  acc.porcentajes.push(porcentajeSplit[index]);
+                }
+                return acc;
+              }, {
+                variedades: [],
+                porcentajes: []
+              });
+              for (const item of filtrados.variedades) {
                 if (!cabecera.includes(item)) {
                   cabecera.push(item);
                 }
@@ -4687,12 +5622,12 @@ const reporteSolicitud = async parametros => {
         } else {
           cabecera.push(dato.variedad);
         }
-        if (dato.variedad === 'todo') {
+        if (dato.variedad.split(',').length > 1) {
           hojaGeneral.addRow(['Datos Generales Fertilizantes']).eachCell(cell => {
             cell.style = headerStyle;
           }); // Encabezado de la hoja
 
-          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud]).eachCell(cell => {
+          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.id_solicitud : dato.id]).eachCell(cell => {
             cell.style = cellStyle;
           });
           hojaGeneral.addRow(['Solicita', dato.usuario]).eachCell(cell => {
@@ -4710,7 +5645,7 @@ const reporteSolicitud = async parametros => {
           hojaGeneral.addRow(['Centro de Coste', dato.centroCoste || dato.centro_coste]).eachCell(cell => {
             cell.style = cellStyle;
           });
-          hojaGeneral.addRow(['Variedad Fruta', dato.variedad !== 'todo' ? dato.variedad : variedades[0].variedad]).eachCell(cell => {
+          hojaGeneral.addRow(['Variedad Fruta', dato.variedad !== 'todo' ? dato.variedad : filtrados.variedades]).eachCell(cell => {
             cell.style = cellStyle;
           });
           hojaGeneral.addRow(['Empresa', dato.empresa]).eachCell(cell => {
@@ -4728,30 +5663,31 @@ const reporteSolicitud = async parametros => {
           }); // Encabezado de la hoja
 
           // obtenemos datos faltantes de la solicitud
-          const datosF = await obtenerDatosSolicitud(dato.id_solicitud);
-          console.log('Datos de la solicitud:', datosF);
-          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud]).eachCell(cell => {
+          const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);
+          // console.log('Datos de la solicitud:', datosF)
+
+          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.idSolicitud : dato.id]).eachCell(cell => {
             cell.style = cellStyle;
           });
-          hojaGeneral.addRow(['Folio de Receta', dato.folio]).eachCell(cell => {
+          hojaGeneral.addRow(['Folio de Receta', dato.folio ? dato.folio : dato.FolioReceta]).eachCell(cell => {
             cell.style = cellStyle;
           });
-          hojaGeneral.addRow(['Solicita', dato.usuario]).eachCell(cell => {
+          hojaGeneral.addRow(['Solicita', dato.usuario ? dato.usuario : dato.Solicita]).eachCell(cell => {
             cell.style = cellStyle;
           });
           hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell(cell => {
             cell.style = cellStyle;
           });
-          hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega]).eachCell(cell => {
+          hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega ? dato.fechaEntrega : 'No aplica']).eachCell(cell => {
             cell.style = cellStyle;
           });
-          hojaGeneral.addRow(['Rancho', dato.rancho]).eachCell(cell => {
+          hojaGeneral.addRow(['Rancho', dato.rancho ? dato.rancho : dato.ranchoDestino]).eachCell(cell => {
             cell.style = cellStyle;
           });
           hojaGeneral.addRow(['Centro de Coste', dato.centroCoste || dato.centro_coste]).eachCell(cell => {
             cell.style = cellStyle;
           });
-          hojaGeneral.addRow(['Variedad Fruta', dato.variedad !== 'todo' ? dato.variedad : variedades[0].variedad]).eachCell(cell => {
+          hojaGeneral.addRow(['Variedad Fruta', dato.variedad !== 'todo' ? dato.variedad : filtrados.variedades]).eachCell(cell => {
             cell.style = cellStyle;
           });
           hojaGeneral.addRow(['Empresa', dato.empresa]).eachCell(cell => {
@@ -4782,23 +5718,23 @@ const reporteSolicitud = async parametros => {
           cell.style = headerStyle;
         });
         // limpiamos cabeceras
-        cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada'];
+        cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];
         porcentaje = ['', '', ''];
 
         // Obtener productos de la base de datos
-        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud);
-        console.log('Productos obtenidos:', productos);
+        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);
+        // console.log('Productos obtenidos:', productos)
 
         // Crear el arreglo de datos
         const data = [];
         if (productos && productos.length > 0) {
           for (const producto of productos) {
-            const fila = [producto.nombre, producto.unidad_medida, producto.cantidad];
+            const fila = [producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad];
 
             // Calcular porcentajes de variedades
-            if (dato.variedad === 'todo') {
+            if (dato.variedad.split(',').length > 1) {
               if (variedades && variedades.length > 0) {
-                for (const variedad of variedades) {
+                for (const variedad of filtrados) {
                   const variedadSplit = variedad.porcentajes.split(',');
                   for (const item of variedadSplit) {
                     const porcentajeVariedad = producto.cantidad * item / 100;
@@ -4867,7 +5803,7 @@ const reporteSolicitud = async parametros => {
   }
 };
 const reporteSolicitudV2 = async parametros => {
-  console.log(parametros);
+  // console.log(parametros)
   // Definir estilos
   const headerStyle = {
     font: {
@@ -4941,7 +5877,7 @@ const reporteSolicitudV2 = async parametros => {
     const workbook = new external_exceljs_namespaceObject["default"].Workbook();
 
     // Cabecera de la tabla mezclas
-    const cabeceraMezclas = ['Id Solicitud', 'Folio de Receta', 'Solicita', 'Fecha Solicitud', 'Fecha Entrega', 'Rancho', 'Centro de Coste', 'Empresa', 'Temporada', 'Variedad Fruta', 'Cantidad de Mezcla', 'Presentacion de la Mezcla', 'Metodo de aplicacion', 'Productos', 'Unidad', 'Cantidad Solicitada', 'Porcentaje Correspondiente', 'Cantidad Correspondiente'];
+    const cabeceraMezclas = ['Id Solicitud', 'Folio de Receta', 'Solicita', 'Fecha Solicitud', 'Fecha Entrega', 'Rancho', 'Centro de Coste', 'Empresa', 'Temporada', 'Variedad Fruta', 'Cantidad de Mezcla', 'Presentacion de la Mezcla', 'Metodo de aplicacion', 'id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada', 'Porcentaje Correspondiente', 'Cantidad Correspondiente'];
     try {
       // Crear una hoja para esta solicitud
       const hojaGeneral = workbook.addWorksheet('Datos Generales');
@@ -4952,15 +5888,15 @@ const reporteSolicitudV2 = async parametros => {
       // obtenemos datos de la variedad
       for (const dato of datos) {
         // // obtenemos datos faltantes de la solicitud
-        const datosF = await obtenerDatosSolicitud(dato.id_solicitud);
+        const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);
         // console.log('Datos de la solicitud:', datosF)
 
         // // Obtener productos de la base de datos
-        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud);
+        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);
         // console.log('Productos obtenidos:', productos)
         // Crear el arreglo de datos
         if (dato.variedad.split(',').length > 1) {
-          variedades = await obtenerPorcentajes(dato.id_solicitud);
+          variedades = await obtenerPorcentajes(dato.id_solicitud ? dato.id_solicitud : dato.id);
           // console.log('Variedades obtenidas:', variedades)
           if (variedades && variedades.length > 0) {
             for (const variedad of variedades) {
@@ -4969,7 +5905,7 @@ const reporteSolicitudV2 = async parametros => {
               for (let i = 0; i < variedadSplit.length; i++) {
                 if (productos && productos.length > 0) {
                   for (const producto of productos) {
-                    const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, variedadSplit[i], datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.nombre, producto.unidad_medida, producto.cantidad, '%' + porcentajeSplit[i], producto.cantidad * porcentajeSplit[i] / 100];
+                    const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, variedadSplit[i], datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad, '%' + porcentajeSplit[i], producto.cantidad * porcentajeSplit[i] / 100];
                     dataMescla.push(fila);
                   }
                 } else {
@@ -4981,9 +5917,8 @@ const reporteSolicitudV2 = async parametros => {
             console.error('No se encontraron productos o la estructura es incorrecta');
           }
         } else {
-          console.log('folio lleno esta es una solicitud de mezclas');
           for (const producto of productos) {
-            const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, dato.variedad, datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.nombre, producto.unidad_medida, producto.cantidad, '% 100', producto.cantidad];
+            const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, dato.variedad, datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad, '% 100', producto.cantidad];
             dataMescla.push(fila);
           }
         }
@@ -5076,12 +6011,13 @@ const crearSolicitud = async parametros => {
   };
   // varialbles globales
   let variedades;
+  let filtrados;
   try {
     // Crear un nuevo libro de Excel
     const workbook = new external_exceljs_namespaceObject["default"].Workbook();
 
     // Cabecera de la tabla
-    let cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada'];
+    let cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];
 
     // preparamos datos
     const idSolicitud = parametros.id_solicitud;
@@ -5102,7 +6038,7 @@ const crearSolicitud = async parametros => {
     try {
       // Crear una hoja para esta solicitud
       const hojaGeneral = workbook.addWorksheet('Datos Generales');
-      // obtenemos datos de la variedad
+
       // Modificación del manejo de variedades múltiples
       if (varie.length > 1) {
         variedades = await obtenerPorcentajes(idSolicitud);
@@ -5115,9 +6051,20 @@ const crearSolicitud = async parametros => {
           variedades.forEach(variedad => {
             const variedadSplit = varie;
             const porcentajeSplit = variedad.dataValues.porcentajes.split(',');
-            variedadSplit.forEach((v, index) => {
+            // Filtrar ambos arrays en paralelo
+            filtrados = variedadSplit.reduce((acc, variedad, index) => {
+              if (parseInt(porcentajeSplit[index].trim()) !== 0) {
+                acc.variedades.push(variedad);
+                acc.porcentajes.push(porcentajeSplit[index]);
+              }
+              return acc;
+            }, {
+              variedades: [],
+              porcentajes: []
+            });
+            filtrados.variedades.forEach((v, index) => {
               if (!todasVariedades.includes(v)) {
-                todasVariedades.push(v + ' ' + '%' + porcentajeSplit[index]);
+                todasVariedades.push(v + ' ' + '%' + filtrados.porcentajes[index]);
                 todosPorcentajes.push(porcentajeSplit[index]);
               }
             });
@@ -5186,7 +6133,7 @@ const crearSolicitud = async parametros => {
         cell.style = headerStyle;
       });
       // limpiamos cabeceras
-      cabecera = ['Productos', 'Unidad', 'Cantidad Solicitada'];
+      cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];
 
       // Obtener productos de la base de datos
       const productos = await obtenerProductosPorSolicitud(idSolicitud);
@@ -5196,12 +6143,10 @@ const crearSolicitud = async parametros => {
       const data = [];
       if (productos && productos.length > 0) {
         productos.forEach(producto => {
-          const fila = [producto.nombre, producto.unidad_medida, producto.cantidad];
+          const fila = [producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad];
           if (varie.length > 1 && variedades && variedades.length > 0) {
-            const porcentajesSplit = variedades[0].dataValues.porcentajes.split(',');
-
             // Agregamos un valor para cada variedad
-            porcentajesSplit.forEach(porcentaje => {
+            filtrados.porcentajes.forEach(porcentaje => {
               const cantidadPorcentaje = producto.cantidad * parseFloat(porcentaje) / 100;
               fila.push(Number(cantidadPorcentaje.toFixed(2))); // Redondear a 2 decimales
             });
@@ -5241,7 +6186,291 @@ const crearSolicitud = async parametros => {
     throw error;
   }
 };
+
+// Extraer estilos a un objeto de configuración
+const EXCEL_STYLES = {
+  header: {
+    font: {
+      bold: true,
+      color: {
+        argb: 'FFFFFFFF'
+      }
+    },
+    fill: {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: {
+        argb: 'FF4F81BD'
+      }
+    },
+    border: {
+      top: {
+        style: 'thin'
+      },
+      left: {
+        style: 'thin'
+      },
+      bottom: {
+        style: 'thin'
+      },
+      right: {
+        style: 'thin'
+      }
+    },
+    alignment: {
+      vertical: 'middle',
+      horizontal: 'center'
+    }
+  },
+  cell: {
+    font: {
+      color: {
+        argb: 'FF000000'
+      }
+    },
+    border: {
+      top: {
+        style: 'thin'
+      },
+      left: {
+        style: 'thin'
+      },
+      bottom: {
+        style: 'thin'
+      },
+      right: {
+        style: 'thin'
+      }
+    },
+    alignment: {
+      vertical: 'middle',
+      horizontal: 'left'
+    }
+  }
+};
+
+// Separar la lógica de procesamiento de datos
+const procesarDatosSolicitud = async dato => {
+  const idSolicitud = dato.id_solicitud || dato.id;
+  // console.log('Datos a procesar:', idSolicitud)
+  // Obtener productos
+  const productos = await obtenerProductosPorSolicitud(idSolicitud);
+  if (!productos?.length) {
+    throw new Error('No se encontraron productos para la solicitud');
+  }
+
+  // Procesar variedades si es necesario
+  let variedadesInfo = null;
+  if (dato.variedad.split(',').length > 1) {
+    variedadesInfo = await procesarVariedades(idSolicitud);
+  }
+  return {
+    productos,
+    variedadesInfo,
+    datosSolicitud: await obtenerDatosSolicitud(idSolicitud)
+  };
+};
+
+// Separar la generación de filas
+const generarFilasProductos = (productos, variedadesInfo) => {
+  return productos.map(producto => {
+    const fila = [producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad];
+    if (variedadesInfo) {
+      variedadesInfo.porcentajes.forEach(porcentaje => {
+        const cantidad = producto.cantidad * parseFloat(porcentaje) / 100;
+        fila.push(Number(cantidad.toFixed(2)));
+      });
+    } else {
+      fila.push(producto.cantidad);
+    }
+    return fila;
+  });
+};
+const procesarVariedades = async idSolicitud => {
+  const variedades = await obtenerVariedades(idSolicitud);
+  if (!variedades?.length) {
+    throw new Error('No se encontraron variedades para el centro de coste');
+  }
+
+  // Convertir a array, eliminar último elemento y volver a string
+  const variedadesArray = variedades[0].variedad.split(',');
+  const porcentajesArray = variedades[0].porcentajes.split(',');
+
+  // Filtrar ambos arrays en paralelo
+  const filtrados = variedadesArray.reduce((acc, variedad, index) => {
+    if (parseInt(porcentajesArray[index].trim()) !== 0) {
+      acc.variedades.push(variedad);
+      acc.porcentajes.push(porcentajesArray[index]);
+    }
+    return acc;
+  }, {
+    variedades: [],
+    porcentajes: []
+  });
+  return filtrados;
+};
+
+// Agregar encabezados a la hoja
+const agregarEncabezadoSolicitud = async (hojaGeneral, dato, datosSolicitud, variedadesInfo) => {
+  // Agregar encabezados
+  hojaGeneral.addRow(['Datos Generales']).eachCell(cell => {
+    cell.style = EXCEL_STYLES.header;
+  });
+
+  // Cabecera de la tabla
+  let cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];
+  let porcentaje = ['', '', ''];
+  const todasVariedades = [];
+
+  // obtenemos datos faltantes de la solicitud
+  if (dato.variedad.split(',').length > 1) {
+    // Filtrar ambos arrays en paralelo
+    variedadesInfo.variedades.forEach((v, index) => {
+      if (!todasVariedades.includes(v)) {
+        todasVariedades.push(v + ' ' + '%' + variedadesInfo.porcentajes[index]);
+      }
+    });
+  } else {
+    cabecera.push(dato.variedad);
+  }
+  // Ahora agregamos a las cabeceras
+  todasVariedades.forEach(v => {
+    if (!cabecera.includes(v)) {
+      cabecera.push(v);
+    }
+  });
+  hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.id_solicitud : dato.id]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Folio de Receta', dato.FolioReceta === '' || dato.folio === '' ? 'No aplica' : dato.FolioReceta || dato.folio]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Solicita', dato.usuario ? dato.usuario : dato.Solicita]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega ? dato.fechaEntrega : 'No aplica']).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Rancho', dato.rancho ? dato.rancho : dato.ranchoDestino]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Centro de Coste', dato.centroCoste || dato.centro_coste]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Variedad Fruta', dato.variedad]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Empresa', dato.empresa]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Temporada', dato.temporada]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Cantidad de Mezcla', datosSolicitud[0].cantidad === '' ? 'No aplica' : datosSolicitud[0].cantidad]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Presentacion de la Mezcla', datosSolicitud[0].cantidad === '' ? 'No aplica' : datosSolicitud[0].cantidad]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Metodo de aplicacion', datosSolicitud[0].metodoAplicacion]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+  hojaGeneral.addRow(['Descripcion', dato.descripcion]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
+
+  // Agregar información de la solicitud
+  hojaGeneral.addRow([]); // Espacio vacío con estilo
+
+  // Agregar la cabecera a la hoja
+  hojaGeneral.addRow(porcentaje);
+  hojaGeneral.addRow(cabecera).eachCell(cell => {
+    cell.style = EXCEL_STYLES.header;
+  });
+  // limpiamos cabeceras
+  cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];
+  porcentaje = ['', '', ''];
+};
+const agregarFilasProductos = (hojaGeneral, filas) => {
+  filas.forEach(fila => {
+    hojaGeneral.addRow(fila).eachCell(cell => {
+      cell.style = EXCEL_STYLES.cell;
+    });
+  });
+};
+const agregarSeparador = hojaGeneral => {
+  hojaGeneral.addRow([]);
+  hojaGeneral.addRow([]);
+  hojaGeneral.addRow(['', '', '', '', '', '', '', '', '', '']).eachCell(cell => {
+    cell.border = {
+      top: {
+        style: 'thick',
+        color: {
+          argb: '00000000'
+        }
+      },
+      bottom: {
+        style: 'thick',
+        color: {
+          argb: '00000000'
+        }
+      }
+    };
+  });
+  hojaGeneral.addRow([]);
+  hojaGeneral.addRow([]);
+};
+const ajustarColumnasExcel = hojaGeneral => {
+  hojaGeneral.columns.forEach(column => {
+    const maxLength = column.values.reduce((max, value) => {
+      return Math.max(max, value ? value.toString().length : 0);
+    }, 0);
+    column.width = maxLength + 2; // Añadir un poco de espacio extra
+  });
+};
+// Función principal refactorizada
+const reporteSolicitudv3 = async parametros => {
+  try {
+    const datos = Array.isArray(parametros) ? parametros : parametros.datos || [];
+    if (!datos.length) throw new Error('No hay datos para generar el Excel');
+    const workbook = new external_exceljs_namespaceObject["default"].Workbook();
+    const hojaGeneral = workbook.addWorksheet('Datos Generales');
+    for (const dato of datos) {
+      // console.log(datos)
+      try {
+        const {
+          productos,
+          variedadesInfo,
+          datosSolicitud
+        } = await procesarDatosSolicitud(dato);
+
+        // Agregar encabezados
+        agregarEncabezadoSolicitud(hojaGeneral, dato, datosSolicitud, variedadesInfo);
+
+        // Agregar productos
+        const filas = generarFilasProductos(productos, variedadesInfo);
+        // console.table(filas)
+        agregarFilasProductos(hojaGeneral, filas);
+
+        // Agregar separador
+        agregarSeparador(hojaGeneral);
+      } catch (error) {
+        console.error(`Error procesando solicitud ${dato.id_solicitud || dato.id}:`, error);
+        continue; // Continuar con la siguiente solicitud
+      }
+    }
+    ajustarColumnasExcel(hojaGeneral);
+    return await workbook.xlsx.writeBuffer();
+  } catch (error) {
+    console.error('Error general:', error);
+    throw error;
+  }
+};
 ;// CONCATENATED MODULE: ./src/models/produccion.models.js
+
 
 
 class ProduccionModel {
@@ -5270,7 +6499,8 @@ class ProduccionModel {
   }
   static async solicitudReporte({
     empresa,
-    rol
+    rol,
+    idUsuario
   }) {
     let data;
     try {
@@ -5278,6 +6508,10 @@ class ProduccionModel {
         data = await db.query('SELECT * FROM total_precio_cantidad_solicitud');
       } else if (rol === 'administrativo' && empresa === 'General') {
         data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`!="Lugar Agricola"');
+      } else if (rol === 'administrativo' && idUsuario === 33) {
+        data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bioagricultura" OR `empresa`="Moras Finas"');
+      } else if (rol === 'administrativo' && idUsuario === null) {
+        data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud`"');
       } else {
         data = await db.query(`SELECT * FROM total_precio_cantidad_solicitud WHERE empresa="${empresa}"`);
       }
@@ -5314,7 +6548,6 @@ class ProduccionModel {
   static async descargarSolicitud({
     datos
   }) {
-    console.log(datos);
     try {
       if (!datos || Array.isArray(datos)) {
         throw new Error('datos invalidos, se requiere un arreglo de datos filtrados.');
@@ -5337,7 +6570,7 @@ class ProduccionModel {
       if (!datos || Array.isArray(datos)) {
         throw new Error('datos invalidos, se requiere un arreglo de datos filtrados.');
       }
-      const excel = await reporteSolicitud(datos);
+      const excel = await reporteSolicitudv3(datos);
       return excel;
     } catch (error) {
       // Manejo de errores
@@ -5356,6 +6589,75 @@ class ProduccionModel {
         throw new Error('datos invalidos, se requiere un arreglo de datos filtrados.');
       }
       const excel = await reporteSolicitudV2(datos);
+      return excel;
+    } catch (error) {
+      // Manejo de errores
+      console.error('Error al procesar producto:', error);
+      return {
+        status: 'error',
+        message: error.message || 'Error desconocido'
+      };
+    }
+  }
+  static async descargarReportePendientes({
+    empresa
+  }) {
+    try {
+      if (!empresa) {
+        return {
+          status: 'error',
+          message: 'Se requiere especificar una empresa'
+        };
+      }
+      const datos = await MezclaModel.obtenerTablaMezclasEmpresa({
+        status: 'Pendiente',
+        empresa
+      });
+
+      // Validar que hay datos para procesar
+      if (!datos) {
+        return {
+          status: 'error',
+          message: 'No se encontraron datos válidos'
+        };
+      }
+      if (datos.length === 0) {
+        return {
+          status: 'error',
+          message: 'No hay mezclas pendientes para esta empresa'
+        };
+      }
+      const excel = await reporteSolicitudv3(datos);
+      return excel;
+    } catch (error) {
+      // Manejo de errores
+      console.error('Error al procesar producto:', error);
+      return {
+        status: 'error',
+        message: error.message || 'Error desconocido'
+      };
+    }
+  }
+  static async descargarReportePendientesCompleto() {
+    try {
+      const datos = await MezclaModel.getAllGeneral({
+        status: 'Pendiente'
+      });
+      console.log(datos);
+      // Validar que hay datos para procesar
+      if (!datos) {
+        return {
+          status: 'error',
+          message: 'No se encontraron datos válidos'
+        };
+      }
+      if (datos.length === 0) {
+        return {
+          status: 'error',
+          message: 'No hay mezclas pendientes para esta empresa'
+        };
+      }
+      const excel = await reporteSolicitudv3(datos.data);
       return excel;
     } catch (error) {
       // Manejo de errores
@@ -5424,6 +6726,11 @@ function setupAssociations() {
   Solicitud.belongsTo(Usuario, {
     foreignKey: 'idUsuarioSolicita'
   });
+
+  // Solicitud.belongsTo(Usuario, {
+  //   foreignKey: 'idUsuarioMezcla'
+  // })
+
   Solicitud.belongsTo(Centrocoste, {
     foreignKey: 'idCentroCoste'
   });
@@ -5436,6 +6743,9 @@ function setupAssociations() {
   SolicitudProductos.belongsTo(Recetas, {
     foreignKey: 'id_receta'
   });
+
+  // Asociaciones para productos Solicitud
+
   console.log('Asociaciones de modelos configuradas');
 }
 ;// CONCATENATED MODULE: ./src/server/server.mjs
@@ -5462,7 +6772,9 @@ function setupAssociations() {
 
 
 
+
 // Models
+
 
 
 
@@ -5527,6 +6839,9 @@ const startServer = async options => {
   })); // Autentificacion general
   app.use('/api/', authenticate, createProductosSoliRouter({
     productossModel: SolicitudRecetaModel
+  }));
+  app.use('/api/', authenticate, createNotificacionesRouter({
+    notificacionModel: NotificacionModel
   }));
   app.use('/api/', authenticate, createProduccionRouter({
     produccionModel: ProduccionModel

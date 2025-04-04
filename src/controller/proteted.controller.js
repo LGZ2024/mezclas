@@ -145,6 +145,38 @@ export class ProtetedController {
             respuestaMezclador: result.dataValues.respuestaMezclador
           })
         }
+        case 'administrativo': {
+          // validamos que el usuario sea fransico ya que es el que procesa la solicitud siendo administrativo
+          if (user.nombre.trim() !== 'Francisco Alvarez') {
+            throw new Error(result.error)
+          }
+          result = await MezclaModel.getOneSolicita({
+            id: idSolicitud,
+            idSolicita: user.id
+          })
+
+          if (result.error) {
+            throw new Error(result.error)
+          }
+          // si existe alguna solicitud con el mismo usuario pasamos a obtener los productos
+          const productos = await SolicitudRecetaModel.obtenerProductoNoDisponibles({ idSolicitud })
+
+          // obtenemos los datos del mezclador que proceso la solicitud
+          const mezclador = await UsuarioModel.getOneId({
+            id: result.dataValues.idUsuarioMezcla
+          })
+
+          return res.render('pages/mezclas/notificaciones', {
+            nombre: user.nombre,
+            idSolicitud,
+            titulo: 'Cambio productos',
+            productos,
+            nombreMezclador: mezclador.nombre,
+            idMezclador: result.dataValues.idUsuarioMezcla,
+            empresa: mezclador.empresa,
+            respuestaMezclador: result.dataValues.respuestaMezclador
+          })
+        }
         default:
           return res.status(403).render('errorPage', {
             title: '403 - Sin Autorisacion',

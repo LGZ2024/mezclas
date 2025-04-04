@@ -28,10 +28,12 @@ export class MezclasController {
       // obtenemos los datos del usuario al que mandaremos el correo
       if (req.body.rancho === 'Atemajac' || req.body.rancho === 'Ahualulco') {
         const r1 = await UsuarioModel.getUserEmailRancho({ rol: 'mezclador', empresa: req.body.empresaPertece, rancho: req.body.rancho })
-        ress = [...r1, ...r2]
+        const r3 = await UsuarioModel.getUserEmailRancho({ rol: 'administrativo', empresa: 'Bioagricultura', rancho: 'General' })
+        ress = [...r1, ...r2, ...r3]
       } else if (req.body.rancho === 'Seccion 7 Fresas') {
         const r1 = await UsuarioModel.getUserEmailRancho({ rol: 'mezclador', empresa: 'Bioagricultura', rancho: 'Atemajac' })
-        ress = [...r1, ...r2]
+        const r3 = await UsuarioModel.getUserEmailRancho({ rol: 'administrativo', empresa: 'Lugar Agricola', rancho: 'Seccion 7 Fresas' })
+        ress = [...r1, ...r2, ...r3]
       } else {
       // obtenemos los datos del usuario al que mandaremos el correo
         const r1 = await UsuarioModel.getUserEmail({ rol: 'mezclador', empresa: req.body.empresaPertece })

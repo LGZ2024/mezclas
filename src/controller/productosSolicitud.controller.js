@@ -57,10 +57,6 @@ export class ProductosController {
         res.status(404).json({ error: `${result.error}` })
       }
 
-      // creamos la notificacion
-      // const notificacion = await NotificacionModel.create({ idSolicitud: req.body.id_solicitud, mensaje: req.body.mensaje, idUsuario: user.id })
-      // if (!notificacion) return { error: 'Error al crear la notificacion' }
-
       if (result.productos.length > 0) {
         await enviarCorreo({
           type: 'notificacion',

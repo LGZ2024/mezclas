@@ -5,7 +5,8 @@ import { inicializarFormulario } from './listaProductos.js'
 import { mostrarMensaje } from '../mensajes.js'
 import { enviarEstadoProductos } from './enviarEstado.js'
 import { descargarExcel, descargarReporte } from './reporte.js'
-import { closeNotification } from '../notificacion.js'
+import { closeNotification, mostrarNotificacion } from '../notificacion.js'
+import { showSpinner, hideSpinner } from '../spinner.js'
 
 document.addEventListener('DOMContentLoaded', () => {
   const btnGuardarMezcla = document.getElementById('btnGuardarMescla')
@@ -15,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabla = document.getElementById('tbSolicitadas')
   const reporte = document.getElementById('reporte')
   const formEmpresa = document.getElementById('empresaForm')
+  const mensajess = document.getElementById('mensajes')
+  const idSolicitud = document.getElementById('idSolicitud')
 
   // metodo boton receta
   document.getElementById('receta').addEventListener('click', async (e) => {
@@ -43,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // metodo para mandar los datos del nuevo producto
   document.getElementById('productoForm').addEventListener('submit', async (e) => {
     e.preventDefault()
+    showSpinner()
     const idSolicitud = document.getElementById('idSolicitud').value
     const producto = document.getElementById('producto').value
     const cantidad = document.getElementById('cantidad').value
@@ -82,6 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fechProductosSolicitud(data)
       if (response.error) {
+        hideSpinner()
         return mostrarMensaje({
           msg: response.error,
           type: 'error'
@@ -101,6 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     } catch (error) {
       console.log(error)
+      hideSpinner()
+    } finally {
+      hideSpinner()
     }
   })
 
@@ -139,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnGuardarMezcla) {
     document.getElementById('formSolicutudes').addEventListener('submit', async (e) => {
       e.preventDefault()
+      showSpinner()
       const idSolicitud = document.getElementById('idSolicitud').value
       const notaMezcla = document.getElementById('notaMezcla').value
       const data = {
@@ -148,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const response = await fechSolicitudProceso({ data, id: idSolicitud })
         if (response.error) {
+          hideSpinner()
           return mostrarMensaje({
             msg: response.error,
             type: 'error'
@@ -160,6 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       } catch (error) {
         console.log(error)
+        hideSpinner()
+      } finally {
+        hideSpinner()
       }
     })
   } else {
@@ -217,10 +230,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (reporte) {
     reporte.addEventListener('click', async (e) => {
+      showSpinner()
       const rol = document.getElementById('rol').value
+
       if (rol === 'mezclador') {
         const url = '/api/reporte-pendientes'
-        await descargarReporte(url)
+        try {
+          await descargarReporte(url)
+        } catch (error) {
+          hideSpinner()
+          mostrarMensaje({
+            msg: 'Error al descargar el reporte',
+            type: 'error'
+          })
+        } finally {
+          hideSpinner()
+        }
       } else if (rol === 'administrativo') {
         $('#empresasModal').modal('show')
 
@@ -243,15 +268,24 @@ document.addEventListener('DOMContentLoaded', () => {
             await descargarReporte(url)
             $('#empresasModal').modal('hide') // Cerrar modal después de descargar
           } catch (error) {
+            hideSpinner()
             mostrarMensaje({
               msg: 'Error al descargar el reporte',
               type: 'error'
             })
+          } finally {
+            hideSpinner()
           }
         })
       }
     })
   } else {
     console.warn('Button with ID "reporte" not found.')
+  }
+
+  if (mensajess && idSolicitud) {
+    mostrarNotificacion(mensajess.value, new Date(), idSolicitud.value)
+  } else {
+    console.warn('Mensaje no encontrado')
   }
 })

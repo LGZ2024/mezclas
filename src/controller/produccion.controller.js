@@ -19,8 +19,9 @@ export class ProduccionController {
 
   solicitudReporte = async (req, res) => {
     const { user } = req.session
+    console.log('user', user)
     try {
-      const centroCoste = await this.produccionModel.solicitudReporte({ empresa: user.empresa, rol: user.rol })
+      const centroCoste = await this.produccionModel.solicitudReporte({ empresa: user.empresa, rol: user.rol, idUsuario: user.id })
       if (centroCoste.error) {
         res.status(404).json({ error: `${centroCoste.error}` })
       }

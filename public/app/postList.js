@@ -3,7 +3,7 @@ const setPost = (data) => {
   const centroCoste = document.getElementById('centroCoste')
   centroCoste.innerHTML = ''
   if (data.length) {
-    centroCoste.append(new Option('Selecciona Centro de Coste', 0))
+    centroCoste.append(new Option('Selecciona Centro de Coste', ''))
     data.forEach(doc => { // con esta funcion recorrecmos los documentos traidos desde firebase
       centroCoste.append(new Option(doc.centroCoste, doc.id))
     })
@@ -16,7 +16,7 @@ const setPostVariedad = (data) => {
   const variedades = document.getElementById('variedad')
   variedades.innerHTML = ''
   if (data.length) {
-    variedades.append(new Option('Seleccione una variedad', 0))
+    variedades.append(new Option('Seleccione una variedad', ''))
 
     // Definir la cadena de datos
     const variedad = data[0].variedad

@@ -10,13 +10,34 @@ export class MezclaModel {
   // crear asistencia
   static async create ({ data, idUsuario }) {
     const transaction = await sequelize.transaction()
-    let variedades
+    let variedad, porcentajes, variedades
     try {
       // validamos variedad si viene todo
       if (data.variedad === 'todo') {
         try {
           // Asumiendo que este método existe en tu modelo
           variedades = await CentroCosteModel.getVariedadPorCentroCoste({ id: data.centroCoste })
+          // Convertir a array, eliminar último elemento y volver a string
+          const variedadesArray = variedades[0].dataValues.variedad
+            .split(',')
+            .slice(0, -1)
+
+          const porcentajesArray = variedades[0].dataValues.porcentajes
+            .split(',')
+            .slice(0, -1)
+
+          // Filtrar ambos arrays en paralelo
+          const filtrados = variedadesArray.reduce((acc, variedad, index) => {
+            if (parseInt(porcentajesArray[index].trim()) !== 0) {
+              acc.variedades.push(variedad)
+              acc.porcentajes.push(porcentajesArray[index])
+            }
+            return acc
+          }, { variedades: [], porcentajes: [] })
+
+          // Convertir de vuelta a strings
+          variedad = filtrados.variedades.join(',')
+          porcentajes = filtrados.porcentajes.join(',')
         } catch (error) {
           console.error('Error al consultar productos para la solicitud', error)
         }
@@ -31,10 +52,10 @@ export class MezclaModel {
         idUsuarioSolicita: idUsuario,
         metodoAplicacion: data.metodoAplicacion,
         temporada: data.temporada,
-        variedad: data.variedad === 'todo' ? variedades[0].dataValues.variedad : data.variedad,
+        variedad: data.variedad === 'todo' ? variedad : data.variedad,
         presentacion: data.presentacion,
         ranchoDestino: data.rancho,
-        porcentajes: data.variedad === 'todo' ? variedades[0].dataValues.porcentajes : '100'
+        porcentajes: data.variedad === 'todo' ? porcentajes : '100'
       }, { transaction })
 
       // Verificar si hay productos y procesar cada uno
@@ -474,7 +495,8 @@ export class MezclaModel {
           id
         },
         attributes: [
-          'porcentajes'
+          'porcentajes',
+          'variedad'
         ]
       })
 
@@ -527,7 +549,7 @@ export class MezclaModel {
       await solicitud.save()
 
       // creamos la notificacion para mostrarla a los usuarios
-      const notificacion = await NotificacionModel.create({ idSolicitud: id, mensaje: mensajes, idUsuario })
+      const notificacion = await NotificacionModel.create({ idSolicitud: id, mensaje: `Respuesta para solicitud:${id}`, idUsuario })
       if (!notificacion) return { error: 'Error al crear la notificacion' }
 
       return { message: 'Notificacion Guadada Correctamente' }

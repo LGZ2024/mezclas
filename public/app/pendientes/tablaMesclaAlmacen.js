@@ -58,7 +58,6 @@ async function fechSolicitudProceso ({ data, id }) {
 const iniciarSolicitudes = async () => {
   try {
     const data = await obtenerSolicitudes()
-    console.log(data)
     const table = $('#tbSolicitadas').DataTable()
     table.clear().rows.add(data).draw()
   } catch (error) {
@@ -160,7 +159,7 @@ const establecerValoresSolicitud = ({ data }) => {
   const rol = document.getElementById('rol').value
   if (rol === 'mezclador') {
     const mensaje = data.respuestaSolicitud
-    if (mensaje) mostrarNotificacion(mensaje, new Date())
+    if (mensaje) mostrarNotificacion(mensaje, new Date(), data.id)
   } else if (rol === 'solicita') {
     const mensaje = data.respuestaMezclador
     if (mensaje) mostrarNotificacion(mensaje, new Date())
