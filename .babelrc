@@ -3,6 +3,8 @@
       "@babel/preset-env",
       {
         "targets": {
+          "esmodules": true,
+          "node": "current",
         "browsers": [
           ">=1%",
           "not ie 11",

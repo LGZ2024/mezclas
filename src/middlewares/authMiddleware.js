@@ -22,6 +22,8 @@ const authenticate = async (req, res, next) => {
 
 const verifyToken = async (token) => {
   try {
+    // Verificamos token
+    console.log('Verificando token:', token)
     const decoded = jwt.verify(token, envs.SECRET_JWT_KEY)
     decoded.userRole = decoded.rol // Agrega la propiedad userRole al objeto decoded
     return decoded

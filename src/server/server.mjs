@@ -1,15 +1,25 @@
 import express from 'express'
-import logger from 'morgan'
+// import logger from 'morgan'
+import compression from 'compression'
+import helmet from 'helmet'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
 import fileUpload from 'express-fileupload'
-import path from 'path'
+
 import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+// Librerias
+import swaggerUi from 'swagger-ui-express'
+import { swaggerSpec } from '../config/documentacion.js'
+// Configuraciones
+import logger from '../config/logger.js'
 
 // middlewares
 import { corsMiddleware } from '../middlewares/cors.js'
 import { validateJSON } from '../middlewares/validateJsonMiddleware.js'
-import { error404 } from '../middlewares/error500Middleware.js'
+import { error404, errorHandler } from '../middlewares/error500Middleware.js'
+import { apiLimiter } from '../middlewares/rateLimit.js'
 import { authenticate, isGeneral } from '../middlewares/authMiddleware.js'
 
 // Rutas
@@ -43,21 +53,50 @@ export const startServer = async (options) => {
   const app = express()
 
   const __filename = fileURLToPath(import.meta.url)
-  const __dirname = path.dirname(__filename)
+  const __dirname = dirname(__filename)
 
   // MOTOR DE PLANTILLAS EJS
-  app.set('views', path.resolve(__dirname, '..', 'views'))
+  app.set('views', resolve(__dirname, '..', 'views'))
   app.set('view engine', 'ejs')
   app.set('trust proxy', 1)
 
   // Middlewares
   if (MODE === 'development') {
-    console.log('🔧 Modo de desarrollo')
-    app.use(logger('dev'))
+    logger.info('🔧 Modo de desarrollo')
+    // console.log('🔧 Modo de desarrollo')
+    // app.use(logger('dev'))
   } else {
-    console.log('📦 Modo de producción')
-    app.use(logger('combined'))
+    logger.info('📦 Modo de producción')
+    // console.log('📦 Modo de producción')
+    // app.use(logger('combined'))
   }
+
+  app.use(compression({
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) {
+        return false
+      }
+      return compression.filter(req, res)
+    },
+    level: 6 // nivel de compresión (0-9)
+  }))
+
+  // Configuración de seguridad para permitir recursos externos mientras se mantiene la seguridad básica
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://ka-f.fontawesome.com'],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://ka-f.fontawesome.com'],
+        fontSrc: ["'self'", 'https://ka-f.fontawesome.com', 'data:'],
+        connectSrc: ["'self'", 'https://ka-f.fontawesome.com'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        upgradeInsecureRequests: []
+      }
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
+  }))
 
   // Configurar middleware para cookies y validar JSON en los request
   app.use(cookieParser())
@@ -72,17 +111,27 @@ export const startServer = async (options) => {
     extended: true
   }))
 
+  if (MODE !== 'development') {
+    logger.info('🔒 limite de peticiones por IP Activado')
+    app.use(apiLimiter) // Limitar el número de peticiones por IP
+  }
+
+  // Validar que la documentación está disponible solo en desarrollo
+  if (MODE === 'development') {
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+    logger.info('📚 Documentación API disponible en /api-docs')
+  }
   // rutas API
   app.use('/api/usuario/', createUsuarioRouter({ usuarioModel: UsuarioModel }))
   app.use('/api/', authenticate, createCentroCosteRouter({ centroModel: CentroCosteModel }))
   app.use('/api/', authenticate, createMezclasRouter({ mezclaModel: MezclaModel }))
-  app.use('/api/', authenticate, createProductosRouter({ productosModel: ProductosModel })) // Autentificacion general
+  app.use('/api/', authenticate, createProductosRouter({ productosModel: ProductosModel }))
   app.use('/api/', authenticate, createProductosSoliRouter({ productossModel: SolicitudRecetaModel }))
   app.use('/api/', authenticate, createNotificacionesRouter({ notificacionModel: NotificacionModel }))
   app.use('/api/', authenticate, createProduccionRouter({ produccionModel: ProduccionModel }))
 
   // rutas Protegidas
-  app.use('/protected/', authenticate, isGeneral, createProtetedRouter()) // Autentificacion general
+  app.use('/protected/', authenticate, isGeneral, createProtetedRouter())
 
   // PAGINA DE Inicio
   app.get('/', (req, res) => {
@@ -95,15 +144,18 @@ export const startServer = async (options) => {
   // Manejo de errores 404
   app.use(error404)
 
+  // Manejo de errores 500
+  app.use(errorHandler)
+
   try {
     // Configurar asociaciones antes de sincronizar
     setupAssociations()
     await sequelize.sync()
-    console.log('📦 Base de datos conectada y sincronizada')
+    logger.info('📦 Base de datos conectada y sincronizada')
     // Iniciamos el servidor en el puerto especificado
-    app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`))
+    app.listen(PORT, () => logger.info(`🚀 Servidor corriendo en puerto ${PORT}`))
   } catch (error) {
-    console.error('❌ Error al iniciar:', error)
-    process.exit(1)
+    logger.error('❌ Error al iniciar:', error)
+    // process.exit(1)
   }
 }

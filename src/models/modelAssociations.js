@@ -5,6 +5,8 @@ import { Solicitud } from '../schema/mezclas.js'
 import { SolicitudProductos } from '../schema/solicitud_receta.js'
 import { Productos } from '../schema/productos.js'
 import { Recetas } from '../schema/recetas.js'
+// logger
+import logger from '../config/logger.js'
 
 export function setupAssociations () {
   // Asociaciones para Solicitud
@@ -31,5 +33,5 @@ export function setupAssociations () {
 
   // Asociaciones para productos Solicitud
 
-  console.log('Asociaciones de modelos configuradas')
+  logger.info('✔ Asociaciones configuradas correctamente')
 }
