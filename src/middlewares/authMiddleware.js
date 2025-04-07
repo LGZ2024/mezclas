@@ -7,23 +7,21 @@ const authenticate = async (req, res, next) => {
 
   req.session = { user: null }
   try {
-    if (!token) return res.status(403).render('errorPage', { codeError: 403, title: '403 - token no proveeido', errorMsg: 'No se ha iniciado sesion' })
+    if (!token) return res.status(403).render('errorSesion', { codeError: 403, title: '403 - token no proveeido', errorMsg: 'No se ha iniciado sesion' })
     // Verificamos token
     decoded = await verifyToken(token)
-    if (!decoded) return res.status(401).render('errorPage', { codeError: 401, title: '401 - Token Invalido', errorMsg: 'Error de autenticación' })
+    if (!decoded) return res.status(401).render('errorSesion', { codeError: 401, title: '401 - Token Invalido', errorMsg: 'Error de autenticación' })
     req.session.user = decoded
     req.userRole = decoded.userRole // Establece la propiedad req.userRole
     next()
   } catch (error) {
     req.session.user = null
-    return res.status(401).render('errorPage', { codeError: 401, title: '401 - Token Invalido', errorMsg: 'Error de autenticación' })
+    return res.status(401).render('errorSesion', { codeError: 401, title: '401 - Token Invalido', errorMsg: 'Error de autenticación' })
   }
 }
 
 const verifyToken = async (token) => {
   try {
-    // Verificamos token
-    console.log('Verificando token:', token)
     const decoded = jwt.verify(token, envs.SECRET_JWT_KEY)
     decoded.userRole = decoded.rol // Agrega la propiedad userRole al objeto decoded
     return decoded

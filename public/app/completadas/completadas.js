@@ -87,13 +87,12 @@ const verSolicitud = () => {
         targets: 15,
         data: 'imagenEntrega',
         render: function (data, type, row) {
-          console.log(data)
           return `
             <button 
               type="button" 
               class="btn btn-primary mostrar-foto" 
               data-foto='${data}'>
-              Mostrar entraga
+              Mostrar entrega
             </button>`
         }
       },
@@ -124,29 +123,57 @@ const foto = () => {
   $(document).on('click', '.mostrar-foto', async function (event) {
     event.preventDefault()
     const foto = $(this).attr('data-foto')
-    Enlace(foto, 'receta', 'jpg')
+    // Corregir la ruta de la imagen
+    const imageUrl = `/api/${foto.replace(/^\//, '')}`
+    // const urlPrueba = '/api/uploads/images/image_1743804209875_mqn0hi2sx2s.png'
+    mostrarImagen(imageUrl, 'Imagen de entrega')
   })
 }
 
-const Enlace = (enlace, descripcion, tipo) => {
-  // Verificar si la ruta del archivo existe
-  fetch(enlace, { method: 'HEAD' })
+const mostrarImagen = (enlace, descripcion) => {
+  fetch(enlace, { method: 'GET' })
     .then(response => {
       if (response.ok) {
-        // La ruta del archivo existe, procede a abrir el modal
-        $('#pdfEmbed').attr('src', enlace)
-        $('#pdfModalLabel').text(`Visualizar ${tipo} - ${descripcion}`)
-        $('#pdfModal').modal('show', { backdrop: 'static', keyboard: false })
+        // Crear modal específico para imágenes
+        const modalHtml = `
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">${descripcion}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body text-center">
+                <img 
+                  src="${enlace}" 
+                  class="img-fluid" 
+                  alt="Imagen de entrega"
+                  onerror="this.onerror=null; this.src='/img/no-image.png';"
+                >
+              </div>
+            </div>
+          </div>`
+
+        $('#pdfModal').html(modalHtml).modal('show')
+      } else if (response.status === 401) {
+        Swal.fire({
+          icon: 'error',
+          title: 'No autorizado',
+          text: 'Por favor, inicie sesión nuevamente'
+        })
       } else {
-        // La ruta del archivo no existe, muestra un SweetAlert
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'El archivo no existe.'
+          text: 'No se pudo cargar la imagen'
         })
       }
     })
     .catch(error => {
-      console.error(`error: ${error}`)
+      console.error('Error al cargar imagen:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al cargar la imagen'
+      })
     })
 }

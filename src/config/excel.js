@@ -2,34 +2,39 @@ import ExcelJS from 'exceljs'
 import { SolicitudRecetaModel } from '../models/productosSolicitud.models.js'
 import { MezclaModel } from '../models/mezclas.models.js'
 
+// utils
+import logger from '../utils/logger.js'
+import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
+
 async function obtenerProductosPorSolicitud (idSolicitud) {
   try {
     // Asumiendo que este método existe en tu modelo
     const productos = await SolicitudRecetaModel.obtenerProductosSolicitud({ idSolicitud })
-    // Verificar si se obtuvieron productos
-    if (productos && productos.length > 0) {
-      return productos.map(producto => ({
-        id_sap: producto.id_sap, // Asegúrate de que este campo existe en tu modelo
-        nombre: producto.nombre_producto, // Asegúrate de que este campo existe en tu modelo
-        unidad_medida: producto.unidad_medida,
-        cantidad: producto.cantidad
-      }))
-    } else {
-      // Si no hay productos, puedes devolver un array vacío o productos por defecto
-      return []
+
+    // Verificamos que se hayan obtenido datos
+    if (!productos || productos.length === 0) {
+      throw new NotFoundError(`No se encontraron productos para la solicitud ${idSolicitud}`)
     }
+
+    return productos.map(producto => ({
+      id_sap: producto.id_sap, // Asegúrate de que este campo existe en tu modelo
+      nombre: producto.nombre_producto, // Asegúrate de que este campo existe en tu modelo
+      unidad_medida: producto.unidad_medida,
+      cantidad: producto.cantidad
+    }))
   } catch (error) {
-    console.error(`Error al consultar productos para la solicitud ${idSolicitud}:`, error)
-    // Puedes lanzar el error o devolver un array vacío o productos por defecto
-    return [] // O puedes lanzar el error si prefieres manejarlo en otro lugar
+    if (error instanceof CustomError) throw error
+    throw new DatabaseError('Error al obtener productos para la solicitud')
   }
 }
 async function obtenerVariedades (idSolicitud) {
   try {
-    // Asumiendo que este método existe en tu modelo
-    // const variedades = await CentroCosteModel.getVariedadPorCentroCoste({ centroCoste })
     const variedades = await MezclaModel.obtenerPorcentajes({ id: idSolicitud })
-    // Verificar si se obtuvieron variedades
+    // Verificamos que se hayan obtenido datos
+    if (!variedades || variedades.length === 0) {
+      throw new NotFoundError(`No se encontraron variedades para la solicitud ${idSolicitud}`)
+    }
+
     if (variedades && variedades.length > 0) {
       return variedades.map(variedad => ({
         variedad: variedad.variedad, // Asegúrate de que este campo existe en tu modelo
@@ -40,33 +45,35 @@ async function obtenerVariedades (idSolicitud) {
       return []
     }
   } catch (error) {
-    console.error('Error al consultar productos para la solicitud', error)
-    // Puedes lanzar el error o devolver un array vacío o productos por defecto
-    return [] // O puedes lanzar el error si prefieres manejarlo en otro lugar
+    if (error instanceof CustomError) throw error
+    throw new DatabaseError('Error al obtener variedades para la solicitud')
   }
 }
 async function obtenerPorcentajes (id) {
   try {
     // Asumiendo que este método existe en tu modelo
     const variedades = await MezclaModel.obtenerPorcentajes({ id })
-
-    // Verificar si se obtuvieron variedades
-    if (variedades && variedades.length > 0) {
-      return variedades
-    } else {
-      // Si no hay productos, puedes devolver un array vacío o productos por defecto
-      return []
+    // Verificamos que se hayan obtenido datos
+    if (!variedades || variedades.length === 0) {
+      throw new NotFoundError(`No se encontraron variedades para el centro de coste ${id}`)
     }
+
+    return variedades
   } catch (error) {
-    console.error('Error al consultar productos para la solicitud', error)
-    // Puedes lanzar el error o devolver un array vacío o productos por defecto
-    return [] // O puedes lanzar el error si prefieres manejarlo en otro lugar
+    if (error instanceof CustomError) throw error
+    throw new DatabaseError('Error al obtener variedades para el centro de coste')
   }
 }
+
 async function obtenerDatosSolicitud (idSolicitud) {
   try {
     // Asumiendo que este método existe en tu modelo
     const solicitudes = await MezclaModel.obtenerDatosSolicitud({ id: idSolicitud })
+    logger.debug('solicitudes', solicitudes)
+    // Verificamos que se hayan obtenido datos
+    if (!solicitudes || solicitudes.length === 0) {
+      throw new NotFoundError(`No se encontraron datos para la solicitud ${idSolicitud}`)
+    }
     // Verificar si se obtuvieron solicitudes
     if (solicitudes && solicitudes.length > 0) {
       return solicitudes.map(solicitud => ({
@@ -79,9 +86,8 @@ async function obtenerDatosSolicitud (idSolicitud) {
       return []
     }
   } catch (error) {
-    console.error('Error al consultar productos para la solicitud', error)
-    // Puedes lanzar el error o devolver un array vacío o productos por defecto
-    return [] // O puedes lanzar el error si prefieres manejarlo en otro lugar
+    if (error instanceof CustomError) throw error
+    throw new DatabaseError('Error al obtener datos para la solicitud')
   }
 }
 
@@ -100,10 +106,9 @@ export const crearExcel = async (parametros) => {
       ? parametros
       : parametros.datos || []
 
-    console.log('Datos a procesar:', datos)
     // Verificar si hay datos
     if (!datos || datos.length === 0) {
-      throw new Error('No hay datos para generar el Excel')
+      throw new NotFoundError('No hay datos para generar el Excel')
     }
 
     // Crear un nuevo libro de Excel
@@ -157,7 +162,7 @@ export const crearExcel = async (parametros) => {
       try {
         // Consultar productos relacionados en la base de datos
         const productos = await obtenerProductosPorSolicitud(idSolicitud)
-        // console.log(productos)
+
         // Crear una hoja para esta solicitud
         const hojaSolicitud = workbook.addWorksheet(`Solicitud ${idSolicitud}`)
         hojaSolicitud.addRow([`Datos de la solicitud ${idSolicitud}`]) // Encabezados de la segunda tabla
@@ -191,7 +196,10 @@ export const crearExcel = async (parametros) => {
             ])
           }
         } else {
-          console.error('No se encontraron productos o la estructura es incorrecta')
+          logger.error({
+            message: 'No se encontraron productos o la estructura es incorrecta',
+            error: 'No se encontraron productos o la estructura es incorrecta'
+          })
         }
 
         // Ajustar el ancho de las columnas
@@ -211,16 +219,14 @@ export const crearExcel = async (parametros) => {
     // Retornar el buffer del archivo Excel
     return await workbook.xlsx.writeBuffer()
   } catch (error) {
-    console.error('Error general al generar Excel:', error)
-    throw error
+    if (error instanceof CustomError) throw error
+    throw new DatabaseError('Error al procesar datos para el reporte')
   }
 }
 export const crearSolicitudV2 = async (parametros) => {
   try {
-    // console.log('Datos a procesar:', parametros)
-    // Verificar si hay datos
     if (!parametros || parametros.length === 0) {
-      throw new Error('No hay datos para generar el Excel')
+      throw new ValidationError('No se encontraron datos para la solicitud')
     }
 
     // Crear un nuevo libro de Excel
@@ -287,7 +293,7 @@ export const crearSolicitudV2 = async (parametros) => {
           ])
         }
       } else {
-        console.error('No se encontraron productos o la estructura es incorrecta')
+        logger.info('No se encontraron productos o la estructura es incorrecta')
       }
 
       // Ajustar el ancho de las columnas
@@ -298,16 +304,18 @@ export const crearSolicitudV2 = async (parametros) => {
         column.width = maxLength + 2 // Añadir un poco de espacio extra
       })
     } catch (error) {
-      console.error(`Error al procesar solicitud ${idSolicitud}:`, error)
       const hojaError = workbook.addWorksheet(`Error ${idSolicitud}`)
       hojaError.addRow(['Error al obtener productos para esta solicitud.'])
+      // Manejo de errores
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al procesar datos para el reporte')
     }
 
     // Retornar el buffer del archivo Excel
     return await workbook.xlsx.writeBuffer()
   } catch (error) {
-    console.error('Error general al generar Excel:', error)
-    throw error
+    if (error instanceof CustomError) throw error
+    throw new DatabaseError('Error al procesar datos para el reporte')
   }
 }
 // Crear Reporte Solicitud
@@ -338,7 +346,7 @@ export const reporteSolicitud = async (parametros) => {
 
     // Verificar si hay datos
     if (!datos || datos.length === 0) {
-      throw new Error('No hay datos para generar el Excel')
+      throw new NotFoundError('No hay datos para generar el Excel')
     }
 
     // Crear un nuevo libro de Excel
@@ -465,7 +473,7 @@ export const reporteSolicitud = async (parametros) => {
             data.push(fila)
           }
         } else {
-          console.error('No se encontraron productos o la estructura es incorrecta')
+          logger.info('No se encontraron productos o la estructura es incorrecta')
         }
 
         // Agregar los datos a la hoja
@@ -495,16 +503,25 @@ export const reporteSolicitud = async (parametros) => {
         column.width = maxLength + 2 // Añadir un poco de espacio extra
       })
     } catch (error) {
-      console.error('Error al procesar solicitud:', error)
       const hojaError = workbook.addWorksheet('Error')
       hojaError.addRow(['Error al obtener productos para esta solicitud.'])
+
+      logger.error({
+        message: 'Error al procesar solicitud',
+        error: error.message,
+        stack: error.stack,
+        method: 'reporteSolicitudv3'
+      })
+
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al procesar datos para el reporte')
     }
 
     // Retornar el buffer del archivo Excel
     return await workbook.xlsx.writeBuffer()
   } catch (error) {
-    console.error('Error general al generar Excel:', error)
-    throw error
+    if (error instanceof CustomError) throw error
+    throw new DatabaseError('Error al procesar datos para el reporte')
   }
 }
 export const reporteSolicitudV2 = async (parametros) => {
@@ -780,7 +797,6 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
 
       // Obtener productos de la base de datos
       const productos = await obtenerProductosPorSolicitud(idSolicitud)
-      // console.log('Productos obtenidos:', productos)
 
       // Crear el arreglo de datos
       const data = []
@@ -806,7 +822,7 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
           data.push(fila)
         })
       } else {
-        console.error('No se encontraron productos o la estructura es incorrecta')
+        logger.info('No se encontraron productos o la estructura es incorrecta')
       }
 
       // Agregar los datos a la hoja
@@ -822,9 +838,17 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
         column.width = maxLength + 2 // Añadir un poco de espacio extra
       })
     } catch (error) {
-      console.error('Error al procesar solicitud:', error)
       const hojaError = workbook.addWorksheet('Error')
       hojaError.addRow(['Error al obtener productos para esta solicitud.'])
+      // Manejo de errores
+      logger.error({
+        message: 'Error al procesar solicitud',
+        error: error.message,
+        stack: error.stack,
+        method: 'reporteSolicitudV2'
+      })
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al procesar datos para el reporte')
     }
 
     // Retornar el buffer del archivo Excel
@@ -853,11 +877,10 @@ const EXCEL_STYLES = {
 // Separar la lógica de procesamiento de datos
 const procesarDatosSolicitud = async (dato) => {
   const idSolicitud = dato.id_solicitud || dato.id
-  // console.log('Datos a procesar:', idSolicitud)
-  // Obtener productos
+
   const productos = await obtenerProductosPorSolicitud(idSolicitud)
   if (!productos?.length) {
-    throw new Error('No se encontraron productos para la solicitud')
+    throw new NotFoundError('No se encontraron productos para la solicitud')
   }
 
   // Procesar variedades si es necesario
@@ -899,7 +922,7 @@ const generarFilasProductos = (productos, variedadesInfo) => {
 const procesarVariedades = async (idSolicitud) => {
   const variedades = await obtenerVariedades(idSolicitud)
   if (!variedades?.length) {
-    throw new Error('No se encontraron variedades para el centro de coste')
+    throw new NotFoundError('No se encontraron variedades para el centro de coste')
   }
 
   // Convertir a array, eliminar último elemento y volver a string
@@ -997,17 +1020,18 @@ const ajustarColumnasExcel = (hojaGeneral) => {
     column.width = maxLength + 2 // Añadir un poco de espacio extra
   })
 }
-// Función principal refactorizada
+// uso
 export const reporteSolicitudv3 = async (parametros) => {
   try {
+    logger.debug('reporteSolicitudv3', parametros)
+
     const datos = Array.isArray(parametros) ? parametros : parametros.datos || []
-    if (!datos.length) throw new Error('No hay datos para generar el Excel')
+    if (!datos.length) throw new NotFoundError('No hay datos para generar el Excel')
 
     const workbook = new ExcelJS.Workbook()
     const hojaGeneral = workbook.addWorksheet('Datos Generales')
 
     for (const dato of datos) {
-      // console.log(datos)
       try {
         const { productos, variedadesInfo, datosSolicitud } = await procesarDatosSolicitud(dato)
 
@@ -1022,7 +1046,7 @@ export const reporteSolicitudv3 = async (parametros) => {
         // Agregar separador
         agregarSeparador(hojaGeneral)
       } catch (error) {
-        console.error(`Error procesando solicitud ${dato.id_solicitud || dato.id}:`, error)
+        logger.error(`Error procesando solicitud ${dato.id_solicitud || dato.id}:`, error)
         continue // Continuar con la siguiente solicitud
       }
     }
@@ -1030,7 +1054,7 @@ export const reporteSolicitudv3 = async (parametros) => {
     ajustarColumnasExcel(hojaGeneral)
     return await workbook.xlsx.writeBuffer()
   } catch (error) {
-    console.error('Error general:', error)
-    throw error
+    if (error instanceof CustomError) throw error
+    throw new DatabaseError('Error al procesar datos para el reporte')
   }
 }

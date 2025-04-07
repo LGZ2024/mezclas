@@ -84,7 +84,7 @@ const verSolicitud = () => {
     order: [[0, 'desc']],
     responsive: true,
     pageLength: -1,
-    searching: true,
+    searching: false,
     language: {
       lengthMenu: 'Mostrar _MENU_ registros',
       zeroRecords: 'No se encontraron resultados',

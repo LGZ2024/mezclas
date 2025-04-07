@@ -5,6 +5,9 @@ import { Productos } from '../schema/productos.js' // Asegúrate de importar el 
 import { Recetas } from '../schema/recetas.js' // Asegúrate de importar el modelo de Usuario
 import { Notificaciones } from '../schema/notificaciones.js' // Asegúrate de importar el modelo de Usuario
 import sequelize from '../db/db.js'
+// utlis
+import logger from '../utils/logger.js'
+import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
 export class SolicitudRecetaModel {
   // crear asistencia
 
@@ -35,10 +38,7 @@ export class SolicitudRecetaModel {
 
       // Verificar si se encontraron resultados
       if (productosSolicitud.length === 0) {
-        return {
-          message: 'No se encontraron productos para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron productos para los criterios especificados')
       }
 
       // Transformar los resultados
@@ -57,11 +57,8 @@ export class SolicitudRecetaModel {
       // Devolver los resultados
       return resultadosFormateados
     } catch (e) {
-      console.error('Error al obtener productos:', e.message)
-      return {
-        error: 'Error al obtener las productos',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener los productos')
     }
   }
 
@@ -97,10 +94,7 @@ export class SolicitudRecetaModel {
 
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
 
       // Transformar los resultados
@@ -132,11 +126,8 @@ export class SolicitudRecetaModel {
         data: resultadosFormateados
       }
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
@@ -163,10 +154,7 @@ export class SolicitudRecetaModel {
 
       // Verificar si se encontraron resultados
       if (productoSolicitud.length === 0) {
-        return {
-          message: 'No se encontraron productos para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron productos para los criterios especificados')
       }
 
       // Transformar los resultados
@@ -184,8 +172,8 @@ export class SolicitudRecetaModel {
       // Devolver los resultados
       return resultadosFormateados
     } catch (e) {
-      console.error(e.message) // Salida: Error la productoSolicitud
-      return { error: 'Error al obtener los producto solicitud' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener los producto solicitud')
     }
   }
 
@@ -197,7 +185,7 @@ export class SolicitudRecetaModel {
       })
 
       if (producto) {
-        return { error: 'producto ya existe en la solicitud' }
+        throw new ValidationError('Producto ya existe en la solicitud')
       }
       // Llamar al procedimiento almacenado
       await SolicitudProductos.create({ id_solicitud: data.idSolicitud, id_producto: data.producto, unidad_medida: data.unidadMedida, cantidad: data.cantidad })
@@ -208,27 +196,27 @@ export class SolicitudRecetaModel {
         message: `Producto procesado exitosamente: ${data.producto}`
       }
     } catch (error) {
-      // Manejo de errores
-      console.error(`Error al procesar producto ${data.producto}:`, error)
-      return {
-        status: 'error',
-        message: error.message || 'Error desconocido'
-      }
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al procesar producto')
     }
   }
 
+  // uso
   static async EliminarPorducto ({ id }) {
     try {
+      // validamos que el id sea un numero
+      if (isNaN(id)) throw new ValidationError('El id debe ser un numero')
+
       // Comprobar que el producto exista
       const producto = await SolicitudProductos.findByPk(id) // Usar findByPk correctamente
-      if (!producto) return { error: 'Producto no encontrado' }
+      if (!producto) throw new NotFoundError(`Producto con ID ${id} no encontrado`)
 
       // Eliminar el producto
       await producto.destroy()
       return { message: `Producto eliminado correctamente con id ${id}` }
     } catch (e) {
-      console.error('Error al eliminar el producto:', e.message) // Registrar el error
-      return { error: 'Error al eliminar el producto' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al eliminar el producto')
     }
   }
 
@@ -250,18 +238,17 @@ export class SolicitudRecetaModel {
     try {
       // Validaciones iniciales
       if (!data?.estados?.length || !idUsuarioMezcla) {
-        throw new Error('Datos requeridos no proporcionados')
+        throw new ValidationError('Datos requeridos no proporcionados')
       }
 
       // Iniciar transacción
       transaction = await sequelize.transaction()
-
+      logger.info('Iniciando transacción de mezcla')
       // Procesar estados de productos
       const receta = await this.procesarEstadosProductos(data, noExistencia, transaction)
-      console.log('datos de la receta')
-      console.log(receta.dataValues)
+
       if (!receta || !receta.dataValues?.id) {
-        throw new Error('No se pudo obtener el ID de la solicitud')
+        throw new NotFoundError('No se pudo obtener el ID de la solicitud')
       }
 
       // // Actualizar solicitud y crear notificación
@@ -274,6 +261,9 @@ export class SolicitudRecetaModel {
 
       // Obtener datos del usuario solicitante
       const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud)
+      if (!datosUsuario || !datosUsuario.length) {
+        throw new NotFoundError('No se encontró el usuario solicitante')
+      }
 
       // crear notificacion
       await this.crearNotificacion({
@@ -283,6 +273,11 @@ export class SolicitudRecetaModel {
         transaction
       })
 
+      logger.verbose({
+        message: 'Procesando transacción',
+        transactionId: transaction.id,
+        steps: ['proceso']
+      })
       await transaction.commit()
 
       // Procesar productos no existentes
@@ -294,15 +289,12 @@ export class SolicitudRecetaModel {
       return {
         data: datosUsuario,
         productos: estados.estados,
-        message: 'Solicitud de mezcla registrada correctamente'
+        message: 'Mezcla Guardada correctamente'
       }
     } catch (error) {
       if (transaction) await transaction.rollback()
-      console.error('Error al registrar solicitud:', error)
-      return {
-        error: 'Error al registrar solicitud',
-        detalle: error.message
-      }
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al registrar mezcla de productos')
     }
   }
 
@@ -310,24 +302,29 @@ export class SolicitudRecetaModel {
   static async procesarEstadosProductos (data, noExistencia, transaction) {
     let ultimaReceta = null
 
-    const estadosPromesas = data.estados.map(async (estado) => {
-      if (!estado.existe) {
-        noExistencia.push({ id_receta: estado.id_receta })
-      }
+    try {
+      const estadosPromesas = data.estados.map(async (estado) => {
+        if (!estado.existe) {
+          noExistencia.push({ id_receta: estado.id_receta })
+        }
 
-      const receta = await SolicitudProductos.findByPk(estado.id_receta, { transaction })
+        const receta = await SolicitudProductos.findByPk(estado.id_receta, { transaction })
 
-      if (!receta) {
-        throw new Error(`Producto ${estado.id_receta} no encontrado`)
-      }
+        if (!receta) {
+          throw new Error(`Producto ${estado.id_receta} no encontrado`)
+        }
 
-      receta.status = estado.existe
-      await receta.save({ transaction })
-      ultimaReceta = receta
-    })
+        receta.status = estado.existe
+        await receta.save({ transaction })
+        ultimaReceta = receta
+      })
 
-    await Promise.all(estadosPromesas)
-    return ultimaReceta
+      await Promise.all(estadosPromesas)
+      return ultimaReceta
+    } catch (error) {
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al procesar estados productos')
+    }
   }
 
   static async actualizarSolicitudYNotificacion ({ id, idUsuarioMezcla, mensaje, transaction }) {
@@ -336,71 +333,89 @@ export class SolicitudRecetaModel {
         transaction,
         lock: true // Bloqueo explícito
       })
-      if (!solicitud) throw new Error('No se encontró la solicitud')
+      if (!solicitud) throw new NotFoundError('No se encontró la solicitud')
 
       solicitud.idUsuarioMezcla = idUsuarioMezcla
       if (mensaje) solicitud.respuestaMezclador = mensaje
       await solicitud.save({ transaction })
     } catch (error) {
-      throw new Error(`Error en actualizarSolicitudYNotificacion: ${error.message}`)
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al actualizar solicitud y notificacion')
     }
   }
 
   static async crearNotificacion ({ id, mensaje, idUsuario, transaction }) {
     try {
-      if (mensaje) {
-        const notificacionData = {
-          id_solicitud: id,
-          mensaje,
-          id_usuario: idUsuario
-        }
-        const notificacion = await Notificaciones.create(notificacionData, { transaction })
-
-        if (!notificacion) throw new Error('Error al crear la notificación')
-      } else {
-        console.log(`mensaje vacio:${mensaje}`)
+      if (!id || !mensaje || !idUsuario) {
+        throw new ValidationError('Datos requeridos no proporcionados')
       }
+      // Crear la notificación
+      const notificacionData = {
+        id_solicitud: id,
+        mensaje,
+        id_usuario: idUsuario
+      }
+      await Notificaciones.create(notificacionData, { transaction })
     } catch (error) {
-      console.error('Error al registrar solicitud:', error)
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al crear la notificación')
     }
   }
 
   static async obtenerProductosNoDisponibles (noExistencia) {
     const idsRecetas = noExistencia.map(item => item.id_receta)
-    const productos = await SolicitudProductos.findAll({
-      where: { id_receta: idsRecetas },
-      include: [{
-        model: Productos,
-        attributes: ['nombre']
-      }],
-      attributes: [
-        'id_producto',
-        'unidad_medida',
-        'cantidad']
-    })
+    try {
+      const productos = await SolicitudProductos.findAll({
+        where: { id_receta: idsRecetas },
+        include: [{
+          model: Productos,
+          attributes: ['nombre']
+        }],
+        attributes: [
+          'id_producto',
+          'unidad_medida',
+          'cantidad']
+      })
+      // Verificar si se encontraron resultados
+      if (productos.length === 0) {
+        throw new NotFoundError('No se encontraron productos para los criterios especificados')
+      }
 
-    return productos.map(item => ({
-      id_producto: item.id_producto,
-      nombre_producto: item.producto?.nombre || 'Producto no encontrado',
-      unidad_medida: item.unidad_medida,
-      cantidad: item.cantidad
-    }))
+      return productos.map(item => ({
+        id_producto: item.id_producto,
+        nombre_producto: item.producto?.nombre || 'Producto no encontrado',
+        unidad_medida: item.unidad_medida,
+        cantidad: item.cantidad
+      }))
+    } catch (error) {
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al obtener productos no disponibles')
+    }
   }
 
   static async obtenerDatosUsuarioSolicitante (idSolicitud) {
-    const usuarios = await Solicitud.findAll({
-      where: { id: idSolicitud },
-      include: [{
-        model: Usuario,
-        attributes: ['nombre', 'email']
-      }],
-      attributes: ['folio', 'idUsuarioSolicita']
-    })
+    try {
+      const usuarios = await Solicitud.findAll({
+        where: { id: idSolicitud },
+        include: [{
+          model: Usuario,
+          attributes: ['nombre', 'email']
+        }],
+        attributes: ['folio', 'idUsuarioSolicita']
+      })
+      // Verificar si se encontraron resultados
+      if (usuarios.length === 0) {
+        throw new NotFoundError('No se encontraron usuarios para los criterios especificados')
+      }
 
-    return usuarios.map(item => ({
-      nombre: item.usuario?.nombre || 'No se encontró Nombre',
-      email: item.usuario?.email || 'No se encontró Correo',
-      idUsuarioSolicita: item.idUsuarioSolicita
-    }))
+      return usuarios.map(item => ({
+        nombre: item.usuario?.nombre || 'No se encontró Nombre',
+        email: item.usuario?.email || 'No se encontró Correo',
+        idUsuarioSolicita: item.idUsuarioSolicita
+      }))
+    } catch (error) {
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al obtener datos usuario solicitante')
+    }
   }
 } // fin modelo

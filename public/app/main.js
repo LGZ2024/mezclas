@@ -1,9 +1,45 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Configuración
-  const CONFIG = {
-    MOBILE_BREAKPOINT: 768,
-    SWIPE_THRESHOLD: 50,
-    ANIMATION_DURATION: 300
+import { BrowserNotificationService } from './notififcaiones.js'
+// Configuración
+const CONFIG = {
+  MOBILE_BREAKPOINT: 768,
+  SWIPE_THRESHOLD: 50,
+  ANIMATION_DURATION: 300
+}
+// Elementos DOM
+const elements = {
+  notifBtn: document.getElementById('notifBtn'),
+  notifDropdown: document.getElementById('notifDropdown'),
+  userProfileBtn: document.querySelector('.user-profile__btn'),
+  userDropdown: document.getElementById('userDropdown'),
+  notifCount: document.getElementById('notifCount'),
+  notifList: document.getElementById('notifList'),
+  clearNotifBtn: document.querySelector('.notifications__clear'),
+  backdrop: document.getElementById('dropdownBackdrop'),
+  body: document.body
+}
+document.addEventListener('DOMContentLoaded', async () => {
+  // Inicializar servicio de notificaciones
+  const notificationService = new BrowserNotificationService()
+  await notificationService.init()
+  // Agregar después de la inicialización del notificationService
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', async (event) => {
+      const { type, data } = event.data
+
+      switch (type) {
+        case 'NUEVA_SOLICITUD':
+          await notificationTypes.nuevaSolicitud(data)
+          break
+        case 'SOLICITUD_ACTUALIZADA':
+          await notificationTypes.solicitudActualizada(data)
+          break
+        case 'SOLICITUD_COMPLETADA':
+          await notificationTypes.solicitudCompletada(data)
+          break
+        default:
+          console.log('Tipo de notificación no manejado:', type)
+      }
+    })
   }
   // Definir handlers globalmente primero
   const handlers = {
@@ -36,18 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
-  // Elementos DOM
-  const elements = {
-    notifBtn: document.getElementById('notifBtn'),
-    notifDropdown: document.getElementById('notifDropdown'),
-    userProfileBtn: document.querySelector('.user-profile__btn'),
-    userDropdown: document.getElementById('userDropdown'),
-    notifCount: document.getElementById('notifCount'),
-    notifList: document.getElementById('notifList'),
-    clearNotifBtn: document.querySelector('.notifications__clear'),
-    backdrop: document.getElementById('dropdownBackdrop'),
-    body: document.body
-  }
+
   const touchUtils = {
     startY: 0,
     startX: 0,
@@ -110,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const notifItem = target.closest('.notification__item')
         if (notifItem) {
           const id = notifItem.dataset.id
+
           actualizarEstadoNotificacion(id).then(() => {
             window.location.href = target.href
           }).catch(error => {
@@ -182,6 +208,34 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })
       }
+    }
+  }
+
+  // Agregar después de la declaración de utils
+  const notificationTypes = {
+    nuevaSolicitud: async (data) => {
+      return notificationService.show('Nueva Solicitud', {
+        body: `Se ha creado una nueva solicitud: ${data.mensaje}`,
+        url: `/protected/notificacion/${data.id_solicitud}`,
+        tag: `solicitud-${data.id}`,
+        requireInteraction: true
+      })
+    },
+
+    solicitudActualizada: async (data) => {
+      return notificationService.show('Solicitud Actualizada', {
+        body: `La solicitud ${data.id_solicitud} ha sido actualizada`,
+        url: `/protected/notificacion/${data.id_solicitud}`,
+        tag: `update-${data.id}`
+      })
+    },
+
+    solicitudCompletada: async (data) => {
+      return notificationService.show('Solicitud Completada', {
+        body: `La solicitud ${data.id_solicitud} ha sido completada`,
+        url: '/protected/completadas',
+        tag: `complete-${data.id}`
+      })
     }
   }
 
@@ -283,15 +337,31 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('unload', cleanup)
 
   // Ejemplo de uso
-  window.addNotification = (message, id_solicitud, id) => {
+  window.addNotification = async (message, idSolicitud, id) => {
     if (elements.notifList) {
+      // Agregar al DOM
       elements.notifList.insertAdjacentHTML('afterbegin',
-        utils.createNotification(message, id_solicitud, id)
+        utils.createNotification(message, idSolicitud, id)
       )
-      //
       utils.addNotificationListener(id)
-      elements.notifCount.textContent =
-                (parseInt(elements.notifCount.textContent) + 1).toString()
+
+      try {
+        // Mostrar notificación del navegador con opciones mejoradas
+        await notificationService.show('Nueva Notificación', {
+          body: message,
+          url: `/protected/notificacion/${idSolicitud}`,
+          tag: `notif-${id}`, // Evita duplicados
+          renotify: true, // Notifica aunque exista una con el mismo tag
+          requireInteraction: true, // La notificación permanece hasta que el usuario interactúe
+          data: {
+            idSolicitud,
+            id,
+            timestamp: new Date().getTime()
+          }
+        })
+      } catch (error) {
+        console.error('Error al mostrar notificación:', error)
+      }
     }
   }
 
@@ -303,6 +373,12 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       const data = await response.json()
+
+      // Mostrar notificaciones no leídas
+      // data.filter(notif => !notif.leida).forEach(async (element) => {
+      //   await window.addNotification(element.mensaje, element.id_solicitud, element.id)
+      // })
+
       return data
     } catch (error) {
       console.error('Error fetching notificaciones:', error)
@@ -311,11 +387,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   obtenerNotificaciones().then((data) => {
-    console.log(data)
-    data.forEach((element) => {
-      window.addNotification(element.mensaje, element.id_solicitud, element.id)
+    // Mostrar notificaciones no leídas
+    data.filter(notif => !notif.leida).forEach(async (element) => {
+      await window.addNotification(element.mensaje, element.id_solicitud, element.id)
     })
   }).catch(error => {
+    console.error('Error al cargar notificaciones:', { error })
     showError('Error al cargar las notificaciones')
   })
 
@@ -351,6 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const notifItem = document.querySelector(`[data-id="${idSolicitud}"]`)
       if (notifItem) {
         notifItem.classList.add('notification--read')
+        updateNotificationCount(false)
       }
 
       return data
@@ -372,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }, 100)
+
   const updateNotificationCount = (increment = true) => {
     const count = parseInt(elements.notifCount.textContent) || 0
     const newCount = increment ? count + 1 : count - 1

@@ -11,7 +11,7 @@ export const mostrarNotificacion = async (mensaje, fecha, idSolicitud) => {
 
   container.classList.add('notification-show')
   // cabiar estatus de la notificacion
-  await cambiarEstado(idSolicitud)
+  // await cambiarEstado(idSolicitud)
 }
 
 export const closeNotification = () => {
@@ -19,7 +19,7 @@ export const closeNotification = () => {
   container.classList.remove('notification-show')
 }
 
-const cambiarEstado = async (idSolicitud) => {
+export const cambiarEstado = async (idSolicitud) => {
   const url = `/api/notificaciones/${idSolicitud}`
   try {
     const response = await fetch(url, {

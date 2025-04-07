@@ -125,7 +125,7 @@ export class SolicitudFormulario {
     this.enviarSolicitud(fotoTomada, archivoSubido)
   }
 
-  enviarSolicitud (fotoTomada, archivoSubido) {
+  async enviarSolicitud (fotoTomada, archivoSubido) {
     const datosFormulario = {}
     if (fotoTomada) {
       datosFormulario.imagen = this.elementos.fileInput.value // Base64
@@ -146,26 +146,25 @@ export class SolicitudFormulario {
     this.realizarEnvio(datosFormulario)
   }
 
-  realizarEnvio (datosFormulario) {
-    showSpinner()
-    fetch('/api/CerrarSolicitud', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(datosFormulario)
-    })
-      .then(respuesta => respuesta.json())
-      .then(datos => {
-        if (datos.message) {
-          this.mostrarExito(datos.message)
-        } else {
-          hideSpinner()
-          this.mostrarError(datos.error)
-        }
+  async realizarEnvio (datosFormulario) {
+    try {
+      showSpinner()
+      const response = await fetch('/api/CerrarSolicitud', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosFormulario)
       })
-      .catch(error => {
-        hideSpinner()
-        this.manejarError(error)
-      }).finally(() => hideSpinner())
+      const data = await response.json()
+      if (response.ok) {
+        return this.mostrarExito(data.message)
+      }
+      this.mostrarError(data.message)
+    } catch (error) {
+      hideSpinner()
+      this.manejarError(error)
+    } finally {
+      hideSpinner()
+    }
   }
 
   mostrarExito (mensaje) {

@@ -38,6 +38,7 @@ export function mostrarMensaje (config) {
   }).showToast()
 }
 export async function fetchApi (url, method, data) {
+  console.log('fetchApi', url, method, data)
   try {
     const response = await fetch(url, {
       method,

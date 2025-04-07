@@ -1,96 +1,48 @@
 import { enviarCorreo } from '../config/smtp.js'
+import { asyncHandler } from '../utils/asyncHandler.js'
 export class ProductosController {
   constructor ({ productossModel }) {
     this.productossModel = productossModel
   }
 
-  obtenerProductosSolicitud = async (req, res) => {
-    try {
-      const result = await this.productossModel.obtenerProductosSolicitud({ idSolicitud: req.params.idSolicitud })
-      if (result.error) {
-        return res.status(400).json({ error: result.error })
-      }
-      return res.json(result)
-    } catch (error) {
-      console.error('Error al crear la solicitud:', error)
-      res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
-    }
-  }
+  obtenerProductosSolicitud = asyncHandler(async (req, res) => {
+    const result = await this.productossModel.obtenerProductosSolicitud({ idSolicitud: req.params.idSolicitud })
+    return res.json(result)
+  })
 
-  obtenerTablaMezclasId = async (req, res) => {
-    try {
-      const id = req.params.id
-      const result = await this.productossModel.obtenerTablaMezclasId({ id })
-      if (result.error) {
-        return res.status(400).json({ error: result.error })
-      }
-      return res.json(result.data)
-    } catch (error) {
-      console.error('Error al crear la solicitud:', error)
-      res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
-    }
-  }
+  obtenerTablaMezclasId = asyncHandler(async (req, res) => {
+    const id = req.params.id
+    const result = await this.productossModel.obtenerTablaMezclasId({ id })
+    return res.json(result.data)
+  })
 
-  create = async (req, res) => {
-    try {
-      // Acceder a los datos de FormData
-      const result = await this.productossModel.create({ data: req.body })
-      if (result.error) {
-        return res.status(400).json({ error: result.error })
-      }
-      return res.json({ message: result.message })
-    } catch (error) {
-      console.error('Error al crear la solicitud:', error)
-      res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
-    }
-  }
+  create = asyncHandler(async (req, res) => {
+    const result = await this.productossModel.create({ data: req.body })
+    return res.json({ message: result.message })
+  })
 
-  actulizarEstado = async (req, res) => {
+  actulizarEstado = asyncHandler(async (req, res) => {
     const { user } = req.session
-    try {
-      const result = await this.productossModel.actualizarEstado({
-        data: req.body,
-        idUsuarioMezcla: user.id
-      })
+    const result = await this.productossModel.actualizarEstado({
+      data: req.body,
+      idUsuarioMezcla: user.id
+    })
 
-      if (result.error) {
-        res.status(404).json({ error: `${result.error}` })
-      }
+    await enviarCorreo({
+      type: 'notificacion',
+      email: result.data[0].email,
+      nombre: result.data[0].nombre,
+      solicitudId: req.body.id_solicitud,
+      data: result.productos,
+      usuario: user
+    })
 
-      if (result.productos.length > 0) {
-        await enviarCorreo({
-          type: 'notificacion',
-          email: result.data[0].email,
-          nombre: result.data[0].nombre,
-          solicitudId: req.body.id_solicitud,
-          data: result.productos,
-          usuario: user
-        })
-      }
+    return res.json({ message: result.message })
+  })
 
-      return res.json({ message: result.message })
-    } catch (error) {
-      console.error('Error en actualizarEstado:', error)
-      return res.status(500).json({
-        error: 'Error interno del servidor',
-        message: error.message
-      })
-    }
-  }
-
-  EliminarPorducto = async (req, res) => {
+  EliminarPorducto = asyncHandler(async (req, res) => {
     const { id } = req.params
-    try {
-      const result = await this.productossModel.EliminarPorducto({ id })
-
-      if (result.error) {
-        res.status(404).json({ error: `${result.error}` })
-      }
-
-      return res.json({ message: result.message })
-    } catch (error) {
-      console.error({ error: `${error}` })
-      return res.status(500).render('500', { error: 'Error interno del servidor' })
-    }
-  }
+    const result = await this.productossModel.EliminarPorducto({ id })
+    return res.json({ message: result.message })
+  })
 }

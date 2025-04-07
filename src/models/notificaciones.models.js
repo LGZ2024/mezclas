@@ -1,19 +1,29 @@
 import { Notificaciones } from '../schema/notificaciones.js'
-
+// utils
+import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
 export class NotificacionModel {
-  // obtener todos los datos
-  static async getAll () {
+  // uso
+  static async create ({ idSolicitud, mensaje, idUsuario }) {
     try {
-      const notificacion = await Notificaciones.findAll()
-      return notificacion
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!idSolicitud || !mensaje || !idUsuario) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
+      // creamos el notificacion
+      await Notificaciones.create({ id_solicitud: idSolicitud, mensaje, id_usuario: idUsuario })
+      return { message: `notificacion registrado exitosamente ${idSolicitud}` }
     } catch (e) {
-      console.error(e.message) // Salida: Error la notificacion
-      return { error: 'Error al obtener los viviendas' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al crear la notificacion')
     }
   }
 
+  // uso
   static async getAllIdUsuario ({ idUsuario }) {
     try {
+      // validamos que el id sea un numero
+      if (isNaN(idUsuario)) throw new ValidationError('El id debe ser un numero')
+
       const notificacion = await Notificaciones.findAll({
         where: {
           id_usuario: idUsuario,
@@ -27,83 +37,58 @@ export class NotificacionModel {
           'status'
         ]
       })
+      if (!notificacion) throw new NotFoundError('notificaciones no encontradas')
+
       return notificacion
     } catch (e) {
-      console.error(e.message) // Salida: Error la notificacion
-      return { error: 'Error al obtener los viviendas' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las notificaciones')
     }
   }
 
-  // obtener todos los un ato por id
-  static async getOne ({ id }) {
+  static async getOneIDSolicitudUsuario ({ idUsuario, idSolicitud }) {
     try {
-      const notificacion = await Notificaciones.findByPk(id)
-      return notificacion || { error: 'Notificacion no encontrada' }
+      // validamos que el id sea un numero
+      if (isNaN(idUsuario) || isNaN(idSolicitud)) throw new ValidationError('No se proporciono el id de usuario o la solicitud')
+
+      const notificacion = await Notificaciones.findAll({
+        where: {
+          id_solicitud: idSolicitud,
+          id_usuario: idUsuario,
+          status: 1
+        },
+        attributes: [
+          'id',
+          'id_solicitud',
+          'id_usuario',
+          'mensaje',
+          'status'
+        ]
+      })
+      if (!notificacion) throw new NotFoundError('notificacion no encontrada')
+
+      return notificacion
     } catch (e) {
-      console.error(e.message) // Salida: Error la notificacion
-      return { error: 'Error al obtener al notificacion' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las notificacion')
     }
   }
 
-  // eliminar usuario
-  static async delete ({ id }) {
-    try {
-      const notificacion = await Notificaciones.findByPk(id)
-      if (!notificacion) return { error: 'notificacion no encontrado' }
-
-      await notificacion.destroy()
-      return { message: `notificacion eliminada correctamente con id ${id}` }
-    } catch (e) {
-      console.error(e.message) // Salida: Error la notificacion
-      return { error: 'Error al elimiar el notificacion' }
-    }
-  }
-
-  static async create ({ idSolicitud, mensaje, idUsuario }) {
-    try {
-      // creamos el notificacion
-      await Notificaciones.create({ id_solicitud: idSolicitud, mensaje, id_usuario: idUsuario })
-      return { message: `notificacion registrado exitosamente ${idSolicitud}` }
-    } catch (e) {
-      console.error(e.message) // Salida: Error la notificacion
-      return { error: 'Error al crear al notificacion' }
-    }
-  }
-
-  // para actualizar datos de usuario
-  static async update ({ id, data }) {
-    try {
-      // verificamos si existe alguna empresa con el id proporcionado
-      const notificacion = await Notificaciones.findByPk(id)
-      if (!notificacion) return { error: 'notificacion no encontrado' }
-      // Actualiza solo los campos que se han proporcionado
-      if (data.nombre) notificacion.nombre = data.nombre
-      if (data.descripcion) notificacion.descripcion = data.descripcion
-      if (data.ubicacion) notificacion.ubicacion = data.ubicacion
-
-      await notificacion.save()
-
-      return { message: 'usuario actualizada correctamente' }
-    } catch (e) {
-      console.error(e.message) // Salida: Error la notificacion
-      return { error: 'Error al obtener las viviendas' }
-    }
-  }
-
-  // para actualizar status de notificacion
+  // uso
   static async updateStatus ({ id }) {
     try {
-      // verificamos si existe alguna empresa con el id proporcionado
+      // validamos que el id sea un numero
+      if (isNaN(id)) throw new ValidationError('El id debe ser un numero')
       const notificacion = await Notificaciones.findByPk(id)
-      if (!notificacion) return { error: 'notificacion no encontrado' }
+      if (!notificacion) throw new NotFoundError('notificacion con id ' + id + ' no encontrada')
       // Actualiza solo los campos que se han proporcionado
       if (id) notificacion.status = 0
       await notificacion.save()
 
-      return { message: 'notificacion actualizada correctamente' }
+      return { message: 'Notificacion actualizada correctamente' }
     } catch (e) {
-      console.error(e.message) // Salida: Error la notificacion
-      return { error: 'Error al obtener las status de notificacion' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al actualizar la notificacion')
     }
   }
 }

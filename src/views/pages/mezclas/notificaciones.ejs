@@ -7,7 +7,9 @@
     <title>
         <%= titulo %>
     </title>
-    <link rel="stylesheet" href="../../css/mezclas/notificaciones.css">
+    <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
+    <link rel="stylesheet" href="../../css/spinner.css">
+
     <%- include("../../templates/mezclas/cabeceraNotificacion") %>
 </head>
 
@@ -15,7 +17,15 @@
     <input type="hidden" id="mensajes" value="<%= respuestaMezclador %>" disabled>
     <input type="hidden" id="idSolicitud" value="<%= idSolicitud %>" disabled >
     <input type="hidden" id="idMezclador" value="<%= idMezclador %>" disabled>
-
+    <input type="hidden" id="idNotificacion" value="<%= idNotificacion %>" disabled>
+    <!-- spinner -->
+    <div class="spinner-overlay" id="spinner" style="display: none;">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <p class="spinner-text">Procesando...</p>
+        </div>
+    </div>
+    <!-- header -->
     <header>
         <div class="barra contenedor">
             <div class="barra__logo">
@@ -139,7 +149,7 @@
                 <%- include("../../templates/mezclas/notificacion") %>
 
     <!-- Firebase Configuración y funciones -->
-    <%- include("../../templates/mezclas/scripts") %>
+    <%- include("../../templates/mezclas/scriptsNotificaciones") %>
     <script type="module" src="../../app/notificaciones/main.js"></script>
 
 </body>

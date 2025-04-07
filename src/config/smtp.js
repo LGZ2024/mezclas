@@ -1,5 +1,8 @@
 import { envs } from './env.mjs'
 import nodemailer from 'nodemailer'
+// utils
+import logger from '../utils/logger.js'
+import { ValidationError } from '../utils/CustomError.js'
 
 // Configuración del transportador SMTP
 const createTransporter = () => {
@@ -23,9 +26,9 @@ const createTransporter = () => {
   // Verificar conexión
   transporter.verify((error, success) => {
     if (error) {
-      console.error('Error en verificación SMTP:', error)
+      logger.error('Error en verificación SMTP:', error)
     } else {
-      console.log('Servidor SMTP listo')
+      logger.info('Servidor SMTP listo')
     }
   })
 
@@ -59,13 +62,13 @@ const sendMail = async (message) => {
 
   try {
     const info = await transporter.sendMail(message)
-    console.log('Correo enviado:', {
+    logger.info('Correo enviado:', {
       messageId: info.messageId,
       response: info.response
     })
     return info
   } catch (error) {
-    console.error('Error al enviar correo:', {
+    logger.error('Error al enviar correo:', {
       error: error.message,
       code: error.code,
       command: error.command,
@@ -88,7 +91,7 @@ const validateEmailData = (type, data) => {
   const missing = fields.filter(field => !data[field])
 
   if (missing.length > 0) {
-    throw new Error(`Faltan campos requeridos para el tipo ${type}: ${missing.join(', ')}`)
+    throw new ValidationError(`Faltan campos requeridos para el tipo ${type}: ${missing.join(', ')}`)
   }
 }
 // Función principal para enviar correos
@@ -110,7 +113,7 @@ export const enviarCorreo = async (params) => {
 
   // Configurar mensaje según tipo
   if (!email || !type) {
-    throw new Error('Email y tipo de mensaje son requeridos')
+    throw new ValidationError('Email y tipo de mensaje son requeridos')
   }
 
   // Configurar mensaje según tipo
@@ -287,7 +290,7 @@ export const enviarCorreo = async (params) => {
   try {
     const template = templates[type]
     if (!template) {
-      throw new Error(`Tipo de mensaje "${type}" no válido`)
+      throw new ValidationError(`Tipo de mensaje "${type}" no válido`)
     }
 
     const message = {
@@ -301,7 +304,7 @@ export const enviarCorreo = async (params) => {
       messageId: result.messageId
     }
   } catch (error) {
-    console.error('Error en enviarCorreo:', error)
+    logger.error('Error en enviarCorreo:', error)
     throw error
   }
 }

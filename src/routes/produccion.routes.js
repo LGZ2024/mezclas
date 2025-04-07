@@ -5,16 +5,14 @@ export const createProduccionRouter = ({ produccionModel }) => {
   const router = Router()
   const produccionController = new ProduccionController({ produccionModel })
 
-  // Crear solicitud
-  router.get('/gastosUsuario/:tipo', produccionController.ObtenerGastoUsuario)
   router.get('/solicitudReporte', produccionController.solicitudReporte)
   router.post('/descargar-excel', produccionController.descargarEcxel)
-  router.post('/descargar-solicitud', produccionController.descargarSolicitud)
+  router.post('/descargar-solicitud', produccionController.descargarSolicitud)// uso
   router.get('/obetenerReceta', produccionController.ObtenerReceta)
-  router.post('/descargarReporte', produccionController.descargarReporte)
-  router.post('/descargarReporte-v2', produccionController.descargarReporteV2)
-  router.get('/reporte-pendientes', produccionController.descargarReportePendientes)
-  router.get('/reporte-pendientes/:empresa', produccionController.descargarReportePendientes)
+  router.post('/descargarReporte', produccionController.descargarReporte) // uso
+  router.post('/descargarReporte-v2', produccionController.descargarReporteV2)// uso
+  router.get('/reporte-pendientes', produccionController.descargarReportePendientes)// uso
+  router.get('/reporte-pendientes/:empresa', produccionController.descargarReportePendientes)// uso
 
   return router
 }

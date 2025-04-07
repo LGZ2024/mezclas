@@ -10,7 +10,7 @@
     "devC": "console-ninja node --watch src/app.mjs",
     "lint": "eslint . --ext .js,.mjs",
     "test": "jest",
-     "test:watch": "jest --watch",
+    "test:watch": "jest --watch",
     "docs": "jsdoc -c jsdoc.json",
     "build": "webpack --config webpack.config.mjs --mode production",
     "buildD": "webpack --config webpack.config.mjs --mode development --stats-error-details"
@@ -20,8 +20,13 @@
     "transform": {
       "^.+\\.js$": "babel-jest"
     },
-    "moduleFileExtensions": ["js"],
-    "testMatch": ["**/__tests__/**/*.js", "**/?(*.)+(spec|test).js"],
+    "moduleFileExtensions": [
+      "js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ],
     "verbose": true
   },
   "author": "Darcka",
@@ -61,6 +66,7 @@
     "sequelize": "6.37.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0",
     "web-push": "^3.6.7",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="../css/spinner.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/2.30.0/date-fns.min.js"></script>
     <title>Mezclas</title>
     <%- include("../../templates/mezclas/cabecera") %>
 </head>
@@ -193,7 +194,7 @@
 
                                 <!-- imputs para tomar o subir imagen -->
                                 <div class="formulario__campo">
-                                    <label class="formulario__label" for="imagen">Imagen Receta</label>
+                                    <label class="formulario__label" for="tomarFoto">Imagen Receta</label>
                                     <button type="button" class="formulario__submit" id="tomarFoto">Tomar
                                         foto</button>
                                     <br>
@@ -242,7 +243,8 @@
 
         <!-- Firebase Configuración y funciones -->
         <%- include("../../templates/mezclas/scripts") %>
-            <script type="module" src="../../app/proceso/Funciones.js"></script>
+        <script type="module" src="../../app/proceso/main.js"></script>
+
 </body>
 
 </html>

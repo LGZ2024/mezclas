@@ -152,8 +152,9 @@ body {
 
   //validamos el usuario
   async function validarUsuario(response) {
+    const data = await response.json();
+
     if (response.status === 200) {
-      const data = await response.json();
       Toastify({
         text: data.message,
         duration: 1000
@@ -162,13 +163,19 @@ body {
         window.location.href = '/protected/admin';
       }, 3000)
     } else {
-      const data = await response.json();
-      if (data.error) {
         return  Toastify({
-        text: data.error,
+        text: data.message,
+        className: "error",
+        style: {
+          background: "linear-gradient(to right, #FF0000, #FF0000)",
+        },
+        gravity: "top",
+        position: "right",
+        stopOnFocus: true,
+        close: true,
         duration: 1000
       }).showToast()
-      }
+      
     }
   }
 </script>

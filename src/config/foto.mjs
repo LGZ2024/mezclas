@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
+import logger from '../utils/logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -9,11 +10,12 @@ const __dirname = dirname(__filename)
 const CONFIG = {
   maxSize: 5 * 1024 * 1024, // 5MB
   allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-  uploadDir: path.join(__dirname, '../../public/uploads')
+  uploadDir: path.join(__dirname, '..', 'uploads', 'images')
 }
 
 export const guardarImagen = async ({ imagen }) => {
   try {
+    logger.info('Guardando imagen...')
     if (!imagen) {
       throw new Error('No se ha enviado ninguna imagen')
     }
@@ -45,7 +47,7 @@ export const guardarImagen = async ({ imagen }) => {
       }
     } catch (error) {
       if (error.code === 'ENOENT') {
-        // console.log('Creando directorio de uploads...')
+        logger.info('Creando directorio de uploads...')
         await fs.mkdir(CONFIG.uploadDir, { recursive: true })
       } else {
         throw error
@@ -58,23 +60,22 @@ export const guardarImagen = async ({ imagen }) => {
     const imagePath = path.join(CONFIG.uploadDir, imageName)
 
     // Debug: Mostrar ruta completa
-    // console.log('Ruta completa de la imagen:', imagePath)
+    logger.debug('Ruta completa de la imagen:', imagePath)
 
-    // Guardar imagen con manejo de errores específico
     try {
       await fs.writeFile(imagePath, buffer)
-      // console.log('Imagen guardada exitosamente')
+      logger.info('Imagen guardada exitosamente')
     } catch (writeError) {
-      console.error('Error al escribir el archivo:', writeError)
+      logger.error('Error al escribir el archivo:', writeError)
       throw new Error(`Error al guardar la imagen: ${writeError.message}`)
     }
 
     // Verificar que el archivo se haya creado
     try {
       await fs.access(imagePath)
-      // console.log('Archivo verificado correctamente')
+      logger.info('Archivo verificado correctamente')
     } catch (accessError) {
-      console.error('El archivo no se creó correctamente:', accessError)
+      logger.error('El archivo no se creó correctamente:', accessError)
       throw new Error('No se pudo verificar la creación del archivo')
     }
 
@@ -82,17 +83,16 @@ export const guardarImagen = async ({ imagen }) => {
     const fechaActual = new Date()
     const fechaFormateada = fechaActual.toISOString().split('T')[0]
 
-    console.log('ruta absoluta:', imagePath)
+    logger.info(`ruta absoluta: ${imagePath}`
+
+    )
     return {
-      relativePath: `../uploads/${imageName}`,
+      relativePath: `/uploads/images/${imageName}`,
       fecha: fechaFormateada,
       success: true
     }
   } catch (error) {
-    console.error('Error en guardarImagen:', error)
-    return {
-      success: false,
-      error: error.message
-    }
+    logger.error('Error en guardarImagen:', error)
+    throw error
   }
 }

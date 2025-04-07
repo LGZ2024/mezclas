@@ -1,0 +1,42 @@
+[2025-04-06 23:46:52] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mEl id debe ser un numero[31m[39m
+{
+  "stack": "Error: El id debe ser un numero\n    at NotificacionModel.updateStatus (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/notificaciones.models.js:53:28)\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/notificaciones.controller.js:17:49\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/utils/asyncHandler.js:3:21\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:284:15\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:365:14)\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:376:14)\n    at Function.process_params (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:421:3)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at Function.handle (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:175:3)\n    at router (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:47:12)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:328:13)",
+  "path": "/api/notificaciones/undefined",
+  "method": "PUT",
+  "statusCode": 400
+}
+[2025-04-06 23:53:36] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mEl id debe ser un numero[31m[39m
+{
+  "stack": "Error: El id debe ser un numero\n    at NotificacionModel.updateStatus (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/notificaciones.models.js:53:28)\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/notificaciones.controller.js:17:49\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/utils/asyncHandler.js:3:21\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:284:15\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:365:14)\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:376:14)\n    at Function.process_params (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:421:3)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at Function.handle (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:175:3)\n    at router (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:47:12)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:328:13)",
+  "path": "/api/notificaciones/undefined",
+  "method": "PUT",
+  "statusCode": 400
+}
+[2025-04-06 23:53:43] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mEl id debe ser un numero[31m[39m
+{
+  "stack": "Error: El id debe ser un numero\n    at NotificacionModel.updateStatus (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/notificaciones.models.js:53:28)\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/notificaciones.controller.js:17:49\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/utils/asyncHandler.js:3:21\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:284:15\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:365:14)\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:376:14)\n    at Function.process_params (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:421:3)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at Function.handle (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:175:3)\n    at router (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:47:12)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:328:13)",
+  "path": "/api/notificaciones/undefined",
+  "method": "PUT",
+  "statusCode": 400
+}
+[2025-04-06 23:57:09] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasUsuario (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:371:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:163:18",
+  "path": "/api/mezclasSolicitadas/Proceso",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-06 23:57:23] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasUsuario (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:371:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:163:18",
+  "path": "/api/mezclasSolicitadas/Proceso",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-06 23:57:53] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasUsuario (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:371:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:163:18",
+  "path": "/api/mezclasSolicitadas/Proceso",
+  "method": "GET",
+  "statusCode": 404
+}

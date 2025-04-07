@@ -18,6 +18,9 @@ async function cambioSolicitud ({ selecion, variedad, porcentaje }) {
   variedades = variedades.slice(0, -1)
   porcentajes = porcentajes.slice(0, -1)
 
+  console.log(variedades)
+  console.log(porcentajes)
+
   if (variedades.length !== porcentajes.length) {
     Swal.fire({
       icon: 'error',

@@ -2,6 +2,9 @@ import { ProductosModel } from '../models/productos.models.js'
 import { SolicitudRecetaModel } from '../models/productosSolicitud.models.js'
 import { MezclaModel } from '../models/mezclas.models.js'
 import { UsuarioModel } from '../models/usuario.models.js'
+import { NotificacionModel } from '../models/notificaciones.models.js'
+import logger from '../utils/logger.js'
+
 export class ProtetedController {
   // ruta Protegida
   protected = async (req, res) => {
@@ -124,8 +127,7 @@ export class ProtetedController {
           if (result.error) {
             throw new Error(result.error)
           }
-          // obtenemos los datos de la solicitud
-          console.log(result)
+
           // si existe alguna solicitud con el mismo usuario pasamos a obtener los productos
           const productos = await SolicitudRecetaModel.obtenerProductoNoDisponibles({ idSolicitud })
 
@@ -133,6 +135,13 @@ export class ProtetedController {
           const mezclador = await UsuarioModel.getOneId({
             id: result.dataValues.idUsuarioMezcla
           })
+
+          // obtenemos datos de la notificacion
+          const notificacion = await NotificacionModel.getOneIDSolicitudUsuario({
+            idUsuario: user.id, idSolicitud
+          })
+
+          logger.debug('Notificación obtenida:', notificacion[0].dataValues)
 
           return res.render('pages/mezclas/notificaciones', {
             nombre: user.nombre,
@@ -142,7 +151,8 @@ export class ProtetedController {
             nombreMezclador: mezclador.nombre,
             idMezclador: result.dataValues.idUsuarioMezcla,
             empresa: mezclador.empresa,
-            respuestaMezclador: result.dataValues.respuestaMezclador
+            respuestaMezclador: result.dataValues.respuestaMezclador,
+            idNotificacion: notificacion[0].dataValues.id
           })
         }
         case 'administrativo': {

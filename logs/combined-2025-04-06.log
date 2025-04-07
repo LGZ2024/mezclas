@@ -1,0 +1,105 @@
+{"timestamp":"2025-04-07T05:33:23.974Z","level":"INFO","message":"📦 Modo de producción"}
+{"timestamp":"2025-04-07T05:33:23.981Z","level":"INFO","message":"🔒 helmet configurado"}
+{"timestamp":"2025-04-07T05:33:24.026Z","level":"INFO","message":"🔒 limite de peticiones por IP Activado"}
+{"timestamp":"2025-04-07T05:33:24.033Z","level":"INFO","message":"✔ Asociaciones configuradas correctamente"}
+{"timestamp":"2025-04-07T05:33:24.146Z","level":"INFO","message":"📦 Base de datos conectada y sincronizada"}
+{"timestamp":"2025-04-07T05:33:24.150Z","level":"INFO","message":"🚀 Servidor corriendo en puerto 3000"}
+{"timestamp":"2025-04-07T05:33:26.906Z","level":"INFO","message":"📦 Modo de producción"}
+{"timestamp":"2025-04-07T05:33:26.913Z","level":"INFO","message":"🔒 helmet configurado"}
+{"timestamp":"2025-04-07T05:33:26.957Z","level":"INFO","message":"🔒 limite de peticiones por IP Activado"}
+{"timestamp":"2025-04-07T05:33:26.964Z","level":"INFO","message":"✔ Asociaciones configuradas correctamente"}
+{"timestamp":"2025-04-07T05:33:27.071Z","level":"INFO","message":"📦 Base de datos conectada y sincronizada"}
+{"timestamp":"2025-04-07T05:33:27.075Z","level":"INFO","message":"🚀 Servidor corriendo en puerto 3000"}
+{"timestamp":"2025-04-07T05:35:51.297Z","level":"INFO","message":"📦 Modo de producción"}
+{"timestamp":"2025-04-07T05:35:51.304Z","level":"INFO","message":"🔒 helmet configurado"}
+{"timestamp":"2025-04-07T05:35:51.362Z","level":"INFO","message":"🔒 limite de peticiones por IP Activado"}
+{"timestamp":"2025-04-07T05:35:51.369Z","level":"INFO","message":"✔ Asociaciones configuradas correctamente"}
+{"timestamp":"2025-04-07T05:35:51.478Z","level":"INFO","message":"📦 Base de datos conectada y sincronizada"}
+{"timestamp":"2025-04-07T05:35:51.482Z","level":"INFO","message":"🚀 Servidor corriendo en puerto 3000"}
+{"timestamp":"2025-04-07T05:37:09.096Z","level":"INFO","message":"🔧 Modo de desarrollo"}
+{"timestamp":"2025-04-07T05:37:09.152Z","level":"INFO","message":"📚 Documentación API disponible en /api-docs"}
+{"timestamp":"2025-04-07T05:37:09.159Z","level":"INFO","message":"✔ Asociaciones configuradas correctamente"}
+{"timestamp":"2025-04-07T05:37:09.251Z","level":"INFO","message":"📦 Base de datos conectada y sincronizada"}
+{"timestamp":"2025-04-07T05:37:09.256Z","level":"INFO","message":"🚀 Servidor corriendo en puerto 3000"}
+{"timestamp":"2025-04-06 23:41:08","level":"INFO","message":"🔧 Modo de desarrollo"}
+{"timestamp":"2025-04-06 23:41:08","level":"INFO","message":"📚 Documentación API disponible en /api-docs"}
+{"timestamp":"2025-04-06 23:41:08","level":"INFO","message":"✔ Asociaciones configuradas correctamente"}
+{"timestamp":"2025-04-06 23:41:08","level":"INFO","message":"📦 Base de datos conectada y sincronizada"}
+{"timestamp":"2025-04-06 23:41:08","level":"INFO","message":"🚀 Servidor corriendo en puerto 3000"}
+{"timestamp":"2025-04-06 23:41:59","level":"INFO","message":"🔧 Modo de desarrollo"}
+{"timestamp":"2025-04-06 23:41:59","level":"INFO","message":"📚 Documentación API disponible en /api-docs"}
+{"timestamp":"2025-04-06 23:41:59","level":"INFO","message":"✔ Asociaciones configuradas correctamente"}
+{"timestamp":"2025-04-06 23:41:59","level":"INFO","message":"📦 Base de datos conectada y sincronizada"}
+{"timestamp":"2025-04-06 23:41:59","level":"INFO","message":"🚀 Servidor corriendo en puerto 3000"}
+{"timestamp":"2025-04-06 23:42:19","level":"INFO","message":"🔧 Modo de desarrollo"}
+{"timestamp":"2025-04-06 23:42:19","level":"INFO","message":"📚 Documentación API disponible en /api-docs"}
+{"timestamp":"2025-04-06 23:42:19","level":"INFO","message":"✔ Asociaciones configuradas correctamente"}
+{"timestamp":"2025-04-06 23:42:19","level":"INFO","message":"📦 Base de datos conectada y sincronizada"}
+{"timestamp":"2025-04-06 23:42:19","level":"INFO","message":"🚀 Servidor corriendo en puerto 3000"}
+[32m{"timestamp":"2025-04-06 23:43:08","level":"\u001b[32MINFO\u001b[39M","message":"\u001b[32m🔧 Modo de desarrollo\u001b[39m"}[39m
+[32m{"timestamp":"2025-04-06 23:43:08","level":"\u001b[32MINFO\u001b[39M","message":"\u001b[32m📚 Documentación API disponible en /api-docs\u001b[39m"}[39m
+[32m{"timestamp":"2025-04-06 23:43:08","level":"\u001b[32MINFO\u001b[39M","message":"\u001b[32m✔ Asociaciones configuradas correctamente\u001b[39m"}[39m
+[32m{"timestamp":"2025-04-06 23:43:08","level":"\u001b[32MINFO\u001b[39M","message":"\u001b[32m📦 Base de datos conectada y sincronizada\u001b[39m"}[39m
+[32m{"timestamp":"2025-04-06 23:43:08","level":"\u001b[32MINFO\u001b[39M","message":"\u001b[32m🚀 Servidor corriendo en puerto 3000\u001b[39m"}[39m
+[2025-04-06 23:43:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-06 23:43:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-06 23:43:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-06 23:43:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-06 23:43:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-06 23:43:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-06 23:43:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-06 23:43:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-06 23:43:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-06 23:43:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-06 23:46:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-06 23:46:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-06 23:46:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-06 23:46:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-06 23:46:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-06 23:46:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-06 23:46:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-06 23:46:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-06 23:46:52] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-06 23:46:52] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-06 23:46:52] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mEl id debe ser un numero[31m[39m
+{
+  "stack": "Error: El id debe ser un numero\n    at NotificacionModel.updateStatus (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/notificaciones.models.js:53:28)\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/notificaciones.controller.js:17:49\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/utils/asyncHandler.js:3:21\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:284:15\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:365:14)\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:376:14)\n    at Function.process_params (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:421:3)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at Function.handle (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:175:3)\n    at router (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:47:12)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:328:13)",
+  "path": "/api/notificaciones/undefined",
+  "method": "PUT",
+  "statusCode": 400
+}
+[2025-04-06 23:53:36] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mEl id debe ser un numero[31m[39m
+{
+  "stack": "Error: El id debe ser un numero\n    at NotificacionModel.updateStatus (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/notificaciones.models.js:53:28)\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/notificaciones.controller.js:17:49\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/utils/asyncHandler.js:3:21\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:284:15\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:365:14)\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:376:14)\n    at Function.process_params (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:421:3)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at Function.handle (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:175:3)\n    at router (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:47:12)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:328:13)",
+  "path": "/api/notificaciones/undefined",
+  "method": "PUT",
+  "statusCode": 400
+}
+[2025-04-06 23:53:43] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mEl id debe ser un numero[31m[39m
+{
+  "stack": "Error: El id debe ser un numero\n    at NotificacionModel.updateStatus (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/notificaciones.models.js:53:28)\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/notificaciones.controller.js:17:49\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/utils/asyncHandler.js:3:21\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:149:13)\n    at Route.dispatch (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\route.js:119:3)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:284:15\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:365:14)\n    at param (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:376:14)\n    at Function.process_params (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:421:3)\n    at next (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:280:10)\n    at Function.handle (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:175:3)\n    at router (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:47:12)\n    at Layer.handle [as handle_request] (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\layer.js:95:5)\n    at trim_prefix (C:\\Users\\ZARAGOZA051\\Desktop\\LGZ2024\\node_modules\\express\\lib\\router\\index.js:328:13)",
+  "path": "/api/notificaciones/undefined",
+  "method": "PUT",
+  "statusCode": 400
+}
+[2025-04-06 23:57:09] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasUsuario (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:371:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:163:18",
+  "path": "/api/mezclasSolicitadas/Proceso",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-06 23:57:23] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasUsuario (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:371:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:163:18",
+  "path": "/api/mezclasSolicitadas/Proceso",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-06 23:57:53] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasUsuario (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:371:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:163:18",
+  "path": "/api/mezclasSolicitadas/Proceso",
+  "method": "GET",
+  "statusCode": 404
+}

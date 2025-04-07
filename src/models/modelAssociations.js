@@ -6,7 +6,7 @@ import { SolicitudProductos } from '../schema/solicitud_receta.js'
 import { Productos } from '../schema/productos.js'
 import { Recetas } from '../schema/recetas.js'
 // logger
-import logger from '../config/logger.js'
+import logger from '../utils/logger.js'
 
 export function setupAssociations () {
   // Asociaciones para Solicitud
@@ -30,8 +30,6 @@ export function setupAssociations () {
   SolicitudProductos.belongsTo(Recetas, {
     foreignKey: 'id_receta'
   })
-
-  // Asociaciones para productos Solicitud
 
   logger.info('✔ Asociaciones configuradas correctamente')
 }

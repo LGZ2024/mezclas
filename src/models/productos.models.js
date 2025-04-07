@@ -1,94 +1,101 @@
+import logger from '../utils/logger.js'
 import { Productos } from '../schema/productos.js'
+import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
 
 export class ProductosModel {
-  // obtener todos los datos
+  // uso
   static async getAll () {
     try {
       const productos = await Productos.findAll({
         attributes: ['id_producto', 'nombre', 'descripcion', 'unidad_medida']
       })
+
+      if (!productos) throw new NotFoundError('productos no encontrados')
+
       return productos
-    } catch (e) {
-      console.error(e.message) // Salida: Error la productos
-      return { error: 'Error al obtener los productos' }
+    } catch (error) {
+      throw new DatabaseError('Error al obtener los productos')
     }
   }
 
-  // obtener todos los un ato por id
   static async getOne ({ id }) {
     try {
-      const usuario = await Productos.findByPk(id)
-      return usuario || { error: 'usuario no encontrada' }
-    } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al obtener al usuario' }
+      const producto = await Productos.findByPk(id)
+      if (!producto) {
+        throw new NotFoundError(`Producto con ID ${id} no encontrado`)
+      }
+      return producto
+    } catch (error) {
+      logger.error(`Productos.model Error al obtener el producto: ${error.message}`)
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al obtener el producto')
     }
   }
 
-  // Obtener todos los centros de coste que pertenecen a un rancho
-  static async getCentrosPorRancho ({ rancho }) {
-    try {
-      const centros = await Productos.findAll({
-        where: {
-          rancho
-        },
-        attributes: ['id', 'centroCoste'] // Especifica los atributos que quieres devolver
-      })
-
-      return centros.length > 0 ? centros : { message: 'No se encontraron centros de coste para este rancho' }
-    } catch (e) {
-      console.error(e.message) // Salida: Error al obtener los centros de coste
-      return { error: 'Error al obtener los centros de coste' }
-    }
-  }
-
-  // eliminar usuario
   static async delete ({ id }) {
     try {
-      const usuario = await Productos.findByPk(id)
-      if (!usuario) return { error: 'usuario no encontrado' }
+      const producto = await Productos.findByPk(id)
 
-      await usuario.destroy()
-      return { message: `usuario eliminada correctamente con id ${id}` }
-    } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al elimiar el usuario' }
+      if (!producto) {
+        throw new NotFoundError(`Producto con ID ${id} no encontrado`)
+      }
+
+      await producto.destroy()
+
+      return { message: `producto eliminada correctamente con id ${id}` }
+    } catch (error) {
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al eliminar el producto')
     }
   }
 
-  // crear usuario
+  // crear producto
   static async create ({ data }) {
     try {
-      // verificamos que no exista el usuario
-      const usuario = await Productos.findOne({ where: { usuario: data.usuario } })
-      if (usuario) return { error: 'usuario ya existe' }
-      // creamos el usuario
+      // verificamos que no exista el producto
+      const producto = await Productos.findOne({ where: { producto: data.producto } })
+
+      if (producto) throw new ValidationError('Producto ya existe')
+
+      // creamos el producto
       await Productos.create({ ...data })
-      return { message: `usuario registrado exitosamente ${data.nombre}` }
+      return { message: `Producto registrado exitosamente ${data.nombre}` }
     } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al crear al usuario' }
+      logger.error({
+        message: 'Error al crear producto',
+        error: e.message,
+        stack: e.stack,
+        method: 'ProductosModel.create'
+      })
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al crear el producto')
     }
   }
 
-  // para actualizar datos de usuario
+  // para actualizar datos de producto
   static async update ({ id, data }) {
     try {
       // verificamos si existe alguna empresa con el id proporcionado
-      const usuario = await Productos.findByPk(id)
-      if (!usuario) return { error: 'usuario no encontrado' }
+      const producto = await Productos.findByPk(id)
+      if (!producto) throw new NotFoundError(`Producto con ID ${id} no encontrado`)
       // Actualiza solo los campos que se han proporcionado
-      if (data.nombre) usuario.nombre = data.nombre
-      if (data.email) usuario.email = data.email
-      if (data.rol) usuario.rol = data.rol
-      if (data.empresa) usuario.empresa = data.empresa
+      if (data.nombre) producto.nombre = data.nombre
+      if (data.email) producto.email = data.email
+      if (data.rol) producto.rol = data.rol
+      if (data.empresa) producto.empresa = data.empresa
 
-      await usuario.save()
+      await producto.save()
 
-      return { message: 'usuario actualizada correctamente', rol: data.rol }
+      return { message: 'producto actualizada correctamente', rol: data.rol }
     } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al obtener las usuarios' }
+      logger.error({
+        message: 'Error al actualizar producto',
+        error: e.message,
+        stack: e.stack,
+        method: 'ProductosModel.update'
+      })
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al actualizar el producto')
     }
   }
 }

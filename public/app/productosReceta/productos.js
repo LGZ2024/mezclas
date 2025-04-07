@@ -119,7 +119,7 @@ const verProductosReceta = async (configuracion = {}) => {
   const tabla = tableReceta.DataTable({
     paging: false,
     order: [[0, 'desc']],
-    dom: '<"d-flex justify-content-between"B>t<"d-xl-flex justify-content-between align-items-center"ip><"clear">',
+    dom: '<"d-flex justify-content-between">t<"d-xl-flex justify-content-between align-items-center"ip><"clear">',
     buttons: [
       {
         extend: 'excelHtml5',

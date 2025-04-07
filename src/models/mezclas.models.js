@@ -6,17 +6,25 @@ import { guardarImagen } from '../config/foto.mjs'
 import { CentroCosteModel } from '../models/centro.models.js'
 import { NotificacionModel } from '../models/notificaciones.models.js'
 import sequelize from '../db/db.js'
+// utils
+import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
+
 export class MezclaModel {
-  // crear asistencia
+  // uso
   static async create ({ data, idUsuario }) {
     const transaction = await sequelize.transaction()
     let variedad, porcentajes, variedades
     try {
+      // validamos datos
+      if (!data || !idUsuario) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
       // validamos variedad si viene todo
       if (data.variedad === 'todo') {
         try {
           // Asumiendo que este método existe en tu modelo
           variedades = await CentroCosteModel.getVariedadPorCentroCoste({ id: data.centroCoste })
+
           // Convertir a array, eliminar último elemento y volver a string
           const variedadesArray = variedades[0].dataValues.variedad
             .split(',')
@@ -39,7 +47,8 @@ export class MezclaModel {
           variedad = filtrados.variedades.join(',')
           porcentajes = filtrados.porcentajes.join(',')
         } catch (error) {
-          console.error('Error al consultar productos para la solicitud', error)
+          if (error instanceof CustomError) throw error
+          throw new DatabaseError('Error al consultar productos para la solicitud')
         }
       }
       // Creamos nueva solicitud con transacción
@@ -69,10 +78,9 @@ export class MezclaModel {
 
         // Validar que haya productos
         if (productosValidos.length === 0) {
-          throw new Error('No hay productos válidos para registrar')
+          throw new ValidationError('No se encontraron productos válidos para procesar')
         }
 
-        // Procesar productos con manejo de errores mejorado
         const productosPromesas = productosValidos.map(async (producto) => {
           // comprobaramos si el id_producto es numero
           try {
@@ -87,12 +95,8 @@ export class MezclaModel {
               status: 'success'
             }
           } catch (errorProducto) {
-            console.error(`Error al procesar producto ${producto.id_producto}:`, errorProducto)
-            return {
-              idProducto: producto.id_producto,
-              status: 'error',
-              message: errorProducto.message
-            }
+            if (errorProducto instanceof CustomError) throw errorProducto
+            throw new DatabaseError(`Error al procesar producto ${producto.id_producto}`)
           }
         })
 
@@ -105,8 +109,7 @@ export class MezclaModel {
         )
 
         if (productosConError.length > 0) {
-          // Si hay errores, lanzar una excepción con detalles
-          throw new Error(`Errores al procesar productos: ${JSON.stringify(productosConError)}`)
+          throw new CustomError(`Errores al procesar productos: ${JSON.stringify(productosConError)}`)
         }
       }
 
@@ -121,25 +124,23 @@ export class MezclaModel {
     } catch (error) {
       // Revertir transacción en caso de error
       if (transaction) await transaction.rollback()
-
-      // Loguear error detallado
-      console.error('Error al registrar solicitud:', error)
-
-      // Retornar mensaje de error más descriptivo
-      return {
-        error: 'Error al registrar solicitud',
-        detalle: error.message
-      }
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al registrar solicitud de mezcla')
     }
   }
 
+  // uso
   static async cerrarSolicitid ({ data, idUsuario }) {
     const id = data.idSolicitud
     const status = 'Completada'
     try {
+      // Validar datos
+      if (!idUsuario || !data) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
       // Verificamos si existe la solicitud con el id proporcionado
       const solicitud = await Solicitud.findByPk(id)
-      if (!solicitud) return { error: 'Solicitud no encontrada' }
+      if (!solicitud) throw new NotFoundError('Solicitud con ID ' + id + ' no encontrada')
 
       // Guardar imagen
       const response = await guardarImagen({ imagen: data.imagen })
@@ -154,13 +155,18 @@ export class MezclaModel {
 
       return { message: 'Solicitud actualizada correctamente', status, idUsuarioSolicita: solicitud.idUsuarioSolicita, id }
     } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al obtener las solicitudes' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al actualizar solicitud')
     }
   }
 
+  // uso
   static async obtenerTablaMezclasEmpresa ({ status, empresa }) {
     try {
+      // Validar datos
+      if (!status || !empresa) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
         where: {
@@ -199,13 +205,9 @@ export class MezclaModel {
 
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
 
-      // Transformar los resultados
       // Transformar los resultados
       const resultadosFormateados = mezclas.map(mezcla => {
         const m = mezcla.toJSON()
@@ -234,16 +236,18 @@ export class MezclaModel {
       // Devolver los resultados validar si hay resultados mandar vacio
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
+  // uso
   static async obtenerTablaMezclasRancho ({ status, ranchoDestino }) {
     try {
+      // Validar datos
+      if (!status || !ranchoDestino) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
         where: {
@@ -282,13 +286,9 @@ export class MezclaModel {
 
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
 
-      // Transformar los resultados
       // Transformar los resultados
       const resultadosFormateados = mezclas.map(mezcla => {
         const m = mezcla.toJSON()
@@ -317,16 +317,18 @@ export class MezclaModel {
       // Devolver los resultados
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
+  // uso
   static async obtenerTablaMezclasUsuario ({ status, idUsuarioSolicita }) {
     try {
+      // Validar datos
+      if (!status || !idUsuarioSolicita) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
         where: {
@@ -366,10 +368,7 @@ export class MezclaModel {
 
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
 
       // Transformar los resultados
@@ -401,16 +400,16 @@ export class MezclaModel {
       // Devolver los resultados
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
+  // uso
   static async obtenerTablaMezclasId ({ id }) {
     try {
+      // validar que el id sea un numero
+      if (isNaN(id)) throw new ValidationError('El id debe ser un numero')
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
         where: {
@@ -444,10 +443,7 @@ export class MezclaModel {
 
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
 
       // Transformar los resultados
@@ -472,18 +468,10 @@ export class MezclaModel {
         }
       })
 
-      // Devolver los resultados
-      return {
-        message: 'Mezclas obtenidas correctamente',
-        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-
-      }
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
@@ -502,27 +490,27 @@ export class MezclaModel {
 
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
       // Devolver los resultados
       return Array.isArray(mezclas) ? mezclas : []
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
+  // uso para actualizar el estado de proceso
   static async estadoProceso ({ id, data }) {
     try {
+      // validamos datos
+      if (!id || !data) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
+
       // Verificamos si existe la solicitud con el id proporcionado
       const solicitud = await Solicitud.findByPk(id)
-      if (!solicitud) return { error: 'Solicitud no encontrada' }
+      if (!solicitud) throw new NotFoundError('Solicitud con ID ' + id + ' no encontrada')
 
       // Actualiza solo los campos que se han proporcionado
       if (data.notaMezcla) solicitud.notaMezcla = data.notaMezcla
@@ -530,18 +518,23 @@ export class MezclaModel {
 
       await solicitud.save()
 
-      return { message: 'Solicitud actualizada correctamente', idUsuarioSolicita: solicitud.idUsuarioSolicita }
+      return { message: 'Solicitud Guardada correctamente', idUsuarioSolicita: solicitud.idUsuarioSolicita }
     } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al obtener las solicitudes' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al actualizar solicitud')
     }
   }
 
+  // uso
   static async mensajeSolicita ({ id, mensajes, idUsuario }) {
     try {
+      // validamos datos
+      if (!id || !mensajes || !idUsuario) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
       // Verificamos si existe la solicitud con el id proporcionado
       const solicitud = await Solicitud.findByPk(id)
-      if (!solicitud) return { error: 'Solicitud no encontrada' }
+      if (!solicitud) throw new NotFoundError('Solicitud no encontrada')
 
       // Actualiza solo los campos que se han proporcionado
       if (mensajes) solicitud.respuestaSolicitud = mensajes
@@ -549,16 +542,16 @@ export class MezclaModel {
       await solicitud.save()
 
       // creamos la notificacion para mostrarla a los usuarios
-      const notificacion = await NotificacionModel.create({ idSolicitud: id, mensaje: `Respuesta para solicitud:${id}`, idUsuario })
-      if (!notificacion) return { error: 'Error al crear la notificacion' }
+      await NotificacionModel.create({ idSolicitud: id, mensaje: `Respuesta para solicitud:${id}`, idUsuario })
 
       return { message: 'Notificacion Guadada Correctamente' }
     } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al guardar el mensaje de solicitante' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al actualizar solicitud')
     }
   }
 
+  // uso
   static async getAll () {
     try {
       // Consulta para obtener las mezclas filtradas por empresa y status
@@ -594,10 +587,7 @@ export class MezclaModel {
 
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
       // Transformar los resultados
       const resultadosFormateados = mezclas.map(mezcla => {
@@ -624,16 +614,10 @@ export class MezclaModel {
       })
 
       // Devolver los resultados
-      return {
-        message: 'Mezclas obtenidas correctamente',
-        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-      }
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
@@ -649,10 +633,15 @@ export class MezclaModel {
           'respuestaMezclador'
         ]
       })
-      return solicitud || { error: 'Error al obtener la solicitud o No está autorizado' }
+      // Verificar si se encontraron resultados
+      if (!solicitud) {
+        throw new NotFoundError('No se encontraron respuestas del mezclador')
+      }
+
+      return solicitud
     } catch (e) {
-      console.error(e.message)
-      return { error: 'Error al obtener la solicitud o No está autorizado' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al respuesta del mezclador')
     }
   }
 
@@ -692,10 +681,7 @@ export class MezclaModel {
 
       // Verificar si se encontraron resultados
       if (!solicitud) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
 
       // Transformar el resultado
@@ -724,14 +710,18 @@ export class MezclaModel {
         data: resultadoFormateado
       }
     } catch (e) {
-      console.error(e.message)
-      return { error: 'Error al obtener la solicitud o No está autorizado' }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener la mezcla')
     }
   }
 
+  // uso
   static async getAllGeneral ({ status }) {
     try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
+      // Validar datos
+      if (!status) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
       const mezclas = await Solicitud.findAll({
         where: {
           status
@@ -767,10 +757,7 @@ export class MezclaModel {
 
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
       }
       // Transformar los resultados
       const resultadosFormateados = mezclas.map(mezcla => {
@@ -797,20 +784,14 @@ export class MezclaModel {
       })
 
       // Devolver los resultados
-      return {
-        message: 'Mezclas obtenidas correctamente',
-        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-
-      }
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
+  // uso
   static async obtenerDatosSolicitud ({ id }) {
     try {
       // Consulta para obtener las mezclas filtradas por empresa y status
@@ -826,19 +807,13 @@ export class MezclaModel {
       })
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
-        return {
-          message: 'No se encontraron mezclas para los criterios especificados',
-          data: []
-        }
+        throw new NotFoundError('No se encontraron datos para la solicitud')
       }
       // Devolver los resultados
       return Array.isArray(mezclas) ? mezclas : []
     } catch (e) {
-      console.error('Error al obtener mezclas:', e.message)
-      return {
-        error: 'Error al obtener las mezclas',
-        detalle: e.message
-      }
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener datos para la solicitud')
     }
   }
 } // fin modelo

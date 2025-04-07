@@ -2,6 +2,7 @@ import cors from 'cors'
 
 const ACCEPTED_ORIGINS = [
   'http://localhost:3000',
+  'http://localhost',
   'https://solicitudmezclas.portalrancho.com.mx',
   'https://mezclas.portalrancho.com.mx'
 ]
