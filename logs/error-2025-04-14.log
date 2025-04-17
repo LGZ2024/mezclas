@@ -1,0 +1,133 @@
+[2025-04-14 00:01:23] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasEmpresa (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:208:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:138:20",
+  "path": "/api/mezclasSolicitadas/Pendiente",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-14 00:01:34] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasEmpresa (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:208:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:138:20",
+  "path": "/api/mezclasSolicitadas/Pendiente",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-14 00:12:33] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasEmpresa (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:208:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:138:20",
+  "path": "/api/mezclasSolicitadas/Pendiente",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 301: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 302: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 303: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 304: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 305: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 306: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 307: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 308: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 309: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 310: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 312: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 315: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 450: No se encontraron productos para los criterios especificados[31m[39m
+{
+  "statusCode": 404,
+  "errorCode": "NOT_FOUND",
+  "status": "fail",
+  "isOperational": true,
+  "stack": "Error: No se encontraron productos para los criterios especificados\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1289:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 451: No se encontraron productos para los criterios especificados[31m[39m
+{
+  "statusCode": 404,
+  "errorCode": "NOT_FOUND",
+  "status": "fail",
+  "isOperational": true,
+  "stack": "Error: No se encontraron productos para los criterios especificados\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1289:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}

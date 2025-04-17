@@ -54,6 +54,7 @@ const logger = winston.createLogger({
       datePattern: 'YYYY-MM-DD',
       level: 'error',
       maxFiles: '14d',
+      compress: true, // Comprimir logs antiguos
       format: customFormat
     }),
 
@@ -63,6 +64,7 @@ const logger = winston.createLogger({
       datePattern: 'YYYY-MM-DD',
       level: 'warn',
       maxFiles: '14d',
+      compress: true, // Comprimir logs antiguos
       format: customFormat
     }),
 
@@ -71,6 +73,7 @@ const logger = winston.createLogger({
       filename: 'logs/combined-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       maxFiles: '14d',
+      compress: true, // Comprimir logs antiguos
       format: customFormat
     }),
 
@@ -99,12 +102,23 @@ if (envs.MODE !== 'production') {
 }
 
 // Agregar métodos de conveniencia
+const metrics = {
+  operations: new Map()
+}
+
 logger.startOperation = (operationName, metadata = {}) => {
+  metrics.operations.set(operationName, Date.now())
   logger.info(`Iniciando operación: ${operationName}`, metadata)
 }
 
 logger.endOperation = (operationName, metadata = {}) => {
-  logger.info(`Finalizando operación: ${operationName}`, metadata)
+  const startTime = metrics.operations.get(operationName)
+  const duration = Date.now() - startTime
+  logger.info(`Finalizando operación: ${operationName}`, {
+    ...metadata,
+    duration_ms: duration
+  })
+  metrics.operations.delete(operationName)
 }
 
 logger.logError = (error, metadata = {}) => {
@@ -114,5 +128,36 @@ logger.logError = (error, metadata = {}) => {
     ...metadata
   })
 }
+
+logger.correlateEvents = (correlationId) => {
+  return {
+    start: (operationName, metadata = {}) => {
+      logger.info(`Iniciando: ${operationName}`, {
+        correlationId,
+        ...metadata
+      })
+    },
+    end: (operationName, metadata = {}) => {
+      logger.info(`Finalizando: ${operationName}`, {
+        correlationId,
+        ...metadata
+      })
+    }
+  }
+}
+
+logger.exceptions.handle(
+  new winston.transports.File({
+    filename: 'logs/exceptions.log',
+    format: customFormat
+  })
+)
+
+logger.rejections.handle(
+  new winston.transports.File({
+    filename: 'logs/rejections.log',
+    format: customFormat
+  })
+)
 
 export default logger

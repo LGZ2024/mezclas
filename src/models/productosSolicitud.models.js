@@ -13,6 +13,7 @@ export class SolicitudRecetaModel {
 
   static async obtenerProductosSolicitud ({ idSolicitud }) {
     try {
+      logger.info('Obteniendo productos de solicitud...', { idSolicitud })
       const productosSolicitud = await SolicitudProductos.findAll({
         where: {
           id_solicitud: idSolicitud
@@ -36,14 +37,10 @@ export class SolicitudRecetaModel {
         ]
       })
 
-      // Verificar si se encontraron resultados
-      if (productosSolicitud.length === 0) {
-        throw new NotFoundError('No se encontraron productos para los criterios especificados')
-      }
-
       // Transformar los resultados
       const resultadosFormateados = productosSolicitud.map(productos => {
         const m = productos.toJSON()
+        logger.info('Productos obtenidos exitosamente', { productos: m })
         return {
           id_receta: m.id_receta,
           id_solicitud: m.id_solicitud,
@@ -55,8 +52,9 @@ export class SolicitudRecetaModel {
       })
 
       // Devolver los resultados
-      return resultadosFormateados
+      return resultadosFormateados || []
     } catch (e) {
+      console.log(e)
       if (e instanceof CustomError) throw e
       throw new DatabaseError('Error al obtener los productos')
     }
@@ -240,55 +238,64 @@ export class SolicitudRecetaModel {
       if (!data?.estados?.length || !idUsuarioMezcla) {
         throw new ValidationError('Datos requeridos no proporcionados')
       }
-
       // Iniciar transacción
       transaction = await sequelize.transaction()
-      logger.info('Iniciando transacción de mezcla')
-      // Procesar estados de productos
-      const receta = await this.procesarEstadosProductos(data, noExistencia, transaction)
 
-      if (!receta || !receta.dataValues?.id) {
-        throw new NotFoundError('No se pudo obtener el ID de la solicitud')
+      // validamos  que todos los estados sea existe true  o false
+      if (data.estados.some(estado => !estado.existe)) {
+        logger.info('Iniciando transacción de mezcla', data.estados)
+        // Procesar estados de productos
+        const receta = await this.procesarEstadosProductos(data, noExistencia, transaction)
+
+        if (!receta || !receta.dataValues?.id) {
+          throw new NotFoundError('No se pudo obtener el ID de la solicitud')
+        }
+
+        // // Actualizar solicitud y crear notificación
+        await this.actualizarSolicitudYNotificacion({
+          id: receta.dataValues.id_solicitud,
+          idUsuarioMezcla,
+          mensaje: data.mensaje,
+          transaction
+        })
+
+        // Obtener datos del usuario solicitante
+        const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud)
+        if (!datosUsuario || !datosUsuario.length) {
+          throw new NotFoundError('No se encontró el usuario solicitante')
+        }
+
+        // crear notificacion
+        // await this.crearNotificacion({
+        //   id: receta.dataValues.id_solicitud,
+        //   mensaje: `Productos no disponibles para la solicitud ${receta.dataValues.id_solicitud}`,
+        //   idUsuario: datosUsuario[0].idUsuarioSolicita,
+        //   transaction
+        // })
+
+        logger.verbose({
+          message: 'Procesando transacción',
+          transactionId: transaction.id,
+          steps: ['proceso']
+        })
+        await transaction.commit()
+
+        // Procesar productos no existentes
+        if (noExistencia.length > 0) {
+          const productosNoDisponibles = await this.obtenerProductosNoDisponibles(noExistencia)
+          estados.estados.push(...productosNoDisponibles)
+        }
+
+        return {
+          data: datosUsuario,
+          productos: estados.estados,
+          message: 'Mezcla Guardada correctamente'
+        }
       }
 
-      // // Actualizar solicitud y crear notificación
-      await this.actualizarSolicitudYNotificacion({
-        id: receta.dataValues.id_solicitud,
-        idUsuarioMezcla,
-        mensaje: data.mensaje,
-        transaction
-      })
-
-      // Obtener datos del usuario solicitante
-      const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud)
-      if (!datosUsuario || !datosUsuario.length) {
-        throw new NotFoundError('No se encontró el usuario solicitante')
-      }
-
-      // crear notificacion
-      await this.crearNotificacion({
-        id: receta.dataValues.id_solicitud,
-        mensaje: `Productos no disponibles para la solicitud ${receta.dataValues.id_solicitud}`,
-        idUsuario: datosUsuario[0].idUsuarioSolicita,
-        transaction
-      })
-
-      logger.verbose({
-        message: 'Procesando transacción',
-        transactionId: transaction.id,
-        steps: ['proceso']
-      })
-      await transaction.commit()
-
-      // Procesar productos no existentes
-      if (noExistencia.length > 0) {
-        const productosNoDisponibles = await this.obtenerProductosNoDisponibles(noExistencia)
-        estados.estados.push(...productosNoDisponibles)
-      }
+      await this.procesarEstadosProductos(data, noExistencia, transaction)
 
       return {
-        data: datosUsuario,
-        productos: estados.estados,
         message: 'Mezcla Guardada correctamente'
       }
     } catch (error) {

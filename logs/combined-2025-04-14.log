@@ -1,0 +1,1465 @@
+[2025-04-14 00:01:17] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Miguel Mora Villa, correo:miguel.mora@lgfrutas.com.mx[32m[39m
+[2025-04-14 00:01:18] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:01:18] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<ef12de5b-80b7-77c2-aee1-4352e63beae9@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 1A625453D6F"
+}
+[2025-04-14 00:01:23] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasEmpresa (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:208:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:138:20",
+  "path": "/api/mezclasSolicitadas/Pendiente",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-14 00:01:34] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasEmpresa (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:208:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:138:20",
+  "path": "/api/mezclasSolicitadas/Pendiente",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-14 00:01:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mGuardando imagen...[32m[39m
+[2025-04-14 00:01:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34mRuta completa de la imagen:[34m[39m
+[2025-04-14 00:01:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mImagen guardada exitosamente[32m[39m
+[2025-04-14 00:01:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mArchivo verificado correctamente[32m[39m
+[2025-04-14 00:01:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mruta absoluta: C:\Users\ZARAGOZA051\Desktop\LGZ2024\src\uploads\images\image_1744610516197_2i2ihvorhs5.png[32m[39m
+[2025-04-14 00:01:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Miguel Mora Villa, correo:miguel.mora@lgfrutas.com.mx[32m[39m
+[2025-04-14 00:01:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:01:57] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<128eef26-e83f-0d09-a0b1-bb435dc17b88@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as C0384453D6F"
+}
+[2025-04-14 00:03:40] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Cecilio Medel, correo:cecilio.medel@portalrancho.com.mx[32m[39m
+[2025-04-14 00:03:40] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Gustavo Ramos, correo:Gustavo.ramos@portalrancho.com.mx[32m[39m
+[2025-04-14 00:03:40] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Octavio Garcia, correo:octavio.garcia@portalrancho.con.mx[32m[39m
+[2025-04-14 00:03:40] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Luis Jaime Salas, correo:Zaragoza051@lgfrutas.com.mx[32m[39m
+[2025-04-14 00:03:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:03:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:03:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:03:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:03:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<5c480d1a-25b4-9a49-6ffc-7a19e52304e0@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as BD272453A18"
+}
+[2025-04-14 00:03:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+[2025-04-14 00:03:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<279dc388-e82c-20c1-5246-dd590b7717f7@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 88D4F453A21"
+}
+[2025-04-14 00:03:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+[2025-04-14 00:03:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<040bea06-2bb0-2c1e-4bbc-96f92add2139@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 78A4E453D2D"
+}
+[2025-04-14 00:03:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+[2025-04-14 00:03:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<6e123445-c366-e962-39e6-30beadf2556b@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 68B2D453D6F"
+}
+[2025-04-14 00:03:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+[2025-04-14 00:04:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mIniciando transacción de mezcla[32m[39m
+{
+  "0": {
+    "id_receta": "474",
+    "existe": false
+  },
+  "1": {
+    "id_receta": "473",
+    "existe": false
+  }
+}
+[2025-04-14 00:04:36] [36m[36mverbose[36m[39m [DEVELOPMENT]: 	[36m	[36mProcesando transacción[36m[39m
+{
+  "transactionId": "659447c0-d3f0-4922-b263-306277bed9df",
+  "steps": [
+    "proceso"
+  ]
+}
+[2025-04-14 00:04:36] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:04:38] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<a998402c-c0a2-30d6-155e-c6a9d199e930@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 0F00E453D6F"
+}
+[2025-04-14 00:11:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:11:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:11:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:11:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:11:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:11:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:11:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:11:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:11:38] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:11:38] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:11:38] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:11:38] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:11:38] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:12:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Cecilio Medel, correo:cecilio.medel@portalrancho.com.mx[32m[39m
+[2025-04-14 00:12:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Gustavo Ramos, correo:Gustavo.ramos@portalrancho.com.mx[32m[39m
+[2025-04-14 00:12:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Octavio Garcia, correo:octavio.garcia@portalrancho.con.mx[32m[39m
+[2025-04-14 00:12:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Luis Jaime Salas, correo:Zaragoza051@lgfrutas.com.mx[32m[39m
+[2025-04-14 00:12:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:12:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:12:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:12:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:12:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:12:28] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Miguel Mora Villa, correo:miguel.mora@lgfrutas.com.mx[32m[39m
+[2025-04-14 00:12:28] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:12:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<784cd928-482d-fb59-8cc7-be04d1a110d6@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as E5523453D6F"
+}
+[2025-04-14 00:12:33] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mNo se encontraron mezclas para los criterios especificados[31m[39m
+{
+  "stack": "Error: No se encontraron mezclas para los criterios especificados\n    at MezclaModel.obtenerTablaMezclasEmpresa (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/mezclas.models.js:208:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/mezclas.controller.js:138:20",
+  "path": "/api/mezclasSolicitadas/Pendiente",
+  "method": "GET",
+  "statusCode": 404
+}
+[2025-04-14 00:12:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mGuardando imagen...[32m[39m
+[2025-04-14 00:12:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34mRuta completa de la imagen:[34m[39m
+[2025-04-14 00:12:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mImagen guardada exitosamente[32m[39m
+[2025-04-14 00:12:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mArchivo verificado correctamente[32m[39m
+[2025-04-14 00:12:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mruta absoluta: C:\Users\ZARAGOZA051\Desktop\LGZ2024\src\uploads\images\image_1744611176504_kqw3aamhyp.png[32m[39m
+[2025-04-14 00:12:56] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Miguel Mora Villa, correo:miguel.mora@lgfrutas.com.mx[32m[39m
+[2025-04-14 00:12:57] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-14 00:12:57] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<c9c62445-f9a3-da5e-95f0-8d5e9b456b8b@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 1619F453D6F"
+}
+[2025-04-14 00:23:17] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:23:17] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:23:17] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:23:17] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:23:17] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:23:49] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:23:49] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:23:49] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:23:50] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:23:50] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:24:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:24:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:24:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:24:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:24:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:24:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:24:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:24:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:24:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:24:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:26:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:26:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:26:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:26:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:26:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:27:25] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:27:25] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:27:25] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:27:25] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:27:25] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:27:48] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:27:48] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:27:48] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:27:48] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:27:48] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:27:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:27:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:27:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:27:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:27:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 00:40:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 00:40:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 00:40:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 00:40:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 00:40:27] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 01:41:04] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 01:41:04] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 01:41:04] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 01:41:04] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 01:41:04] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 01:41:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 01:41:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 01:41:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 01:41:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 01:41:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 01:41:13] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 01:41:13] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 01:41:13] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 01:41:13] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 01:41:13] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 22:54:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-14 22:54:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-14 22:54:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-14 22:54:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-14 22:54:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-14 23:35:55] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34mreporteSolicitudv3[34m[39m
+{
+  "0": {
+    "id": 299,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "1": {
+    "id": 300,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "2": {
+    "id": 301,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "3": {
+    "id": 302,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "4": {
+    "id": 303,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "5": {
+    "id": 304,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "6": {
+    "id": 305,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "Aplicación foliar",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "7": {
+    "id": 306,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "Aplicación foliar",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "8": {
+    "id": 307,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "9": {
+    "id": 308,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "10": {
+    "id": 309,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "11": {
+    "id": 310,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn MC",
+    "FolioReceta": "805",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "Mezcla con calidad de urgencia de favor.",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "12": {
+    "id": 312,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "826",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "2",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "13": {
+    "id": 313,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "826",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "2",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "14": {
+    "id": 315,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-26",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "826",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "2",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "15": {
+    "id": 328,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-02-28",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Marilyn NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "Complemento filtro vías",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "16": {
+    "id": 329,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-03-01",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "Solicitud para filtro guayabos",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "17": {
+    "id": 334,
+    "Solicita": "Eduardo Garcia",
+    "fechaSolicitud": "2025-03-01",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya NP",
+    "FolioReceta": "TERMO",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "10",
+    "prensetacion": "Otro",
+    "metodoAplicacion": "Termonebulizacion",
+    "imagenEntrega": "",
+    "descripcion": "10 mezclas para termo",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "18": {
+    "id": 336,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-01",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAS Ario/Fresa",
+    "variedad": "Minerva NP,Veronica ",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "19": {
+    "id": 337,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-01",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMCV Chivas/Fresa",
+    "variedad": "Minerva NP,Veronica ",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "20": {
+    "id": 341,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-03",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMCV Chivas/Fresa",
+    "variedad": "Minerva NP,Veronica ",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "6",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "21": {
+    "id": 342,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-03",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAS Ario/Fresa",
+    "variedad": "Minerva NP,Veronica NP,Marisabel NP,JC033,JC032",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "6",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "22": {
+    "id": 372,
+    "Solicita": "Miguel Mora Villa",
+    "fechaSolicitud": "2025-03-07",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMPI Paraíso/Zarzamora",
+    "variedad": "Rebecas MC",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "Otro",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "23": {
+    "id": 373,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-03-07",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "Filtro vías",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "24": {
+    "id": 374,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-03-07",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "Filtro guayabos",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "25": {
+    "id": 376,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-03-07",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMPRN Presa/Frambueza",
+    "variedad": "Marilyn NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "Filtro Guzmán (presa rincon)",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "26": {
+    "id": 377,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-03-07",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMSG Santiaguillo/Frambueza",
+    "variedad": "Marilym MC",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "Filtro santiaguillo",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "27": {
+    "id": 378,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-03-07",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMGZ Guzman/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "Filtro Guzmán",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "28": {
+    "id": 381,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-08",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAS Ario/Fresa",
+    "variedad": "Minerva NP,Veronica NP,Marisabel NP,JC033,JC032",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "29": {
+    "id": 382,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-08",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMJ Jimenez/Fresa",
+    "variedad": "Veronica NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "30": {
+    "id": 383,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-08",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMCV Chivas/Fresa",
+    "variedad": "Minerva NP,Veronica NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "31": {
+    "id": 384,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-08",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMCV Chivas/Fresa",
+    "variedad": "Minerva NP,Veronica NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "32": {
+    "id": 385,
+    "Solicita": "Jose Luis Anaya Mariscal",
+    "fechaSolicitud": "2025-03-08",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMGZ Guzman/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Enmienda",
+    "imagenEntrega": "",
+    "descripcion": "Filtro Guzmán",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "33": {
+    "id": 450,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-12",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAS Ario/Fresa",
+    "variedad": "Minerva NP,Veronica NP,Marisabel NP,JC033,JC032",
+    "FolioReceta": "0051",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "2",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "34": {
+    "id": 451,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-12",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMJ Jimenez/Fresa",
+    "variedad": "Veronica NP",
+    "FolioReceta": "0051",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "3",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "35": {
+    "id": 501,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-15",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAS Ario/Fresa",
+    "variedad": "Minerva NP,Veronica NP,Marisabel NP,JC033,JC032",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "36": {
+    "id": 502,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-15",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMJ Jimenez/Fresa",
+    "variedad": "Veronica NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "37": {
+    "id": 503,
+    "Solicita": "Jorge Andres  Yañes rodriguez",
+    "fechaSolicitud": "2025-03-15",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMCV Chivas/Fresa",
+    "variedad": "Minerva NP,Veronica NP",
+    "FolioReceta": "",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "",
+    "prensetacion": "",
+    "metodoAplicacion": "Filtro",
+    "imagenEntrega": "",
+    "descripcion": "",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "38": {
+    "id": 738,
+    "Solicita": "Eduardo Garcia",
+    "fechaSolicitud": "2025-03-28",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMSG Santiaguillo/Frambueza",
+    "variedad": "Marilym MC",
+    "FolioReceta": "733",
+    "temporada": "Julio24-Junio25",
+    "cantidad": "1",
+    "prensetacion": "Willi",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "1 Willy de folio 733 Impide para control de araña roja en Zarco 2 y 1.3",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "39": {
+    "id": 996,
+    "Solicita": "Eduardo Garcia",
+    "fechaSolicitud": "2025-04-13",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "SELLLADA",
+    "temporada": "Julio25-Junio26",
+    "cantidad": "10",
+    "prensetacion": "Barril",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "Lo siguiente solicitado es dosis POR BARRIL. Favor de enviar 10 barriles para sellada.",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "40": {
+    "id": 997,
+    "Solicita": "Eduardo Garcia",
+    "fechaSolicitud": "2025-04-13",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMPRN Presa/Frambueza",
+    "variedad": "Mya NP",
+    "FolioReceta": "SELLLADA",
+    "temporada": "Julio25-Junio26",
+    "cantidad": "6",
+    "prensetacion": "Barril",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "Lo siguiente solicitado es dosis POR BARRIL. Favor de enviar 6 barriles para sellada.",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "41": {
+    "id": 998,
+    "Solicita": "Eduardo Garcia",
+    "fechaSolicitud": "2025-04-13",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "ESTIMULACION",
+    "temporada": "Julio25-Junio26",
+    "cantidad": "10",
+    "prensetacion": "Barril",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "Lo siguiente solicitado es dosis POR BARRIL. Favor de enviar 10 barriles para estimulación.",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "42": {
+    "id": 999,
+    "Solicita": "Eduardo Garcia",
+    "fechaSolicitud": "2025-04-13",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMPRN Presa/Frambueza",
+    "variedad": "Mya NP",
+    "FolioReceta": "ESTIMULACION",
+    "temporada": "Julio25-Junio26",
+    "cantidad": "6",
+    "prensetacion": "Barril",
+    "metodoAplicacion": "Foliar",
+    "imagenEntrega": "",
+    "descripcion": "Lo siguiente solicitado es dosis POR BARRIL. Favor de enviar 6 barriles para estimulación.",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "43": {
+    "id": 1000,
+    "Solicita": "Eduardo Garcia",
+    "fechaSolicitud": "2025-04-13",
+    "ranchoDestino": "Potrero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMAF Ario/Frambueza",
+    "variedad": "Mya MC",
+    "FolioReceta": "10457-B3",
+    "temporada": "Julio25-Junio26",
+    "cantidad": "8",
+    "prensetacion": "Barril",
+    "metodoAplicacion": "Riego",
+    "imagenEntrega": "",
+    "descripcion": "Lo siguiente solicitado es dosis POR MEZCLA. Favor de enviar 8 mezclas.",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  },
+  "44": {
+    "id": 1001,
+    "Solicita": "Eduardo Garcia",
+    "fechaSolicitud": "2025-04-13",
+    "ranchoDestino": "Romero",
+    "notaMezcla": "",
+    "empresa": "Moras Finas",
+    "centroCoste": "MFIMPRN Presa/Frambueza",
+    "variedad": "Mya NP",
+    "FolioReceta": "10457-B3",
+    "temporada": "Julio25-Junio26",
+    "cantidad": "4",
+    "prensetacion": "Barril",
+    "metodoAplicacion": "Riego",
+    "imagenEntrega": "",
+    "descripcion": "Lo siguiente solicitado es dosis POR MEZCLA. Favor de enviar 4 mezclas.",
+    "fechaEntrega": "",
+    "status": "Pendiente",
+    "respuestaSolicitud": ""
+  }
+}
+[2025-04-14 23:35:55] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "1",
+    "presentacion": "Willi",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:55] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "1",
+    "presentacion": "Willi",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 301: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 302: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 303: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 304: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 305: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 306: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 307: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 308: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 309: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:55] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 310: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 312: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "2",
+    "presentacion": "Willi",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 315: Error al obtener los productos[31m[39m
+{
+  "statusCode": 500,
+  "errorCode": "DB_ERROR",
+  "status": "error",
+  "isOperational": true,
+  "stack": "Error: Error al obtener los productos\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1309:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "10",
+    "presentacion": "Otro",
+    "metodoAplicacion": "Termonebulizacion"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "6",
+    "presentacion": "Willi",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "6",
+    "presentacion": "Willi",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "Otro",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Enmienda"
+  }
+}
+[2025-04-14 23:35:56] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 450: No se encontraron productos para los criterios especificados[31m[39m
+{
+  "statusCode": 404,
+  "errorCode": "NOT_FOUND",
+  "status": "fail",
+  "isOperational": true,
+  "stack": "Error: No se encontraron productos para los criterios especificados\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1289:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mError procesando solicitud 451: No se encontraron productos para los criterios especificados[31m[39m
+{
+  "statusCode": 404,
+  "errorCode": "NOT_FOUND",
+  "status": "fail",
+  "isOperational": true,
+  "stack": "Error: No se encontraron productos para los criterios especificados\n    at SolicitudRecetaModel.obtenerProductosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:1289:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async obtenerProductosPorSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:5068:23)\n    at async procesarDatosSolicitud (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6167:21)\n    at async reporteSolicitudv3 (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6358:13)\n    at async ProduccionModel.descargarReportePendientes (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:6550:21)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/dist/bundle.mjs:4731:16"
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "",
+    "presentacion": "",
+    "metodoAplicacion": "Filtro"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "1",
+    "presentacion": "Willi",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "10",
+    "presentacion": "Barril",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "6",
+    "presentacion": "Barril",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "10",
+    "presentacion": "Barril",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "6",
+    "presentacion": "Barril",
+    "metodoAplicacion": "Foliar"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "8",
+    "presentacion": "Barril",
+    "metodoAplicacion": "Riego"
+  }
+}
+[2025-04-14 23:35:56] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34msolicitudes[34m[39m
+{
+  "0": {
+    "cantidad": "4",
+    "presentacion": "Barril",
+    "metodoAplicacion": "Riego"
+  }
+}

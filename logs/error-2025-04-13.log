@@ -1,0 +1,21 @@
+[2025-04-13 22:58:54] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mContraseña incorrecta[31m[39m
+{
+  "stack": "Error: Contraseña incorrecta\n    at UsuarioModel.login (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/usuario.models.js:220:35)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/usuario.controller.js:35:20",
+  "path": "/api/usuario/login",
+  "method": "POST",
+  "statusCode": 400
+}
+[2025-04-13 23:45:12] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mCannot read properties of undefined (reading 'length')[31m[39m
+{
+  "stack": "TypeError: Cannot read properties of undefined (reading 'length')\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/productosSolicitud.controller.js:31:46\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+  "path": "/api/actualizarEstadoProductos",
+  "method": "POST",
+  "statusCode": 500
+}
+[2025-04-13 23:45:39] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mCannot read properties of undefined (reading 'length')[31m[39m
+{
+  "stack": "TypeError: Cannot read properties of undefined (reading 'length')\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/productosSolicitud.controller.js:31:56\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+  "path": "/api/actualizarEstadoProductos",
+  "method": "POST",
+  "statusCode": 500
+}

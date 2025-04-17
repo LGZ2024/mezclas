@@ -46,23 +46,23 @@ export const enviarEstadoProductos = async () => {
 
   // Validación de productos no disponibles
   const hayProductosNoDisponibles = estados.estados.some(estado => estado.existe === false)
-  const mensajeMezclador = document.getElementById('mensaje')
+  // const mensajeMezclador = document.getElementById('mensaje')
 
   if (hayProductosNoDisponibles) {
-    mensajeMezclador.setAttribute('required', 'required')
+    // mensajeMezclador.setAttribute('required', 'required')
 
     // Validar si el mensaje está vacío
-    if (!mensajeMezclador.value.trim()) {
-      mostrarMensaje({
-        msg: 'Debe ingresar un mensaje cuando hay productos no disponibles',
-        type: 'warning'
-      })
-      return
-    }
+    // if (!mensajeMezclador.value.trim()) {
+    //   mostrarMensaje({
+    //     msg: 'Debe ingresar un mensaje cuando hay productos no disponibles',
+    //     type: 'warning'
+    //   })
+    //   return
+    // }
     // Agregar el mensaje al objeto estados
-    estados.mensaje = mensajeMezclador.value.trim()
+    // estados.mensaje = mensajeMezclador.value.trim()
   } else {
-    mensajeMezclador.removeAttribute('required')
+    // mensajeMezclador.removeAttribute('required')
   }
 
   // Si no todos los radios están seleccionados, mostrar un mensaje y salir

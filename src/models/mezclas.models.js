@@ -8,6 +8,7 @@ import { NotificacionModel } from '../models/notificaciones.models.js'
 import sequelize from '../db/db.js'
 // utils
 import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
+import logger from '../utils/logger.js'
 
 export class MezclaModel {
   // uso
@@ -167,6 +168,7 @@ export class MezclaModel {
       if (!status || !empresa) {
         throw new ValidationError('Datos requeridos no proporcionados')
       }
+      logger.info('Obteniendo tabla de mezclas por empresa y status: ' + status + ' y ' + empresa)
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
         where: {
@@ -202,11 +204,6 @@ export class MezclaModel {
           'respuestaSolicitud'
         ]
       })
-
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
-      }
 
       // Transformar los resultados
       const resultadosFormateados = mezclas.map(mezcla => {

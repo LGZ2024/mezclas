@@ -170,7 +170,7 @@ const equiposConfig = {
   }
 }
 
-export const Centrocoste = sequelize.define('empleados', equiposConfig, {
-  tableName: 'empleados', // Nombre de la tabla en la base de datos
+export const Equipos = sequelize.define('equipos', equiposConfig, {
+  tableName: 'equipos', // Nombre de la tabla en la base de datos
   timestamps: false // Agrega createdAt y updatedAt automáticamente
 })

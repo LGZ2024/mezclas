@@ -1,5 +1,4 @@
 import * as __WEBPACK_EXTERNAL_MODULE_express__ from "express";
-import * as __WEBPACK_EXTERNAL_MODULE_morgan__ from "morgan";
 import * as __WEBPACK_EXTERNAL_MODULE_compression__ from "compression";
 import * as __WEBPACK_EXTERNAL_MODULE_helmet__ from "helmet";
 import * as __WEBPACK_EXTERNAL_MODULE_body_parser_496b7721__ from "body-parser";
@@ -51,12 +50,6 @@ var x = (y) => {
 } 
 var y = (x) => (() => (x))
 const external_express_namespaceObject = x({ ["Router"]: () => (__WEBPACK_EXTERNAL_MODULE_express__.Router), ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_express__["default"]) });
-;// CONCATENATED MODULE: external "morgan"
-var external_morgan_x = (y) => {
-	var x = {}; __webpack_require__.d(x, y); return x
-} 
-var external_morgan_y = (x) => (() => (x))
-const external_morgan_namespaceObject = external_morgan_x({  });
 ;// CONCATENATED MODULE: external "compression"
 var external_compression_x = (y) => {
 	var x = {}; __webpack_require__.d(x, y); return x
@@ -213,18 +206,28 @@ const levels = {
 };
 
 // Formato personalizado
-const customFormat = external_winston_namespaceObject["default"].format.combine(external_winston_namespaceObject["default"].format.timestamp(), external_winston_namespaceObject["default"].format.json(), external_winston_namespaceObject["default"].format.prettyPrint(), external_winston_namespaceObject["default"].format.printf(({
+const customFormat = external_winston_namespaceObject["default"].format.combine(external_winston_namespaceObject["default"].format.timestamp({
+  format: 'YYYY-MM-DD HH:mm:ss'
+}), external_winston_namespaceObject["default"].format.json(), external_winston_namespaceObject["default"].format.prettyPrint(), external_winston_namespaceObject["default"].format.colorize({
+  all: true,
+  colors: {
+    error: 'red',
+    warn: 'yellow',
+    info: 'green',
+    http: 'magenta',
+    debug: 'blue'
+  }
+}), external_winston_namespaceObject["default"].format.label({
+  label: envs.MODE.toUpperCase()
+}), external_winston_namespaceObject["default"].format.align(), external_winston_namespaceObject["default"].format.printf(({
   timestamp,
   level,
   message,
+  label,
   ...metadata
 }) => {
-  return JSON.stringify({
-    timestamp,
-    level: level.toUpperCase(),
-    message,
-    ...metadata
-  });
+  const metaStr = Object.keys(metadata).length ? `\n${JSON.stringify(metadata, null, 2)}` : '';
+  return `[${timestamp}] ${level} [${label}]: ${message}${metaStr}`;
 }));
 const logger_logger = external_winston_namespaceObject["default"].createLogger({
   level: envs.MODE === 'development' ? 'debug' : 'info',
@@ -265,7 +268,30 @@ const logger_logger = external_winston_namespaceObject["default"].createLogger({
 // Agregar consola en desarrollo
 if (envs.MODE !== 'production') {
   logger_logger.add(new external_winston_namespaceObject["default"].transports.Console({
-    format: external_winston_namespaceObject["default"].format.combine(external_winston_namespaceObject["default"].format.colorize(), external_winston_namespaceObject["default"].format.simple())
+    format: customFormat,
+    // Niveles personalizados por tipo de log
+    levels: {
+      error: {
+        color: 'red',
+        background: 'black'
+      },
+      warn: {
+        color: 'yellow',
+        background: 'black'
+      },
+      info: {
+        color: 'green',
+        background: 'black'
+      },
+      http: {
+        color: 'magenta',
+        background: 'black'
+      },
+      debug: {
+        color: 'blue',
+        background: 'black'
+      }
+    }
   }));
 }
 
@@ -292,7 +318,7 @@ var external_cors_y = (x) => (() => (x))
 const external_cors_namespaceObject = external_cors_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_cors__["default"]) });
 ;// CONCATENATED MODULE: ./src/middlewares/cors.js
 
-const ACCEPTED_ORIGINS = ['http://localhost:3000', 'https://solicitudmezclas.portalrancho.com.mx', 'https://mezclas.portalrancho.com.mx'];
+const ACCEPTED_ORIGINS = ['http://localhost:3000', 'http://localhost', 'https://solicitudmezclas.portalrancho.com.mx', 'https://mezclas.portalrancho.com.mx'];
 const corsMiddleware = ({
   acceptedOrigins = ACCEPTED_ORIGINS
 } = {}) => (0,external_cors_namespaceObject["default"])({
@@ -318,6 +344,7 @@ const validateJSON = async (err, req, res, next) => {
 
 ;// CONCATENATED MODULE: ./src/middlewares/error500Middleware.js
 
+
 const error404 = async (req, res, next) => {
   res.status(404).render('errorPage', {
     codeError: '404',
@@ -337,7 +364,14 @@ const errorHandler = (err, req, res, next) => {
     method: req.method,
     statusCode: err.statusCode
   });
-  if (false) {} else {
+  if (envs.MODE === 'development') {
+    res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack
+    });
+  } else {
     // Producción: no enviar detalles del error
     res.status(err.statusCode).json({
       status: err.status,
@@ -380,14 +414,14 @@ const authenticate = async (req, res, next) => {
     user: null
   };
   try {
-    if (!token) return res.status(403).render('errorPage', {
+    if (!token) return res.status(403).render('errorSesion', {
       codeError: 403,
       title: '403 - token no proveeido',
       errorMsg: 'No se ha iniciado sesion'
     });
     // Verificamos token
     decoded = await verifyToken(token);
-    if (!decoded) return res.status(401).render('errorPage', {
+    if (!decoded) return res.status(401).render('errorSesion', {
       codeError: 401,
       title: '401 - Token Invalido',
       errorMsg: 'Error de autenticación'
@@ -397,7 +431,7 @@ const authenticate = async (req, res, next) => {
     next();
   } catch (error) {
     req.session.user = null;
-    return res.status(401).render('errorPage', {
+    return res.status(401).render('errorSesion', {
       codeError: 401,
       title: '401 - Token Invalido',
       errorMsg: 'Error de autenticación'
@@ -1449,52 +1483,60 @@ class SolicitudRecetaModel {
       if (!data?.estados?.length || !idUsuarioMezcla) {
         throw new CustomError_ValidationError('Datos requeridos no proporcionados');
       }
-
       // Iniciar transacción
       transaction = await db.transaction();
-      utils_logger.info('Iniciando transacción de mezcla');
-      // Procesar estados de productos
-      const receta = await this.procesarEstadosProductos(data, noExistencia, transaction);
-      if (!receta || !receta.dataValues?.id) {
-        throw new CustomError_NotFoundError('No se pudo obtener el ID de la solicitud');
+
+      // validamos  que todos los estados sea existe true  o false
+      if (data.estados.some(estado => !estado.existe)) {
+        utils_logger.info('Iniciando transacción de mezcla', data.estados);
+        // Procesar estados de productos
+        const receta = await this.procesarEstadosProductos(data, noExistencia, transaction);
+        if (!receta || !receta.dataValues?.id) {
+          throw new CustomError_NotFoundError('No se pudo obtener el ID de la solicitud');
+        }
+
+        // // Actualizar solicitud y crear notificación
+        await this.actualizarSolicitudYNotificacion({
+          id: receta.dataValues.id_solicitud,
+          idUsuarioMezcla,
+          mensaje: data.mensaje,
+          transaction
+        });
+
+        // Obtener datos del usuario solicitante
+        const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud);
+        if (!datosUsuario || !datosUsuario.length) {
+          throw new CustomError_NotFoundError('No se encontró el usuario solicitante');
+        }
+
+        // crear notificacion
+        // await this.crearNotificacion({
+        //   id: receta.dataValues.id_solicitud,
+        //   mensaje: `Productos no disponibles para la solicitud ${receta.dataValues.id_solicitud}`,
+        //   idUsuario: datosUsuario[0].idUsuarioSolicita,
+        //   transaction
+        // })
+
+        utils_logger.verbose({
+          message: 'Procesando transacción',
+          transactionId: transaction.id,
+          steps: ['proceso']
+        });
+        await transaction.commit();
+
+        // Procesar productos no existentes
+        if (noExistencia.length > 0) {
+          const productosNoDisponibles = await this.obtenerProductosNoDisponibles(noExistencia);
+          estados.estados.push(...productosNoDisponibles);
+        }
+        return {
+          data: datosUsuario,
+          productos: estados.estados,
+          message: 'Mezcla Guardada correctamente'
+        };
       }
-
-      // // Actualizar solicitud y crear notificación
-      await this.actualizarSolicitudYNotificacion({
-        id: receta.dataValues.id_solicitud,
-        idUsuarioMezcla,
-        mensaje: data.mensaje,
-        transaction
-      });
-
-      // Obtener datos del usuario solicitante
-      const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud);
-      if (!datosUsuario || !datosUsuario.length) {
-        throw new CustomError_NotFoundError('No se encontró el usuario solicitante');
-      }
-
-      // crear notificacion
-      await this.crearNotificacion({
-        id: receta.dataValues.id_solicitud,
-        mensaje: `Productos no disponibles para la solicitud ${receta.dataValues.id_solicitud}`,
-        idUsuario: datosUsuario[0].idUsuarioSolicita,
-        transaction
-      });
-      utils_logger.verbose({
-        message: 'Procesando transacción',
-        transactionId: transaction.id,
-        steps: ['proceso']
-      });
-      await transaction.commit();
-
-      // Procesar productos no existentes
-      if (noExistencia.length > 0) {
-        const productosNoDisponibles = await this.obtenerProductosNoDisponibles(noExistencia);
-        estados.estados.push(...productosNoDisponibles);
-      }
+      await this.procesarEstadosProductos(data, noExistencia, transaction);
       return {
-        data: datosUsuario,
-        productos: estados.estados,
         message: 'Mezcla Guardada correctamente'
       };
     } catch (error) {
@@ -2062,6 +2104,28 @@ class NotificacionModel {
     } catch (e) {
       if (e instanceof CustomError_CustomError) throw e;
       throw new CustomError_DatabaseError('Error al obtener las notificaciones');
+    }
+  }
+  static async getOneIDSolicitudUsuario({
+    idUsuario,
+    idSolicitud
+  }) {
+    try {
+      // validamos que el id sea un numero
+      if (isNaN(idUsuario) || isNaN(idSolicitud)) throw new CustomError_ValidationError('No se proporciono el id de usuario o la solicitud');
+      const notificacion = await Notificaciones.findAll({
+        where: {
+          id_solicitud: idSolicitud,
+          id_usuario: idUsuario,
+          status: 1
+        },
+        attributes: ['id', 'id_solicitud', 'id_usuario', 'mensaje', 'status']
+      });
+      if (!notificacion) throw new CustomError_NotFoundError('notificacion no encontrada');
+      return notificacion;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener las notificacion');
     }
   }
 
@@ -3160,6 +3224,8 @@ class UsuarioModel {
 
 
 
+
+
 class ProtetedController {
   // ruta Protegida
   protected = async (req, res) => {
@@ -3341,8 +3407,7 @@ class ProtetedController {
             if (result.error) {
               throw new Error(result.error);
             }
-            // obtenemos los datos de la solicitud
-            console.log(result);
+
             // si existe alguna solicitud con el mismo usuario pasamos a obtener los productos
             const productos = await SolicitudRecetaModel.obtenerProductoNoDisponibles({
               idSolicitud
@@ -3352,6 +3417,13 @@ class ProtetedController {
             const mezclador = await UsuarioModel.getOneId({
               id: result.dataValues.idUsuarioMezcla
             });
+
+            // obtenemos datos de la notificacion
+            const notificacion = await NotificacionModel.getOneIDSolicitudUsuario({
+              idUsuario: user.id,
+              idSolicitud
+            });
+            utils_logger.debug('Notificación obtenida:', notificacion[0].dataValues);
             return res.render('pages/mezclas/notificaciones', {
               nombre: user.nombre,
               idSolicitud,
@@ -3360,7 +3432,8 @@ class ProtetedController {
               nombreMezclador: mezclador.nombre,
               idMezclador: result.dataValues.idUsuarioMezcla,
               empresa: mezclador.empresa,
-              respuestaMezclador: result.dataValues.respuestaMezclador
+              respuestaMezclador: result.dataValues.respuestaMezclador,
+              idNotificacion: notificacion[0].dataValues.id
             });
           }
         case 'administrativo':
@@ -3592,7 +3665,7 @@ const enviarCorreo = async params => {
                 <h4>Detalles de la Solicitud:</h4>
                 ${getAdditionalDetails(status)}
       
-               <a href="https://mezclas.portalrancho.com.mx//protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
+               <a href="https://solicitudmezclas.portalrancho.com.mx/protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
       
                <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
                <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -3615,7 +3688,7 @@ const enviarCorreo = async params => {
                 <li>Nombre de usuario:<b>${email}</b></li>
                 <li>Contraseña temporal:<b>${password}</b></li>
             </ul>
-             <a href="https://mezclas.portalrancho.com.mx/ style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
+             <a href="https://solicitudmezclas.portalrancho.com.mx/" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
             <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>
             <p>¡Gracias por unirte a nosotros!</p>
             <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -3648,7 +3721,7 @@ const enviarCorreo = async params => {
                 <li><strong>Folio Receta:</strong> ${data.folio}</li>
             </ul>
 
-            <a href="https://mezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
 
             <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
             <p>Atentamente,<br>El equipo de Grupo LG</p>
@@ -3682,7 +3755,7 @@ const enviarCorreo = async params => {
       
                    <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
                   <div style="text-align: center; margin-top: 20px;">
-                      <a href="https://mezclas.portalrancho.com.mx/protected/notificacion/${solicitudId}" 
+                      <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" 
                         style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                         Ver Solicitud
                       </a>
@@ -3722,7 +3795,7 @@ const enviarCorreo = async params => {
           </div>
   
           <div style="text-align: center; margin-top: 20px;">
-            <a href="https://mezclas.portalrancho.com.mx/protected/notificacion/${solicitudId}" 
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" 
                style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                Ver Solicitud
             </a>
@@ -3748,7 +3821,7 @@ const enviarCorreo = async params => {
     }
     const message = {
       ...template,
-      to: 'zaragoza051@lgfrutas.com.mx' // Reemplazar con el correo del cliente
+      to: email // Reemplazar con el correo del cliente
     };
     const result = await sendMail(message);
     return {
@@ -4487,14 +4560,17 @@ class productosSolicitud_controller_ProductosController {
       data: req.body,
       idUsuarioMezcla: user.id
     });
-    await enviarCorreo({
-      type: 'notificacion',
-      email: result.data[0].email,
-      nombre: result.data[0].nombre,
-      solicitudId: req.body.id_solicitud,
-      data: result.productos,
-      usuario: user
-    });
+    // validamos que data y productos vengan dentro de result
+    if (result.productos || result.data) {
+      await enviarCorreo({
+        type: 'notificacion',
+        email: result.data[0].email,
+        nombre: result.data[0].nombre,
+        solicitudId: req.body.id_solicitud,
+        data: result.productos,
+        usuario: user
+      });
+    }
     return res.json({
       message: result.message
     });
@@ -4689,6 +4765,7 @@ const createProduccionRouter = ({
     produccionModel
   });
   router.get('/solicitudReporte', produccionController.solicitudReporte);
+  router.get('/asignacionesActivos', produccionController.solicitudReporte);
   router.post('/descargar-excel', produccionController.descargarEcxel);
   router.post('/descargar-solicitud', produccionController.descargarSolicitud); // uso
   router.get('/obetenerReceta', produccionController.ObtenerReceta);
@@ -4700,6 +4777,7 @@ const createProduccionRouter = ({
   return router;
 };
 ;// CONCATENATED MODULE: ./src/controller/notificaciones.controller.js
+
 
 class NotificacionesController {
   constructor({
@@ -4724,6 +4802,7 @@ class NotificacionesController {
     const {
       id
     } = req.params;
+    utils_logger.info(`id notificacion: ${id}`);
     const result = await this.notificacionModel.updateStatus({
       id
     });
@@ -4746,6 +4825,73 @@ const createNotificacionesRouter = ({
   // Obtener todas las notificaciones
   router.get('/notificaciones', notificacionController.getAllIdUsuario);
   router.put('/notificaciones/:id', notificacionController.updateStatus);
+  return router;
+};
+;// CONCATENATED MODULE: ./src/controller/equipos.controller.js
+
+class EquiposController {
+  constructor({
+    equiposModel
+  }) {
+    this.equiposModel = equiposModel;
+  }
+
+  // extraer
+  getAllDisponible = asyncHandler(async (req, res) => {
+    const response = await this.equiposModel.getAllDisponible();
+    res.json(response);
+  });
+}
+;// CONCATENATED MODULE: ./src/routes/equipos.routes.js
+
+
+const createEquiposRouter = ({
+  equiposModel
+}) => {
+  const router = (0,external_express_namespaceObject.Router)();
+  const equiposController = new EquiposController({
+    equiposModel
+  });
+
+  // Obtener centros de coste. pasamos
+  router.get('/equipos', equiposController.getAllDisponible);
+  return router;
+};
+;// CONCATENATED MODULE: ./src/controller/empleados.controller.js
+
+class EmpleadosController {
+  constructor({
+    empleadosModel
+  }) {
+    this.empleadosModel = empleadosModel;
+  }
+
+  // extraer
+  getAllEmpleados = asyncHandler(async (req, res) => {
+    const response = await this.empleadosModel.getAllEmpleados();
+    res.json(response);
+  });
+  agregarUsuario = asyncHandler(async (req, res) => {
+    const response = await this.empleadosModel.agregarUsuario({
+      data: req.body
+    });
+    res.json(response);
+  });
+}
+;// CONCATENATED MODULE: ./src/routes/empleados.routes.js
+
+
+const createEmpleadosRouter = ({
+  equiposModel
+}) => {
+  const router = (0,external_express_namespaceObject.Router)();
+  const empleadosController = new EmpleadosController({
+    equiposModel
+  });
+
+  // Obtener centros de coste. pasamos
+  router.get('/empleados', empleadosController.getAllEmpleados);
+  router.post('/empleados', empleadosController.agregarUsuario);
   return router;
 };
 ;// CONCATENATED MODULE: ./src/middlewares/validateFormatoImg.js
@@ -6264,6 +6410,19 @@ class ProduccionModel {
       };
     }
   }
+  static async getAsignacionesActivos() {
+    try {
+      const data = await db.query('SELECT * FROM total_precio_cantidad_solicitud');
+      // Verificamos que se hayan obtenido datos
+      if (!data || data.length === 0) {
+        throw new CustomError_NotFoundError('No se encontraron datos para el usuario solicitante');
+      }
+      return data;
+    } catch (error) {
+      if (error instanceof CustomError_CustomError) throw error;
+      throw new CustomError_DatabaseError('Error al procesar datos de solicitudes');
+    }
+  }
   static async solicitudReporte({
     empresa,
     rol,
@@ -6458,6 +6617,458 @@ class ProduccionModel {
     }
   }
 } // fin modelo
+;// CONCATENATED MODULE: ./src/schema/equipos.js
+
+
+const equiposConfig = {
+  id: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  equipo: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El equipo es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El equipo debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  marca: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La marca es requerida'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'La marca debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  modelo: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El modelo es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El modelo debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  ns: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El NS es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El NS debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  tag: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El tag es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El tag debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  url_factura: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La url de la factura es requerida'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'La url de la factura debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  foto: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La foto es requerida'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'La foto debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  empresa_pertenece: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La empresa pertenece es requerida'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'La empresa pertenece debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  centro_coste: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El centro de coste es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  fecha_baja: {
+    type: external_sequelize_namespaceObject.DataTypes.DATE,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La fecha de baja es requerida'
+      }
+    }
+  },
+  documento_baja: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El documento de baja es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El documento de baja debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  fecha_creacion: {
+    type: external_sequelize_namespaceObject.DataTypes.DATE,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La fecha de creación es requerida'
+      }
+    }
+  },
+  status: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El estado es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El estado debe tener entre 3 y 50 caracteres'
+      }
+    }
+  }
+};
+const Equipos = db.define('equipos', equiposConfig, {
+  tableName: 'equipos',
+  // Nombre de la tabla en la base de datos
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
+});
+;// CONCATENATED MODULE: ./src/models/equipos.models.js
+
+// utils
+
+class EquiposModel {
+  // uso
+  static async getAllDisponible() {
+    try {
+      const equipo = await Equipos.findAll({
+        where: {
+          status: 'disponible'
+        },
+        attributes: ['id', 'ns']
+      });
+      if (!equipo) throw new CustomError_NotFoundError('Equipos de coste no encontrados');
+      return equipo;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener los equipos');
+    }
+  }
+  static async actualizarEquipo({
+    id,
+    estado
+  }) {
+    try {
+      // validamos que el id sea un numero
+      if (isNaN(id)) throw new CustomError_ValidationError('El id debe ser un numero');
+      const equipo = await Equipos.findByPk(id);
+      if (!equipo) throw new CustomError_NotFoundError('Equipo no encontrado');
+      // Actualiza solo los campos que se han proporcionado
+      if (estado) equipo.estado = estado;
+      await equipo.save();
+      return {
+        message: 'Equipo actualizado correctamente',
+        id
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al actualizar equipo');
+    }
+  }
+  static async delete({
+    id
+  }) {
+    try {
+      const usuario = await Equipos.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      await usuario.destroy();
+      return {
+        message: `usuario eliminada correctamente con id ${id}`
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al elimiar el usuario'
+      };
+    }
+  }
+  static async create({
+    data
+  }) {
+    try {
+      // verificamos que no exista el usuario
+      const usuario = await Equipos.findOne({
+        where: {
+          usuario: data.usuario
+        }
+      });
+      if (usuario) return {
+        error: 'usuario ya existe'
+      };
+      // creamos el usuario
+      await Equipos.create({
+        ...data
+      });
+      return {
+        message: `usuario registrado exitosamente ${data.nombre}`
+      };
+    } catch (e) {
+      console.error(e.message); // Salida: Error la usuario
+      return {
+        error: 'Error al crear al usuario'
+      };
+    }
+  }
+}
+;// CONCATENATED MODULE: ./src/schema/empleados.js
+
+
+const empleadosConfig = {
+  id: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  id_empleado: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El centro de coste es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  nombre: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El nombre es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El nombre debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  apellido_paterno: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El apellido paterno es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El apellido paterno debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  apellido_materno: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El apellido materno es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El apellido materno debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  departamento: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El departamento es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El departamento debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  estado: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'disponible'
+  }
+};
+const Empleados = db.define('empleados', empleadosConfig, {
+  tableName: 'empleados',
+  // Nombre de la tabla en la base de datos
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
+});
+;// CONCATENATED MODULE: ./src/models/empleados.models.js
+
+ // Agregar esta importación
+/**
+Los operadores de Sequelize (Op) son necesarios para realizar consultas complejas. Algunos operadores comunes son:
+Op.eq: Igual
+Op.ne: No igual
+Op.gt: Mayor que
+Op.lt: Menor que
+Op.in: Dentro de un array
+Op.like: Búsqueda con comodín
+ */
+// utils
+
+class EmpleadosModel {
+  // uso
+  static async getAllEmpleados() {
+    try {
+      const equipo = await Empleados.findAll({
+        where: {
+          estado: {
+            [external_sequelize_namespaceObject.Op.ne]: 'asignado'
+          }
+        },
+        attributes: ['id', 'nombre', 'apellido_paterno']
+      });
+      if (!equipo) throw new CustomError_NotFoundError('Empleados no encontrados');
+      return equipo;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener los equipos');
+    }
+  }
+  static async getDatosEmpleado({
+    id
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!id) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      const usuario = await Empleados.findByPk({
+        where: {
+          id
+        },
+        attributes: ['nombre', 'apellido_paterno']
+      });
+      // Verificar si se encontraron resultados
+      if (!usuario) {
+        throw new CustomError_NotFoundError('No se encontro empleado con id ' + id);
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    }
+  }
+  static async agregarUsuario({
+    data
+  }) {
+    try {
+      // verificamos que no exista el usuario
+      const usuario = await Empleados.findOne({
+        where: {
+          id_empleado: data.id_empleado
+        }
+      });
+      if (usuario) throw new CustomError_ValidationError('ya existe un empleado con id ' + data.id_empleado);
+      // creamos el usuario
+      await Empleados.create({
+        ...data
+      });
+      return {
+        message: `Usuario registrado exitosamente ${data.nombre}`
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener los equipos');
+    }
+  }
+  static async actualizarUsuario({
+    id,
+    estado
+  }) {
+    try {
+      // validamos que el id sea un numero
+      if (isNaN(id)) throw new CustomError_ValidationError('El id debe ser un numero');
+      const usuario = await Empleados.findByPk(id);
+      if (!usuario) throw new CustomError_NotFoundError('Usuario no encontrado');
+      // Actualiza solo los campos que se han proporcionado
+      if (estado) usuario.estado = estado;
+      await usuario.save();
+      return {
+        message: 'Usuario actualizado correctamente',
+        id
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al actualizar usuario');
+    }
+  }
+}
 ;// CONCATENATED MODULE: ./src/models/modelAssociations.js
 // models/modelAssociations.js
 
@@ -6494,7 +7105,7 @@ function setupAssociations() {
 }
 ;// CONCATENATED MODULE: ./src/server/server.mjs
 
-
+// import logger from 'morgan'
 
 
 
@@ -6527,7 +7138,11 @@ function setupAssociations() {
 
 
 
+
+
 // Models
+
+
 
 
 
@@ -6644,6 +7259,15 @@ const startServer = async options => {
   }));
   app.use('/api/', authenticate, createProduccionRouter({
     produccionModel: ProduccionModel
+  }));
+  app.use('/api/', authenticate, createProductosRouter({
+    productosModel: ProductosModel
+  }));
+  app.use('/api/', authenticate, createEquiposRouter({
+    equiposModel: EquiposModel
+  }));
+  app.use('/api/', authenticate, createEmpleadosRouter({
+    empleadosModel: EmpleadosModel
   }));
 
   // rutas Protegidas

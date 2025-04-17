@@ -6,14 +6,14 @@ import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
 import fileUpload from 'express-fileupload'
 
-import { fileURLToPath } from 'url'
-import { dirname, resolve } from 'path'
+import { join } from 'path'
 
 // Librerias
 import swaggerUi from 'swagger-ui-express'
 import { swaggerSpec } from '../utils/swagger.js'
 // Configuraciones
 import loggerWiston from '../utils/logger.js'
+import { paths } from '../config/paths.js'
 
 // middlewares
 import { corsMiddleware } from '../middlewares/cors.js'
@@ -31,7 +31,9 @@ import { createProductosRouter } from '../routes/productos.routes.js'
 import { createProductosSoliRouter } from '../routes/productosSolitud.routes.js'
 import { createProduccionRouter } from '../routes/produccion.routes.js'
 import { createNotificacionesRouter } from '../routes/notificaciones.routes.js'
-import { createUploadsRouter } from '../routes//uploads.routes.js'
+import { createEquiposRouter } from '../routes/equipos.routes.js'
+import { createEmpleadosRouter } from '../routes/empleados.routes.js'
+import { createUploadsRouter } from '../routes/uploads.routes.js'
 
 // Models
 import { UsuarioModel } from '../models/usuario.models.js'
@@ -39,8 +41,10 @@ import { CentroCosteModel } from '../models/centro.models.js'
 import { MezclaModel } from '../models/mezclas.models.js'
 import { ProductosModel } from '../models/productos.models.js'
 import { SolicitudRecetaModel } from '../models/productosSolicitud.models.js'
-import { NotificacionModel } from '../models/notificaciones.models.js'
 import { ProduccionModel } from '../models/produccion.models.js'
+import { NotificacionModel } from '../models/notificaciones.models.js'
+import { EquiposModel } from '../models/equipos.models.js'
+import { EmpleadosModel } from '../models/empleados.models.js'
 
 // Asociaciones
 import { setupAssociations } from '../models/modelAssociations.js'
@@ -53,15 +57,12 @@ export const startServer = async (options) => {
 
   const app = express()
 
-  const __filename = fileURLToPath(import.meta.url)
-  const __dirname = dirname(__filename)
-
   // Configura el directorio de uploads
-  const uploadsDir = resolve(__dirname, '..', 'uploads')
-  const imagesDir = resolve(uploadsDir, 'images')
+  const uploadsDir = paths.uploads
+  const imagesDir = join(uploadsDir, 'images')
 
   // MOTOR DE PLANTILLAS EJS
-  app.set('views', resolve(__dirname, '..', 'views'))
+  app.set('views', paths.views)
   app.set('view engine', 'ejs')
   app.set('trust proxy', 1)
 
@@ -153,6 +154,9 @@ export const startServer = async (options) => {
   app.use('/api/', authenticate, createProductosSoliRouter({ productossModel: SolicitudRecetaModel }))
   app.use('/api/', authenticate, createNotificacionesRouter({ notificacionModel: NotificacionModel }))
   app.use('/api/', authenticate, createProduccionRouter({ produccionModel: ProduccionModel }))
+  app.use('/api/', authenticate, createProductosRouter({ productosModel: ProductosModel }))
+  app.use('/api/', authenticate, createEquiposRouter({ equiposModel: EquiposModel }))
+  app.use('/api/', authenticate, createEmpleadosRouter({ empleadosModel: EmpleadosModel }))
 
   // rutas Protegidas
   app.use('/protected/', authenticate, isGeneral, createProtetedRouter())
@@ -169,7 +173,7 @@ export const startServer = async (options) => {
   })
 
   // contenido estatico que ponemos disponible
-  app.use(express.static('public'))
+  app.use(express.static(paths.public))
 
   // Manejo de errores 404
   app.use(error404)

@@ -1,0 +1,17 @@
+[2025-04-17 12:20:05] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-17 12:20:05] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-17 12:20:05] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-17 12:20:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-17 12:20:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-17 12:20:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-17 12:20:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-17 12:20:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-17 12:20:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-17 12:20:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-17 12:20:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-17 12:20:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-17 12:20:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-17 12:20:28] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mContraseña incorrecta[31m[39m
+{
+  "stack": "Error: Contraseña incorrecta\n    at UsuarioModel.login (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/usuario.models.js:220:35)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/usuario.controller.js:35:20"
+}

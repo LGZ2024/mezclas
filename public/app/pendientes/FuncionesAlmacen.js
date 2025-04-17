@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnDescargarExcel) {
     btnDescargarExcel.addEventListener('click', descargarExcel)
   } else {
-    console.warn('Button with ID "btnEnviarEstado" not found.')
+    console.warn('Button with ID "btnDescargarExcel" not found.')
   }
   // metodo de eliminacion de productos de la tabla de producto
 
@@ -230,10 +230,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (reporte) {
     reporte.addEventListener('click', async (e) => {
-      showSpinner()
       const rol = document.getElementById('rol').value
-
       if (rol === 'mezclador') {
+        showSpinner()
         const url = '/api/reporte-pendientes'
         try {
           await descargarReporte(url)
@@ -259,11 +258,12 @@ document.addEventListener('DOMContentLoaded', () => {
               msg: 'Por favor, selecciona una empresa',
               type: 'error'
             })
+            return
           }
 
           const empresa = radioSeleccionado.value
           const url = `/api/reporte-pendientes/${empresa}`
-
+          showSpinner()
           try {
             await descargarReporte(url)
             $('#empresasModal').modal('hide') // Cerrar modal después de descargar

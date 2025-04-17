@@ -10,7 +10,7 @@ export const errorHandler = (err, req, res, next) => {
   err.status = err.status || 'error'
 
   // Log del error
-  logger.error({
+  logger.logError({
     message: err.message,
     stack: err.stack,
     path: req.path,

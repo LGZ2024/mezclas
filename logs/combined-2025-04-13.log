@@ -1,0 +1,313 @@
+[2025-04-13 22:58:08] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 22:58:08] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 22:58:08] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 22:58:10] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 22:58:10] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 22:58:10] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 22:58:11] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 22:58:11] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 22:58:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 22:58:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 22:58:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 22:58:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 22:58:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 22:58:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 22:58:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 22:58:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 22:58:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 22:58:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 22:58:54] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mContraseña incorrecta[31m[39m
+{
+  "stack": "Error: Contraseña incorrecta\n    at UsuarioModel.login (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/usuario.models.js:220:35)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/usuario.controller.js:35:20",
+  "path": "/api/usuario/login",
+  "method": "POST",
+  "statusCode": 400
+}
+[2025-04-13 22:59:44] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mIniciando transacción de mezcla[32m[39m
+[2025-04-13 22:59:44] [36m[36mverbose[36m[39m [DEVELOPMENT]: 	[36m	[36mProcesando transacción[36m[39m
+{
+  "transactionId": "0872785a-7b82-44c5-9b2c-805e09f511fb",
+  "steps": [
+    "proceso"
+  ]
+}
+[2025-04-13 22:59:45] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 22:59:46] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<1c968778-1f02-423a-964a-1c466ad2ea04@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as DABD5453D6F"
+}
+[2025-04-13 23:00:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mIniciando transacción de mezcla[32m[39m
+[2025-04-13 23:00:35] [36m[36mverbose[36m[39m [DEVELOPMENT]: 	[36m	[36mProcesando transacción[36m[39m
+{
+  "transactionId": "2bbb789f-042a-4d17-94ba-49692e720339",
+  "steps": [
+    "proceso"
+  ]
+}
+[2025-04-13 23:00:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:00:36] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<c20b801e-2feb-b1b0-f7a8-e5810680d83b@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as A8468453D6F"
+}
+[2025-04-13 23:06:24] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mIniciando transacción de mezcla[32m[39m
+[2025-04-13 23:06:24] [36m[36mverbose[36m[39m [DEVELOPMENT]: 	[36m	[36mProcesando transacción[36m[39m
+{
+  "transactionId": "c09c26fe-949e-4ac2-9644-98b08bb7e70d",
+  "steps": [
+    "proceso"
+  ]
+}
+[2025-04-13 23:06:25] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:06:26] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<b3f3d97f-0616-38d8-11ae-3fe173fe75ca@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as AC54A453D6F"
+}
+[2025-04-13 23:07:37] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mIniciando transacción de mezcla[32m[39m
+[2025-04-13 23:07:37] [36m[36mverbose[36m[39m [DEVELOPMENT]: 	[36m	[36mProcesando transacción[36m[39m
+{
+  "transactionId": "81d7b3bd-ff44-442b-8089-c0725b8206d9",
+  "steps": [
+    "proceso"
+  ]
+}
+[2025-04-13 23:07:37] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:07:38] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<ec4fe6b1-39f3-b692-73a0-a549472f40fc@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 9F190453D6F"
+}
+[2025-04-13 23:08:34] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mIniciando transacción de mezcla[32m[39m
+[2025-04-13 23:08:34] [36m[36mverbose[36m[39m [DEVELOPMENT]: 	[36m	[36mProcesando transacción[36m[39m
+{
+  "transactionId": "862081a3-192a-4425-adba-890af366f30a",
+  "steps": [
+    "proceso"
+  ]
+}
+[2025-04-13 23:08:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:08:36] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<d92376fc-6822-8a1c-2f95-384f887cfe62@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 50EA3453D6F"
+}
+[2025-04-13 23:15:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:15:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:15:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:15:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:15:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:17:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:17:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:17:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:17:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:17:54] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:18:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mmostrando datos de los estados[32m[39m
+[2025-04-13 23:18:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mIniciando transacción de mezcla[32m[39m
+{
+  "0": {
+    "id_receta": "454",
+    "existe": true
+  },
+  "1": {
+    "id_receta": "453",
+    "existe": true
+  },
+  "2": {
+    "id_receta": "452",
+    "existe": true
+  }
+}
+[2025-04-13 23:18:30] [36m[36mverbose[36m[39m [DEVELOPMENT]: 	[36m	[36mProcesando transacción[36m[39m
+{
+  "transactionId": "5b581c9b-5c91-486e-bbda-33d2465a7988",
+  "steps": [
+    "proceso"
+  ]
+}
+[2025-04-13 23:18:31] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:18:32] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<e843e6c5-5ccf-37de-f5f1-6f8bd2f3de0e@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 582A9453D6F"
+}
+[2025-04-13 23:27:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:27:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:27:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:27:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:27:07] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:27:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:27:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:27:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:27:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:27:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:28:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:28:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:28:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:28:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:28:30] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:28:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:28:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:28:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:28:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:28:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:29:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:29:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:29:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:29:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:29:02] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:29:20] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:29:20] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:29:20] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:29:20] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:29:20] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:37:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:37:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:37:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:37:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:37:42] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:38:09] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:38:09] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:38:09] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:38:09] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:38:09] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:38:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:38:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:38:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:38:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:38:43] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:39:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:39:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:39:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:39:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:39:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:41:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:41:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:41:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:41:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:41:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:41:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:41:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:41:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:41:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:41:29] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:42:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:42:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:42:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:42:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:42:01] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:43:18] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:43:18] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:43:18] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:43:18] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:43:19] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:43:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:43:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:43:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:43:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:43:35] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:44:40] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:44:40] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:44:40] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:44:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:44:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:45:12] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mCannot read properties of undefined (reading 'length')[31m[39m
+{
+  "stack": "TypeError: Cannot read properties of undefined (reading 'length')\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/productosSolicitud.controller.js:31:46\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+  "path": "/api/actualizarEstadoProductos",
+  "method": "POST",
+  "statusCode": 500
+}
+[2025-04-13 23:45:34] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:45:34] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:45:34] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:45:34] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:45:34] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:45:39] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mCannot read properties of undefined (reading 'length')[31m[39m
+{
+  "stack": "TypeError: Cannot read properties of undefined (reading 'length')\n    at file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/productosSolicitud.controller.js:31:56\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+  "path": "/api/actualizarEstadoProductos",
+  "method": "POST",
+  "statusCode": 500
+}
+[2025-04-13 23:45:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:45:52] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:45:52] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:45:52] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:45:52] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:46:31] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Miguel Mora Villa, correo:miguel.mora@lgfrutas.com.mx[32m[39m
+[2025-04-13 23:46:32] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:46:32] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<15027b8b-2739-2cd8-cd64-bf3603f8741d@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 3157D453D6F"
+}
+[2025-04-13 23:46:58] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mIniciando transacción de mezcla[32m[39m
+{
+  "0": {
+    "id_receta": "451",
+    "existe": false
+  }
+}
+[2025-04-13 23:46:58] [36m[36mverbose[36m[39m [DEVELOPMENT]: 	[36m	[36mProcesando transacción[36m[39m
+{
+  "transactionId": "6eadc27c-4fe7-43fa-94db-4bbff3f4e9d3",
+  "steps": [
+    "proceso"
+  ]
+}
+[2025-04-13 23:46:59] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:47:00] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<b6f1f2b8-17f4-8a8f-ef81-af80ee95b46f@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 743EF453D6F"
+}
+[2025-04-13 23:54:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🔧 Modo de desarrollo[32m[39m
+[2025-04-13 23:54:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📚 Documentación API disponible en /api-docs[32m[39m
+[2025-04-13 23:54:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m✔ Asociaciones configuradas correctamente[32m[39m
+[2025-04-13 23:54:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m📦 Base de datos conectada y sincronizada[32m[39m
+[2025-04-13 23:54:41] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32m🚀 Servidor corriendo en puerto 3000[32m[39m
+[2025-04-13 23:56:38] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mid notificacion: 100[32m[39m
+[2025-04-13 23:56:39] [34m[34mdebug[34m[39m [DEVELOPMENT]: 	[34m	[34mNotificación obtenida:[34m[39m
+{
+  "id": 64,
+  "id_solicitud": 273,
+  "id_usuario": 28,
+  "mensaje": "Productos no disponibles para la solicitud 273",
+  "status": true
+}
+[2025-04-13 23:56:44] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mid notificacion: 99[32m[39m
+[2025-04-13 23:56:51] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mid notificacion: 99[32m[39m
+[2025-04-13 23:59:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Cecilio Medel, correo:cecilio.medel@portalrancho.com.mx[32m[39m
+[2025-04-13 23:59:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Gustavo Ramos, correo:Gustavo.ramos@portalrancho.com.mx[32m[39m
+[2025-04-13 23:59:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Octavio Garcia, correo:octavio.garcia@portalrancho.con.mx[32m[39m
+[2025-04-13 23:59:21] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mnombre:Luis Jaime Salas, correo:Zaragoza051@lgfrutas.com.mx[32m[39m
+[2025-04-13 23:59:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:59:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:59:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:59:22] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mServidor SMTP listo[32m[39m
+[2025-04-13 23:59:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<cb9bcc07-be54-9d02-3aa8-125ae38b31a9@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 38E24453D6F"
+}
+[2025-04-13 23:59:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+[2025-04-13 23:59:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<e023e322-ad0d-118d-6a8a-2dd2a8808045@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 41549453A21"
+}
+[2025-04-13 23:59:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+[2025-04-13 23:59:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<200c99b6-9857-7a5e-f85c-5429091b923d@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 3C082453D2D"
+}
+[2025-04-13 23:59:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+[2025-04-13 23:59:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m
+{
+  "messageId": "<ad1cd50a-ba41-f890-7dc2-ce80cfdca085@portalrancho.com.mx>",
+  "response": "250 2.0.0 Ok: queued as 46297453A18"
+}
+[2025-04-13 23:59:23] [32m[32minfo[32m[39m [DEVELOPMENT]: 	[32m	[32mCorreo enviado:[32m[39m

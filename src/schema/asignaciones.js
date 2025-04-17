@@ -44,12 +44,7 @@ const asignacionesConfig = {
   },
   fecha_devolucion: {
     type: DataTypes.DATE,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La fecha de devolución es requerida'
-      }
-    }
+    allowNull: true
   },
   ubicacion: {
     type: DataTypes.STRING,
@@ -79,20 +74,12 @@ const asignacionesConfig = {
   },
   estado: {
     type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El estado es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El estado debe tener entre 3 y 50 caracteres'
-      }
-    }
+    allowNull: true,
+    defaultValue: 'asignado'
   }
 }
 
-export const Centrocoste = sequelize.define('asignaciones', asignacionesConfig, {
+export const Asignaciones = sequelize.define('asignaciones', asignacionesConfig, {
   tableName: 'asignaciones', // Nombre de la tabla en la base de datos
   timestamps: false // Agrega createdAt y updatedAt automáticamente
 })

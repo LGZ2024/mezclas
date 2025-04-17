@@ -6,6 +6,7 @@ export const createProduccionRouter = ({ produccionModel }) => {
   const produccionController = new ProduccionController({ produccionModel })
 
   router.get('/solicitudReporte', produccionController.solicitudReporte)
+  router.get('/asignacionesActivos', produccionController.solicitudReporte)
   router.post('/descargar-excel', produccionController.descargarEcxel)
   router.post('/descargar-solicitud', produccionController.descargarSolicitud)// uso
   router.get('/obetenerReceta', produccionController.ObtenerReceta)

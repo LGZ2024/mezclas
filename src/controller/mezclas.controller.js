@@ -123,6 +123,7 @@ export class MezclasController {
 
   obtenerTablaMezclasEmpresa = asyncHandler(async (req, res) => {
     const { user } = req.session
+    logger.info('Obteniendo datos  del usuario: ', user)
     // console.log('user', user)
     const { status } = req.params
 

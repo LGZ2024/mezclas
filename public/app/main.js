@@ -1,4 +1,3 @@
-import { BrowserNotificationService } from './notififcaiones.js'
 // Configuración
 const CONFIG = {
   MOBILE_BREAKPOINT: 768,
@@ -18,29 +17,6 @@ const elements = {
   body: document.body
 }
 document.addEventListener('DOMContentLoaded', async () => {
-  // Inicializar servicio de notificaciones
-  const notificationService = new BrowserNotificationService()
-  await notificationService.init()
-  // Agregar después de la inicialización del notificationService
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', async (event) => {
-      const { type, data } = event.data
-
-      switch (type) {
-        case 'NUEVA_SOLICITUD':
-          await notificationTypes.nuevaSolicitud(data)
-          break
-        case 'SOLICITUD_ACTUALIZADA':
-          await notificationTypes.solicitudActualizada(data)
-          break
-        case 'SOLICITUD_COMPLETADA':
-          await notificationTypes.solicitudCompletada(data)
-          break
-        default:
-          console.log('Tipo de notificación no manejado:', type)
-      }
-    })
-  }
   // Definir handlers globalmente primero
   const handlers = {
     closeAll: () => {
@@ -211,34 +187,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Agregar después de la declaración de utils
-  const notificationTypes = {
-    nuevaSolicitud: async (data) => {
-      return notificationService.show('Nueva Solicitud', {
-        body: `Se ha creado una nueva solicitud: ${data.mensaje}`,
-        url: `/protected/notificacion/${data.id_solicitud}`,
-        tag: `solicitud-${data.id}`,
-        requireInteraction: true
-      })
-    },
-
-    solicitudActualizada: async (data) => {
-      return notificationService.show('Solicitud Actualizada', {
-        body: `La solicitud ${data.id_solicitud} ha sido actualizada`,
-        url: `/protected/notificacion/${data.id_solicitud}`,
-        tag: `update-${data.id}`
-      })
-    },
-
-    solicitudCompletada: async (data) => {
-      return notificationService.show('Solicitud Completada', {
-        body: `La solicitud ${data.id_solicitud} ha sido completada`,
-        url: '/protected/completadas',
-        tag: `complete-${data.id}`
-      })
-    }
-  }
-
   const initializeMobileEvents = () => {
     if (utils.isMobile() && elements.notifList) {
       // Cambiamos passive: true por false para permitir preventDefault()
@@ -344,24 +292,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         utils.createNotification(message, idSolicitud, id)
       )
       utils.addNotificationListener(id)
-
-      try {
-        // Mostrar notificación del navegador con opciones mejoradas
-        await notificationService.show('Nueva Notificación', {
-          body: message,
-          url: `/protected/notificacion/${idSolicitud}`,
-          tag: `notif-${id}`, // Evita duplicados
-          renotify: true, // Notifica aunque exista una con el mismo tag
-          requireInteraction: true, // La notificación permanece hasta que el usuario interactúe
-          data: {
-            idSolicitud,
-            id,
-            timestamp: new Date().getTime()
-          }
-        })
-      } catch (error) {
-        console.error('Error al mostrar notificación:', error)
-      }
     }
   }
 

@@ -74,20 +74,12 @@ const empleadosConfig = {
   },
   estado: {
     type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El estado es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El estado debe tener entre 3 y 50 caracteres'
-      }
-    }
+    allowNull: true,
+    defaultValue: 'disponible'
   }
 }
 
-export const Centrocoste = sequelize.define('empleados', empleadosConfig, {
+export const Empleados = sequelize.define('empleados', empleadosConfig, {
   tableName: 'empleados', // Nombre de la tabla en la base de datos
   timestamps: false // Agrega createdAt y updatedAt automáticamente
 })

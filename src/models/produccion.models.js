@@ -29,6 +29,23 @@ export class ProduccionModel {
     }
   }
 
+  static async getAsignacionesActivos () {
+    try {
+      const data = await sequelize.query(
+        'SELECT * FROM total_precio_cantidad_solicitud'
+      )
+      // Verificamos que se hayan obtenido datos
+      if (!data || data.length === 0) {
+        throw new NotFoundError('No se encontraron datos para el usuario solicitante')
+      }
+
+      return data
+    } catch (error) {
+      if (error instanceof CustomError) throw error
+      throw new DatabaseError('Error al procesar datos de solicitudes')
+    }
+  }
+
   static async solicitudReporte ({ empresa, rol, idUsuario }) {
     let data
     try {
