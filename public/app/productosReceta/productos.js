@@ -29,13 +29,51 @@ async function fechTbrecetas (idSolicitud) {
 }
 // Iniciar productos de solicitud
 const iniciarProductosReceta = async (idSolicitud) => {
+  // Validar el parámetro de entrada
+  if (!idSolicitud) {
+    console.error('ID de solicitud no proporcionado')
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'ID de solicitud no válido'
+    })
+    return
+  }
+
+  // Mostrar estado de carga
+  Swal.fire({
+    title: 'Cargando productos...',
+    text: 'Por favor espere',
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  })
+
   try {
     const data = await obtenerProductosReceta(idSolicitud)
+
+    // Validar que se obtuvieron datos
+    if (!data || data.length === 0) {
+      await Swal.fire({
+        icon: 'info',
+        title: 'Sin datos',
+        text: 'No se encontraron productos para esta solicitud'
+      })
+      return
+    }
+
+    // Actualizar tabla
     const table = $('#tbReceta').DataTable()
     table.clear().rows.add(data).draw()
+
+    // Cerrar loading
+    Swal.close()
   } catch (error) {
     console.error('Error al iniciar productos de solicitud:', error)
-    // Opcional: Mostrar mensaje de error al usuario
+    await Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Error al cargar los productos. Por favor intente nuevamente.'
+    })
   }
 }
 
@@ -81,17 +119,46 @@ const verProductosReceta = async (configuracion = {}) => {
       targets: 5,
       data: 'id_receta',
       render: function (data, type, row) {
-        return `
-          <div>
-            <label>
-              <input type="radio" name="producto_${data}" value="1">Hay existencia
-            </label>
-            <label>
-              <input type="radio" name="producto_${data}" value="0">No hay existencia
-            </label>
-            <button type="button" data-id="${data}" id="btnDelete" class="btn btn-danger")"><i class="mdi mdi-delete"></i></button>
+        const rol = document.getElementById('rol').value
+
+        if (rol === 'mezclador' || rol === 'administrativo') {
+          return `
+          <div class="btn-group">
+           <button class="btn btn-sm btn-danger btnDelete" 
+        data-id="${data}" 
+        title="Eliminar producto">
+  <i class="fas fa-trash-alt"></i>
+  <span class="d-none d-md-inline ms-1">Eliminar</span>
+</button>
+            <div class="btn-group ms-2">
+              <input type="radio" class="btn-check" name="producto_${data}" 
+                     id="existe_${data}" value="1">
+              <label class="btn btn-sm btn-outline-success" for="existe_${data}">
+                Disponible
+              </label>
+              <input type="radio" class="btn-check" name="producto_${data}" 
+                     id="noexiste_${data}" value="0">
+              <label class="btn btn-sm btn-outline-danger" for="noexiste_${data}">
+                No disponible
+              </label>
+            </div>
           </div>
         `
+        } else if (rol === 'solicita' || rol === 'solicita2') {
+          return `
+          <div class="btn-group">
+           <button class="btn btn-sm btn-danger btnDelete" 
+            data-id="${data}" 
+            title="Eliminar producto">
+              <i class="fas fa-trash-alt"></i>
+              <span class="d-none d-md-inline ms-1">
+               Eliminar
+              </span>
+           </button>
+          </div>
+        `
+        }
+        return 'Sin permisos' // Mensaje por defecto si no se cumple ninguna condición
       }
     }
   ]
@@ -118,8 +185,11 @@ const verProductosReceta = async (configuracion = {}) => {
 
   const tabla = tableReceta.DataTable({
     paging: false,
+    destroy: true,
+    ordering: true,
+    info: true,
+    autoWidth: false,
     order: [[0, 'desc']],
-    dom: '<"d-flex justify-content-between">t<"d-xl-flex justify-content-between align-items-center"ip><"clear">',
     buttons: [
       {
         extend: 'excelHtml5',
@@ -231,36 +301,83 @@ const verProductosReceta = async (configuracion = {}) => {
 export { iniciarProductosReceta, verProductosReceta }
 // Eliminar Asistencia
 const eliminar = async () => {
-  $(document).on('click', '#btnDelete', async function () {
-    const id = $(this).data('id')
-    console.log(id)
-    Swal.fire({
-      title: 'Estas seguro que deseas eliminar este prodcuto?',
-      showDenyButton: true,
-      confirmButtonText: 'Eliminar',
-      denyButtonText: 'Cancelar'
-    }).then(async (result) => {
-      /* Read more about isConfirmed, isDenied below */
+  $(document).on('click', '.btnDelete', async function () {
+    try {
+      const id = $(this).data('id')
+      if (!id) throw new Error('ID del producto no encontrado')
+
+      // Confirmación con SweetAlert2
+      const result = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: '¿Deseas eliminar este producto?',
+        icon: 'warning',
+        showDenyButton: true,
+        confirmButtonText: 'Eliminar',
+        denyButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        denyButtonColor: '#3085d6'
+      })
+
       if (result.isConfirmed) {
-        $('#staticBackdrop').modal('hide')
-        const response = await fetchApi(`/api/eliminarProducto/${id}`, 'delete')
-        const res = await response.json()
-        if (response.status === 200) {
-          $('#staticBackdrop').modal('show')
-          Swal.fire(res.message, '', 'success')
-          const idSolicitud = document.getElementById('idSolicitud').value
-          iniciarProductosReceta(idSolicitud)
-          verProductosReceta({
-            eliminarUltimaColumna: false,
-            depuracion: true
-          })
-        } else {
-          Swal.fire(res.error, '', 'error')
+        // Obtener ID de solicitud
+        const idSolicitudElement = document.getElementById('idSolicitud') ||
+                                 document.getElementById('idSolicit')
+
+        if (!idSolicitudElement) {
+          throw new Error('No se encontró el ID de la solicitud')
         }
+
+        const idSolicitud = idSolicitudElement.value
+
+        // Loading state
+        Swal.fire({
+          title: 'Eliminando...',
+          text: 'Por favor espere',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => Swal.showLoading()
+        })
+
+        // Eliminar producto
+        const response = await fetchApi(`/api/eliminarProducto/${id}`, 'delete')
+        if (!response.ok) throw new Error('Error al eliminar el producto')
+
+        // Obtener datos actualizados
+        const nuevaData = await obtenerProductosReceta(idSolicitud)
+
+        // Actualizar tabla existente sin reinicializar
+        const table = $('#tbReceta').DataTable()
+        table
+          .clear()
+          .rows.add(nuevaData)
+          .draw(false) // false para mantener la página actual
+
+        // Mensaje de éxito
+        await Swal.fire({
+          icon: 'success',
+          title: 'Éxito',
+          text: 'Producto eliminado correctamente',
+          timer: 1500,
+          showConfirmButton: false
+        })
       } else if (result.isDenied) {
-        Swal.fire('Eliminacion Cancelada', '', 'info')
+        Swal.fire({
+          title: 'Eliminación Cancelada',
+          icon: 'info',
+          timer: 1500,
+          showConfirmButton: false
+        })
       }
-    })
+    } catch (error) {
+      console.error('Error en eliminación:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Error al eliminar el producto',
+        confirmButtonColor: '#d33'
+      })
+    }
   })
 }
 

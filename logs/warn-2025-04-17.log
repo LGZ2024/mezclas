@@ -1,4 +1,0 @@
-[2025-04-17 12:20:28] [31m[31merror[31m[39m [DEVELOPMENT]: 	[31m	[31mContraseña incorrecta[31m[39m
-{
-  "stack": "Error: Contraseña incorrecta\n    at UsuarioModel.login (file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/models/usuario.models.js:220:35)\n    at async file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/controller/usuario.controller.js:35:20"
-}

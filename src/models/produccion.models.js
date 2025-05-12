@@ -48,6 +48,7 @@ export class ProduccionModel {
 
   static async solicitudReporte ({ empresa, rol, idUsuario }) {
     let data
+    logger.info('solicitudReporte', { empresa, rol, idUsuario })
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!empresa || !rol || !idUsuario) {
@@ -62,13 +63,23 @@ export class ProduccionModel {
         data = await sequelize.query(
           'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`!="Lugar Agricola"'
         )
-      } else if (rol === 'administrativo' && idUsuario === 33) { // admin de Bioagricultura id usuario 33 de francisco alvarez
+      } else if (rol === 'adminMezclador') { // admin de Bioagricultura id usuario 33 de francisco alvarez
+        if (empresa === 'Bioagricultura') {
+          data = await sequelize.query(
+            'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bioagricultura" OR `empresa`="Moras Finas"'
+          )
+        } else if (empresa === 'General') {
+          data = await sequelize.query(
+            'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bayas del Centro" OR `empresa`="Moras Finas"'
+          )
+        } else if (empresa === 'Lugar Agricola') {
+          data = await sequelize.query(
+            'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Lugar Agricola"'
+          )
+        }
+      } else if (rol === 'administrativo') { // admin de general id usuario 49 de janet medina
         data = await sequelize.query(
-          'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bioagricultura" OR `empresa`="Moras Finas"'
-        )
-      } else if (rol === 'administrativo' && idUsuario === 49) { // admin de general id usuario 49 de janet medina
-        data = await sequelize.query(
-          'SELECT * FROM `total_precio_cantidad_solicitud`"'
+          'SELECT * FROM `total_precio_cantidad_solicitud`'
         )
       } else {
         data = await sequelize.query(
@@ -161,7 +172,7 @@ export class ProduccionModel {
         throw new ValidationError('Se requiere especificar una empresa')
       }
 
-      const datos = await MezclaModel.obtenerTablaMezclasEmpresa({ status: 'Pendiente', empresa })
+      const datos = await MezclaModel.obtenerTablaMezclasEmpresa({ status: 'Pendiente', empresa, confirmacion: 'Confirmada' })
 
       // Validar que hay datos para procesar
       if (!datos) {

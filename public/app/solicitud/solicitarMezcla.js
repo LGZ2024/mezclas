@@ -85,7 +85,8 @@ class SolicitudFormulario {
         })
       }, 500)
     })
-    const { value: tipo } = await Swal.fire({
+
+    const result = await Swal.fire({
       title: 'Seleciona el tipo de solicitud',
       input: 'radio',
       inputOptions,
@@ -94,16 +95,29 @@ class SolicitudFormulario {
           return 'Debe seleccionar una opcionar el tipo de solicitud'
         }
       },
-      allowOutsideClick: false, // No permitir cerrar al hacer clic fuera
-      allowEscapeKey: false, // No permitir cerrar con la tecla Escape
-      showCancelButton: false // No mostrar botón de cancelar
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Continuar'
     })
-    if (tipo) {
+
+    // Si se hace clic en cancelar, redirigir a admin
+    if (result.dismiss === Swal.DismissReason.cancel) {
+      window.location.href = '/protected/admin'
+      return
+    }
+
+    // Si se seleccionó un tipo, procesar la selección
+    if (result.value) {
+      const tipo = result.value
       const titulo = document.getElementById('titulo')
       const campofolio = document.getElementById('campoFolio')
       const campoCantidad = document.getElementById('campoCantidad')
       const campoPresentacion = document.getElementById('campoUnidad')
-      Swal.fire({ html: `Seleccionastes: ${tipo}` })
+
+      await Swal.fire({ html: `Seleccionastes: ${tipo}` })
+
       if (tipo === 'Mezcla') {
         titulo.innerHTML = 'Solicitud de Mezcla'
         campofolio.style.display = 'block'
@@ -123,11 +137,9 @@ class SolicitudFormulario {
         folio.disabled = true
         folio.required = false
         folio.value = ''
-
         cantidad.disabled = true
         cantidad.required = false
         cantidad.value = ''
-
         presentacion.disabled = true
         presentacion.required = false
         presentacion.value = ''

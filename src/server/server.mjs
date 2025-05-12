@@ -20,7 +20,7 @@ import { corsMiddleware } from '../middlewares/cors.js'
 import { validateJSON } from '../middlewares/validateJsonMiddleware.js'
 import { error404, errorHandler } from '../middlewares/error500Middleware.js'
 import { apiLimiter } from '../middlewares/rateLimit.js'
-import { authenticate, isGeneral } from '../middlewares/authMiddleware.js'
+import { authenticate } from '../middlewares/authMiddleware.js'
 
 // Rutas
 import { createProtetedRouter } from '../routes/proteted.routes.js' // protegidas
@@ -159,7 +159,7 @@ export const startServer = async (options) => {
   app.use('/api/', authenticate, createEmpleadosRouter({ empleadosModel: EmpleadosModel }))
 
   // rutas Protegidas
-  app.use('/protected/', authenticate, isGeneral, createProtetedRouter())
+  app.use('/protected/', authenticate, createProtetedRouter())
 
   // Rutas para imágenes (antes de las rutas API)
   app.use('/api/', authenticate, createUploadsRouter())

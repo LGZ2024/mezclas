@@ -79,7 +79,8 @@ async function obtenerDatosSolicitud (idSolicitud) {
       return solicitudes.map(solicitud => ({
         cantidad: solicitud.cantidad, // Asegúrate de que este campo existe en tu modelo
         presentacion: solicitud.presentacion,
-        metodoAplicacion: solicitud.metodoAplicacion
+        metodoAplicacion: solicitud.metodoAplicacion,
+        descripcion: solicitud.descripcion
       }))
     } else {
       // Si no hay productos, puedes devolver un array vacío o productos por defecto
@@ -559,6 +560,7 @@ export const reporteSolicitudV2 = async (parametros) => {
       'Id Solicitud',
       'Folio de Receta',
       'Solicita',
+      'Comentario de solicitante',
       'Fecha Solicitud',
       'Fecha Entrega',
       'Rancho',
@@ -586,7 +588,8 @@ export const reporteSolicitudV2 = async (parametros) => {
       for (const dato of datos) {
         // // obtenemos datos faltantes de la solicitud
         const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id)
-        // console.log('Datos de la solicitud:', datosF)
+        console.log('Datos de la solicitud:', datosF)
+        console.log('Datos de la solicitud:', datosF[0].descripcion)
 
         // // Obtener productos de la base de datos
         const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id)
@@ -606,6 +609,7 @@ export const reporteSolicitudV2 = async (parametros) => {
                       dato.id_solicitud,
                       dato.folio ? dato.folio : 'No aplica',
                       dato.usuario,
+                      datosF[0].descripcion ? datosF[0].descripcion : 'hola',
                       dato.fechaSolicitud,
                       dato.fechaEntrega,
                       dato.rancho,
@@ -639,6 +643,7 @@ export const reporteSolicitudV2 = async (parametros) => {
               dato.id_solicitud,
               dato.folio ? dato.folio : 'No aplica',
               dato.usuario,
+              datosF[0].descripcion ? datosF[0].descripcion : 'hola',
               dato.fechaSolicitud,
               dato.fechaEntrega,
               dato.rancho,
@@ -971,6 +976,7 @@ const agregarEncabezadoSolicitud = async (hojaGeneral, dato, datosSolicitud, var
   hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.id_solicitud : dato.id]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Folio de Receta', dato.FolioReceta === '' || dato.folio === '' ? 'No aplica' : dato.FolioReceta || dato.folio]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Solicita', dato.usuario ? dato.usuario : dato.Solicita]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
+  hojaGeneral.addRow(['Comentario de solicitante', datosSolicitud[0].respuestaSolicitud === '' ? 'Sin Comentario' : datosSolicitud[0].respuestaSolicitud]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega ? dato.fechaEntrega : 'No aplica']).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Rancho', dato.rancho ? dato.rancho : dato.ranchoDestino]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })

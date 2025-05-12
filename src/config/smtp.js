@@ -84,7 +84,10 @@ const validateEmailData = (type, data) => {
     solicitud: ['email', 'nombre', 'solicitudId', 'fechaSolicitud', 'usuario', 'data'],
     notificacion: ['email', 'nombre', 'solicitudId', 'data'],
     usuario: ['email', 'password'],
-    respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario']
+    respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    cancelacion: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    aprobada: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    confirmacionInicial: ['email', 'nombre', 'solicitudId', 'data', 'usuario']
   }
 
   const fields = requiredFields[type] || []
@@ -181,7 +184,7 @@ export const enviarCorreo = async (params) => {
             <ul>
                 <li><strong>Nombre:</strong> ${usuario.nombre}</li>
                 <li><strong>Empresa</strong> ${usuario.empresa}</li>
-                <li><strong>Rancho:</strong> ${data.rancho}</li>
+                <li><strong>Rancho:</strong> ${data.rancho || data.ranchoDestino}</li>
             </ul>
 
             <h4>Detalles de la Solicitud:</h4>
@@ -279,6 +282,213 @@ export const enviarCorreo = async (params) => {
           
           <p style="color: #666; font-size: 0.9em;">
             Este es un mensaje automático. Si necesita ayuda adicional, contacte al departamento de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    cancelacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Cancelada - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #dc3545; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud Cancelada</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Cancelación de Solicitud</h2>
+          
+          <div style="background-color: #ffe6e6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #dc3545;">Detalles de la Solicitud Cancelada:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Cancelación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Motivo de Cancelación:</h4>
+            <p style="margin-bottom: 0;">${data.motivo || 'No se especificó motivo'}</p>
+          </div>
+  
+          <p style="margin-top: 20px;">Si considera que esto fue un error o necesita realizar una nueva solicitud, por favor:</p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitud" 
+               style="display: inline-block; background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Crear Nueva Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si tiene alguna pregunta o necesita aclaraciones, no dude en contactar a nuestro equipo de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    aprobada: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Aprobada - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #28a745; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud Aprobada</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>¡Su Solicitud ha sido Aprobada!</h2>
+          
+          <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #28a745;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Aprobación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #28a745; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Información Importante:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Nota:</strong> La mezcla estará lista para su aprobacion en el almacén asignado.
+          </p>
+
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si tiene alguna pregunta o necesita aclaraciones, no dude en contactar a nuestro equipo de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    confirmacionInicial: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Pendiente de Confirmación - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Nueva Solicitud por Confirmar</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Nueva Solicitud Requiere Confirmación</h2>
+          
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #2196F3;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Solicitud:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Información de la Mezcla:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio de Receta:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+              <li><strong>Descripción:</strong> ${data.descripcion || 'Sin descripción'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Acción Requerida:</strong> Esta solicitud necesita su confirmación para proceder con la preparación.
+          </p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/confirmacion" 
+               style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Revisar y Confirmar Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Este es un mensaje automático. Por favor, revise y confirme la solicitud lo antes posible.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    reevaluacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud en Reevaluación - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #FFA500; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud en Reevaluación</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Solicitud Requiere Reevaluación</h2>
+          
+          <div style="background-color: #FFF3E0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #E65100;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Reevaluación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #FFA500; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Observaciones para Reevaluación:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Motivo:</strong> ${data.motivo || 'No especificado'}</li>
+              <li><strong>Comentarios:</strong> ${data.comentarios || 'Sin comentarios adicionales'}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Detalles de la Mezcla:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio de Receta:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Acción Requerida:</strong> Por favor, revise los comentarios y realice las correcciones necesarias.
+          </p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/reevaluacion/${solicitudId}" 
+               style="display: inline-block; background-color: #FFA500; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Revisar Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si necesita asistencia adicional, contacte al departamento de soporte.
           </p>
           
           <p>Atentamente,<br>El equipo de Grupo LG</p>

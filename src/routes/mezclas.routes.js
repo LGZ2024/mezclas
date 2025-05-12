@@ -12,6 +12,10 @@ export const createMezclasRouter = ({ mezclaModel }) => {
   router.get('/mezclasId/:id', mezclasController.obtenerTablaMezclasId) // obtener mezclas con id
   router.patch('/solicitudProceso/:idSolicitud', mezclasController.estadoProceso) // actualizar estado proceso
   router.patch('/notificacion/:idSolicitud', mezclasController.notificacion) // actualizar mensaje de notificacion
-
+  router.post('/validacion', mezclasController.validacion) // actualizar mensaje de notificacion
+  router.patch('/cancelarSolicitud/:idSolicitud', mezclasController.cancelar) // actualizar mensaje de notificacion
+  router.get('/mezclasConfirmar/', mezclasController.obtenerTablasConfirmar) // obtener solicitud
+  router.patch('/mezclasConfirmar/:idSolicitud', mezclasController.mezclaConfirmar) // obtener solicitud
+  router.get('/mezclasCancelada/', mezclasController.obtenerTablasCancelada) // obtener solicitud
   return router
 }

@@ -1,4 +1,3 @@
-import { ProductosModel } from '../models/productos.models.js'
 import { SolicitudRecetaModel } from '../models/productosSolicitud.models.js'
 import { MezclaModel } from '../models/mezclas.models.js'
 import { UsuarioModel } from '../models/usuario.models.js'
@@ -9,9 +8,10 @@ export class ProtetedController {
   // ruta Protegida
   protected = async (req, res) => {
     const { user } = req.session
+    logger.debug('Usuario en la ruta protegida:', user)
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // validamos al usuario
-    if (user.rol === 'admin' || user.rol === 'administrativo') {
+    if (user.rol === 'admin' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {
       res.status(200).render('pages/admin/solicitudes', { user, rol: user.rol, titulo: 'Bienvenido' })
     } else if (user.rol === 'mezclador' || user.rol === 'solicita' || user.rol === 'supervisor' || user.rol === 'solicita2') {
       res.status(200).render('pages/mezclas/main', { rol: user.rol, nombre: user.nombre })
@@ -49,8 +49,7 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
 
-    const productos = await ProductosModel.getAll()
-    res.render('pages/mezclas/completadas', { productos })
+    res.render('pages/mezclas/completadas', { rol: user.rol })
   }
 
   tablaSolicitudes = async (req, res) => {
@@ -155,7 +154,7 @@ export class ProtetedController {
             idNotificacion: notificacion[0].dataValues.id
           })
         }
-        case 'administrativo': {
+        case 'adminMezclador': {
           // validamos que el usuario sea fransico ya que es el que procesa la solicitud siendo administrativo
           if (user.nombre.trim() !== 'Francisco Alvarez') {
             throw new Error(result.error)
@@ -176,6 +175,14 @@ export class ProtetedController {
             id: result.dataValues.idUsuarioMezcla
           })
 
+          // obtenemos datos de la notificacion
+          const notificacion = await NotificacionModel.getOneIDSolicitudUsuario({
+            idUsuario: user.id,
+            idSolicitud
+          })
+
+          logger.debug(notificacion)
+
           return res.render('pages/mezclas/notificaciones', {
             nombre: user.nombre,
             idSolicitud,
@@ -184,7 +191,8 @@ export class ProtetedController {
             nombreMezclador: mezclador.nombre,
             idMezclador: result.dataValues.idUsuarioMezcla,
             empresa: mezclador.empresa,
-            respuestaMezclador: result.dataValues.respuestaMezclador
+            respuestaMezclador: result.dataValues.respuestaMezclador,
+            idNotificacion: notificacion[0].dataValues.id
           })
         }
         default:
@@ -193,6 +201,66 @@ export class ProtetedController {
             codeError: '403',
             errorMsg: 'Acceso no utorizado'
           })
+      }
+    } catch (error) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: error.message
+      })
+    }
+  }
+
+  confirmacion = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: 'Acceso no utorizado'
+      })
+    }
+
+    try {
+      res.render('pages/mezclas/confirmaSolicitud', { rol: user.rol, user })
+    } catch (error) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: error.message
+      })
+    }
+  }
+
+  canceladas = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: 'Acceso no utorizado'
+      })
+    }
+    try {
+      if (user.rol === 'admin' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {
+        return res.render('pages/admin/solicitudesCanceladas', {
+          user,
+          rol: user.rol,
+          titulo: 'Bienvenido'
+        })
+      } else if (user.rol === 'solicita' || user.rol === 'solicita2') {
+        return res.render('pages/mezclas/canceladas', {
+          rol: user.rol,
+          nombre: user.nombre
+        })
+      } else {
+        return res.status(403).render('errorPage', {
+          title: '403 - Sin Autorisacion',
+          codeError: '403',
+          errorMsg: 'Acceso no utorizado'
+        })
       }
     } catch (error) {
       return res.status(403).render('errorPage', {

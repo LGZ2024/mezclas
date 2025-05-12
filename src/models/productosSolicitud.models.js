@@ -233,6 +233,7 @@ export class SolicitudRecetaModel {
       estados: []
     }
 
+    logger.info('Iniciando actualización de estado de productos', { data, idUsuarioMezcla })
     try {
       // Validaciones iniciales
       if (!data?.estados?.length || !idUsuarioMezcla) {
@@ -335,6 +336,7 @@ export class SolicitudRecetaModel {
   }
 
   static async actualizarSolicitudYNotificacion ({ id, idUsuarioMezcla, mensaje, transaction }) {
+    logger.info('Actualizando solicitud y notificación', { id, idUsuarioMezcla, mensaje })
     try {
       const solicitud = await Solicitud.findByPk(id, {
         transaction,

@@ -124,11 +124,12 @@ const verRegistro = async () => {
           { targets: 2, data: 'empresa' },
           { targets: 3, data: 'rancho' },
           { targets: 4, data: 'temporada' },
-          { targets: 5, data: 'folio' },
-          { targets: 6, data: 'centroCoste' },
-          { targets: 7, data: 'variedad' },
-          { targets: 8, data: 'fechaSolicitud' },
-          { targets: 9, data: 'fechaEntrega' }
+          { targets: 5, data: 'descripcion' },
+          { targets: 6, data: 'folio' },
+          { targets: 7, data: 'centroCoste' },
+          { targets: 8, data: 'variedad' },
+          { targets: 9, data: 'fechaSolicitud' },
+          { targets: 10, data: 'fechaEntrega' }
         ]
       })
 

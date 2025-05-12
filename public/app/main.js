@@ -420,4 +420,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('entregadas').addEventListener('click', () => {
     window.location.href = '/protected/completadas'
   })
+  document.getElementById('canceladas').addEventListener('click', () => {
+    window.location.href = '/protected/canceladas'
+  })
 })

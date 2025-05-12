@@ -1,30 +1,43 @@
 export class CustomError extends Error {
-  constructor (message, statusCode, errorCode) {
+  constructor (message, statusCode, errorCode, details = {}) {
     super(message)
     this.statusCode = statusCode
     this.errorCode = errorCode
-    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error'
+    this.details = details
+    this.timestamp = new Date().toISOString()
+    this.status = this.getStatusType(statusCode)
     this.isOperational = true
 
     Error.captureStackTrace(this, this.constructor)
   }
-}
 
-// Errores específicos
-export class NotFoundError extends CustomError {
-  constructor (message = 'Recurso no encontrado') {
-    super(message, 404, 'NOT_FOUND')
+  getStatusType (statusCode) {
+    if (statusCode >= 500) return 'error'
+    if (statusCode >= 400) return 'fail'
+    return 'success'
   }
 }
 
 export class ValidationError extends CustomError {
-  constructor (message = 'Error de validación') {
-    super(message, 400, 'VALIDATION_ERROR')
+  constructor (message = 'Error de validación', details = {}) {
+    super(message, 400, 'VALIDATION_ERROR', details)
+  }
+}
+
+export class NotFoundError extends CustomError {
+  constructor (message = 'Recurso no encontrado', details = {}) {
+    super(message, 404, 'NOT_FOUND', details)
   }
 }
 
 export class DatabaseError extends CustomError {
-  constructor (message = 'Error en la base de datos') {
-    super(message, 500, 'DB_ERROR')
+  constructor (message = 'Error en la base de datos', details = {}) {
+    super(message, 500, 'DB_ERROR', details)
+  }
+}
+
+export class BusinessError extends CustomError {
+  constructor (message = 'Error de negocio', details = {}) {
+    super(message, 422, 'BUSINESS_ERROR', details)
   }
 }

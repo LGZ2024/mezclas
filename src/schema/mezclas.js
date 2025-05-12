@@ -187,6 +187,22 @@ const solicitudConfig = {
     type: DataTypes.STRING,
     field: 'respuestaMezclador', // Nombre de columna en la base de datos
     allowNull: true
+  },
+  motivoCancelacion: {
+    type: DataTypes.STRING,
+    field: 'motivoCancelacion', // Nombre de columna en la base de datos
+    allowNull: true
+  },
+  confirmacion: {
+    type: DataTypes.STRING,
+    field: 'confirmacion',
+    allowNull: true,
+    defaultValue: 'Pendiente'
+  },
+  idUsuarioValida: {
+    type: DataTypes.INTEGER,
+    field: 'idUsuarioValida',
+    allowNull: true
   }
 }
 

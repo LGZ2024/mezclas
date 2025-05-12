@@ -8,7 +8,7 @@
         <span class="menu-title">Solicitudes</span>
       </a>
     </li>
-    <% if (user.rol==="admin" || user.rol==="administrativo" ) { %>
+    <% if (user.rol==="admin" || user.rol==="administrativo" || user.rol==="adminMezclador" ) { %>
       <li class="nav-item">
         <a class="nav-link" href="/protected/productos">
           <span class="icon-bg"><i class="mdi mdi-cube menu-icon"></i></span>
@@ -16,6 +16,7 @@
         </a>
       </li>
       <% } %>
+
         <% if (user.rol==="admin" ) { %>
           <li class="nav-item">
             <a class="nav-link" href="/protected/usuarios">
@@ -30,74 +31,90 @@
               <span class="menu-title">Centros de Coste</span>
             </a>
           </li>
+
           <% } %>
-            <% 
-              const esAdministrativo=user.rol==="administrativo" ; 
-              const empresaPermitida=user.empresa==="Bioagricultura" || user.empresa==="Lugar Agricola" ; 
-              const ranchoEspecifico=user.ranchos !=="General" ; 
-              
-              if (esAdministrativo && empresaPermitida && ranchoEspecifico) { 
-            %>
+
+            <% if (user.rol==="admin" || user.rol==="administrativo" || user.rol==="adminMezclador" ) { %>
               <li class="nav-item">
-                <a class="nav-link" href="/protected/solicitud">
-                  <span class="icon-bg"><i class="mdi mdi-account menu-icon"></i></span>
-                  <span class="menu-title">Realizar Solicitud</span>
+                <a class="nav-link" href="/protected/canceladas">
+                  <span class="icon-bg"><i class="mdi mdi-cancel menu-icon"></i></span>
+                  <span class="menu-title">Solicitudes Canceladas</span>
                 </a>
               </li>
               <% } %>
-                <li class="nav-item">
-                  <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false" aria-controls="auth">
-                    <span class="icon-bg"><i class="mdi mdi-book menu-icon"></i></span>
-                    <span class="menu-title">Estado de Solicitudes</span>
-                    <i class="menu-arrow"></i>
-                  </a>
-                  <div class="collapse" id="auth">
-                    <ul class="nav flex-column sub-menu">
-                      <li class="nav-item"> <a class="nav-link" href="/protected/solicitudes">Solicitudes Pendientes
-                        </a></li>
-                      <li class="nav-item"> <a class="nav-link" href="/protected/proceso">Solicitudes En Proceso</a>
-                      </li>
-                      <li class="nav-item"> <a class="nav-link" href="/protected/completadas">Solicitudes Completadas
-                        </a></li>
-                    </ul>
-                  </div>
-                </li>
-                <li class="nav-item sidebar-user-actions">
-                  <div class="user-details">
-                    <div class="d-flex justify-content-between align-items-center">
-                      <div>
-                        <div class="p-2 d-flex align-items-center">
-                          <div class="sidebar-profile-img">
-                            <img src="../../../images/faces/pic-1.png" alt="image">
+
+                <% const esAdministradorMezclador=user.rol==="adminMezclador" ; const esAdministrador=user.rol==="admin"
+                  if ( esAdministradorMezclador || esAdministrador ) { %>
+                  %>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/protected/confirmacion">
+                      <span class="icon-bg"><i class="mdi mdi-check-circle-outline menu-icon"></i></span>
+                      <span class="menu-title">Confirmar Solicitudes</span>
+                    </a>
+                  </li>
+
+                  <li class="nav-item">
+                    <a class="nav-link" href="/protected/solicitud">
+                      <span class="icon-bg"><i class="mdi mdi-file-plus menu-icon"></i></span>
+                      <span class="menu-title">Realizar Solicitud</span>
+                    </a>
+                  </li>
+                  <% } %>
+                    <li class="nav-item">
+                      <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false"
+                        aria-controls="auth">
+                        <span class="icon-bg"><i class="mdi mdi-book menu-icon"></i></span>
+                        <span class="menu-title">Estado de Solicitudes</span>
+                        <i class="menu-arrow"></i>
+                      </a>
+                      <div class="collapse" id="auth">
+                        <ul class="nav flex-column sub-menu">
+                          <li class="nav-item"> <a class="nav-link" href="/protected/solicitudes">Solicitudes Pendientes
+                            </a></li>
+                          <li class="nav-item"> <a class="nav-link" href="/protected/proceso">Solicitudes En Proceso</a>
+                          </li>
+                          <li class="nav-item"> <a class="nav-link" href="/protected/completadas">Solicitudes
+                              Completadas
+                            </a></li>
+                        </ul>
+                      </div>
+                    </li>
+                    <li class="nav-item sidebar-user-actions">
+                      <div class="user-details">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div class="p-2 d-flex align-items-center">
+                              <div class="sidebar-profile-img">
+                                <img src="../../../images/faces/pic-1.png" alt="image">
+                              </div>
+                              <div class="sidebar-profile-text">
+                                <p class="mb-1">
+                                  <%= user.nombre %>
+                                </p>
+                              </div>
+                            </div>
                           </div>
-                          <div class="sidebar-profile-text">
-                            <p class="mb-1">
-                              <%= user.nombre %>
-                            </p>
+                          <div class="badge badge-primary">
+                            <a id="rol">
+                              <%= user.rol %>
+                            </a>
                           </div>
                         </div>
                       </div>
-                      <div class="badge badge-primary">
-                        <a id="rol">
-                          <%= user.rol %>
+                    </li>
+                    <li class="nav-item sidebar-user-actions">
+                      <div class="sidebar-user-menu">
+                        <a href="#" class="nav-link"><i class="mdi mdi-settings menu-icon"></i>
+                          <span class="menu-title">Configuraciones</span>
                         </a>
                       </div>
-                    </div>
-                  </div>
-                </li>
-                <li class="nav-item sidebar-user-actions">
-                  <div class="sidebar-user-menu">
-                    <a href="#" class="nav-link"><i class="mdi mdi-settings menu-icon"></i>
-                      <span class="menu-title">Configuraciones</span>
-                    </a>
-                  </div>
-                </li>
-                <li class="nav-item sidebar-user-actions">
-                  <div class="sidebar-user-menu">
-                    <a href="/protected/cerrarSesion" class="nav-link"><i class="mdi mdi-logout menu-icon"></i>
-                      <span class="menu-title">Cerrar Sesion</span></a>
-                  </div>
-                </li>
+                    </li>
+                    <li class="nav-item sidebar-user-actions">
+                      <div class="sidebar-user-menu">
+                        <a href="/protected/cerrarSesion" class="nav-link"><i class="mdi mdi-logout menu-icon"></i>
+                          <span class="menu-title">Cerrar Sesion</span></a>
+                      </div>
+                    </li>
   </ul>
 </nav>
 <!-- partial -->

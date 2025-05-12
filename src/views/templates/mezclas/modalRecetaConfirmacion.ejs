@@ -1,0 +1,197 @@
+<div class="modal fade" id="modalInformacion" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+    aria-labelledby="modalInformacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalInformacionLabel">
+                    <i class="bi bi-info-circle me-2"></i>Información de la Solicitud
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <!-- Información Principal -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="idSolicit">ID Solicitud</label>
+                                <input type="text" class="form-control form-control-sm" id="idSolicit" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="fechaSolicitud">Fecha Solicitud</label>
+                                <input type="text" class="form-control form-control-sm" id="fechaSolicitud" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="solicita">Solicitante</label>
+                                <input type="text" class="form-control form-control-sm" id="solicita" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Ubicación -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="empresa">Empresa</label>
+                                <input type="text" class="form-control form-control-sm" id="empresa" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="ranchoDestino">Rancho Destino</label>
+                                <input type="text" class="form-control form-control-sm" id="ranchoDestino" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="centroCoste">Centro de Coste</label>
+                                <input type="text" class="form-control form-control-sm" id="centroCoste" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detalles de la Mezcla -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="variedad">Variedad</label>
+                                <input type="text" class="form-control form-control-sm" id="variedad" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="FolioReceta">Folio Receta</label>
+                                <input type="text" class="form-control form-control-sm" id="FolioReceta" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Temporada y Cantidad -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="temporada">Temporada</label>
+                                <input type="text" class="form-control form-control-sm" id="temporada" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="cantidad">Cantidad</label>
+                                <input type="text" class="form-control form-control-sm" id="cantidad" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="presentacion">Presentación</label>
+                                <input type="text" class="form-control form-control-sm" id="presentacion" readonly>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Método y Descripción -->
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="metodoAplicacion">Método de Aplicación</label>
+                                <input type="text" class="form-control form-control-sm" id="metodoAplicacion" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label fw-bold" for="descripcion">Descripción</label>
+                                <textarea class="form-control form-control-sm" id="descripcion" rows="3"
+                                    readonly></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Productos -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-box-seam me-2"></i>Productos de la Mezcla
+                            </h5>
+                            <style>
+                                #agregarProductoReceta {
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 0.5rem;
+                                }
+
+                                #agregarProductoReceta i.mdi {
+                                    font-size: 1.1rem;
+                                }
+
+                                #agregarProductoReceta:hover i.mdi {
+                                    transform: scale(1.1);
+                                    transition: transform 0.2s ease;
+                                }
+
+                                .modal-footer .btn {
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 0.5rem;
+                                }
+
+                                .modal-footer .btn i.mdi {
+                                    font-size: 1.2rem;
+                                }
+
+                                .modal-footer .btn:hover i.mdi {
+                                    transform: scale(1.1);
+                                    transition: transform 0.2s ease;
+                                }
+                            </style>
+                            <% if (rol==="solicita" || rol==="solicita2" ) { %>
+                                <button type="button" class="btn btn-primary btn-sm m-2" id="agregarProductoReceta">
+                                    <i class="mdi mdi-plus-box-outline me-2"></i>Agregar Producto
+                                </button>
+                                <% } %>
+                                    <div class="table-responsive">
+                                        <table
+                                            class="table table-striped tanle table-bordered table-hover align-middle mobile-table w-100 table-sm"
+                                            id="tbReceta" style="white-space: nowrap;">
+                                            <thead class="table-primary">
+                                                <tr>
+                                                    <th>id#</th>
+                                                    <th>id_sap</th>
+                                                    <th>Producto</th>
+                                                    <th>Unidad</th>
+                                                    <th>Cantidad</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- Contenido de la tabla -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="mdi mdi-exit-to-app me-2"></i>Cerrar
+                </button>
+
+                <button type="button" class="btn btn-primary" id="confirmacion">
+                    <span class="icon-bg"><i class="mdi mdi-check-circle-outline menu-icon"></i> Confirmar Solicitud
+                </button>
+                <% if (rol==="adminMezclador" ) { %>
+                    <!-- boton para cancelar solicitud -->
+                    <button type="button" class="btn btn-danger" id="cancelacion">
+                        <span class="icon-bg"><i class="mdi mdi-cancel menu-icon"></i> Cancelar Solicitud
+                    </button>
+                    <% } %>
+            </div>
+        </div>
+    </div>
+</div>

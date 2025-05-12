@@ -5,11 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Mezclas</title>
+    <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
+    <link rel="stylesheet" href="../../css/spinner.css">
     <%- include("../../templates/mezclas/cabecera") %>
+
 </head>
 
 
 <body>
+    <!-- Spinner de carga -->
+    <div class="spinner-overlay" id="spinner" style="display: none;">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <p class="spinner-text">Procesando...</p>
+        </div>
+    </div>
     <header>
         <div class="barra contenedor">
             <div class="barra__logo">
@@ -25,47 +35,40 @@
             </nav>
         </div>
     </header>
+    
     <input type="hidden" value="<%= rol %>" id="rol">
-    <section class="tablas">
+    
+    <section id="tablaFuciones" class="tablas" style="display: block;">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-md-8">
+                <div class="col-md-11">
                     <div class="card text-center">
                         <div class="card-body">
-
                             <div class="titulo">
                                 <div class="col">
-                                    <button class="formulario__submit" id="regresar"><span
+                                    <button class="formulario__submit" id="regresarInicio"><span
                                             class="mdi mdi-arrow-left-bold"></span></button>
                                 </div>
                                 <div class="text-center">
-                                    <h3>Mezclas Completadas</h3>
+                                    <h3>Solicitudes</h3>
                                 </div>
                             </div>
                             <hr>
                             <div class="table-responsive">
                                 <table
-                                    class="table table-striped table-bordered table-hover table-sm table-compac border-0"
-                                    id="completadas" style="white-space: nowrap;">
-                                    <thead class="bg-primary">
+                                    class="table table-striped table-bordered table-hover align-middle mobile-table w-100 table-sm"
+                                    id="tablaCanceladas">
+                                    <thead class="table-primary">
                                         <tr class="bg-primary">
-                                            <th>id Mescla</th>
+                                            <th>id</th>
                                             <th>Solicita</th>
-                                            <th>Fecha de Solicitud</th>
-                                            <th>Rancho destino</th>
+                                            <th>Folio Receta</th>
+                                            <th>Motivo cancelación</th>
+                                            <th>Fecha solicitud</th>
                                             <th>Empresa</th>
-                                            <th>Centro de Coste</th>
-                                            <th>Folio</th>
+                                            <th>Rancho destino</th>
+                                            <th>Centro coste</th>
                                             <th>Temporada</th>
-                                            <th>Cantidad de Producto</th>
-                                            <th>Presentacion de Producto</th>
-                                            <th>Metodo de Aplicacion</th>
-                                            <th>Descripcion</th>
-                                            <th>variedad</th>
-                                            <th>Imagen Receta</th>
-                                            <th>Nota de almacen</th>
-                                            <th>Imagen Entrega</th>
-                                            <th>Fecha de Entrega</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -73,22 +76,24 @@
                                     </tbody>
                                 </table>
                             </div>
-
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <!--  cargamos modal para receta -->
-    <%- include("../../templates/mezclas/mostrarRecetaProceso") %>
-    <!--Modal2 pdf-->
-    <%- include("../../templates/mezclas/modalPdf") %>
 
+   
+   
 
-    <!-- Firebase Configuración y funciones -->
-    <%- include("../../templates/mezclas/scripts") %>
-    <script type="module" src="../../app/completadas/Funciones.js"></script>
+    <!-- Modal mostar receta -->
+    <%- include("../../templates/mezclas/modalRecetaConfirmacion") %>
+    <%- include("../../templates/mezclas/modalNuevoProducto") %>
+
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/canceladas/main2.js"></script>2
+
 </body>
 
 </html>

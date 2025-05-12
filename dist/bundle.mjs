@@ -80,8 +80,6 @@ var external_express_fileupload_x = (y) => {
 } 
 var external_express_fileupload_y = (x) => (() => (x))
 const external_express_fileupload_namespaceObject = external_express_fileupload_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_express_fileupload_7aacc68d__["default"]) });
-;// CONCATENATED MODULE: external "url"
-const external_url_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("url");
 ;// CONCATENATED MODULE: external "path"
 const external_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("path");
 ;// CONCATENATED MODULE: external "swagger-ui-express"
@@ -240,6 +238,8 @@ const logger_logger = external_winston_namespaceObject["default"].createLogger({
     datePattern: 'YYYY-MM-DD',
     level: 'error',
     maxFiles: '14d',
+    compress: true,
+    // Comprimir logs antiguos
     format: customFormat
   }),
   // Logs de advertencia con rotación diaria
@@ -248,6 +248,8 @@ const logger_logger = external_winston_namespaceObject["default"].createLogger({
     datePattern: 'YYYY-MM-DD',
     level: 'warn',
     maxFiles: '14d',
+    compress: true,
+    // Comprimir logs antiguos
     format: customFormat
   }),
   // Logs combinados con rotación diaria
@@ -255,6 +257,8 @@ const logger_logger = external_winston_namespaceObject["default"].createLogger({
     filename: 'logs/combined-%DATE%.log',
     datePattern: 'YYYY-MM-DD',
     maxFiles: '14d',
+    compress: true,
+    // Comprimir logs antiguos
     format: customFormat
   }),
   // Archivo estático para errores críticos
@@ -296,11 +300,21 @@ if (envs.MODE !== 'production') {
 }
 
 // Agregar métodos de conveniencia
+const metrics = {
+  operations: new Map()
+};
 logger_logger.startOperation = (operationName, metadata = {}) => {
+  metrics.operations.set(operationName, Date.now());
   logger_logger.info(`Iniciando operación: ${operationName}`, metadata);
 };
 logger_logger.endOperation = (operationName, metadata = {}) => {
-  logger_logger.info(`Finalizando operación: ${operationName}`, metadata);
+  const startTime = metrics.operations.get(operationName);
+  const duration = Date.now() - startTime;
+  logger_logger.info(`Finalizando operación: ${operationName}`, {
+    ...metadata,
+    duration_ms: duration
+  });
+  metrics.operations.delete(operationName);
 };
 logger_logger.logError = (error, metadata = {}) => {
   logger_logger.error({
@@ -309,7 +323,44 @@ logger_logger.logError = (error, metadata = {}) => {
     ...metadata
   });
 };
+logger_logger.correlateEvents = correlationId => {
+  return {
+    start: (operationName, metadata = {}) => {
+      logger_logger.info(`Iniciando: ${operationName}`, {
+        correlationId,
+        ...metadata
+      });
+    },
+    end: (operationName, metadata = {}) => {
+      logger_logger.info(`Finalizando: ${operationName}`, {
+        correlationId,
+        ...metadata
+      });
+    }
+  };
+};
+logger_logger.exceptions.handle(new external_winston_namespaceObject["default"].transports.File({
+  filename: 'logs/exceptions.log',
+  format: customFormat
+}));
+logger_logger.rejections.handle(new external_winston_namespaceObject["default"].transports.File({
+  filename: 'logs/rejections.log',
+  format: customFormat
+}));
 /* harmony default export */ const utils_logger = (logger_logger);
+;// CONCATENATED MODULE: external "url"
+const external_url_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("url");
+;// CONCATENATED MODULE: ./src/config/paths.js
+
+
+const paths_filename = (0,external_url_namespaceObject.fileURLToPath)("file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/config/paths.js");
+const paths_dirname = (0,external_path_namespaceObject.dirname)(paths_filename);
+const paths = {
+  root: (0,external_path_namespaceObject.join)(paths_dirname, '..'),
+  views: (0,external_path_namespaceObject.join)(paths_dirname, '..', 'views'),
+  public: (0,external_path_namespaceObject.join)(paths_dirname, '..', '..', 'public'),
+  uploads: (0,external_path_namespaceObject.join)(paths_dirname, '..', 'uploads')
+};
 ;// CONCATENATED MODULE: external "cors"
 var external_cors_x = (y) => {
 	var x = {}; __webpack_require__.d(x, y); return x
@@ -357,7 +408,7 @@ const errorHandler = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   // Log del error
-  utils_logger.error({
+  utils_logger.logError({
     message: err.message,
     stack: err.stack,
     path: req.path,
@@ -387,6 +438,7 @@ var external_express_rate_limit_y = (x) => (() => (x))
 const external_express_rate_limit_namespaceObject = external_express_rate_limit_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_express_rate_limit_c965cf1c__["default"]) });
 ;// CONCATENATED MODULE: ./src/middlewares/rateLimit.js
 
+
 const apiLimiter = (0,external_express_rate_limit_namespaceObject["default"])({
   windowMs: 15 * 60 * 1000,
   // 15 minutos
@@ -396,7 +448,18 @@ const apiLimiter = (0,external_express_rate_limit_namespaceObject["default"])({
     error: 'Demasiadas peticiones, por favor intente más tarde'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: (req, res, next, options) => {
+    utils_logger.warn('Límite de peticiones excedido', {
+      ip: req.ip,
+      path: req.path
+    });
+    res.status(429).json(options.message);
+  },
+  skip: req => {
+    // Ignorar rutas específicas
+    return req.path.startsWith('/public');
+  }
 });
 ;// CONCATENATED MODULE: external "jsonwebtoken"
 var external_jsonwebtoken_x = (y) => {
@@ -456,9 +519,10 @@ const isAdmin = (req, res, next) => {
   next();
 };
 const isGeneral = (req, res, next) => {
-  if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo' && req.userRole !== 'admin') return res.status(403).render('errorPage', {
+  if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo' && req.userRole !== 'admin' && req.userRole !== 'adminMezclador') return res.status(403).render('errorPage', {
     codeError: 403,
-    errorMsg: 'No autorizado'
+    errorMsg: 'No autorizado',
+    title: 'Sin Autorizacion'
   });
   next();
 };
@@ -472,6 +536,14 @@ const isAdminsitrativoOrAdmin = (req, res, next) => {
 };
 const isSolicitaOrMezclador = (req, res, next) => {
   if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo') return res.status(403).render('errorPage', {
+    codeError: 403,
+    title: 'Sin Autorizacion',
+    errorMsg: 'No autorizado'
+  });
+  next();
+};
+const isaAdminMezclador = (req, res, next) => {
+  if (req.userRole !== 'adminMezclador') return res.status(403).render('errorPage', {
     codeError: 403,
     title: 'Sin Autorizacion',
     errorMsg: 'No autorizado'
@@ -514,218 +586,10 @@ const sequelizeConfig = {
 };
 const sequelize = new external_sequelize_namespaceObject.Sequelize(sequelizeConfig);
 /* harmony default export */ const db = (sequelize);
-;// CONCATENATED MODULE: ./src/schema/productos.js
-
-
-const productosConfig = {
-  id_producto: {
-    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  id_sap: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El id del Sap es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El id del Sap es requerido'
-      }
-    }
-  },
-  nombre: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El nombre del producto es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El nombre del producto debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  descripcion: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: true,
-    validate: {
-      notEmpty: {
-        msg: 'La presentacion del producto es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'
-      }
-    }
-  },
-  unidad_medida: {
-    type: external_sequelize_namespaceObject.DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La unidad de medida es requerida para el producto'
-      },
-      len: {
-        args: [2, 20],
-        msg: 'El nombre del producto debe tener entre 2 y 20 caracteres'
-      }
-    }
-  }
-};
-const Productos = db.define('productos', productosConfig, {
-  tableName: 'productos',
-  // Nombre de la tabla en la base de datos
-  timestamps: true // Agrega createdAt y updatedAt automáticamente
-});
-;// CONCATENATED MODULE: ./src/utils/CustomError.js
-class CustomError_CustomError extends Error {
-  constructor(message, statusCode, errorCode) {
-    super(message);
-    this.statusCode = statusCode;
-    this.errorCode = errorCode;
-    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
-    this.isOperational = true;
-    Error.captureStackTrace(this, this.constructor);
-  }
-}
-
-// Errores específicos
-class CustomError_NotFoundError extends CustomError_CustomError {
-  constructor(message = 'Recurso no encontrado') {
-    super(message, 404, 'NOT_FOUND');
-  }
-}
-class CustomError_ValidationError extends CustomError_CustomError {
-  constructor(message = 'Error de validación') {
-    super(message, 400, 'VALIDATION_ERROR');
-  }
-}
-class CustomError_DatabaseError extends CustomError_CustomError {
-  constructor(message = 'Error en la base de datos') {
-    super(message, 500, 'DB_ERROR');
-  }
-}
-;// CONCATENATED MODULE: ./src/models/productos.models.js
-
-
-
-class ProductosModel {
-  // uso
-  static async getAll() {
-    try {
-      const productos = await Productos.findAll({
-        attributes: ['id_producto', 'nombre', 'descripcion', 'unidad_medida']
-      });
-      if (!productos) throw new CustomError_NotFoundError('productos no encontrados');
-      return productos;
-    } catch (error) {
-      throw new CustomError_DatabaseError('Error al obtener los productos');
-    }
-  }
-  static async getOne({
-    id
-  }) {
-    try {
-      const producto = await Productos.findByPk(id);
-      if (!producto) {
-        throw new CustomError_NotFoundError(`Producto con ID ${id} no encontrado`);
-      }
-      return producto;
-    } catch (error) {
-      utils_logger.error(`Productos.model Error al obtener el producto: ${error.message}`);
-      if (error instanceof CustomError_CustomError) throw error;
-      throw new CustomError_DatabaseError('Error al obtener el producto');
-    }
-  }
-  static async delete({
-    id
-  }) {
-    try {
-      const producto = await Productos.findByPk(id);
-      if (!producto) {
-        throw new CustomError_NotFoundError(`Producto con ID ${id} no encontrado`);
-      }
-      await producto.destroy();
-      return {
-        message: `producto eliminada correctamente con id ${id}`
-      };
-    } catch (error) {
-      if (error instanceof CustomError_CustomError) throw error;
-      throw new CustomError_DatabaseError('Error al eliminar el producto');
-    }
-  }
-
-  // crear producto
-  static async create({
-    data
-  }) {
-    try {
-      // verificamos que no exista el producto
-      const producto = await Productos.findOne({
-        where: {
-          producto: data.producto
-        }
-      });
-      if (producto) throw new CustomError_ValidationError('Producto ya existe');
-
-      // creamos el producto
-      await Productos.create({
-        ...data
-      });
-      return {
-        message: `Producto registrado exitosamente ${data.nombre}`
-      };
-    } catch (e) {
-      utils_logger.error({
-        message: 'Error al crear producto',
-        error: e.message,
-        stack: e.stack,
-        method: 'ProductosModel.create'
-      });
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al crear el producto');
-    }
-  }
-
-  // para actualizar datos de producto
-  static async update({
-    id,
-    data
-  }) {
-    try {
-      // verificamos si existe alguna empresa con el id proporcionado
-      const producto = await Productos.findByPk(id);
-      if (!producto) throw new CustomError_NotFoundError(`Producto con ID ${id} no encontrado`);
-      // Actualiza solo los campos que se han proporcionado
-      if (data.nombre) producto.nombre = data.nombre;
-      if (data.email) producto.email = data.email;
-      if (data.rol) producto.rol = data.rol;
-      if (data.empresa) producto.empresa = data.empresa;
-      await producto.save();
-      return {
-        message: 'producto actualizada correctamente',
-        rol: data.rol
-      };
-    } catch (e) {
-      utils_logger.error({
-        message: 'Error al actualizar producto',
-        error: e.message,
-        stack: e.stack,
-        method: 'ProductosModel.update'
-      });
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al actualizar el producto');
-    }
-  }
-}
 ;// CONCATENATED MODULE: ./src/schema/solicitud_receta.js
 
 
-const solicitud_receta_productosConfig = {
+const productosConfig = {
   id: {
     type: external_sequelize_namespaceObject.DataTypes.INTEGER,
     field: 'id_receta',
@@ -779,7 +643,7 @@ const solicitud_receta_productosConfig = {
     defaultValue: 1
   }
 };
-const SolicitudProductos = db.define('solicitud_receta ', solicitud_receta_productosConfig, {
+const SolicitudProductos = db.define('solicitud_receta ', productosConfig, {
   tableName: 'solicitud_receta',
   // Nombre de la tabla en la base de datos
   timestamps: false // Agrega createdAt y updatedAt automáticamente
@@ -984,6 +848,23 @@ const solicitudConfig = {
     field: 'respuestaMezclador',
     // Nombre de columna en la base de datos
     allowNull: true
+  },
+  motivoCancelacion: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    field: 'motivoCancelacion',
+    // Nombre de columna en la base de datos
+    allowNull: true
+  },
+  confirmacion: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    field: 'confirmacion',
+    allowNull: true,
+    defaultValue: 'Pendiente'
+  },
+  idUsuarioValida: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    field: 'idUsuarioValida',
+    allowNull: true
   }
 };
 const Solicitud = db.define('solicitud', solicitudConfig, {
@@ -1081,7 +962,7 @@ const usuarioConfig = {
     }
   },
   rol: {
-    type: external_sequelize_namespaceObject.DataTypes.ENUM('admin', 'supervisor', 'mezclador', 'solicita', 'administrativo'),
+    type: external_sequelize_namespaceObject.DataTypes.ENUM('admin', 'supervisor', 'mezclador', 'solicita', 'administrativo', 'adminMezclador'),
     allowNull: false,
     validate: {
       notEmpty: {
@@ -1137,6 +1018,73 @@ const Usuario = db.define('usuarios', usuarioConfig, {
       }
     }
   }
+});
+;// CONCATENATED MODULE: ./src/schema/productos.js
+
+
+const productos_productosConfig = {
+  id_producto: {
+    type: external_sequelize_namespaceObject.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  id_sap: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El id del Sap es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El id del Sap es requerido'
+      }
+    }
+  },
+  nombre: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El nombre del producto es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El nombre del producto debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  descripcion: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      notEmpty: {
+        msg: 'La presentacion del producto es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  unidad_medida: {
+    type: external_sequelize_namespaceObject.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La unidad de medida es requerida para el producto'
+      },
+      len: {
+        args: [2, 20],
+        msg: 'El nombre del producto debe tener entre 2 y 20 caracteres'
+      }
+    }
+  }
+};
+const Productos = db.define('productos', productos_productosConfig, {
+  tableName: 'productos',
+  // Nombre de la tabla en la base de datos
+  timestamps: true // Agrega createdAt y updatedAt automáticamente
 });
 ;// CONCATENATED MODULE: ./src/schema/recetas.js
 
@@ -1250,6 +1198,34 @@ const Notificaciones = db.define('notificaciones', notificacionesConfig, {
   // Nombre de la tabla en la base de datos
   timestamps: false // Agrega createdAt y updatedAt automáticamente
 });
+;// CONCATENATED MODULE: ./src/utils/CustomError.js
+class CustomError_CustomError extends Error {
+  constructor(message, statusCode, errorCode) {
+    super(message);
+    this.statusCode = statusCode;
+    this.errorCode = errorCode;
+    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
+    this.isOperational = true;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+// Errores específicos
+class CustomError_NotFoundError extends CustomError_CustomError {
+  constructor(message = 'Recurso no encontrado') {
+    super(message, 404, 'NOT_FOUND');
+  }
+}
+class CustomError_ValidationError extends CustomError_CustomError {
+  constructor(message = 'Error de validación') {
+    super(message, 400, 'VALIDATION_ERROR');
+  }
+}
+class CustomError_DatabaseError extends CustomError_CustomError {
+  constructor(message = 'Error en la base de datos') {
+    super(message, 500, 'DB_ERROR');
+  }
+}
 ;// CONCATENATED MODULE: ./src/models/productosSolicitud.models.js
 
 
@@ -1268,6 +1244,9 @@ class SolicitudRecetaModel {
     idSolicitud
   }) {
     try {
+      utils_logger.info('Obteniendo productos de solicitud...', {
+        idSolicitud
+      });
       const productosSolicitud = await SolicitudProductos.findAll({
         where: {
           id_solicitud: idSolicitud
@@ -1284,14 +1263,12 @@ class SolicitudRecetaModel {
         attributes: ['id_receta', 'id_solicitud', 'id_producto', 'unidad_medida', 'cantidad']
       });
 
-      // Verificar si se encontraron resultados
-      if (productosSolicitud.length === 0) {
-        throw new CustomError_NotFoundError('No se encontraron productos para los criterios especificados');
-      }
-
       // Transformar los resultados
       const resultadosFormateados = productosSolicitud.map(productos => {
         const m = productos.toJSON();
+        utils_logger.info('Productos obtenidos exitosamente', {
+          productos: m
+        });
         return {
           id_receta: m.id_receta,
           id_solicitud: m.id_solicitud,
@@ -1303,8 +1280,9 @@ class SolicitudRecetaModel {
       });
 
       // Devolver los resultados
-      return resultadosFormateados;
+      return resultadosFormateados || [];
     } catch (e) {
+      console.log(e);
       if (e instanceof CustomError_CustomError) throw e;
       throw new CustomError_DatabaseError('Error al obtener los productos');
     }
@@ -1478,6 +1456,10 @@ class SolicitudRecetaModel {
     const estados = {
       estados: []
     };
+    utils_logger.info('Iniciando actualización de estado de productos', {
+      data,
+      idUsuarioMezcla
+    });
     try {
       // Validaciones iniciales
       if (!data?.estados?.length || !idUsuarioMezcla) {
@@ -1581,6 +1563,11 @@ class SolicitudRecetaModel {
     mensaje,
     transaction
   }) {
+    utils_logger.info('Actualizando solicitud y notificación', {
+      id,
+      idUsuarioMezcla,
+      mensaje
+    });
     try {
       const solicitud = await Solicitud.findByPk(id, {
         transaction,
@@ -1871,6 +1858,526 @@ const guardarImagen = async ({
     throw error;
   }
 };
+;// CONCATENATED MODULE: external "nodemailer"
+var external_nodemailer_x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var external_nodemailer_y = (x) => (() => (x))
+const external_nodemailer_namespaceObject = external_nodemailer_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_nodemailer__["default"]) });
+;// CONCATENATED MODULE: ./src/config/smtp.js
+
+
+// utils
+
+
+
+// Configuración del transportador SMTP
+const createTransporter = () => {
+  const transporter = external_nodemailer_namespaceObject["default"].createTransport({
+    host: 'portalrancho.com.mx',
+    port: 465,
+    secure: true,
+    auth: {
+      user: envs.EMAIL_USER,
+      pass: envs.EMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: true,
+      minVersion: 'TLSv1.2' // Versión mínima de TLS
+    },
+    pool: true,
+    debug: true,
+    logger: false
+  });
+
+  // Verificar conexión
+  transporter.verify((error, success) => {
+    if (error) {
+      utils_logger.error('Error en verificación SMTP:', error);
+    } else {
+      utils_logger.info('Servidor SMTP listo');
+    }
+  });
+  return transporter;
+};
+
+// Función auxiliar para obtener color según el estatus
+const getStatusColor = status => {
+  const colors = {
+    Proceso: '#28a745',
+    // Verde
+    Completada: '#ffc107',
+    // Amarillo
+    Rechazado: '#dc3545',
+    // Rojo
+    default: '#17a2b8' // Azul
+  };
+  return colors[status] || colors.default;
+};
+
+// Función auxiliar para detalles adicionales según estatus
+const getAdditionalDetails = status => {
+  const details = {
+    Proceso: '<p>Su solicitud está siendo procesada. Le mantendremos informado sobre cualquier actualización.</p>',
+    Completada: '<p>Su solicitud ha sido <strong>completada</strong>. Para más detalles, por favor contacte a nuestro equipo.</p>',
+    default: ''
+  };
+  return details[status] || details.default;
+};
+
+// Función para enviar correo con manejo de errores
+const sendMail = async message => {
+  const transporter = createTransporter();
+  try {
+    const info = await transporter.sendMail(message);
+    utils_logger.info('Correo enviado:', {
+      messageId: info.messageId,
+      response: info.response
+    });
+    return info;
+  } catch (error) {
+    utils_logger.error('Error al enviar correo:', {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    });
+    throw error;
+  }
+};
+const validateEmailData = (type, data) => {
+  const requiredFields = {
+    status: ['email', 'nombre', 'solicitudId', 'status'],
+    solicitud: ['email', 'nombre', 'solicitudId', 'fechaSolicitud', 'usuario', 'data'],
+    notificacion: ['email', 'nombre', 'solicitudId', 'data'],
+    usuario: ['email', 'password'],
+    respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    cancelacion: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    aprobada: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    confirmacionInicial: ['email', 'nombre', 'solicitudId', 'data', 'usuario']
+  };
+  const fields = requiredFields[type] || [];
+  const missing = fields.filter(field => !data[field]);
+  if (missing.length > 0) {
+    throw new CustomError_ValidationError(`Faltan campos requeridos para el tipo ${type}: ${missing.join(', ')}`);
+  }
+};
+// Función principal para enviar correos
+const enviarCorreo = async params => {
+  const {
+    type,
+    email,
+    password = '',
+    fechaSolicitud = '',
+    nombre = 'Usuario',
+    solicitudId = '',
+    status = '',
+    usuario = {},
+    data = {}
+  } = params;
+
+  // Validar datos requeridos según el tipo
+  validateEmailData(type, params);
+
+  // Configurar mensaje según tipo
+  if (!email || !type) {
+    throw new CustomError_ValidationError('Email y tipo de mensaje son requeridos');
+  }
+
+  // Configurar mensaje según tipo
+  const templates = {
+    status: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Actualización de Solicitud - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
+             <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
+                 <h1>Grupo LG</h1>
+            </div>
+            <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
+                <h2>Actualización de Solicitud</h2>
+                <p>Estimado(a) ${nombre},</p>
+                <p>Le informamos que su solicitud con ID: <b>${solicitudId}</b> ha cambiado de estatus.</p>
+                <div style="background-color: ${getStatusColor(status)}; color: white; padding: 10px; border-radius: 5px; text-align: center;">
+                    <h3>Estado Actual: ${status}</h3>
+                </div>
+                <h4>Detalles de la Solicitud:</h4>
+                ${getAdditionalDetails(status)}
+      
+               <a href="https://solicitudmezclas.portalrancho.com.mx/protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
+      
+               <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
+               <p>Atentamente,<br>El equipo de Grupo LG</p>
+          </div>
+      </body>`
+    },
+    usuario: {
+      from: '"Registro Portal Checador" <mezclas.rancho@portalrancho.com.mx>',
+      subject: 'Usuario Creado Exitosamente',
+      html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
+        <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
+            <h1>Grupo LG</h1>
+        </div>
+        <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
+            <h2>¡Bienvenido a Grupo LG!</h2>
+            <p>Estimado nuevo usuario,</p>
+            <p>Nos complace darte la bienvenida a Grupo LG. Tu cuenta ha sido creada exitosamente.</p>
+            <p>Para acceder a tu cuenta, por favor utiliza los siguientes datos:</p>
+            <ul>
+                <li>Nombre de usuario:<b>${email}</b></li>
+                <li>Contraseña temporal:<b>${password}</b></li>
+            </ul>
+             <a href="https://solicitudmezclas.portalrancho.com.mx/" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
+            <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>
+            <p>¡Gracias por unirte a nosotros!</p>
+            <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+    </body>`
+    },
+    solicitud: {
+      from: '"Portal de Solicitudes Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Nueva Solicitud Creada - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #4CAF50; color: white; text-align: center; padding: 20px;">
+            <h1>Grupo LG</h1>
+        </div>
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+            <h2>Nueva Solicitud Creada</h2>
+            <p>Estimado(a) ${nombre},</p>
+            <p>Le informamos nueva solicitud ha sido creada con éxito. ID de solicitud es: <b>${solicitudId}</b>.</p>
+
+            <h4>Datos de solicitante:</h4>
+            <ul>
+                <li><strong>Nombre:</strong> ${usuario.nombre}</li>
+                <li><strong>Empresa</strong> ${usuario.empresa}</li>
+                <li><strong>Rancho:</strong> ${data.rancho || data.ranchoDestino}</li>
+            </ul>
+
+            <h4>Detalles de la Solicitud:</h4>
+            <ul>
+                <li><strong>Fecha de Solicitud:</strong> ${fechaSolicitud}</li>
+                <li><strong>Descripción:</strong> ${data.descripcion}</li>
+                <li><strong>Folio Receta:</strong> ${data.folio}</li>
+            </ul>
+
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
+
+            <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
+            <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+    </body>`
+    },
+    notificacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Notificación de No Disponibilidad - ${solicitudId}`,
+      html: ` <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+               <div style="background-color: #FF5733; color: white; text-align: center; padding: 20px;">
+                   <h1>Grupo LG</h1>
+               </div>
+               <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+                   <h2>Notificación de No Disponibilidad de Producto</h2>
+                   <p>Estimado(a) ${nombre},</p>
+                   <p>Le informamos que el producto que solicitó no está disponible en este momento. A continuación, se detallan los datos de los productos sin existencia:</p>
+      
+                   <h4>Solicitud: <b>${solicitudId}</b></h4>
+      
+                   <ul>
+                      ${Array.isArray(data) ? data.map(product => `
+                   <li>
+                     <strong>Id del Producto:</strong> ${product.id_producto}<br>
+                     <strong>Nombre del Producto:</strong> ${product.nombre_producto}<br>
+                     <strong>Unidad de Medida:</strong> ${product.unidad_medida}<br>
+                     <strong>cantidad:</strong> ${product.cantidad}
+                   </li>
+                 `).join('') : '<li>No hay productos para mostrar</li>'}
+                   </ul>
+      
+                   <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
+                  <div style="text-align: center; margin-top: 20px;">
+                      <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" 
+                        style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Ver Solicitud
+                      </a>
+                  </div>
+                   <p>Si tiene alguna pregunta o necesita más información, no dude en contactar a nuestro equipo de almacen.</p>
+                   <p><strong>Encargado de almacen:</strong> ${usuario?.nombre || 'No especificado'}<br></p>
+                   <p><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}<br></p>
+                   <p><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}<br></p>
+                   <p>Atentamente,<br>El equipo de Grupo LG</p>
+               </div>
+             </body>`
+    },
+    respuestaSolicitante: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Respuesta de Solicitante - Solicitud ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Respuesta de Solicitante</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Nueva Respuesta del Solicitante</h2>
+          
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Ranchos:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Mensaje del Solicitante:</h4>
+            <p style="margin-bottom: 0;">${data.mensaje}</p>
+          </div>
+  
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" 
+               style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver Solicitud
+            </a>
+          </div>
+  
+          <p style="margin-top: 20px;">Por favor, revise la respuesta y tome las acciones necesarias.</p>
+          
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Este es un mensaje automático. Si necesita ayuda adicional, contacte al departamento de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    cancelacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Cancelada - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #dc3545; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud Cancelada</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Cancelación de Solicitud</h2>
+          
+          <div style="background-color: #ffe6e6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #dc3545;">Detalles de la Solicitud Cancelada:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Cancelación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Motivo de Cancelación:</h4>
+            <p style="margin-bottom: 0;">${data.motivo || 'No se especificó motivo'}</p>
+          </div>
+  
+          <p style="margin-top: 20px;">Si considera que esto fue un error o necesita realizar una nueva solicitud, por favor:</p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitud" 
+               style="display: inline-block; background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Crear Nueva Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si tiene alguna pregunta o necesita aclaraciones, no dude en contactar a nuestro equipo de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    aprobada: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Aprobada - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #28a745; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud Aprobada</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>¡Su Solicitud ha sido Aprobada!</h2>
+          
+          <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #28a745;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Aprobación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #28a745; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Información Importante:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Nota:</strong> La mezcla estará lista para su aprobacion en el almacén asignado.
+          </p>
+
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si tiene alguna pregunta o necesita aclaraciones, no dude en contactar a nuestro equipo de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    confirmacionInicial: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Pendiente de Confirmación - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Nueva Solicitud por Confirmar</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Nueva Solicitud Requiere Confirmación</h2>
+          
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #2196F3;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Solicitud:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Información de la Mezcla:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio de Receta:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+              <li><strong>Descripción:</strong> ${data.descripcion || 'Sin descripción'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Acción Requerida:</strong> Esta solicitud necesita su confirmación para proceder con la preparación.
+          </p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/confirmacion" 
+               style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Revisar y Confirmar Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Este es un mensaje automático. Por favor, revise y confirme la solicitud lo antes posible.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    reevaluacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud en Reevaluación - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #FFA500; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud en Reevaluación</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Solicitud Requiere Reevaluación</h2>
+          
+          <div style="background-color: #FFF3E0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #E65100;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Reevaluación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #FFA500; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Observaciones para Reevaluación:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Motivo:</strong> ${data.motivo || 'No especificado'}</li>
+              <li><strong>Comentarios:</strong> ${data.comentarios || 'Sin comentarios adicionales'}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Detalles de la Mezcla:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio de Receta:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Acción Requerida:</strong> Por favor, revise los comentarios y realice las correcciones necesarias.
+          </p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/reevaluacion/${solicitudId}" 
+               style="display: inline-block; background-color: #FFA500; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Revisar Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si necesita asistencia adicional, contacte al departamento de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    }
+  };
+  try {
+    const template = templates[type];
+    if (!template) {
+      throw new CustomError_ValidationError(`Tipo de mensaje "${type}" no válido`);
+    }
+    const message = {
+      ...template,
+      to: email // Reemplazar con el correo del cliente
+    };
+    const result = await sendMail(message);
+    return {
+      success: true,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    utils_logger.error('Error en enviarCorreo:', error);
+    throw error;
+  }
+};
 ;// CONCATENATED MODULE: ./src/models/centro.models.js
 
 // utils
@@ -2150,16 +2657,402 @@ class NotificacionModel {
     }
   }
 }
+;// CONCATENATED MODULE: ./src/models/usuario.models.js
+
+
+
+
+
+
+class UsuarioModel {
+  // obtener todos los datos
+  static async getAll() {
+    try {
+      const usuario = await Usuario.findAll({
+        attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    }
+  }
+
+  // uso
+  static async getUserEmail({
+    rol,
+    empresa
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !empresa) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          [external_sequelize_namespaceObject.Op.or]: [{
+            empresa
+          }, {
+            empresa: 'General'
+          }]
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    }
+  }
+
+  // uso
+  static async getUserEmailRancho({
+    rol,
+    empresa,
+    rancho
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !empresa || !rancho) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          empresa,
+          // Se filtra por empresa
+          ranchos: rancho // Se filtra por rancho
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    }
+  }
+  static async getUserEmailGerente({
+    rol,
+    idUsuario
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !idUsuario) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          id: idUsuario // Se filtra por rancho
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    }
+  }
+
+  // uso
+  static async getUserEmailEmpresa({
+    rol,
+    empresa
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !empresa) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          empresa // Se filtra por empresa
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    }
+  }
+
+  // obtener todos los un ato por id
+  static async getOne({
+    rol,
+    empresa
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !empresa) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      const usuario = await Usuario.findOne({
+        where: {
+          rol,
+          empresa
+        },
+        attributes: ['nombre', 'email', 'rol']
+      });
+      // Verificar si se encontraron resultados
+      if (!usuario) {
+        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    }
+  }
+  static async getOneId({
+    id
+  }) {
+    try {
+      if (!id) {
+        throw new CustomError_ValidationError('ID no proporcionados');
+      }
+      const usuario = await Usuario.findOne({
+        where: {
+          id
+        },
+        attributes: ['nombre', 'email', 'rol', 'empresa']
+      });
+      // Verificar si se encontraron resultados
+      if (!usuario) {
+        throw new CustomError_NotFoundError('No se encontro usuario');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    }
+  }
+
+  // eliminar usuario
+  static async delete({
+    id
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!id) throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      const usuario = await Usuario.findByPk(id);
+      if (!usuario) throw new CustomError_NotFoundError('Usuario no encontrado');
+      await usuario.destroy();
+      return {
+        message: `usuario eliminada correctamente con id ${id}`
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al eliminar usuario');
+    }
+  }
+
+  // crear usuario
+  static async create({
+    data
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!data.usuario || !data.email || !data.password || !data.rol || !data.empresa) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      // verificamos que no exista el usuario
+      const usuario = await Usuario.findOne({
+        where: {
+          usuario: data.usuario,
+          email: data.email
+        }
+      });
+      if (usuario) throw new CustomError_ValidationError('El usuario o email ya existe');
+      // creamos el usuario
+      await Usuario.create({
+        ...data
+      });
+      return {
+        message: `usuario registrado exitosamente ${data.nombre}`
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al crear usuario');
+    }
+  }
+
+  // para actualizar datos de usuario
+  static async update({
+    id,
+    data
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!id || !data.nombre || !data.email || !data.password || !data.rol || !data.empresa) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      // verificamos si existe alguna empresa con el id proporcionado
+      const usuario = await Usuario.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      // Actualiza solo los campos que se han proporcionado
+      if (data.nombre) usuario.nombre = data.nombre;
+      if (data.email) usuario.email = data.email;
+      if (data.rol) usuario.rol = data.rol;
+      if (data.empresa) usuario.empresa = data.empresa;
+      await usuario.save();
+      return {
+        message: 'usuario actualizada correctamente',
+        rol: data.rol
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al actualizar usuario');
+    }
+  }
+
+  // funcion login
+  static async login({
+    user,
+    password
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!user || !password) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      const usuario = await Usuario.findOne({
+        where: {
+          usuario: user
+        }
+      });
+      if (!usuario) throw new CustomError_NotFoundError('Usuario no encontrado');
+      const isValidPassword = await external_bcryptjs_namespaceObject["default"].compare(password, usuario.password);
+      if (!isValidPassword) throw new CustomError_ValidationError('Contraseña incorrecta');
+
+      // creamos jwt
+      const token = external_jsonwebtoken_namespaceObject["default"].sign({
+        id: usuario.id,
+        nombre: usuario.nombre,
+        rol: usuario.rol,
+        empresa: usuario.empresa,
+        ranchos: usuario.ranchos,
+        cultivo: usuario.variedad
+      }, envs.SECRET_JWT_KEY, {
+        expiresIn: '24h'
+      });
+      return {
+        message: 'Usuario logueado correctamente',
+        token,
+        rol: usuario.rol
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al iniciar sesión');
+    }
+  }
+
+  // funcion cambiar contraseña usuario
+  static async changePassword({
+    id,
+    oldPassword,
+    newPassword
+  }) {
+    try {
+      const usuario = await Usuario.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      const isValidPassword = await external_bcryptjs_namespaceObject["default"].compare(oldPassword, usuario.password);
+      if (!isValidPassword) return {
+        error: 'contraseña actual incorrecta'
+      };
+      usuario.password = newPassword;
+      await usuario.save();
+      return {
+        message: 'contraseña cambiada correctamente'
+      };
+    } catch (e) {
+      console.error(e.message);
+      return {
+        error: 'Error al cambiar contraseña'
+      };
+    }
+  }
+
+  // funcion cambiar contraseña Admin
+  static async changePasswordAdmin({
+    id,
+    newPassword
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!id || !newPassword) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      const usuario = await Usuario.findByPk(id);
+      if (!usuario) throw new CustomError_NotFoundError('usuario no encontrado');
+      usuario.password = newPassword;
+      await usuario.save();
+      return {
+        message: 'Contraseña cambiada correctamente'
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al cambiar contraseña');
+    }
+  }
+}
+;// CONCATENATED MODULE: external "date-fns"
+var external_date_fns_x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var external_date_fns_y = (x) => (() => (x))
+const external_date_fns_namespaceObject = external_date_fns_x({ ["format"]: () => (__WEBPACK_EXTERNAL_MODULE_date_fns_f4130be9__.format) });
 ;// CONCATENATED MODULE: ./src/models/mezclas.models.js
-
-
- // Asegúrate de importar el modelo de Usuario
- // Asegúrate de importar el modelo de CentroCoste
+// Modelos de Base de Datos
 
 
 
 
-// utils
+
+// Configuraciones
+
+
+
+
+// Modelos de Negocio
+
+
+
+
+// Utilidades
+
+
+
+ // Agregar esta importación
 
 class MezclaModel {
   // uso
@@ -2174,6 +3067,7 @@ class MezclaModel {
       if (!data || !idUsuario) {
         throw new CustomError_ValidationError('Datos requeridos no proporcionados');
       }
+      // logger.info('Creando nueva solicitud de mezcla', data)
       // validamos variedad si viene todo
       if (data.variedad === 'todo') {
         try {
@@ -2249,6 +3143,7 @@ class MezclaModel {
               status: 'success'
             };
           } catch (errorProducto) {
+            utils_logger.error('Error al procesar producto', errorProducto);
             if (errorProducto instanceof CustomError_CustomError) throw errorProducto;
             throw new CustomError_DatabaseError(`Error al procesar producto ${producto.id_producto}`);
           }
@@ -2270,9 +3165,11 @@ class MezclaModel {
       return {
         message: 'Solicitud de mezcla registrada correctamente',
         idSolicitud: solicitud.id,
-        fechaSolicitud: solicitud.fechaSolicitud
+        fechaSolicitud: solicitud.fechaSolicitud,
+        data: solicitud
       };
     } catch (error) {
+      utils_logger.error('Error al registrar solicitud de mezcla', error);
       // Revertir transacción en caso de error
       if (transaction) await transaction.rollback();
       if (error instanceof CustomError_CustomError) throw error;
@@ -2322,18 +3219,21 @@ class MezclaModel {
   // uso
   static async obtenerTablaMezclasEmpresa({
     status,
-    empresa
+    empresa,
+    confirmacion
   }) {
     try {
       // Validar datos
       if (!status || !empresa) {
         throw new CustomError_ValidationError('Datos requeridos no proporcionados');
       }
+      utils_logger.info('Obteniendo tabla de mezclas por empresa y status: ' + status + ' y ' + empresa);
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
         where: {
           empresa,
-          status
+          status,
+          confirmacion // Solo mezclas confirmadas
         },
         include: [{
           model: Usuario,
@@ -2346,11 +3246,6 @@ class MezclaModel {
         }],
         attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']
       });
-
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new CustomError_NotFoundError('No se encontraron mezclas para los criterios especificados');
-      }
 
       // Transformar los resultados
       const resultadosFormateados = mezclas.map(mezcla => {
@@ -2384,11 +3279,200 @@ class MezclaModel {
       throw new CustomError_DatabaseError('Error al obtener las mezclas');
     }
   }
+  static async obtenerTablaMezclasValidados({
+    status,
+    empresa,
+    confirmacion
+  }) {
+    try {
+      // Validar datos
+      if (!status || !empresa) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          empresa,
+          status,
+          confirmacion,
+          // Solo mezclas no confirmadas
+          idUsuarioSolicita: {
+            [external_sequelize_namespaceObject.Op.ne]: 33 // Excluir ID 33
+          }
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']
+      });
+
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud
+        };
+      });
+      // logger.debug('obtenerTablaMezclasEmpresa: resultadosFormateados', resultadosFormateados)
+      // Devolver los resultados validar si hay resultados mandar vacio
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener las mezclas');
+    }
+  }
+  static async obtenerTablaMezclasJalisco({
+    status,
+    empresa,
+    confirmacion
+  }) {
+    try {
+      // Validar datos
+      if (!status || !empresa) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          empresa,
+          status,
+          confirmacion // Solo mezclas no confirmadas
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']
+      });
+
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud
+        };
+      });
+      // logger.debug('obtenerTablaMezclasEmpresa: resultadosFormateados', resultadosFormateados)
+      // Devolver los resultados validar si hay resultados mandar vacio
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener las mezclas');
+    }
+  }
+  static async obtenerTablaMezclasValidadosMichoacan({
+    status,
+    confirmacion
+  }) {
+    try {
+      // Validar datos
+      if (!status || !confirmacion) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      // Consulta para obtener las mezclas filtradas por empresa y status
+      const mezclas = await Solicitud.findAll({
+        where: {
+          empresa: {
+            [external_sequelize_namespaceObject.Op.or]: ['Moras Finas', 'Bayas del Centro']
+          },
+          status,
+          confirmacion // Solo mezclas no confirmadas
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }, {
+          model: Centrocoste,
+          // Modelo de CentroCoste
+          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']
+      });
+
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status,
+          respuestaSolicitud: m.respuestaSolicitud
+        };
+      });
+      // logger.debug('obtenerTablaMezclasEmpresa: resultadosFormateados', resultadosFormateados)
+      // Devolver los resultados validar si hay resultados mandar vacio
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener las mezclas');
+    }
+  }
 
   // uso
   static async obtenerTablaMezclasRancho({
     status,
-    ranchoDestino
+    ranchoDestino,
+    confirmacion
   }) {
     try {
       // Validar datos
@@ -2399,7 +3483,8 @@ class MezclaModel {
       const mezclas = await Solicitud.findAll({
         where: {
           ranchoDestino,
-          status
+          status,
+          confirmacion // Solo mezclas confirmadas
         },
         include: [{
           model: Usuario,
@@ -2454,18 +3539,22 @@ class MezclaModel {
   // uso
   static async obtenerTablaMezclasUsuario({
     status,
-    idUsuarioSolicita
+    idUsuarioSolicita,
+    confirmacion
   }) {
     try {
       // Validar datos
       if (!status || !idUsuarioSolicita) {
         throw new CustomError_ValidationError('Datos requeridos no proporcionados');
       }
+      utils_logger.info('Obteniendo tabla de mezclas por status y usuario: ' + status + ' y ' + idUsuarioSolicita + ' y ' + confirmacion);
+
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
         where: {
           idUsuarioSolicita,
-          status
+          status,
+          confirmacion // Solo mezclas no confirmadas
         },
         include: [{
           model: Usuario,
@@ -2478,11 +3567,6 @@ class MezclaModel {
         }],
         attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud', 'respuestaMezclador']
       });
-
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new CustomError_NotFoundError('No se encontraron mezclas para los criterios especificados');
-      }
 
       // Transformar los resultados
       const resultadosFormateados = mezclas.map(mezcla => {
@@ -2507,6 +3591,107 @@ class MezclaModel {
           status: m.status,
           respuestaSolicitud: m.respuestaSolicitud,
           respuestaMezclador: m.respuestaMezclador
+        };
+      });
+
+      // Devolver los resultados
+      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener las mezclas');
+    }
+  }
+  static async obtenerTablaMezclasCancelada({
+    idUsuario,
+    confirmacion,
+    rol
+  }) {
+    try {
+      let mezclas;
+      // Validar datos
+      if (!idUsuario || !rol) {
+        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      }
+      utils_logger.info('Obteniendo tabla de mezclas por status y usuario: ' + idUsuario + ' y ' + rol);
+      // Validar rol
+      if (rol === 'adminMezclador') {
+        mezclas = await Solicitud.findAll({
+          where: {
+            idUsuarioValida: idUsuario,
+            confirmacion // Solo mezclas no confirmadas
+          },
+          include: [{
+            model: Usuario,
+            // Modelo de Usuario
+            attributes: ['nombre'] // Campos que quieres obtener del usuario
+          }, {
+            model: Centrocoste,
+            // Modelo de CentroCoste
+            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+          }],
+          attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud', 'respuestaMezclador', 'motivoCancelacion']
+        });
+      } else if (rol === 'solicita' || rol === 'solicita2') {
+        mezclas = await Solicitud.findAll({
+          where: {
+            idUsuarioSolicita: idUsuario,
+            confirmacion // Solo mezclas no confirmadas
+          },
+          include: [{
+            model: Usuario,
+            // Modelo de Usuario
+            attributes: ['nombre'] // Campos que quieres obtener del usuario
+          }, {
+            model: Centrocoste,
+            // Modelo de CentroCoste
+            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+          }],
+          attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud', 'respuestaMezclador', 'motivoCancelacion']
+        });
+      } else if (rol === 'administrativo') {
+        mezclas = await Solicitud.findAll({
+          where: {
+            confirmacion // Solo mezclas no confirmadas
+          },
+          include: [{
+            model: Usuario,
+            // Modelo de Usuario
+            attributes: ['nombre'] // Campos que quieres obtener del usuario
+          }, {
+            model: Centrocoste,
+            // Modelo de CentroCoste
+            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+          }],
+          attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud', 'respuestaMezclador', 'motivoCancelacion']
+        });
+        // Verificar si se encontraron resultados
+        if (mezclas.length === 0) {
+          throw new CustomError_NotFoundError('No se encontraron mezclas para los criterios especificados');
+        }
+      }
+
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status,
+          motivoCancelacion: m.motivoCancelacion
         };
       });
 
@@ -2853,6 +4038,63 @@ class MezclaModel {
       throw new CustomError_DatabaseError('Error al obtener las mezclas');
     }
   }
+  static async obtenerMezclasMichoacan() {
+    try {
+      // Validar datos
+      // Agregar condición para empresas específicas
+      const mezclas = await Solicitud.findAll({
+        where: {
+          empresa: {
+            [external_sequelize_namespaceObject.Op.or]: ['Moras Finas', 'Bayas del Centro']
+          }
+        },
+        include: [{
+          model: Usuario,
+          // Modelo de Usuario
+          attributes: ['nombre'] // Campos que quieres obtener del usuario
+        }],
+        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']
+      });
+
+      // Verificar si se encontraron resultados
+      if (mezclas.length === 0) {
+        throw new CustomError_NotFoundError('No se encontraron mezclas para los criterios especificados');
+      }
+
+      // Transformar los resultados
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON();
+        return {
+          id: m.id,
+          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status
+        };
+      });
+
+      // Devolver los resultados
+      return {
+        message: 'Mezclas obtenidas correctamente',
+        data: resultadosFormateados
+      };
+    } catch (e) {
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al obtener las mezclas');
+    }
+  }
 
   // uso
   static async obtenerDatosSolicitud({
@@ -2864,7 +4106,7 @@ class MezclaModel {
         where: {
           id
         },
-        attributes: ['cantidad', 'presentacion', 'metodoAplicacion']
+        attributes: ['cantidad', 'presentacion', 'metodoAplicacion', 'descripcion']
       });
       // Verificar si se encontraron resultados
       if (mezclas.length === 0) {
@@ -2877,350 +4119,268 @@ class MezclaModel {
       throw new CustomError_DatabaseError('Error al obtener datos para la solicitud');
     }
   }
-} // fin modelo
-;// CONCATENATED MODULE: ./src/models/usuario.models.js
-
-
-
-
-
-
-class UsuarioModel {
-  // obtener todos los datos
-  static async getAll() {
+  static async validacion({
+    data,
+    idUsuario,
+    user
+  }) {
+    if (!data) {
+      throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+    }
+    const transaction = await db.transaction();
     try {
-      const usuario = await Usuario.findAll({
-        attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
-      });
-      // Verificar si se encontraron resultados
-      if (usuario.length === 0) {
-        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
-      }
-      return usuario;
+      const resultados = await Promise.all(data.map(async estado => {
+        // Procesar cada solicitud de manera independiente
+        const resultado = await procesarSolicitud({
+          estado,
+          idUsuario,
+          user,
+          transaction
+        });
+        return resultado;
+      }));
+      await transaction.commit();
+      return {
+        message: 'Solicitudes guardadas correctamente',
+        resultados
+      };
     } catch (e) {
+      utils_logger.error('Error al validar solicitud:', e);
+      await transaction.rollback();
       if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+      throw new CustomError_DatabaseError('Error al validar datos');
     }
   }
-
-  // uso
-  static async getUserEmail({
-    rol,
-    empresa
+  static async cancelar({
+    idSolicitud,
+    data,
+    idUsuario
   }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!rol || !empresa) {
-        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
-      }
-      const usuario = await Usuario.findAll({
-        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
-        where: {
-          rol,
-          [external_sequelize_namespaceObject.Op.or]: [{
-            empresa
-          }, {
-            empresa: 'General'
-          }]
-        }
-      });
-      // Verificar si se encontraron resultados
-      if (usuario.length === 0) {
-        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
-      }
-      return usuario;
-    } catch (e) {
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
+    let solicitud;
+    let solicita;
+    let validacion;
+    if (!idSolicitud || !data || !idUsuario) {
+      throw new CustomError_ValidationError('Datos requeridos no proporcionados');
     }
-  }
-
-  // uso
-  static async getUserEmailRancho({
-    rol,
-    empresa,
-    rancho
-  }) {
+    const transaction = await db.transaction();
     try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!rol || !empresa || !rancho) {
-        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      solicitud = await Solicitud.findByPk(idSolicitud);
+      if (!solicitud) {
+        throw new CustomError_NotFoundError('Solicitud no encontrada');
       }
-      const usuario = await Usuario.findAll({
-        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
-        where: {
-          rol,
-          // Se filtra por rol
-          empresa,
-          // Se filtra por empresa
-          ranchos: rancho // Se filtra por rancho
-        }
+      if (data.validacion === false) {
+        validacion = 'Cancelada';
+      }
+      solicitud.confirmacion = validacion;
+      solicitud.idUsuarioValida = idUsuario;
+      solicitud.motivoCancelacion = data.motivo;
+      await solicitud.save({
+        transaction
       });
-      // Verificar si se encontraron resultados
-      if (usuario.length === 0) {
-        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
-      }
-      return usuario;
-    } catch (e) {
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
-    }
-  }
+      utils_logger.info('Solicitud actual:', solicitud);
+      utils_logger.info(`empresa:${solicitud.empresa}, fecha:${(0,external_date_fns_namespaceObject.format)(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss')}, confirmacion rancho:${solicitud.ranchoDestino}`);
+      // obtener datos para mandar correo al mezclador
 
-  // uso
-  static async getUserEmailEmpresa({
-    rol,
-    empresa
-  }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!rol || !empresa) {
-        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
-      }
-      const usuario = await Usuario.findAll({
-        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
-        where: {
-          rol,
-          // Se filtra por rol
-          empresa // Se filtra por empresa
-        }
+      solicita = await UsuarioModel.getOneId({
+        id: solicitud.idUsuarioSolicita
       });
-      // Verificar si se encontraron resultados
-      if (usuario.length === 0) {
-        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
-      }
-      return usuario;
-    } catch (e) {
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
-    }
-  }
-
-  // obtener todos los un ato por id
-  static async getOne({
-    rol,
-    empresa
-  }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!rol || !empresa) {
-        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
-      }
-      const usuario = await Usuario.findOne({
-        where: {
-          rol,
-          empresa
+      utils_logger.info('Solicitante actual:', solicita);
+      utils_logger.info(`nombre:${solicita.nombre}, correo:${solicita.email}`);
+      const respues = await enviarCorreo({
+        type: 'cancelacion',
+        email: solicita.email,
+        nombre: solicita.nombre,
+        solicitudId: solicitud.id,
+        usuario: {
+          empresa: solicitud.empresa,
+          ranchos: solicitud.ranchoDestino
         },
-        attributes: ['nombre', 'email', 'rol']
-      });
-      // Verificar si se encontraron resultados
-      if (!usuario) {
-        throw new CustomError_NotFoundError('No se encontraron usuarios para los criterios especificados');
-      }
-      return usuario;
-    } catch (e) {
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
-    }
-  }
-  static async getOneId({
-    id
-  }) {
-    try {
-      if (!id) {
-        throw new CustomError_ValidationError('ID no proporcionados');
-      }
-      const usuario = await Usuario.findOne({
-        where: {
-          id
-        },
-        attributes: ['nombre', 'email', 'rol', 'empresa']
-      });
-      // Verificar si se encontraron resultados
-      if (!usuario) {
-        throw new CustomError_NotFoundError('No se encontro usuario');
-      }
-      return usuario;
-    } catch (e) {
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al obtener todos los usuarios');
-    }
-  }
-
-  // eliminar usuario
-  static async delete({
-    id
-  }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!id) throw new CustomError_ValidationError('Datos requeridos no proporcionados');
-      const usuario = await Usuario.findByPk(id);
-      if (!usuario) throw new CustomError_NotFoundError('Usuario no encontrado');
-      await usuario.destroy();
-      return {
-        message: `usuario eliminada correctamente con id ${id}`
-      };
-    } catch (e) {
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al eliminar usuario');
-    }
-  }
-
-  // crear usuario
-  static async create({
-    data
-  }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!data.usuario || !data.email || !data.password || !data.rol || !data.empresa) {
-        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
-      }
-      // verificamos que no exista el usuario
-      const usuario = await Usuario.findOne({
-        where: {
-          usuario: data.usuario,
-          email: data.email
+        data: {
+          motivo: data.motivo
         }
       });
-      if (usuario) throw new CustomError_ValidationError('El usuario o email ya existe');
-      // creamos el usuario
-      await Usuario.create({
-        ...data
-      });
+      if (respues.error) {
+        utils_logger.error('Error al enviar correo:', respues.error);
+      } else {
+        utils_logger.info('Correo enviado:', respues.messageId);
+      }
+      await transaction.commit();
       return {
-        message: `usuario registrado exitosamente ${data.nombre}`
+        message: 'Solicitudes Guardada correctamente'
       };
     } catch (e) {
+      utils_logger.error('Error al cancelar solicitud:', e);
+      await transaction.rollback();
       if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al crear usuario');
+      throw new CustomError_DatabaseError('Error al validar datos');
     }
   }
-
-  // para actualizar datos de usuario
-  static async update({
-    id,
-    data
+  static async mezclaConfirmar({
+    idSolicitud,
+    data,
+    usuario
   }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!id || !data.nombre || !data.email || !data.password || !data.rol || !data.empresa) {
-        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
-      }
-      // verificamos si existe alguna empresa con el id proporcionado
-      const usuario = await Usuario.findByPk(id);
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      // Actualiza solo los campos que se han proporcionado
-      if (data.nombre) usuario.nombre = data.nombre;
-      if (data.email) usuario.email = data.email;
-      if (data.rol) usuario.rol = data.rol;
-      if (data.empresa) usuario.empresa = data.empresa;
-      await usuario.save();
-      return {
-        message: 'usuario actualizada correctamente',
-        rol: data.rol
-      };
-    } catch (e) {
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al actualizar usuario');
+    let solicitud;
+    let solicita;
+    const validacion = 'Pendiente';
+    if (!idSolicitud || !data) {
+      throw new CustomError_ValidationError('Datos requeridos no proporcionados');
     }
-  }
-
-  // funcion login
-  static async login({
-    user,
-    password
-  }) {
+    const transaction = await db.transaction();
     try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!user || !password) {
-        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      solicitud = await Solicitud.findByPk(idSolicitud);
+      if (!solicitud) {
+        throw new CustomError_NotFoundError('Solicitud no encontrada');
       }
-      const usuario = await Usuario.findOne({
-        where: {
-          usuario: user
-        }
+      solicitud.confirmacion = validacion;
+      if (data.comentarios) solicitud.comentarios = data.comentarios;
+      if (data.fechaSolicitud) solicitud.fechaSolicitud = data.fechaSolicitud;
+      if (data.empresa) solicitud.empresa = data.empresa;
+      if (data.ranchoDestino) solicitud.ranchoDestino = data.ranchoDestino;
+      if (data.descripcion) solicitud.descripcion = data.descripcion;
+      if (data.folio) solicitud.folio = data.folio;
+      if (data.temporada) solicitud.temporada = data.temporada;
+      if (data.cantidad) solicitud.cantidad = data.cantidad;
+      if (data.presentacion) solicitud.presentacion = data.presentacion;
+      if (data.metodoAplicacion) solicitud.metodoAplicacion = data.metodoAplicacion;
+      if (data.descripcion) solicitud.descripcion = data.descripcion;
+      await solicitud.save({
+        transaction
       });
-      if (!usuario) throw new CustomError_NotFoundError('Usuario no encontrado');
-      const isValidPassword = await external_bcryptjs_namespaceObject["default"].compare(password, usuario.password);
-      if (!isValidPassword) throw new CustomError_ValidationError('Contraseña incorrecta');
+      utils_logger.info('Solicitud actual:', solicitud);
+      // obtener datos para mandar correo al mezclador
 
-      // creamos jwt
-      const token = external_jsonwebtoken_namespaceObject["default"].sign({
-        id: usuario.id,
+      solicita = await UsuarioModel.getOneId({
+        id: solicitud.idUsuarioValida
+      });
+      utils_logger.info(`nombre:${solicita.nombre}, correo:${solicita.email}`);
+      const respues = await enviarCorreo({
+        type: 'reevaluacion',
+        email: solicita.email,
         nombre: usuario.nombre,
-        rol: usuario.rol,
-        empresa: usuario.empresa,
-        ranchos: usuario.ranchos,
-        cultivo: usuario.variedad
-      }, envs.SECRET_JWT_KEY, {
-        expiresIn: '24h'
+        solicitudId: solicitud.id,
+        usuario: {
+          empresa: usuario.empresa,
+          ranchos: solicita.ranchoDestino
+        },
+        data: {
+          folio: solicitud.folio || 'No Aplica',
+          cantidad: solicitud.cantidad || 'No Aplica',
+          presentacion: solicitud.presentacion || 'No Aplica',
+          metodoAplicacion: solicitud.metodoAplicacion,
+          motivo: solicitud.motivoCancelacion,
+          comentarios: solicitud.comentario || 'Por favor, revisar las proporciones de los productos'
+        }
       });
-      return {
-        message: 'Usuario logueado correctamente',
-        token,
-        rol: usuario.rol
-      };
-    } catch (e) {
-      if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al iniciar sesión');
-    }
-  }
-
-  // funcion cambiar contraseña usuario
-  static async changePassword({
-    id,
-    oldPassword,
-    newPassword
-  }) {
-    try {
-      const usuario = await Usuario.findByPk(id);
-      if (!usuario) return {
-        error: 'usuario no encontrado'
-      };
-      const isValidPassword = await external_bcryptjs_namespaceObject["default"].compare(oldPassword, usuario.password);
-      if (!isValidPassword) return {
-        error: 'contraseña actual incorrecta'
-      };
-      usuario.password = newPassword;
-      await usuario.save();
-      return {
-        message: 'contraseña cambiada correctamente'
-      };
-    } catch (e) {
-      console.error(e.message);
-      return {
-        error: 'Error al cambiar contraseña'
-      };
-    }
-  }
-
-  // funcion cambiar contraseña Admin
-  static async changePasswordAdmin({
-    id,
-    newPassword
-  }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!id || !newPassword) {
-        throw new CustomError_ValidationError('Datos requeridos no proporcionados');
+      if (respues.error) {
+        utils_logger.error('Error al enviar correo:', respues.error);
+      } else {
+        utils_logger.info('Correo enviado:', respues.messageId);
       }
-      const usuario = await Usuario.findByPk(id);
-      if (!usuario) throw new CustomError_NotFoundError('usuario no encontrado');
-      usuario.password = newPassword;
-      await usuario.save();
+      await transaction.commit();
       return {
-        message: 'Contraseña cambiada correctamente'
+        message: 'Solicitudes Guardada correctamente'
       };
     } catch (e) {
+      utils_logger.error('Error al cancelar solicitud:', e);
+      await transaction.rollback();
       if (e instanceof CustomError_CustomError) throw e;
-      throw new CustomError_DatabaseError('Error al cambiar contraseña');
+      throw new CustomError_DatabaseError('Error al validar datos');
     }
   }
+} // fin modelo
+
+// Función auxiliar para procesar cada solicitud
+async function procesarSolicitud({
+  estado,
+  idUsuario,
+  user,
+  transaction
+}) {
+  // Buscar la solicitud
+  const solicitud = await Solicitud.findByPk(estado.id_solicitud);
+  if (!solicitud) {
+    throw new CustomError_NotFoundError(`Solicitud ${estado.id_solicitud} no encontrada`);
+  }
+
+  // Actualizar solicitud
+  solicitud.confirmacion = estado.validacion === true ? 'Confirmada' : solicitud.confirmacion;
+  solicitud.idUsuarioValida = idUsuario;
+  await solicitud.save({
+    transaction
+  });
+
+  // Obtener mezclador según la empresa
+  let mezclador;
+  if (solicitud.empresa === 'Moras Finas' || solicitud.empresa === 'Bayas del Centro') {
+    mezclador = await UsuarioModel.getUserEmail({
+      rol: 'mezclador',
+      empresa: solicitud.empresa
+    });
+  } else {
+    mezclador = await UsuarioModel.getUserEmailRancho({
+      rol: 'mezclador',
+      empresa: solicitud.empresa,
+      rancho: solicitud.ranchoDestino
+    });
+  }
+
+  // Obtener solicitante
+  const solicitante = await UsuarioModel.getOneId({
+    id: solicitud.idUsuarioSolicita
+  });
+
+  // Enviar correos si se tienen los datos necesarios
+  if (mezclador?.[0] && solicitante) {
+    utils_logger.info(`nombre mezclador:${mezclador[0].nombre}, correo:${mezclador[0].email}`);
+    utils_logger.info(`nombre solicitante:${solicitante.nombre}, correo:${solicitante.email}`);
+    const respues = await enviarCorreo({
+      type: 'solicitud',
+      email: mezclador[0].email,
+      nombre: mezclador[0].nombre,
+      solicitudId: solicitud.id,
+      fechaSolicitud: (0,external_date_fns_namespaceObject.format)(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss'),
+      data: solicitud,
+      usuario: {
+        nombre: solicitante.nombre,
+        empresa: solicitante.empresa,
+        ranchos: solicitud.ranchoDestino
+      }
+    });
+    const respuesSolicitante = await enviarCorreo({
+      type: 'aprobada',
+      email: solicitante.email,
+      nombre: solicitante.nombre,
+      solicitudId: solicitud.id,
+      usuario: {
+        empresa: solicitante.empresa,
+        ranchos: solicitud.ranchoDestino
+      },
+      data: {
+        folio: solicitud.folio,
+        cantidad: solicitud.cantidad,
+        presentacion: solicitud.presentacion,
+        metodoAplicacion: solicitud.metodoAplicacion
+      }
+    });
+    if (respues.error) {
+      utils_logger.error('Error al enviar correo:', respues.error);
+    } else {
+      utils_logger.info('Correo enviado:', respues.messageId);
+    }
+    if (respuesSolicitante.error) {
+      utils_logger.error('Error al enviar correo:', respuesSolicitante.error);
+    } else {
+      utils_logger.info('Correo enviado:', respuesSolicitante.messageId);
+    }
+  }
+  return {
+    idSolicitud: estado.id_solicitud,
+    empresa: solicitud.empresa,
+    status: 'procesado'
+  };
 }
 ;// CONCATENATED MODULE: ./src/controller/proteted.controller.js
-
 
 
 
@@ -3232,12 +4392,13 @@ class ProtetedController {
     const {
       user
     } = req.session;
+    utils_logger.debug('Usuario en la ruta protegida:', user);
     if (!user) return res.status(403).render('errorPage', {
       codeError: '403',
       errorMsg: 'Acceso no utorizado'
     });
     // validamos al usuario
-    if (user.rol === 'admin' || user.rol === 'administrativo') {
+    if (user.rol === 'admin' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {
       res.status(200).render('pages/admin/solicitudes', {
         user,
         rol: user.rol,
@@ -3302,9 +4463,8 @@ class ProtetedController {
       codeError: '403',
       errorMsg: 'Acceso no utorizado'
     });
-    const productos = await ProductosModel.getAll();
     res.render('pages/mezclas/completadas', {
-      productos
+      rol: user.rol
     });
   };
   tablaSolicitudes = async (req, res) => {
@@ -3436,7 +4596,7 @@ class ProtetedController {
               idNotificacion: notificacion[0].dataValues.id
             });
           }
-        case 'administrativo':
+        case 'adminMezclador':
           {
             // validamos que el usuario sea fransico ya que es el que procesa la solicitud siendo administrativo
             if (user.nombre.trim() !== 'Francisco Alvarez') {
@@ -3458,6 +4618,13 @@ class ProtetedController {
             const mezclador = await UsuarioModel.getOneId({
               id: result.dataValues.idUsuarioMezcla
             });
+
+            // obtenemos datos de la notificacion
+            const notificacion = await NotificacionModel.getOneIDSolicitudUsuario({
+              idUsuario: user.id,
+              idSolicitud
+            });
+            utils_logger.debug(notificacion);
             return res.render('pages/mezclas/notificaciones', {
               nombre: user.nombre,
               idSolicitud,
@@ -3466,7 +4633,8 @@ class ProtetedController {
               nombreMezclador: mezclador.nombre,
               idMezclador: result.dataValues.idUsuarioMezcla,
               empresa: mezclador.empresa,
-              respuestaMezclador: result.dataValues.respuestaMezclador
+              respuestaMezclador: result.dataValues.respuestaMezclador,
+              idNotificacion: notificacion[0].dataValues.id
             });
           }
         default:
@@ -3475,6 +4643,70 @@ class ProtetedController {
             codeError: '403',
             errorMsg: 'Acceso no utorizado'
           });
+      }
+    } catch (error) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: error.message
+      });
+    }
+  };
+  confirmacion = async (req, res) => {
+    const {
+      user
+    } = req.session;
+    // verificamos si existe un usuario
+    if (!user) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: 'Acceso no utorizado'
+      });
+    }
+    try {
+      res.render('pages/mezclas/confirmaSolicitud', {
+        rol: user.rol,
+        user
+      });
+    } catch (error) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: error.message
+      });
+    }
+  };
+  canceladas = async (req, res) => {
+    const {
+      user
+    } = req.session;
+    // verificamos si existe un usuario
+    if (!user) {
+      return res.status(403).render('errorPage', {
+        title: '403 - Sin Autorisacion',
+        codeError: '403',
+        errorMsg: 'Acceso no utorizado'
+      });
+    }
+    try {
+      if (user.rol === 'admin' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {
+        return res.render('pages/admin/solicitudesCanceladas', {
+          user,
+          rol: user.rol,
+          titulo: 'Bienvenido'
+        });
+      } else if (user.rol === 'solicita' || user.rol === 'solicita2') {
+        return res.render('pages/mezclas/canceladas', {
+          rol: user.rol,
+          nombre: user.nombre
+        });
+      } else {
+        return res.status(403).render('errorPage', {
+          title: '403 - Sin Autorisacion',
+          codeError: '403',
+          errorMsg: 'Acceso no utorizado'
+        });
       }
     } catch (error) {
       return res.status(403).render('errorPage', {
@@ -3517,321 +4749,13 @@ const createProtetedRouter = () => {
   router.get('/productos', asistenciaController.productos);
   router.get('/centroCoste', asistenciaController.centroCoste);
   router.get('/notificacion/:idSolicitud', asistenciaController.notificacion);
+  router.get('/confirmacion', asistenciaController.confirmacion);
+  router.get('/canceladas/', asistenciaController.canceladas);
 
   // cerrar sesion
   router.get('/cerrarSesion', asistenciaController.logout); // logear usuario
 
   return router;
-};
-;// CONCATENATED MODULE: external "nodemailer"
-var external_nodemailer_x = (y) => {
-	var x = {}; __webpack_require__.d(x, y); return x
-} 
-var external_nodemailer_y = (x) => (() => (x))
-const external_nodemailer_namespaceObject = external_nodemailer_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_nodemailer__["default"]) });
-;// CONCATENATED MODULE: ./src/config/smtp.js
-
-
-// utils
-
-
-
-// Configuración del transportador SMTP
-const createTransporter = () => {
-  const transporter = external_nodemailer_namespaceObject["default"].createTransport({
-    host: 'portalrancho.com.mx',
-    port: 465,
-    secure: true,
-    auth: {
-      user: envs.EMAIL_USER,
-      pass: envs.EMAIL_PASSWORD
-    },
-    tls: {
-      rejectUnauthorized: true,
-      minVersion: 'TLSv1.2' // Versión mínima de TLS
-    },
-    pool: true,
-    debug: true,
-    logger: false
-  });
-
-  // Verificar conexión
-  transporter.verify((error, success) => {
-    if (error) {
-      utils_logger.error('Error en verificación SMTP:', error);
-    } else {
-      utils_logger.info('Servidor SMTP listo');
-    }
-  });
-  return transporter;
-};
-
-// Función auxiliar para obtener color según el estatus
-const getStatusColor = status => {
-  const colors = {
-    Proceso: '#28a745',
-    // Verde
-    Completada: '#ffc107',
-    // Amarillo
-    Rechazado: '#dc3545',
-    // Rojo
-    default: '#17a2b8' // Azul
-  };
-  return colors[status] || colors.default;
-};
-
-// Función auxiliar para detalles adicionales según estatus
-const getAdditionalDetails = status => {
-  const details = {
-    Proceso: '<p>Su solicitud está siendo procesada. Le mantendremos informado sobre cualquier actualización.</p>',
-    Completada: '<p>Su solicitud ha sido <strong>completada</strong>. Para más detalles, por favor contacte a nuestro equipo.</p>',
-    default: ''
-  };
-  return details[status] || details.default;
-};
-
-// Función para enviar correo con manejo de errores
-const sendMail = async message => {
-  const transporter = createTransporter();
-  try {
-    const info = await transporter.sendMail(message);
-    utils_logger.info('Correo enviado:', {
-      messageId: info.messageId,
-      response: info.response
-    });
-    return info;
-  } catch (error) {
-    utils_logger.error('Error al enviar correo:', {
-      error: error.message,
-      code: error.code,
-      command: error.command,
-      response: error.response
-    });
-    throw error;
-  }
-};
-const validateEmailData = (type, data) => {
-  const requiredFields = {
-    status: ['email', 'nombre', 'solicitudId', 'status'],
-    solicitud: ['email', 'nombre', 'solicitudId', 'fechaSolicitud', 'usuario', 'data'],
-    notificacion: ['email', 'nombre', 'solicitudId', 'data'],
-    usuario: ['email', 'password'],
-    respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario']
-  };
-  const fields = requiredFields[type] || [];
-  const missing = fields.filter(field => !data[field]);
-  if (missing.length > 0) {
-    throw new CustomError_ValidationError(`Faltan campos requeridos para el tipo ${type}: ${missing.join(', ')}`);
-  }
-};
-// Función principal para enviar correos
-const enviarCorreo = async params => {
-  const {
-    type,
-    email,
-    password = '',
-    fechaSolicitud = '',
-    nombre = 'Usuario',
-    solicitudId = '',
-    status = '',
-    usuario = {},
-    data = {}
-  } = params;
-
-  // Validar datos requeridos según el tipo
-  validateEmailData(type, params);
-
-  // Configurar mensaje según tipo
-  if (!email || !type) {
-    throw new CustomError_ValidationError('Email y tipo de mensaje son requeridos');
-  }
-
-  // Configurar mensaje según tipo
-  const templates = {
-    status: {
-      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
-      subject: `Actualización de Solicitud - ${solicitudId}`,
-      html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
-             <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
-                 <h1>Grupo LG</h1>
-            </div>
-            <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
-                <h2>Actualización de Solicitud</h2>
-                <p>Estimado(a) ${nombre},</p>
-                <p>Le informamos que su solicitud con ID: <b>${solicitudId}</b> ha cambiado de estatus.</p>
-                <div style="background-color: ${getStatusColor(status)}; color: white; padding: 10px; border-radius: 5px; text-align: center;">
-                    <h3>Estado Actual: ${status}</h3>
-                </div>
-                <h4>Detalles de la Solicitud:</h4>
-                ${getAdditionalDetails(status)}
-      
-               <a href="https://solicitudmezclas.portalrancho.com.mx/protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
-      
-               <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
-               <p>Atentamente,<br>El equipo de Grupo LG</p>
-          </div>
-      </body>`
-    },
-    usuario: {
-      from: '"Registro Portal Checador" <mezclas.rancho@portalrancho.com.mx>',
-      subject: 'Usuario Creado Exitosamente',
-      html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
-        <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
-            <h1>Grupo LG</h1>
-        </div>
-        <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
-            <h2>¡Bienvenido a Grupo LG!</h2>
-            <p>Estimado nuevo usuario,</p>
-            <p>Nos complace darte la bienvenida a Grupo LG. Tu cuenta ha sido creada exitosamente.</p>
-            <p>Para acceder a tu cuenta, por favor utiliza los siguientes datos:</p>
-            <ul>
-                <li>Nombre de usuario:<b>${email}</b></li>
-                <li>Contraseña temporal:<b>${password}</b></li>
-            </ul>
-             <a href="https://solicitudmezclas.portalrancho.com.mx/" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
-            <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>
-            <p>¡Gracias por unirte a nosotros!</p>
-            <p>Atentamente,<br>El equipo de Grupo LG</p>
-        </div>
-    </body>`
-    },
-    solicitud: {
-      from: '"Portal de Solicitudes Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
-      subject: `Nueva Solicitud Creada - ${solicitudId}`,
-      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #4CAF50; color: white; text-align: center; padding: 20px;">
-            <h1>Grupo LG</h1>
-        </div>
-        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
-            <h2>Nueva Solicitud Creada</h2>
-            <p>Estimado(a) ${nombre},</p>
-            <p>Le informamos nueva solicitud ha sido creada con éxito. ID de solicitud es: <b>${solicitudId}</b>.</p>
-
-            <h4>Datos de solicitante:</h4>
-            <ul>
-                <li><strong>Nombre:</strong> ${usuario.nombre}</li>
-                <li><strong>Empresa</strong> ${usuario.empresa}</li>
-                <li><strong>Rancho:</strong> ${data.rancho}</li>
-            </ul>
-
-            <h4>Detalles de la Solicitud:</h4>
-            <ul>
-                <li><strong>Fecha de Solicitud:</strong> ${fechaSolicitud}</li>
-                <li><strong>Descripción:</strong> ${data.descripcion}</li>
-                <li><strong>Folio Receta:</strong> ${data.folio}</li>
-            </ul>
-
-            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
-
-            <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
-            <p>Atentamente,<br>El equipo de Grupo LG</p>
-        </div>
-    </body>`
-    },
-    notificacion: {
-      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
-      subject: `Notificación de No Disponibilidad - ${solicitudId}`,
-      html: ` <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-               <div style="background-color: #FF5733; color: white; text-align: center; padding: 20px;">
-                   <h1>Grupo LG</h1>
-               </div>
-               <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
-                   <h2>Notificación de No Disponibilidad de Producto</h2>
-                   <p>Estimado(a) ${nombre},</p>
-                   <p>Le informamos que el producto que solicitó no está disponible en este momento. A continuación, se detallan los datos de los productos sin existencia:</p>
-      
-                   <h4>Solicitud: <b>${solicitudId}</b></h4>
-      
-                   <ul>
-                      ${Array.isArray(data) ? data.map(product => `
-                   <li>
-                     <strong>Id del Producto:</strong> ${product.id_producto}<br>
-                     <strong>Nombre del Producto:</strong> ${product.nombre_producto}<br>
-                     <strong>Unidad de Medida:</strong> ${product.unidad_medida}<br>
-                     <strong>cantidad:</strong> ${product.cantidad}
-                   </li>
-                 `).join('') : '<li>No hay productos para mostrar</li>'}
-                   </ul>
-      
-                   <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
-                  <div style="text-align: center; margin-top: 20px;">
-                      <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" 
-                        style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                        Ver Solicitud
-                      </a>
-                  </div>
-                   <p>Si tiene alguna pregunta o necesita más información, no dude en contactar a nuestro equipo de almacen.</p>
-                   <p><strong>Encargado de almacen:</strong> ${usuario?.nombre || 'No especificado'}<br></p>
-                   <p><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}<br></p>
-                   <p><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}<br></p>
-                   <p>Atentamente,<br>El equipo de Grupo LG</p>
-               </div>
-             </body>`
-    },
-    respuestaSolicitante: {
-      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
-      subject: `Respuesta de Solicitante - Solicitud ${solicitudId}`,
-      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
-          <h1>Grupo LG - Respuesta de Solicitante</h1>
-        </div>
-        
-        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
-          <h2>Nueva Respuesta del Solicitante</h2>
-          
-          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <h4 style="margin-top: 0;">Detalles de la Solicitud:</h4>
-            <ul style="list-style: none; padding: 0;">
-              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
-              <li><strong>Solicitante:</strong> ${nombre}</li>
-              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
-              <li><strong>Ranchos:</strong> ${usuario?.ranchos || 'No especificado'}</li>
-            </ul>
-          </div>
-  
-          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
-            <h4 style="margin-top: 0;">Mensaje del Solicitante:</h4>
-            <p style="margin-bottom: 0;">${data.mensaje}</p>
-          </div>
-  
-          <div style="text-align: center; margin-top: 20px;">
-            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" 
-               style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-               Ver Solicitud
-            </a>
-          </div>
-  
-          <p style="margin-top: 20px;">Por favor, revise la respuesta y tome las acciones necesarias.</p>
-          
-          <hr style="border: 1px solid #eee; margin: 20px 0;">
-          
-          <p style="color: #666; font-size: 0.9em;">
-            Este es un mensaje automático. Si necesita ayuda adicional, contacte al departamento de soporte.
-          </p>
-          
-          <p>Atentamente,<br>El equipo de Grupo LG</p>
-        </div>
-      </body>`
-    }
-  };
-  try {
-    const template = templates[type];
-    if (!template) {
-      throw new CustomError_ValidationError(`Tipo de mensaje "${type}" no válido`);
-    }
-    const message = {
-      ...template,
-      to: email // Reemplazar con el correo del cliente
-    };
-    const result = await sendMail(message);
-    return {
-      success: true,
-      messageId: result.messageId
-    };
-  } catch (error) {
-    utils_logger.error('Error en enviarCorreo:', error);
-    throw error;
-  }
 };
 ;// CONCATENATED MODULE: ./src/utils/asyncHandler.js
 const asyncHandler = fn => {
@@ -4047,14 +4971,7 @@ const createCentroCosteRouter = ({
   router.post('/porcentajeVariedad', centroController.porcentajeVariedad);
   return router;
 };
-;// CONCATENATED MODULE: external "date-fns"
-var external_date_fns_x = (y) => {
-	var x = {}; __webpack_require__.d(x, y); return x
-} 
-var external_date_fns_y = (x) => (() => (x))
-const external_date_fns_namespaceObject = external_date_fns_x({ ["format"]: () => (__WEBPACK_EXTERNAL_MODULE_date_fns_f4130be9__.format) });
 ;// CONCATENATED MODULE: ./src/controller/mezclas.controller.js
-
 
 
 
@@ -4080,62 +4997,65 @@ class MezclasController {
       data: req.body,
       idUsuario: user.id
     });
-
+    utils_logger.info('Resultado de la creación:', result);
     // procesar fecha
-    const fechaSolicitud = new Date(result.fechaSolicitud);
-    const fechaFormateada = (0,external_date_fns_namespaceObject.format)(fechaSolicitud, 'dd/MM/yyyy HH:mm:ss');
-
-    // estos usuarios les llegaran todas las notificaciones
-    const r2 = await UsuarioModel.getUserEmailEmpresa({
-      rol: 'administrativo',
-      empresa: 'General'
-    });
 
     // obtenemos los datos del usuario al que mandaremos el correo
     if (req.body.rancho === 'Atemajac' || req.body.rancho === 'Ahualulco') {
-      const r1 = await UsuarioModel.getUserEmailRancho({
-        rol: 'mezclador',
-        empresa: req.body.empresaPertece,
-        rancho: req.body.rancho
-      });
-      const r3 = await UsuarioModel.getUserEmailRancho({
-        rol: 'administrativo',
-        empresa: 'Bioagricultura',
-        rancho: 'General'
-      });
-      ress = [...r1, ...r2, ...r3];
+      const r3 = await UsuarioModel.getUserEmailEmpresa({
+        rol: 'adminMezclador',
+        empresa: 'Bioagricultura'
+      }); // idUsuario: 33 es el id de Francisco Alvarez
+      ress = [...r3];
     } else if (req.body.rancho === 'Seccion 7 Fresas') {
-      const r1 = await UsuarioModel.getUserEmailRancho({
-        rol: 'mezclador',
-        empresa: 'Bioagricultura',
-        rancho: 'Atemajac'
-      });
-      const r3 = await UsuarioModel.getUserEmailRancho({
-        rol: 'administrativo',
-        empresa: 'Lugar Agricola',
-        rancho: 'Seccion 7 Fresas'
-      });
-      ress = [...r1, ...r2, ...r3];
-    } else {
-      // obtenemos los datos del usuario al que mandaremos el correo
-      const r1 = await UsuarioModel.getUserEmail({
-        rol: 'mezclador',
-        empresa: req.body.empresaPertece
-      });
-      ress = [...r1, ...r2];
+      const r3 = await UsuarioModel.getUserEmailEmpresa({
+        rol: 'adminMezclador',
+        empresa: 'Bioagricultura'
+      }); // idUsuario: 33 es el id de Francisco Alvarez
+      ress = [...r3];
+    } else if (req.body.rancho === 'Romero' || req.body.rancho === 'Potrero' || req.body.rancho === 'Casas de Altos') {
+      let r3 = [];
+      if (user.rol === 'adminMezclador' && user.id === 33) {
+        r3 = await UsuarioModel.getUserEmailEmpresa({
+          rol: 'adminMezclador',
+          empresa: 'Bioagricultura'
+        }); // idUsuario: 33 es el id de Francisco Alvarez
+      } else {
+        r3 = await UsuarioModel.getUserEmailGerente({
+          rol: 'adminMezclador',
+          idUsuario: 51
+        }); // idUsuario: 48 es el id de abigail ortiz
+      }
+      ress = [...r3];
+    } else if (req.body.rancho === 'La Loma' || req.body.rancho === 'Zapote' || req.body.rancho === 'Ojo de Agua') {
+      const r1 = await UsuarioModel.getUserEmailGerente({
+        rol: 'adminMezclador',
+        idUsuario: 51
+      }); // idUsuario: 48 es el id de abigail ortiz
+      ress = [...r1];
     }
+
+    // validasmo resultados
     if (ress) {
       // Usar forEach para mapear los resultados
       ress.forEach(async usuario => {
         utils_logger.info(`nombre:${usuario.nombre}, correo:${usuario.email}`);
         const respues = await enviarCorreo({
-          type: 'solicitud',
+          type: 'confirmacionInicial',
           email: usuario.email,
-          nombre: usuario.nombre,
+          nombre: user.nombre,
           solicitudId: result.idSolicitud,
-          fechaSolicitud: fechaFormateada,
-          data: req.body,
-          usuario: user
+          usuario: {
+            empresa: usuario.empresa,
+            ranchos: result.data.ranchoDestino
+          },
+          data: {
+            folio: result.data.folio,
+            cantidad: result.data.cantidad,
+            presentacion: result.data.presentacion,
+            metodoAplicacion: result.data.metodoAplicacion,
+            descripcion: result.data.descripcion
+          }
         });
         // validamos los resultados
         if (respues.error) {
@@ -4241,29 +5161,32 @@ class MezclasController {
     const {
       user
     } = req.session;
-    // console.log('user', user)
     const {
       status
     } = req.params;
+    let result = [];
+    const confirmacion = 'Confirmada';
     if (!status) {
       throw new CustomError_ValidationError('El estado es requerido');
     }
-    let result = [];
     switch (user.rol) {
       case 'mezclador':
         if (user.ranchos === 'General') {
           result = await this.mezclaModel.obtenerTablaMezclasEmpresa({
             status,
-            empresa: user.empresa
+            empresa: user.empresa,
+            confirmacion
           });
         } else if (user.ranchos === 'Atemajac') {
           const r1 = (await this.mezclaModel.obtenerTablaMezclasRancho({
             status,
-            ranchoDestino: user.ranchos
+            ranchoDestino: user.ranchos,
+            confirmacion
           })) || [];
           const r2 = (await this.mezclaModel.obtenerTablaMezclasEmpresa({
             status,
-            empresa: 'Lugar Agricola'
+            empresa: 'Lugar Agricola',
+            confirmacion
           })) || [];
           result = [...(Array.isArray(r1) ? r1 : []), ...(Array.isArray(r2) ? r2 : [])];
 
@@ -4272,22 +5195,25 @@ class MezclasController {
             result = []; // Asegurar que retornamos un array vacío
           }
         } else {
-          result = await this.mezclaModel.obtenerTablaMezclasRancho({
+          result = (await this.mezclaModel.obtenerTablaMezclasRancho({
             status,
-            ranchoDestino: user.ranchos
-          });
+            ranchoDestino: user.ranchos,
+            confirmacion
+          })) || [];
         }
         break;
       case 'solicita':
         result = await this.mezclaModel.obtenerTablaMezclasUsuario({
           status,
-          idUsuarioSolicita: user.id
+          idUsuarioSolicita: user.id,
+          confirmacion
         });
         break;
       case 'solicita2':
         result = await this.mezclaModel.obtenerTablaMezclasEmpresa({
           status,
-          empresa: user.empresa
+          empresa: user.empresa,
+          confirmacion
         });
         break;
       case 'supervisor':
@@ -4330,6 +5256,46 @@ class MezclasController {
           }
           break;
         }
+      case 'adminMezclador':
+        {
+          if (user.empresa === 'General' && user.ranchos === 'General') {
+            result = await this.mezclaModel.obtenerMezclasMichoacan({
+              status
+            });
+          } else {
+            const [res2, res1] = await Promise.all([this.mezclaModel.obtenerTablaMezclasValidados({
+              status,
+              empresa: user.empresa,
+              confirmacion
+            }), this.mezclaModel.obtenerTablaMezclasUsuario({
+              status,
+              idUsuarioSolicita: user.id,
+              confirmacion
+            })]);
+
+            // Verificar y combinar resultados
+            if (Array.isArray(res2)) {
+              result = result.concat(res2); // Agregar res2 si es un array
+            }
+            if (Array.isArray(res1)) {
+              result = result.concat(res1); // Agregar res1 si es un array
+            }
+            // Eliminar duplicados basados en un campo único, por ejemplo, 'id'
+            const uniqueIds = new Set();
+            const uniqueResults = result.filter(item => {
+              if (!uniqueIds.has(item.id)) {
+                // Cambia 'id' por el campo que identifique de manera única
+                uniqueIds.add(item.id);
+                return true;
+              }
+              return false;
+            });
+
+            // Asignar los resultados únicos a result
+            result = uniqueResults;
+          }
+          break;
+        }
       default:
         return res.status(403).json({
           error: 'Rol no autorizado'
@@ -4343,6 +5309,124 @@ class MezclasController {
       id
     });
     return res.json(result.data);
+  });
+  obtenerTablasConfirmar = asyncHandler(async (req, res) => {
+    const {
+      user
+    } = req.session;
+    let result = [];
+    let uniqueResults = [];
+    const confirmacion = 'Pendiente';
+    utils_logger.debug('obtenerTablasConfirmar', user);
+    if (user.rol === 'adminMezclador' && user.empresa === 'General') {
+      const res = await this.mezclaModel.obtenerTablaMezclasValidadosMichoacan({
+        status: 'Pendiente',
+        confirmacion
+      });
+      // logger.debug('obtenerTablasConfirmar: res', res)
+      if (Array.isArray(res)) {
+        result = result.concat(res);
+        utils_logger.debug('obtenerTablasConfirmar: resultados', result);
+      }
+    } else if (user.rol === 'adminMezclador' && user.empresa === 'Bioagricultura') {
+      if (user.ranchos !== 'General') {
+        // Verificar si hay al menos una solicitud seleccionada
+        const [res2, res1] = await Promise.all([this.mezclaModel.obtenerTablaMezclasValidados({
+          status: 'Pendiente',
+          empresa: user.empresa,
+          confirmacion
+        }), this.mezclaModel.obtenerTablaMezclasUsuario({
+          status: 'Pendiente',
+          idUsuarioSolicita: user.id,
+          confirmacion
+        })]);
+        // Verificar y combinar resultados
+        if (Array.isArray(res2)) {
+          result = result.concat(res2); // Agregar res2 si es un array
+        }
+        if (Array.isArray(res1)) {
+          result = result.concat(res1); // Agregar res1 si es un array
+        }
+      } else {
+        const res = await this.mezclaModel.obtenerTablaMezclasJalisco({
+          status: 'Pendiente',
+          empresa: user.empresa,
+          confirmacion
+        });
+        // Verificar y combinar resultados
+        if (Array.isArray(res)) {
+          result = result.concat(res); // Agregar res1 si es un array
+        }
+      }
+    }
+    // Eliminar duplicados basados en un campo único, por ejemplo, 'id'
+    const uniqueIds = new Set();
+    uniqueResults = result.filter(item => {
+      if (!uniqueIds.has(item.id)) {
+        // Cambia 'id' por el campo que identifique de manera única
+        uniqueIds.add(item.id);
+        return true;
+      }
+      return false;
+    });
+    utils_logger.debug('obtenerTablasConfirmar: uniqueResults', uniqueResults);
+    // Asignar los resultados únicos a result
+    result = uniqueResults;
+    return res.json(result);
+  });
+  mezclaConfirmar = asyncHandler(async (req, res) => {
+    const {
+      user
+    } = req.session;
+    const idSolicitud = req.params.idSolicitud;
+    const response = await this.mezclaModel.mezclaConfirmar({
+      idSolicitud,
+      data: req.body,
+      usuario: user
+    });
+    utils_logger.debug('mezclaConfirmar: response', response);
+    return res.json({
+      message: response.message
+    });
+  });
+  obtenerTablasCancelada = asyncHandler(async (req, res) => {
+    const {
+      user
+    } = req.session;
+    const confirmacion = 'Cancelada';
+    const resultado = await this.mezclaModel.obtenerTablaMezclasCancelada({
+      confirmacion,
+      idUsuario: user.id,
+      rol: user.rol
+    });
+    utils_logger.debug('obtenerTablasCancelada: resultado', resultado);
+    return res.json(resultado);
+  });
+  validacion = asyncHandler(async (req, res) => {
+    const {
+      user
+    } = req.session;
+    const data = req.body;
+    utils_logger.debug('validacion: data', data);
+    const result = await this.mezclaModel.validacion({
+      data,
+      idUsuario: user.id,
+      user
+    });
+    return res.json(result);
+  });
+  cancelar = asyncHandler(async (req, res) => {
+    const {
+      user
+    } = req.session;
+    const idSolicitud = req.params.idSolicitud;
+    const data = req.body;
+    const result = await this.mezclaModel.cancelar({
+      idSolicitud,
+      data,
+      idUsuario: user.id
+    });
+    return res.json(result);
   });
 }
 ;// CONCATENATED MODULE: ./src/routes/mezclas.routes.js
@@ -4363,7 +5447,11 @@ const createMezclasRouter = ({
   router.get('/mezclasId/:id', mezclasController.obtenerTablaMezclasId); // obtener mezclas con id
   router.patch('/solicitudProceso/:idSolicitud', mezclasController.estadoProceso); // actualizar estado proceso
   router.patch('/notificacion/:idSolicitud', mezclasController.notificacion); // actualizar mensaje de notificacion
-
+  router.post('/validacion', mezclasController.validacion); // actualizar mensaje de notificacion
+  router.patch('/cancelarSolicitud/:idSolicitud', mezclasController.cancelar); // actualizar mensaje de notificacion
+  router.get('/mezclasConfirmar/', mezclasController.obtenerTablasConfirmar); // obtener solicitud
+  router.patch('/mezclasConfirmar/:idSolicitud', mezclasController.mezclaConfirmar); // obtener solicitud
+  router.get('/mezclasCancelada/', mezclasController.obtenerTablasCancelada); // obtener solicitud
   return router;
 };
 ;// CONCATENATED MODULE: ./src/models/recetas.models.js
@@ -5048,6 +6136,119 @@ const createUploadsRouter = () => {
   router.get('/images/:filename', uploadsController.obtenerImagenes);
   return router;
 };
+;// CONCATENATED MODULE: ./src/models/productos.models.js
+
+
+
+class ProductosModel {
+  // uso
+  static async getAll() {
+    try {
+      const productos = await Productos.findAll({
+        attributes: ['id_producto', 'nombre', 'descripcion', 'unidad_medida']
+      });
+      if (!productos) throw new CustomError_NotFoundError('productos no encontrados');
+      return productos;
+    } catch (error) {
+      throw new CustomError_DatabaseError('Error al obtener los productos');
+    }
+  }
+  static async getOne({
+    id
+  }) {
+    try {
+      const producto = await Productos.findByPk(id);
+      if (!producto) {
+        throw new CustomError_NotFoundError(`Producto con ID ${id} no encontrado`);
+      }
+      return producto;
+    } catch (error) {
+      utils_logger.error(`Productos.model Error al obtener el producto: ${error.message}`);
+      if (error instanceof CustomError_CustomError) throw error;
+      throw new CustomError_DatabaseError('Error al obtener el producto');
+    }
+  }
+  static async delete({
+    id
+  }) {
+    try {
+      const producto = await Productos.findByPk(id);
+      if (!producto) {
+        throw new CustomError_NotFoundError(`Producto con ID ${id} no encontrado`);
+      }
+      await producto.destroy();
+      return {
+        message: `producto eliminada correctamente con id ${id}`
+      };
+    } catch (error) {
+      if (error instanceof CustomError_CustomError) throw error;
+      throw new CustomError_DatabaseError('Error al eliminar el producto');
+    }
+  }
+
+  // crear producto
+  static async create({
+    data
+  }) {
+    try {
+      // verificamos que no exista el producto
+      const producto = await Productos.findOne({
+        where: {
+          producto: data.producto
+        }
+      });
+      if (producto) throw new CustomError_ValidationError('Producto ya existe');
+
+      // creamos el producto
+      await Productos.create({
+        ...data
+      });
+      return {
+        message: `Producto registrado exitosamente ${data.nombre}`
+      };
+    } catch (e) {
+      utils_logger.error({
+        message: 'Error al crear producto',
+        error: e.message,
+        stack: e.stack,
+        method: 'ProductosModel.create'
+      });
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al crear el producto');
+    }
+  }
+
+  // para actualizar datos de producto
+  static async update({
+    id,
+    data
+  }) {
+    try {
+      // verificamos si existe alguna empresa con el id proporcionado
+      const producto = await Productos.findByPk(id);
+      if (!producto) throw new CustomError_NotFoundError(`Producto con ID ${id} no encontrado`);
+      // Actualiza solo los campos que se han proporcionado
+      if (data.nombre) producto.nombre = data.nombre;
+      if (data.email) producto.email = data.email;
+      if (data.rol) producto.rol = data.rol;
+      if (data.empresa) producto.empresa = data.empresa;
+      await producto.save();
+      return {
+        message: 'producto actualizada correctamente',
+        rol: data.rol
+      };
+    } catch (e) {
+      utils_logger.error({
+        message: 'Error al actualizar producto',
+        error: e.message,
+        stack: e.stack,
+        method: 'ProductosModel.update'
+      });
+      if (e instanceof CustomError_CustomError) throw e;
+      throw new CustomError_DatabaseError('Error al actualizar el producto');
+    }
+  }
+}
 ;// CONCATENATED MODULE: external "exceljs"
 var external_exceljs_x = (y) => {
 	var x = {}; __webpack_require__.d(x, y); return x
@@ -5143,7 +6344,8 @@ async function obtenerDatosSolicitud(idSolicitud) {
         cantidad: solicitud.cantidad,
         // Asegúrate de que este campo existe en tu modelo
         presentacion: solicitud.presentacion,
-        metodoAplicacion: solicitud.metodoAplicacion
+        metodoAplicacion: solicitud.metodoAplicacion,
+        descripcion: solicitud.descripcion
       }));
     } else {
       // Si no hay productos, puedes devolver un array vacío o productos por defecto
@@ -5782,7 +6984,7 @@ const reporteSolicitudV2 = async parametros => {
     const workbook = new external_exceljs_namespaceObject["default"].Workbook();
 
     // Cabecera de la tabla mezclas
-    const cabeceraMezclas = ['Id Solicitud', 'Folio de Receta', 'Solicita', 'Fecha Solicitud', 'Fecha Entrega', 'Rancho', 'Centro de Coste', 'Empresa', 'Temporada', 'Variedad Fruta', 'Cantidad de Mezcla', 'Presentacion de la Mezcla', 'Metodo de aplicacion', 'id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada', 'Porcentaje Correspondiente', 'Cantidad Correspondiente'];
+    const cabeceraMezclas = ['Id Solicitud', 'Folio de Receta', 'Solicita', 'Comentario de solicitante', 'Fecha Solicitud', 'Fecha Entrega', 'Rancho', 'Centro de Coste', 'Empresa', 'Temporada', 'Variedad Fruta', 'Cantidad de Mezcla', 'Presentacion de la Mezcla', 'Metodo de aplicacion', 'id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada', 'Porcentaje Correspondiente', 'Cantidad Correspondiente'];
     try {
       // Crear una hoja para esta solicitud
       const hojaGeneral = workbook.addWorksheet('Datos Generales');
@@ -5794,7 +6996,8 @@ const reporteSolicitudV2 = async parametros => {
       for (const dato of datos) {
         // // obtenemos datos faltantes de la solicitud
         const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);
-        // console.log('Datos de la solicitud:', datosF)
+        console.log('Datos de la solicitud:', datosF);
+        console.log('Datos de la solicitud:', datosF[0].descripcion);
 
         // // Obtener productos de la base de datos
         const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);
@@ -5810,7 +7013,7 @@ const reporteSolicitudV2 = async parametros => {
               for (let i = 0; i < variedadSplit.length; i++) {
                 if (productos && productos.length > 0) {
                   for (const producto of productos) {
-                    const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, variedadSplit[i], datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad, '%' + porcentajeSplit[i], producto.cantidad * porcentajeSplit[i] / 100];
+                    const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, datosF[0].descripcion ? datosF[0].descripcion : 'hola', dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, variedadSplit[i], datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad, '%' + porcentajeSplit[i], producto.cantidad * porcentajeSplit[i] / 100];
                     dataMescla.push(fila);
                   }
                 } else {
@@ -5823,7 +7026,7 @@ const reporteSolicitudV2 = async parametros => {
           }
         } else {
           for (const producto of productos) {
-            const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, dato.variedad, datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad, '% 100', producto.cantidad];
+            const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, datosF[0].descripcion ? datosF[0].descripcion : 'hola', dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, dato.variedad, datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad, '% 100', producto.cantidad];
             dataMescla.push(fila);
           }
         }
@@ -6258,6 +7461,9 @@ const agregarEncabezadoSolicitud = async (hojaGeneral, dato, datosSolicitud, var
   hojaGeneral.addRow(['Solicita', dato.usuario ? dato.usuario : dato.Solicita]).eachCell(cell => {
     cell.style = EXCEL_STYLES.cell;
   });
+  hojaGeneral.addRow(['Comentario de solicitante', datosSolicitud[0].respuestaSolicitud === '' ? 'Sin Comentario' : datosSolicitud[0].respuestaSolicitud]).eachCell(cell => {
+    cell.style = EXCEL_STYLES.cell;
+  });
   hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell(cell => {
     cell.style = EXCEL_STYLES.cell;
   });
@@ -6429,6 +7635,11 @@ class ProduccionModel {
     idUsuario
   }) {
     let data;
+    utils_logger.info('solicitudReporte', {
+      empresa,
+      rol,
+      idUsuario
+    });
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!empresa || !rol || !idUsuario) {
@@ -6438,12 +7649,18 @@ class ProduccionModel {
         data = await db.query('SELECT * FROM total_precio_cantidad_solicitud');
       } else if (rol === 'administrativo' && empresa === 'General') {
         data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`!="Lugar Agricola"');
-      } else if (rol === 'administrativo' && idUsuario === 33) {
+      } else if (rol === 'adminMezclador') {
         // admin de Bioagricultura id usuario 33 de francisco alvarez
-        data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bioagricultura" OR `empresa`="Moras Finas"');
-      } else if (rol === 'administrativo' && idUsuario === 49) {
+        if (empresa === 'Bioagricultura') {
+          data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bioagricultura" OR `empresa`="Moras Finas"');
+        } else if (empresa === 'General') {
+          data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bayas del Centro" OR `empresa`="Moras Finas"');
+        } else if (empresa === 'Lugar Agricola') {
+          data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Lugar Agricola"');
+        }
+      } else if (rol === 'administrativo') {
         // admin de general id usuario 49 de janet medina
-        data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud`"');
+        data = await db.query('SELECT * FROM `total_precio_cantidad_solicitud`');
       } else {
         data = await db.query(`SELECT * FROM total_precio_cantidad_solicitud WHERE empresa="${empresa}"`);
       }
@@ -6540,7 +7757,8 @@ class ProduccionModel {
       }
       const datos = await MezclaModel.obtenerTablaMezclasEmpresa({
         status: 'Pendiente',
-        empresa
+        empresa,
+        confirmacion: 'Confirmada'
       });
 
       // Validar que hay datos para procesar
@@ -7113,11 +8331,11 @@ function setupAssociations() {
 
 
 
-
 // Librerias
 
 
 // Configuraciones
+
 
 
 // middlewares
@@ -7162,15 +8380,13 @@ const startServer = async options => {
     MODE
   } = options;
   const app = (0,external_express_namespaceObject["default"])();
-  const __filename = (0,external_url_namespaceObject.fileURLToPath)("file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/server/server.mjs");
-  const __dirname = (0,external_path_namespaceObject.dirname)(__filename);
 
   // Configura el directorio de uploads
-  const uploadsDir = (0,external_path_namespaceObject.resolve)(__dirname, '..', 'uploads');
-  const imagesDir = (0,external_path_namespaceObject.resolve)(uploadsDir, 'images');
+  const uploadsDir = paths.uploads;
+  const imagesDir = (0,external_path_namespaceObject.join)(uploadsDir, 'images');
 
   // MOTOR DE PLANTILLAS EJS
-  app.set('views', (0,external_path_namespaceObject.resolve)(__dirname, '..', 'views'));
+  app.set('views', paths.views);
   app.set('view engine', 'ejs');
   app.set('trust proxy', 1);
 
@@ -7271,7 +8487,7 @@ const startServer = async options => {
   }));
 
   // rutas Protegidas
-  app.use('/protected/', authenticate, isGeneral, createProtetedRouter());
+  app.use('/protected/', authenticate, createProtetedRouter());
 
   // Rutas para imágenes (antes de las rutas API)
   app.use('/api/', authenticate, createUploadsRouter());
@@ -7288,7 +8504,7 @@ const startServer = async options => {
   });
 
   // contenido estatico que ponemos disponible
-  app.use(external_express_namespaceObject["default"]["static"]('public'));
+  app.use(external_express_namespaceObject["default"]["static"](paths.public));
 
   // Manejo de errores 404
   app.use(error404);

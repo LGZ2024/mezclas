@@ -35,7 +35,7 @@ const isAdmin = (req, res, next) => {
   next()
 }
 const isGeneral = (req, res, next) => {
-  if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo' && req.userRole !== 'admin') return res.status(403).render('errorPage', { codeError: 403, errorMsg: 'No autorizado' })
+  if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo' && req.userRole !== 'admin' && req.userRole !== 'adminMezclador') return res.status(403).render('errorPage', { codeError: 403, errorMsg: 'No autorizado', title: 'Sin Autorizacion' })
   next()
 }
 
@@ -47,5 +47,9 @@ const isSolicitaOrMezclador = (req, res, next) => {
   if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo') return res.status(403).render('errorPage', { codeError: 403, title: 'Sin Autorizacion', errorMsg: 'No autorizado' })
   next()
 }
+const isaAdminMezclador = (req, res, next) => {
+  if (req.userRole !== 'adminMezclador') return res.status(403).render('errorPage', { codeError: 403, title: 'Sin Autorizacion', errorMsg: 'No autorizado' })
+  next()
+}
 
-export { authenticate, isAdmin, isSolicitaOrMezclador, isAdminsitrativoOrAdmin, isGeneral }
+export { authenticate, isAdmin, isSolicitaOrMezclador, isAdminsitrativoOrAdmin, isGeneral, isaAdminMezclador }

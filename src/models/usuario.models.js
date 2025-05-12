@@ -76,6 +76,30 @@ export class UsuarioModel {
     }
   }
 
+  static async getUserEmailGerente ({ rol, idUsuario }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !idUsuario) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol, // Se filtra por rol
+          id: idUsuario // Se filtra por rancho
+        }
+      })
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new NotFoundError('No se encontraron usuarios para los criterios especificados')
+      }
+      return usuario
+    } catch (e) {
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener todos los usuarios')
+    }
+  }
+
   // uso
   static async getUserEmailEmpresa ({ rol, empresa }) {
     try {

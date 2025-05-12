@@ -22,7 +22,7 @@ async function fechProductosSolicitud (data) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
-    return await response.json()
+    return response
   } catch (error) {
     console.error('Error posting productos solicitud:', error)
     throw error

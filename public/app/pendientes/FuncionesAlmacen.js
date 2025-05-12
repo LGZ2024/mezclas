@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showSpinner()
     const idSolicitud = document.getElementById('idSolicitud').value
     const producto = document.getElementById('producto').value
-    const cantidad = document.getElementById('cantidad').value
+    const cantidad = document.getElementById('cantidadP').value
     const unidadMedida = document.getElementById('unidad_medida').value
     // convertimos entero
     // const cantidadNum = parseFloat(cantidad)
@@ -85,16 +85,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     try {
       const response = await fechProductosSolicitud(data)
-      if (response.error) {
+      const res = await response.json()
+      console.log(res)
+      if (!response.ok) {
         hideSpinner()
         return mostrarMensaje({
-          msg: response.error,
+          msg: res.message,
           type: 'error'
         })
       }
 
       mostrarMensaje({
-        msg: response.message,
+        msg: res.message,
         type: 'success'
       })
       $('#exampleModal').modal('hide')

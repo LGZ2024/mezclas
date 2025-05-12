@@ -131,49 +131,46 @@ const foto = () => {
 }
 
 const mostrarImagen = (enlace, descripcion) => {
+  // Mostrar loader
+  const imageLoader = document.getElementById('imageLoader')
+  if (imageLoader) imageLoader.style.display = 'block'
+
   fetch(enlace, { method: 'GET' })
     .then(response => {
-      if (response.ok) {
-        // Crear modal específico para imágenes
-        const modalHtml = `
-          <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">${descripcion}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body text-center">
-                <img 
-                  src="${enlace}" 
-                  class="img-fluid" 
-                  alt="Imagen de entrega"
-                  onerror="this.onerror=null; this.src='/img/no-image.png';"
-                >
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+      return response
+    })
+    .then(() => {
+      const modalContent = `
+        <div class="modal-dialog modal-fullscreen-sm-down modal-lg">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">${descripcion}</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+              <div class="image-container position-relative">
+                <img src="${enlace}" 
+                     class="img-fluid w-100" 
+                     style="max-height: 80vh; object-fit: contain;"
+                     alt="Imagen de entrega"
+                     onerror="this.onerror=null; this.src='/img/no-image.png';">
               </div>
             </div>
-          </div>`
+          </div>
+        </div>`
 
-        $('#pdfModal').html(modalHtml).modal('show')
-      } else if (response.status === 401) {
-        Swal.fire({
-          icon: 'error',
-          title: 'No autorizado',
-          text: 'Por favor, inicie sesión nuevamente'
-        })
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo cargar la imagen'
-        })
-      }
+      $('#pdfModal').html(modalContent).modal('show')
     })
     .catch(error => {
-      console.error('Error al cargar imagen:', error)
+      console.error('Error:', error)
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Error al cargar la imagen'
+        text: 'No se pudo cargar la imagen'
       })
+    })
+    .finally(() => {
+      if (imageLoader) imageLoader.style.display = 'none'
     })
 }
