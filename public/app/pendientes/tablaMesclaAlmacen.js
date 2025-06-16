@@ -36,16 +36,7 @@ async function fechSolicitudProceso ({ data, id }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    // Convertir la respuesta a JSON una sola vez
     const responseData = await response.json()
-
-    // Para debugging (opcional)
-    console.log('Respuesta del servidor:', responseData)
 
     return responseData
   } catch (error) {
@@ -101,25 +92,51 @@ const verSolicitud = () => {
       sProcessing: 'Procesando...'
     },
     columnDefs: [
-      { targets: 0, data: 'id' },
+      {
+        targets: 0,
+        data: 'id',
+        render: function (data) {
+          return `<span data-label="Solicitud">${data}</span>`
+        }
+      },
       {
         targets: 1,
         data: 'id',
         render: function (data, type, row) {
           return `
-            <p>${row.Solicita}</p>
-            <hr>
-            <button 
-              type="button" 
-              class="btn btn-primary mostrar-solicitud" 
-              data-row='${JSON.stringify(row)}'>
-              Mostrar Solicitud
-            </button>`
+            <div data-label="Solicita">
+              <p>${row.Solicita}</p>
+              <hr>
+              <button 
+                type="button" 
+                class="btn btn-primary mostrar-solicitud touch-target" 
+                data-row='${JSON.stringify(row)}'>
+                Mostrar Solicitud
+              </button>
+            </div>`
         }
       },
-      { targets: 2, data: 'fechaSolicitud' },
-      { targets: 3, data: 'ranchoDestino' },
-      { targets: 4, data: 'empresa' }
+      {
+        targets: 2,
+        data: 'fechaSolicitud',
+        render: function (data) {
+          return `<span data-label="Fecha de Solicitud">${data}</span>`
+        }
+      },
+      {
+        targets: 3,
+        data: 'ranchoDestino',
+        render: function (data) {
+          return `<span data-label="Rancho destino">${data}</span>`
+        }
+      },
+      {
+        targets: 4,
+        data: 'empresa',
+        render: function (data) {
+          return `<span data-label="Empresa">${data}</span>`
+        }
+      }
     ]
   })
 

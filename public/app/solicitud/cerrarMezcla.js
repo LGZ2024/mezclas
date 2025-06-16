@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { CameraHandler } from '../camara.js'
 import { mostrarMensaje } from '../mensajes.js'
 import { showSpinner, hideSpinner } from '../spinner.js'

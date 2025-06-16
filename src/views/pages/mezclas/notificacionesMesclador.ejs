@@ -2,173 +2,168 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Mezclas</title>
-    <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
-    <%- include("../../templates/mezclas/cabeceraNotificacion") %>
+    <%- include("../../templates/head-pwa") %>
+        <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
+        <%- include("../../templates/mezclas/cabeceraNotificacion") %>
 
 </head>
 
 
 <body>
-    <header>
-        <div class="barra contenedor">
-            <div class="barra__logo">
-                <img src="../../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
-            </div>
-
-            <nav class="barra__navegacion">
-                <a class="barra__link" id="inicio"></a>
-            </nav>
-
-            <nav class="barra__login">
-                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
-            </nav>
-        </div>
-    </header>
-
-    <input type="hidden" value="<%= rol %>" id="rol">
-    <input type="hidden" id="mensajes" value="<%= data.respuestaSolicitud %>" disabled>
-    <input type="hidden" id="idSolicitud" value="<%= data.id %>" disabled >
+    <%- include("../../templates/mezclas/headerNav") %>
 
 
-    <section id="formPreparadas" class="formularios">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="form">
-                                <div class="card">
-                                    <div class="titulo">
-                                        <div class="col">
-                                            <button class="formulario__submit" id="regresatabla"><span
-                                                    class="mdi mdi-arrow-left-bold"></span></button>
+        <input type="hidden" value="<%= rol %>" id="rol">
+        <input type="hidden" id="mensajes" value="<%= data.respuestaSolicitud %>" disabled>
+        <input type="hidden" id="idSolicitud" value="<%= data.id %>" disabled>
+
+
+        <section id="formPreparadas" class="formularios">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="form">
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+
+                                                    <button class="formulario__submit" id="regresatabla"><span
+                                                            class="mdi mdi-arrow-left-bold"></span></button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>Solicitud</h3>
+                                            </div>
                                         </div>
-                                        <div class="text-center">
-                                            <h3>Solicitud</h3>
-                                        </div>
-                                    </div>
-                                    <hr>
-                                    
-                                    <% if (rol==="mezclador" || rol==="administrativo" ) { %>
-                                        <div class="formulario__campo"
-                                            style="display: flex; flex-direction: column; align-items: center;">
-                                            <label class="formulario__label" for="folioi">Descargar Solicitud</label>
-                                            <button type="button" class="btn btn-primary formulario__submit"
-                                                id="descargar" style="width: 20vw;">
-                                                Descargar
-                                            </button>
-                                        </div>
-                                        <% } %>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="folioi">Folio de Receta</label>
-                                                <input type="text" class="formulario__input" id="folioi"
-                                                    value="<%= data.FolioReceta %>" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="solicitai">Solicita</label>
-                                                <input type="text" class="formulario__input" id="solicitai"
-                                                    value="<%= data.Solicita %>" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="fechai">Fecha de Solicitud</label>
-                                                <input type="text" class="formulario__input" id="fechai"
-                                                    value="<%= data.fechaSolicitud %>" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="ranchoi">Rancho Destino</label>
-                                                <input type="text" class="formulario__input"
-                                                    value="<%= data.ranchoDestino %>" id="ranchoi" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="centroCostei">Centro de
-                                                    coste</label>
-                                                <input type="text" class="formulario__input"
-                                                    value="<%= data.centroCoste %>" id="centroCostei" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="variedadi">Variedad</label>
-                                                <input type="text" class="formulario__input"
-                                                    value="<%= data.variedad %>" id="variedadi" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="empresai">Empresa</label>
-                                                <input type="text" class="formulario__input" value="<%= data.empresa %>"
-                                                    id="empresai" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="temporadai">Temporada</label>
-                                                <input type="text" class="formulario__input"
-                                                    value="<%= data.temporada %>" id="temporadai" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="cantidadi">Cantidad de
-                                                    producto</label>
-                                                <input type="text" class="formulario__input"
-                                                    value="<%= data.cantidad %>" id="cantidadi" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label"
-                                                    for="presentacioni">Presentacion</label>
-                                                <input type="text" class="formulario__input"
-                                                    value="<%= data.prensetacion %>" id="presentacioni" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="metodoi">Metodo de
-                                                    aplicacion</label>
-                                                <input type="text" class="formulario__input"
-                                                    value="<%= data.metodoAplicacion %>" id="metodoi" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label" for="descripcioni">Descripcion</label>
-                                                <input type="text" class="formulario__input"
-                                                    value="<%= data.descripcion %>" id="descripcioni" disabled>
-                                            </div>
-                                            <div class="formulario__campo">
-                                                <label class="formulario__label">Productos</label>
+                                        <hr>
+
+                                        <% if (rol==="mezclador" || rol==="administrativo" ) { %>
+                                            <div class="formulario__campo"
+                                                style="display: flex; flex-direction: column; align-items: center;">
+                                                <label class="formulario__label" for="folioi">Descargar
+                                                    Solicitud</label>
                                                 <button type="button" class="btn btn-primary formulario__submit"
-                                                    id="receta" data-bs-toggle="modal">
-                                                    Mostrar Receta
+                                                    id="descargar" style="width: 20vw;">
+                                                    Descargar
                                                 </button>
                                             </div>
-                                            <% if (rol==="mezclador" || rol==="administrativo" ) { %>
-                                                <form id="formSolicutudes">
-                                                    <div class="formulario__campo">
-                                                        <label class="formulario__label" for="notaMezcla">Nota de
-                                                            mezclador</label>
-                                                        <textarea id="notaMezcla" class="formulario__input"></textarea>
-                                                    </div>
-                                                    <div class="formulario__campo">
-                                                        <button type="submit" class="formulario__submit"
-                                                            id="btnGuardarMescla" style="display: none;">Guardar
-                                                            mezcla</button>
-                                                    </div>
-                                                </form>
-                                                <% } %>
+                                            <% } %>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="folioi">Folio de
+                                                        Receta</label>
+                                                    <input type="text" class="formulario__input" id="folioi"
+                                                        value="<%= data.FolioReceta %>" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="solicitai">Solicita</label>
+                                                    <input type="text" class="formulario__input" id="solicitai"
+                                                        value="<%= data.Solicita %>" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="fechai">Fecha de
+                                                        Solicitud</label>
+                                                    <input type="text" class="formulario__input" id="fechai"
+                                                        value="<%= data.fechaSolicitud %>" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="ranchoi">Rancho
+                                                        Destino</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.ranchoDestino %>" id="ranchoi" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="centroCostei">Centro de
+                                                        coste</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.centroCoste %>" id="centroCostei" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="variedadi">Variedad</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.variedad %>" id="variedadi" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="empresai">Empresa</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.empresa %>" id="empresai" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="temporadai">Temporada</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.temporada %>" id="temporadai" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="cantidadi">Cantidad de
+                                                        producto</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.cantidad %>" id="cantidadi" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label"
+                                                        for="presentacioni">Presentacion</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.prensetacion %>" id="presentacioni" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label" for="metodoi">Metodo de
+                                                        aplicacion</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.metodoAplicacion %>" id="metodoi" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label"
+                                                        for="descripcioni">Descripcion</label>
+                                                    <input type="text" class="formulario__input"
+                                                        value="<%= data.descripcion %>" id="descripcioni" disabled>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <label class="formulario__label">Productos</label>
+                                                    <button type="button" class="btn btn-primary formulario__submit"
+                                                        id="receta" data-bs-toggle="modal">
+                                                        Mostrar Receta
+                                                    </button>
+                                                </div>
+                                                <% if (rol==="mezclador" || rol==="administrativo" ) { %>
+                                                    <form id="formSolicutudes">
+                                                        <div class="formulario__campo">
+                                                            <label class="formulario__label" for="notaMezcla">Nota de
+                                                                mezclador</label>
+                                                            <textarea id="notaMezcla"
+                                                                class="formulario__input"></textarea>
+                                                        </div>
+                                                        <div class="formulario__campo">
+                                                            <button type="submit" class="formulario__submit"
+                                                                id="btnGuardarMescla" style="display: none;">Guardar
+                                                                mezcla</button>
+                                                        </div>
+                                                    </form>
+                                                    <% } %>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Modal mostar receta -->
-    <%- include("../../templates/mezclas/mostrarReceta") %>
+        <!-- Modal mostar receta -->
+        <%- include("../../templates/mezclas/mostrarReceta") %>
 
-        <!-- Modal nuevo producto -->
-        <%- include("../../templates/mezclas/modalNuevoProducto") %>
+            <!-- Modal nuevo producto -->
+            <%- include("../../templates/mezclas/modalNuevoProducto") %>
 
-            <!--notificaion-->
-            <%- include("../../templates/mezclas/notificacion") %>
+                <!--notificaion-->
+                <%- include("../../templates/mezclas/notificacion") %>
 
 
-            <!-- Firebase Configuración y funciones -->
-            <%- include("../../templates/mezclas/scripts") %>
-                <script type="module" src="../../app/pendientes/FuncionesAlmacen.js"></script>
+                    <!-- Firebase Configuración y funciones -->
+                    <%- include("../../templates/mezclas/scripts") %>
+                        <script type="module" src="../../app/pendientes/FuncionesAlmacen.js"></script>
 
 
 </body>

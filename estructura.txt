@@ -1,0 +1,353 @@
+├───.continue
+│   └───models
+│       ├───new-model-1.yaml
+│       └───new-model.yaml
+├───.env.development
+├───.gitignore
+├───babel.config.js
+├───deploy.config.mjs
+├───logs
+├───manifest.json
+├───package-lock.json
+├───package.json
+├───public
+│   ├───app
+│   │   ├───admin
+│   │   │   ├───graficas.js
+│   │   │   ├───main.js
+│   │   │   ├───postList.js
+│   │   │   └───tablaRegistroVivienda.js
+│   │   ├───camara.js
+│   │   ├───canceladas
+│   │   │   ├───canceladas.js
+│   │   │   ├───canceladas2.js
+│   │   │   ├───main.js
+│   │   │   └───main2.js
+│   │   ├───centroCoste
+│   │   │   ├───main.js
+│   │   │   ├───solicitarMezcla.js
+│   │   │   └───tablaViviendas.js
+│   │   ├───CentrosCoste.js
+│   │   ├───completadas
+│   │   │   ├───completadas.js
+│   │   │   └───Funciones.js
+│   │   ├───confirmacion
+│   │   │   ├───confirmacion.js
+│   │   │   ├───enviarEstado.js
+│   │   │   └───tablaConfirmacion.js
+│   │   ├───funciones.js
+│   │   ├───main.js
+│   │   ├───mensajes.js
+│   │   ├───notificacion.js
+│   │   ├───notificaciones
+│   │   │   └───main.js
+│   │   ├───notififcaiones.js
+│   │   ├───pendientes
+│   │   │   ├───enviarEstado copy.js
+│   │   │   ├───enviarEstado.js
+│   │   │   ├───FuncionesAlmacen.js
+│   │   │   ├───listaProductos.js
+│   │   │   ├───reporte.js
+│   │   │   └───tablaMesclaAlmacen.js
+│   │   ├───postList.js
+│   │   ├───proceso
+│   │   │   ├───Funciones.js
+│   │   │   ├───main.js
+│   │   │   └───proceso.js
+│   │   ├───productos
+│   │   │   ├───main.js
+│   │   │   └───tablaProductos.js
+│   │   ├───productosReceta
+│   │   │   └───productos.js
+│   │   ├───solicitud
+│   │   │   ├───cerrarMezcla.js
+│   │   │   └───solicitarMezcla.js
+│   │   ├───solicitudes
+│   │   │   ├───funciones.js
+│   │   │   ├───notificaiones.js
+│   │   │   ├───reporte.js
+│   │   │   └───solicitudes.js
+│   │   ├───spinner.js
+│   │   └───usuarios
+│   │       ├───funcionesFormulario.js
+│   │       ├───main.js
+│   │       ├───postList.js
+│   │       └───tablaUsuarios.js
+│   ├───css
+│   │   ├───animate.css
+│   │   ├───app.css
+│   │   ├───app.css.map
+│   │   ├───errorpage.css
+│   │   ├───estiloLogin.css
+│   │   ├───foodhut.css
+│   │   ├───headerNotificaciones.css
+│   │   ├───mdi
+│   │   ├───mensajeNotificaciones.css
+│   │   ├───mezclas-modals.css
+│   │   ├───mobile-fixes.css
+│   │   ├───noProductos.css
+│   │   ├───PaginaNotificacion.css
+│   │   ├───pwa.css
+│   │   ├───responsive.css
+│   │   ├───solicitudProductos.css
+│   │   ├───spinner.css
+│   │   ├───style.css
+│   │   └───style.css.map
+│   ├───fonts
+│   │   ├───Nunito
+│   │   └───Ubuntu
+│   ├───images
+│   │   ├───faces
+│   │   │   ├───pic-1.png
+│   │   │   ├───pic-2.png
+│   │   │   ├───pic-3.png
+│   │   │   └───pic-4.png
+│   │   ├───inicio.jpg
+│   ├───js
+│   │   ├───app.js
+│   │   ├───chart.js
+│   │   ├───codemirror.js
+│   │   ├───dashboard.js
+│   │   ├───file-upload.js
+│   │   ├───hoverable-collapse.js
+│   │   ├───misc.js
+│   │   ├───off-canvas.js
+│   │   ├───select2.js
+│   │   ├───settings.js
+│   │   ├───todolist.js
+│   │   └───typeahead.js
+│   ├───manifest.json
+│   ├───offline.html
+│   ├───service-worker.js
+│   └───vendors
+│       ├───boostrap-bundle
+│       │   ├───bootstrap-datepicker.min.css
+│       │   ├───bootstrap.bundle.min.js
+│       │   └───bootstrap.min.css
+│       ├───css
+│       │   └───vendor.bundle.base.css
+│       ├───dataTables
+│       │   ├───buttons.dataTables.min.css
+│       │   ├───buttons.html5.min.js
+│       │   ├───dataTables.buttons.min.js
+│       │   ├───datatables.css
+│       │   ├───dataTables.dataTables.min.css
+│       │   ├───dataTables.dateTime.min.css
+│       │   ├───dataTables.js
+│       │   ├───datatables.min.css
+│       │   ├───datatablesF.js
+│       │   ├───jquery.dataTables.min.js
+│       │   ├───pdfmake.js
+│       │   └───vfs_fonts.js
+│       ├───DateTime-1.5.2
+│       │   ├───css
+│       │   │   ├───dataTables.dateTime.css
+│       │   │   └───dataTables.dateTime.min.css
+│       │   └───js
+│       │       ├───dataTables.dateTime.js
+│       │       └───dataTables.dateTime.min.js
+│       ├───font-awesome
+│       │   ├───css
+│       │   │   └───font-awesome.min.css
+│       │   ├───fontawesome.js
+│       │   └───fonts
+│       │       ├───fontawesome-webfont.eot
+│       │       ├───fontawesome-webfont.svg
+│       │       ├───fontawesome-webfont.ttf
+│       │       ├───fontawesome-webfont.woff
+│       │       ├───fontawesome-webfont.woff2
+│       │       └───FontAwesome.otf
+│       ├───jquery
+│       │   └───jquery-3.6.0.min.js
+│       ├───js
+│       │   ├───bootstrap.min.js.map
+│       │   └───vendor.bundle.base.js
+│       ├───luxon
+│       │   └───luxon.min.js
+│       ├───mdi
+│       │   ├───css
+│       │   │   ├───materialdesignicons.min.css
+│       │   │   └───materialdesignicons.min.css.map
+│       │   └───fonts
+│       │       ├───materialdesignicons-webfont.eot
+│       │       ├───materialdesignicons-webfont.ttf
+│       │       ├───materialdesignicons-webfont.woff
+│       │       └───materialdesignicons-webfont.woff2
+│       ├───moment
+│       │   ├───es.min.js
+│       │   ├───moment.js
+│       │   └───moment.min.js
+│       ├───SearchBuilder-1.7.0
+│       │   ├───css
+│       │   └───js
+│       ├───select2
+│       │   ├───select2.min.css
+│       │   └───select2.min.js
+│       ├───sweetalert
+│       │   └───sweetalert.js
+│       └───toastify
+│           ├───meta.json
+│           ├───toastify-js.js
+│           └───toastify.min.css
+├───scripts
+│   ├───check-configuracion.mjs
+│   ├───check-plesk.mjs
+│   ├───check-port.mjs
+│   ├───check-version.mjs
+│   ├───health-check.mjs
+│   ├───rotate-logs.mjs
+│   ├───verify-all.mjs
+│   ├───verify-db.mjs
+│   ├───verify-env.mjs
+│   └───verify-pwa.mjs
+├───src
+│   ├───app.mjs
+│   ├───config
+│   │   ├───env.mjs
+│   │   ├───excel.js
+│   │   ├───foto.mjs
+│   │   ├───logger.config.js
+│   │   ├───paths.js
+│   │   ├───responsivas.js
+│   │   └───smtp.js
+│   ├───controller
+│   │   ├───asignaciones.controller.js
+│   │   ├───centro.controller.js
+│   │   ├───devolucion.controller.js
+│   │   ├───empleados.controller.js
+│   │   ├───equipos.controller.js
+│   │   ├───mezclas.controller.js
+│   │   ├───notificaciones.controller.js
+│   │   ├───produccion.controller.js
+│   │   ├───productos.controller.js
+│   │   ├───productosSolicitud.controller.js
+│   │   ├───proteted.controller.js
+│   │   ├───uploads.controller.js
+│   │   └───usuario.controller.js
+│   ├───db
+│   │   ├───DatabaseConnection.js
+│   │   └───db.js
+│   ├───middlewares
+│   │   ├───authMiddleware.js
+│   │   ├───correlationMiddleware.js
+│   │   ├───cors.js
+│   │   ├───error500Middleware.js
+│   │   ├───rateLimit.js
+│   │   ├───validateFormatoImg.js
+│   │   └───validateJsonMiddleware.js
+│   ├───models
+│   │   ├───asignaciones.models.js
+│   │   ├───centro.models.js
+│   │   ├───CRUDModels.js
+│   │   ├───devolucion.models.js
+│   │   ├───ejemplo.models.js
+│   │   ├───empleados.models.js
+│   │   ├───equipos.models.js
+│   │   ├───mezclas.models.js
+│   │   ├───modelAssociations.js
+│   │   ├───notificaciones.models.js
+│   │   ├───produccion.models.js
+│   │   ├───productos.models.js
+│   │   ├───productosSolicitud.models.js
+│   │   ├───recetas.models.js
+│   │   └───usuario.models.js
+│   ├───routes
+│   │   ├───asignaciones.routes.js
+│   │   ├───centro.routes.js
+│   │   ├───devolucion.routes.js
+│   │   ├───empleados.routes.js
+│   │   ├───equipos.routes.js
+│   │   ├───mezclas.routes.js
+│   │   ├───notificaciones.routes.js
+│   │   ├───produccion.routes.js
+│   │   ├───productos.routes.js
+│   │   ├───productosSolitud.routes.js
+│   │   ├───proteted.routes.js
+│   │   ├───uploads.routes.js
+│   │   └───usuario.routes.js
+│   ├───schema
+│   │   ├───asignaciones.js
+│   │   ├───centro.js
+│   │   ├───devoluciones.js
+│   │   ├───empleados.js
+│   │   ├───equipos.js
+│   │   ├───mezclas.js
+│   │   ├───notificaciones.js
+│   │   ├───productos.js
+│   │   ├───recetas.js
+│   │   ├───recetas_productos.js
+│   │   ├───solicitud_receta.js
+│   │   └───usuarios.js
+│   ├───server
+│   │   └───server.mjs
+│   ├───uploads
+│   │   └───images
+│   │       ├───image_1748898091989_ftpsg9nkz9o.png
+│   │       └───image_1749101576043_ileadel1te.png
+│   ├───utils
+│   │   ├───asyncHandler.js
+│   │   ├───cache.js
+│   │   ├───CustomError.js
+│   │   ├───dbHelper.js
+│   │   ├───errorHandlers.js
+│   │   ├───logger.js
+│   │   ├───path-utils.mjs
+│   │   ├───retryOperation.js
+│   │   ├───swagger.js
+│   │   └───transactionUtils.js
+│   ├───views
+│   │   ├───404.ejs
+│   │   ├───errorPage.ejs
+│   │   ├───errorSesion.ejs
+│   │   ├───main.ejs
+│   │   ├───pages
+│   │   │   ├───admin
+│   │   │   │   ├───centrosCoste.ejs
+│   │   │   │   ├───productos.ejs
+│   │   │   │   ├───solicitudes.ejs
+│   │   │   │   ├───solicitudesCanceladas.ejs
+│   │   │   │   └───usuarios.ejs
+│   │   │   └───mezclas
+│   │   │       ├───canceladas.ejs
+│   │   │       ├───completadas.ejs
+│   │   │       ├───confirmaSolicitud.ejs
+│   │   │       ├───main.ejs
+│   │   │       ├───notificaciones.ejs
+│   │   │       ├───notificacionesMesclador.ejs
+│   │   │       ├───pendientes.ejs
+│   │   │       ├───proceso.ejs
+│   │   │       ├───registrarSolicitud.ejs
+│   │   │       └───solicitud.ejs
+│   │   └───templates
+│   │       ├───admin
+│   │       │   ├───cabecera.ejs
+│   │       │   ├───footer.ejs
+│   │       │   ├───modal.ejs
+│   │       │   ├───modalCentrosCoste.ejs
+│   │       │   ├───modalProductos.ejs
+│   │       │   ├───modalResetPass.ejs
+│   │       │   ├───modalUsuarios.ejs
+│   │       │   ├───navCabecera.ejs
+│   │       │   ├───navLateral.ejs
+│   │       │   └───scripts.ejs
+│   │       ├───head-pwa.ejs
+│   │       └───mezclas
+│   │           ├───cabecera.ejs
+│   │           ├───cabeceraNotificacion.ejs
+│   │           ├───headerNav.ejs
+│   │           ├───modalCambioPorcentaje.ejs
+│   │           ├───modalCancelacion.ejs
+│   │           ├───modalNuevoProducto.ejs
+│   │           ├───modalPdf.ejs
+│   │           ├───modalRecetaConfirmacion.ejs
+│   │           ├───modalSelecionEmpresa.ejs
+│   │           ├───modalSolicitudCompletada.ejs
+│   │           ├───mostrarReceta.ejs
+│   │           ├───mostrarRecetaProceso.ejs
+│   │           ├───notificacion.ejs
+│   │           ├───scripts.ejs
+│   │           └───scriptsNotificaciones.ejs
+│   └───__tests__
+├───tree.mjs
+├───webpack.config.mjs
+└───_passenger.cjs

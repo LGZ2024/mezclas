@@ -20,7 +20,10 @@ export class ProductosModel {
 
   static async getOne ({ id }) {
     try {
-      const producto = await Productos.findByPk(id)
+      const producto = await Productos.findOne({
+        where: { id_producto: id },
+        attributes: ['id_producto', 'id_sap', 'nombre', 'descripcion', 'unidad_medida']
+      })
       if (!producto) {
         throw new NotFoundError(`Producto con ID ${id} no encontrado`)
       }

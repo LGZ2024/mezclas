@@ -82,17 +82,8 @@ const solicitudConfig = {
   },
   metodoAplicacion: {
     type: DataTypes.STRING,
-    allowNull: false,
-    field: 'metodoAplicacion', // Nombre de columna en la base de datos
-    validate: {
-      notEmpty: {
-        msg: 'El método de aplicación es requerido'
-      },
-      len: {
-        args: [3, 100],
-        msg: 'El método de aplicación debe tener entre 3 y 100 caracteres'
-      }
-    }
+    allowNull: true,
+    field: 'metodoAplicacion' // Nombre de columna en la base de datos
   },
   notaMezcla: {
     type: DataTypes.TEXT,
@@ -117,7 +108,7 @@ const solicitudConfig = {
   },
   ranchoDestino: {
     type: DataTypes.STRING,
-    allowNull: true,
+    allowNull: false,
     field: 'ranchoDestino', // Nombre de columna en la base de datos
     validate: {
       notEmpty: {

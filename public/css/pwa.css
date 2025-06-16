@@ -1,0 +1,114 @@
+/* Estilos para el modo offline y notificaciones */
+body.offline {
+    filter: grayscale(0.5);
+}
+
+.connection-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 9999;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.connection-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.connection-toast.hide {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+}
+
+body.offline {
+  filter: grayscale(1);
+}
+
+/* Opcional: Deshabilitar botones al estar offline */
+body.offline button,
+body.offline input[type="submit"] {
+  pointer-events: none;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estilos para el botón de instalación */
+#installPwa {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    background: var(--color-primario, #0d6efd);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 1000;
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Mejoras para dispositivos Apple */
+@supports (-webkit-touch-callout: none) {
+    #installPwa {
+        padding: 14px 28px;
+    }
+    
+    .connection-toast {
+        padding-bottom: 24px; /* Safe area para iPhone X+ */
+    }
+}
+
+/* Media queries para diferentes tamaños de pantalla */
+@media (max-width: 768px) {
+    #installPwa {
+        bottom: 40px;
+        transform: translateX(50%);
+        width: calc(100% - 40px);
+        max-width: 320px;
+    }
+}
+
+/* Soporte para modo oscuro */
+@media (prefers-color-scheme: dark) {
+    .connection-toast {
+        background: rgba(255, 255, 255, 0.9);
+        color: black;
+    }
+}
+#updateModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  justify-content: center; align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+}
+#updateModal.hide {
+  display: none;
+}
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}

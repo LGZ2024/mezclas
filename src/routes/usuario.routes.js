@@ -9,6 +9,7 @@ export const createUsuarioRouter = ({ usuarioModel }) => {
 
   // Crear un usuario
   router.post('/', authenticate, isAdmin, usuarioController.create)
+  router.get('/usuarios', authenticate, usuarioController.getUsuarios)
   router.get('/', authenticate, isAdmin, usuarioController.getAll)
   router.get('/:id', authenticate, isAdmin, usuarioController.getOne)
   router.patch('/:id', authenticate, isAdmin, usuarioController.update)

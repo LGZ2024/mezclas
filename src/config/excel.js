@@ -788,8 +788,8 @@ export const crearSolicitud = async (parametros) => { // Definir estilos
       hojaGeneral.addRow(['Temporada', temporada]).eachCell((cell) => { cell.style = cellStyle })
       hojaGeneral.addRow(['Cantidad de Mezcla', cantidad === '' ? 'No aplica' : cantidad]).eachCell((cell) => { cell.style = cellStyle })
       hojaGeneral.addRow(['Presentacion de la Mezcla', presentacion === '' ? 'No aplica' : presentacion]).eachCell((cell) => { cell.style = cellStyle })
-      hojaGeneral.addRow(['Metodo de aplicacion', metodoAplicacion]).eachCell((cell) => { cell.style = cellStyle })
-      hojaGeneral.addRow(['Descripcion', descripcion]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Metodo de aplicacion', metodoAplicacion === '' ? 'No aplica' : metodoAplicacion]).eachCell((cell) => { cell.style = cellStyle })
+      hojaGeneral.addRow(['Descripcion', descripcion === '' ? 'Sin descripcion' : descripcion]).eachCell((cell) => { cell.style = cellStyle })
 
       // Agregar información de la solicitud
       hojaGeneral.addRow([]) // Espacio vacío con estilo
@@ -976,7 +976,6 @@ const agregarEncabezadoSolicitud = async (hojaGeneral, dato, datosSolicitud, var
   hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.id_solicitud : dato.id]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Folio de Receta', dato.FolioReceta === '' || dato.folio === '' ? 'No aplica' : dato.FolioReceta || dato.folio]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Solicita', dato.usuario ? dato.usuario : dato.Solicita]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
-  hojaGeneral.addRow(['Comentario de solicitante', datosSolicitud[0].respuestaSolicitud === '' ? 'Sin Comentario' : datosSolicitud[0].respuestaSolicitud]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega ? dato.fechaEntrega : 'No aplica']).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Rancho', dato.rancho ? dato.rancho : dato.ranchoDestino]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })

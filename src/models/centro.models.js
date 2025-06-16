@@ -1,6 +1,7 @@
 import { Centrocoste } from '../schema/centro.js'
-// utils
+import logger from '../utils/logger.js'
 import { ValidationError, DatabaseError, CustomError, NotFoundError } from '../utils/CustomError.js'
+
 export class CentroCosteModel {
   // uso
   static async getAll () {
@@ -19,10 +20,16 @@ export class CentroCosteModel {
   // uso
   static async getCentrosPorRancho ({ rancho, cultivo }) {
     let centros
+    const logContext = {
+      operation: 'GET_CENTROS_POR_RANCHO_Modelo',
+      rancho,
+      cultivo
+    }
     try {
+      logger.logModelOperation('GET_CENTROS_POR_RANCHO', logContext)
       // validamos datos
       if (!rancho || !cultivo) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+        throw new ValidationError(`Datos requeridos no proporcionados: rancho: ${rancho}, cultivo: ${cultivo}`)
       }
 
       if (cultivo === 'General') {
@@ -44,9 +51,18 @@ export class CentroCosteModel {
       if (!centros) throw new NotFoundError('No se encontraron centros de coste para este rancho')
 
       return centros
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener los centros de coste')
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener los centros de coste', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 

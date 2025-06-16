@@ -5,7 +5,6 @@ import { Usuario } from '../schema/usuarios.js'
 import { Centrocoste } from '../schema/centro.js'
 
 // Configuraciones
-import sequelize from '../db/db.js'
 import { guardarImagen } from '../config/foto.mjs'
 import { enviarCorreo } from '../config/smtp.js'
 
@@ -16,226 +15,671 @@ import { UsuarioModel } from '../models/usuario.models.js'
 
 // Utilidades
 import { format } from 'date-fns'
+import { DbHelper } from '../utils/dbHelper.js'
 import logger from '../utils/logger.js'
 import {
-  NotFoundError,
   ValidationError,
+  NotFoundError,
   DatabaseError,
-  CustomError
+  CustomError,
+  MezclaOperationError
+
 } from '../utils/CustomError.js'
-import { Op } from 'sequelize' // Agregar esta importación
+
+import { Op } from 'sequelize'
 
 export class MezclaModel {
-  // uso
-  static async create ({ data, idUsuario }) {
-    const transaction = await sequelize.transaction()
-    let variedad, porcentajes, variedades
+  // Métodos auxiliares de validación
+  static #validarDatos (datos = {}, camposRequeridos = []) {
+    const errores = []
+    const recibidos = {}
+
+    camposRequeridos.forEach(campo => {
+      if (!datos[campo]) {
+        errores.push(`El campo ${campo} es requerido`)
+      }
+      recibidos[campo] = !!datos[campo]
+    })
+
+    if (errores.length > 0) {
+      throw new ValidationError('Datos requeridos no proporcionados', {
+        errores,
+        recibidos
+      })
+    }
+  }
+
+  static async #ejecutarTransaccion (operacion, callback, logContext, transaction) {
     try {
-      // validamos datos
-      if (!data || !idUsuario) {
-        throw new ValidationError('Datos requeridos no proporcionados')
-      }
-      // logger.info('Creando nueva solicitud de mezcla', data)
-      // validamos variedad si viene todo
-      if (data.variedad === 'todo') {
-        try {
-          // Asumiendo que este método existe en tu modelo
-          variedades = await CentroCosteModel.getVariedadPorCentroCoste({ id: data.centroCoste })
+      logger.logDBTransaction(operacion, 'started', {
+        correlationId: logContext.correlationId
+      })
 
-          // Convertir a array, eliminar último elemento y volver a string
-          const variedadesArray = variedades[0].dataValues.variedad
-            .split(',')
-            .slice(0, -1)
+      const resultado = await callback(transaction)
 
-          const porcentajesArray = variedades[0].dataValues.porcentajes
-            .split(',')
-            .slice(0, -1)
+      logger.logDBTransaction(operacion, 'committed', {
+        correlationId: logContext.correlationId
+      })
 
-          // Filtrar ambos arrays en paralelo
-          const filtrados = variedadesArray.reduce((acc, variedad, index) => {
-            if (parseInt(porcentajesArray[index].trim()) !== 0) {
-              acc.variedades.push(variedad)
-              acc.porcentajes.push(porcentajesArray[index])
-            }
-            return acc
-          }, { variedades: [], porcentajes: [] })
+      return resultado
+    } catch (error) {
+      logger.logDBTransaction(operacion, 'rolled_back', {
+        error: error.message,
+        correlationId: logContext.correlationId
+      })
+      throw error
+    }
+  }
 
-          // Convertir de vuelta a strings
-          variedad = filtrados.variedades.join(',')
-          porcentajes = filtrados.porcentajes.join(',')
-        } catch (error) {
-          if (error instanceof CustomError) throw error
-          throw new DatabaseError('Error al consultar productos para la solicitud')
-        }
-      }
-      // Creamos nueva solicitud con transacción
-      const solicitud = await Solicitud.create({
-        folio: data.folio,
-        cantidad: data.cantidad,
-        idCentroCoste: data.centroCoste,
-        descripcion: data.descripcion,
-        empresa: data.empresaPertece,
-        idUsuarioSolicita: idUsuario,
-        metodoAplicacion: data.metodoAplicacion,
-        temporada: data.temporada,
-        variedad: data.variedad === 'todo' ? variedad : data.variedad,
-        presentacion: data.presentacion,
-        ranchoDestino: data.rancho,
-        porcentajes: data.variedad === 'todo' ? porcentajes : '100'
-      }, { transaction })
+  // funciones privadas
+  static async create ({ data, idUsuario, rol, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        logger.logModelOperation('CREATE_MEZCLA_modelo', 'started', logContext)
 
-      // Verificar si hay productos y procesar cada uno
-      if (data.productos && Array.isArray(data.productos)) {
-        // Filtrar productos válidos
-        const productosValidos = data.productos.filter(producto =>
-          producto.id_producto &&
-          producto.unidad_medida &&
-          producto.cantidad
-        )
+        this.#validarDatos(data, ['empresaPertece', 'rancho', 'centroCoste', 'productos'])
 
-        // Validar que haya productos
-        if (productosValidos.length === 0) {
-          throw new ValidationError('No se encontraron productos válidos para procesar')
-        }
+        const resultado = await this.#ejecutarTransaccion('CREATE_MEZCLA', async () => {
+          const { variedad, porcentajes } = await this.#procesarVariedades({
+            data,
+            transaction
+          })
 
-        const productosPromesas = productosValidos.map(async (producto) => {
-          // comprobaramos si el id_producto es numero
-          try {
-            await SolicitudProductos.create({
-              id_solicitud: solicitud.id,
-              id_producto: parseInt(producto.id_producto),
-              unidad_medida: producto.unidad_medida,
-              cantidad: producto.cantidad
-            }, { transaction })
-            return {
-              idProducto: producto.id_producto,
-              status: 'success'
-            }
-          } catch (errorProducto) {
-            logger.error('Error al procesar producto', errorProducto)
-            if (errorProducto instanceof CustomError) throw errorProducto
-            throw new DatabaseError(`Error al procesar producto ${producto.id_producto}`)
+          const solicitud = await this.#crearSolicitudBase({
+            data,
+            variedad,
+            porcentajes,
+            idUsuario,
+            rol,
+            transaction
+          })
+
+          if (data.productos?.length) {
+            await this.#procesarProductos({
+              productos: data.productos,
+              idSolicitud: solicitud.id,
+              transaction
+            })
           }
+
+          return {
+            message: 'Solicitud de mezcla registrada correctamente',
+            idSolicitud: solicitud.id,
+            fechaSolicitud: solicitud.fechaSolicitud,
+            data: solicitud
+          }
+        }, logContext)
+
+        logger.logOperation('CREATE_MEZCLA_modelo', 'completed', {
+          ...logContext,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
         })
 
-        // Esperar a que se procesen todos los productos
-        const resultadosProductos = await Promise.all(productosPromesas)
+        return resultado
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
 
-        // Verificar si hubo errores en los productos
-        const productosConError = resultadosProductos.filter(resultado =>
-          resultado.status === 'error'
-        )
+        if (error instanceof CustomError) throw error
 
-        if (productosConError.length > 0) {
-          throw new CustomError(`Errores al procesar productos: ${JSON.stringify(productosConError)}`)
+        throw new MezclaOperationError('CREATE', 'Error al registrar solicitud de mezcla', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
+  }
+
+  static async cerrarSolicitud ({ data, idUsuario, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        logger.logOperation('CERRAR_SOLICITUD_modelo', 'started', logContext)
+
+        this.#validarDatos(data, ['idSolicitud', 'imagen'])
+
+        const resultado = await this.#ejecutarTransaccion('CERRAR_SOLICITUD', async (transaction) => {
+          const solicitud = await this.#buscarSolicitud({
+            id: data.idSolicitud,
+            transaction
+          })
+
+          const { solicitudActualizada } = await this.#actualizarSolicitud({
+            solicitud,
+            data: {
+              imagenPath: logContext.requestBody.imagen,
+              fecha: new Date()
+            },
+            idUsuario,
+            transaction,
+            logContext
+          })
+
+          await this.#notificarCierreSolicitud({
+            solicitud: solicitudActualizada,
+            idUsuario
+          })
+
+          return {
+            message: 'Solicitud cerrada correctamente',
+            status: solicitudActualizada.status,
+            idUsuarioSolicita: solicitudActualizada.idUsuarioSolicita,
+            id: solicitudActualizada.id
+          }
+        }, logContext, transaction)
+
+        logger.logOperation('CERRAR_SOLICITUD', 'completed', {
+          ...logContext,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
+        })
+
+        return resultado
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new MezclaOperationError('CLOSE', 'Error al cerrar solicitud', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
+  }
+
+  static async validacion ({ data, idUsuario, user, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        logger.logOperation('VALIDAR_MEZCLA', 'started', logContext)
+
+        this.#validarDatos({ data, idUsuario }, ['data', 'idUsuario'])
+
+        const resultado = await this.#ejecutarTransaccion('VALIDAR_MEZCLA', async (transaction) => {
+          const resultados = await Promise.all(data.map(async (estado) => {
+            logger.logModelOperation('Solicitud', 'processing', {
+              solicitudId: estado.id_solicitud,
+              userId: idUsuario
+            })
+
+            const resultado = await procesarSolicitud({
+              estado,
+              idUsuario,
+              user,
+              transaction
+            })
+
+            logger.logModelOperation('Solicitud', 'processed', {
+              solicitudId: estado.id_solicitud,
+              status: resultado.status
+            })
+
+            return resultado
+          }))
+
+          return {
+            message: 'Solicitudes guardadas correctamente',
+            resultados
+          }
+        }, logContext, transaction)
+
+        logger.logOperation('VALIDAR_MEZCLA', 'completed', {
+          ...logContext,
+          resultCount: resultado.resultados.length,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
+        })
+
+        return resultado
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new MezclaOperationError('VALIDATE', 'Error al validar solicitudes', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
+  }
+
+  static async cancelar ({ idSolicitud, data, idUsuario, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        logger.logOperation('CANCELAR_MEZCLA_MODELO started', logContext)
+
+        if (!idSolicitud || !data || !idUsuario) {
+          throw new ValidationError('Datos requeridos no proporcionados', {
+            required: ['idSolicitud', 'data', 'idUsuario'],
+            received: { idSolicitud, data: !!data, idUsuario }
+          })
         }
-      }
 
-      // Confirmar transacción
-      await transaction.commit()
-      // Retornar mensaje de éxito con ID de solicitud
-      return {
-        message: 'Solicitud de mezcla registrada correctamente',
-        idSolicitud: solicitud.id,
-        fechaSolicitud: solicitud.fechaSolicitud,
-        data: solicitud
+        try {
+          logger.logDBTransaction('CANCELAR_MEZCLA_MODELO transation iniciada', {
+            solicitudId: idSolicitud,
+            correlationId: logContext.correlationId
+          })
+
+          const solicitud = await Solicitud.findByPk(idSolicitud)
+          if (!solicitud) {
+            throw new NotFoundError(`Solicitud ${idSolicitud} no encontrada`)
+          }
+
+          logger.logModelOperation('CANCELAR_MEZCLA_MODELO obtener solicitud found', {
+            solicitudId: solicitud.id,
+            estadoActual: solicitud.status
+          })
+
+          // Actualizar solicitud
+          solicitud.confirmacion = data.validacion === false ? 'Cancelada' : solicitud.confirmacion
+          solicitud.idUsuarioValida = idUsuario
+          solicitud.motivoCancelacion = data.motivo
+
+          await solicitud.save({ transaction })
+
+          logger.logModelOperation('CANCELAR_MEZCLA_MODELO actualizar solicitud updated', {
+            solicitudId: solicitud.id,
+            nuevoEstado: solicitud.confirmacion
+          })
+
+          // Notificación por correo
+          const solicitante = await UsuarioModel.getOneId({
+            id: solicitud.idUsuarioSolicita
+          })
+
+          logger.info('Notificando al solicitante', {
+            solicitanteId: solicitante.id,
+            solicitanteEmail: solicitante.email,
+            solicitanteNombre: solicitante.nombre
+          })
+
+          if (solicitante?.email) {
+            const respuesta = await enviarCorreo({
+              type: 'cancelacion',
+              email: solicitante.email,
+              nombre: solicitante.nombre,
+              solicitudId: solicitud.id,
+              usuario: {
+                empresa: solicitud.empresa,
+                ranchos: solicitud.ranchoDestino
+              },
+              data: {
+                motivo: data.motivo
+              }
+            })
+
+            logger.logModelOperation('Notificacion enviada ', {
+              solicitudId: solicitud.id,
+              destinatario: solicitante.email,
+              status: respuesta.error ? 'error' : 'success'
+            })
+          }
+
+          logger.logOperation('CANCELAR_MEZCLA completed', {
+            ...logContext,
+            duration: Date.now() - new Date(logContext.timestamp).getTime()
+          })
+
+          return {
+            message: 'Solicitud cancelada correctamente',
+            solicitudId: solicitud.id
+          }
+        } catch (error) {
+          logger.logDBTransaction('CANCELAR_MEZCLA', 'rolled_back', {
+            error: error.message,
+            correlationId: logContext.correlationId
+          })
+          throw error
+        }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al cancelar solicitud', {
+          originalError: error.message,
+          context: logContext
+        })
       }
-    } catch (error) {
-      logger.error('Error al registrar solicitud de mezcla', error)
-      // Revertir transacción en caso de error
-      if (transaction) await transaction.rollback()
-      if (error instanceof CustomError) throw error
-      throw new DatabaseError('Error al registrar solicitud de mezcla')
-    }
+    })
   }
 
-  // uso
-  static async cerrarSolicitid ({ data, idUsuario }) {
-    const id = data.idSolicitud
-    const status = 'Completada'
-    try {
-      // Validar datos
-      if (!idUsuario || !data) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+  static async mezclaConfirmar ({ idSolicitud, data, usuario, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        logger.logOperation('CONFIRMAR_MEZCLA_modelo', 'started', logContext)
+
+        if (!idSolicitud || !data) {
+          throw new ValidationError('Datos requeridos no proporcionados', {
+            required: ['idSolicitud', 'data'],
+            received: { idSolicitud, data: !!data }
+          })
+        }
+        try {
+          logger.logDBTransaction('CONFIRMAR_MEZCLA_modelo', 'started', {
+            solicitudId: idSolicitud,
+            correlationId: logContext.correlationId
+          })
+
+          const solicitud = await Solicitud.findByPk(idSolicitud)
+          if (!solicitud) {
+            throw new NotFoundError(`Solicitud ${idSolicitud} no encontrada`)
+          }
+
+          logger.logModelOperation('Solicitud', 'found', {
+            solicitudId: solicitud.id,
+            estadoActual: solicitud.status
+          })
+
+          // Actualizar campos
+          const cambios = {
+            confirmacion: 'Pendiente',
+            ...(data.comentarios && { comentarios: data.comentarios }),
+            ...(data.fechaSolicitud && { fechaSolicitud: data.fechaSolicitud }),
+            ...(data.empresa && { empresa: data.empresa }),
+            ...(data.ranchoDestino && { ranchoDestino: data.ranchoDestino }),
+            ...(data.descripcion && { descripcion: data.descripcion }),
+            ...(data.folio && { folio: data.folio }),
+            ...(data.temporada && { temporada: data.temporada }),
+            ...(data.cantidad && { cantidad: data.cantidad }),
+            ...(data.presentacion && { presentacion: data.presentacion }),
+            ...(data.metodoAplicacion && { metodoAplicacion: data.metodoAplicacion })
+          }
+
+          Object.assign(solicitud, cambios)
+          await solicitud.save({ transaction })
+
+          logger.logModelOperation('Solicitud', 'updated', {
+            solicitudId: solicitud.id,
+            cambios
+          })
+
+          // Notificar al mezclador
+          const mezclador = await UsuarioModel.getOneId({
+            id: solicitud.idUsuarioValida
+          })
+
+          if (mezclador?.email) {
+            const respuesta = await enviarCorreo({
+              type: 'reevaluacion',
+              email: mezclador.email,
+              nombre: usuario.nombre,
+              solicitudId: solicitud.id,
+              usuario: {
+                empresa: usuario.empresa,
+                ranchos: mezclador.ranchoDestino
+              },
+              data: {
+                folio: solicitud.folio || 'No Aplica',
+                cantidad: solicitud.cantidad || 'No Aplica',
+                presentacion: solicitud.presentacion || 'No Aplica',
+                metodoAplicacion: solicitud.metodoAplicacion,
+                motivo: solicitud.motivoCancelacion,
+                comentarios: solicitud.comentario || 'Por favor, revisar las proporciones'
+              }
+            })
+
+            logger.logModelOperation('Notificacion', 'sent', {
+              solicitudId: solicitud.id,
+              destinatario: mezclador.email,
+              status: respuesta.error ? 'error' : 'success'
+            })
+          }
+
+          logger.logOperation('CONFIRMAR_MEZCLA_modelo', 'completed', {
+            ...logContext,
+            duration: Date.now() - new Date(logContext.timestamp).getTime()
+          })
+
+          return {
+            message: 'Solicitud actualizada correctamente',
+            solicitudId: solicitud.id
+          }
+        } catch (error) {
+          logger.logDBTransaction('CONFIRMAR_MEZCLA_modelo', 'rolled_back', {
+            error: error.message,
+            correlationId: logContext.correlationId
+          })
+          throw error
+        }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al confirmar mezcla', {
+          originalError: error.message,
+          context: logContext
+        })
       }
-      // Verificamos si existe la solicitud con el id proporcionado
-      const solicitud = await Solicitud.findByPk(id)
-      if (!solicitud) throw new NotFoundError('Solicitud con ID ' + id + ' no encontrada')
-
-      // Guardar imagen
-      const response = await guardarImagen({ imagen: data.imagen })
-
-      // Actualiza solo los campos que se han proporcionado
-      if (response.relativePath) solicitud.imagenEntrega = response.relativePath
-      if (status) solicitud.status = status
-      if (idUsuario) solicitud.idUsuarioMezcla = idUsuario
-      if (response.fecha) solicitud.fechaEntrega = response.fecha
-
-      await solicitud.save()
-
-      return { message: 'Solicitud actualizada correctamente', status, idUsuarioSolicita: solicitud.idUsuarioSolicita, id }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al actualizar solicitud')
-    }
+    })
   }
 
-  // uso
-  static async obtenerTablaMezclasEmpresa ({ status, empresa, confirmacion }) {
-    try {
-      // Validar datos
-      if (!status || !empresa) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+  static async estadoProceso ({ id, data, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        logger.logOperation('modelo_estado_proceso', 'iniciado', logContext)
+        // Validación de datos
+        if (!id || !data) {
+          throw new ValidationError('Datos requeridos no proporcionados', {
+            required: ['id', 'data'],
+            received: { id, data: !!data }
+          })
+        }
+        try {
+          logger.logDBTransaction('ACTUALIZAR_ESTADO', 'started', {
+            solicitudId: id,
+            correlationId: logContext.correlationId
+          })
+
+          // Buscar solicitud
+          const solicitud = await Solicitud.findByPk(id)
+          if (!solicitud) {
+            throw new NotFoundError(`Solicitud con ID ${id} no encontrada`, {
+              solicitudId: id
+            })
+          }
+
+          logger.logModelOperation('Solicitud', 'found', {
+            solicitudId: solicitud.id,
+            estadoActual: solicitud.status
+          })
+
+          // Actualizar campos
+          const cambios = {
+            ...(data.notaMezcla && { notaMezcla: data.notaMezcla }),
+            ...(data.status && { status: data.status })
+          }
+
+          Object.assign(solicitud, cambios)
+          await solicitud.save({ transaction })
+
+          logger.logModelOperation('Solicitud', 'updated', {
+            solicitudId: solicitud.id,
+            cambios
+          })
+
+          logger.logOperation('ACTUALIZAR_ESTADO', 'completed', {
+            ...logContext,
+            duration: Date.now() - new Date(logContext.timestamp).getTime()
+          })
+
+          return {
+            message: 'Solicitud actualizada correctamente',
+            idUsuarioSolicita: solicitud.idUsuarioSolicita
+          }
+        } catch (error) {
+          logger.logDBTransaction('ACTUALIZAR_ESTADO', 'rolled_back', {
+            error: error.message,
+            correlationId: logContext.correlationId
+          })
+          throw error
+        }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al actualizar estado de solicitud', {
+          originalError: error.message,
+          context: logContext
+        })
       }
-      logger.info('Obteniendo tabla de mezclas por empresa y status: ' + status + ' y ' + empresa)
-      // Consulta para obtener las mezclas filtradas por empresa y status
+    })
+  }
+
+  static async mensajeSolicita ({ id, mensajes, idUsuario, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        logger.logOperation('MENSAJE_SOLICITUD', 'started', logContext)
+
+        // Validación de datos
+        if (!id || !mensajes || !idUsuario) {
+          throw new ValidationError('Datos requeridos no proporcionados', {
+            required: ['id', 'mensajes', 'idUsuario'],
+            received: { id, mensajes: !!mensajes, idUsuario }
+          })
+        }
+
+        try {
+          logger.logDBTransaction('MENSAJE_SOLICITUD', 'started', {
+            solicitudId: id,
+            correlationId: logContext.correlationId
+          })
+
+          // Buscar solicitud
+          const solicitud = await Solicitud.findByPk(id)
+          if (!solicitud) {
+            throw new NotFoundError(`Solicitud con ID ${id} no encontrada`, {
+              solicitudId: id
+            })
+          }
+
+          logger.logModelOperation('Solicitud', 'found', {
+            solicitudId: solicitud.id,
+            mensajeAnterior: solicitud.respuestaSolicitud
+          })
+
+          // Actualizar mensaje
+          solicitud.respuestaSolicitud = mensajes
+          await solicitud.save({ transaction })
+
+          logger.logModelOperation('Solicitud', 'updated', {
+            solicitudId: solicitud.id,
+            nuevoMensaje: mensajes
+          })
+
+          // Crear notificación
+          await NotificacionModel.create({
+            idSolicitud: id,
+            mensaje: `Respuesta para solicitud:${id}`,
+            idUsuario
+          }, { transaction })
+
+          logger.logModelOperation('Notificacion', 'created', {
+            solicitudId: id,
+            userId: idUsuario
+          })
+
+          logger.logOperation('MENSAJE_SOLICITUD', 'completed', {
+            ...logContext,
+            duration: Date.now() - new Date(logContext.timestamp).getTime()
+          })
+
+          return {
+            message: 'Notificación guardada correctamente',
+            solicitudId: id
+          }
+        } catch (error) {
+          await transaction.rollback()
+          logger.logDBTransaction('MENSAJE_SOLICITUD', 'rolled_back', {
+            error: error.message,
+            correlationId: logContext.correlationId
+          })
+          throw error
+        }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al guardar mensaje de solicitud', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
+  }
+
+  // metodos de consultas especificos
+  //
+  static async getAll () {
+    const logContext = {
+      operation: 'GET_ALL_MEZCLAS',
+      timestamp: new Date().toISOString()
+    }
+
+    try {
+      logger.logOperation('GET_ALL_MEZCLAS', 'started', logContext)
+
       const mezclas = await Solicitud.findAll({
-        where: {
-          empresa,
-          status,
-          confirmacion // Solo mezclas confirmadas
-        },
         include: [
           {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
+            model: Usuario,
+            attributes: ['nombre']
           },
           {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+            model: Centrocoste,
+            attributes: ['centroCoste']
           }
         ],
         attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'notaMezcla',
-          'folio',
-          'temporada',
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud',
-          'imagenEntrega',
-          'fechaEntrega',
-          'respuestaSolicitud'
+          'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+          'folio', 'temporada', 'cantidad', 'presentacion',
+          'metodoAplicacion', 'descripcion', 'status',
+          'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega'
         ]
       })
 
-      // Transformar los resultados
+      logger.logModelOperation('Solicitud', 'found', {
+        count: mezclas.length
+      })
+
       const resultadosFormateados = mezclas.map(mezcla => {
         const m = mezcla.toJSON()
+        logger.debug('Procesando mezcla', {
+          id: m.id,
+          usuario: m.usuario?.nombre,
+          centroCoste: m.centrocoste?.centroCoste
+        })
+
         return {
           id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          Solicita: m.usuario?.nombre || 'Usuario no encontrado',
           fechaSolicitud: m.fechaSolicitud,
           ranchoDestino: m.ranchoDestino,
           notaMezcla: m.notaMezcla,
           empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
           variedad: m.variedad,
           FolioReceta: m.folio,
           temporada: m.temporada,
@@ -245,31 +689,209 @@ export class MezclaModel {
           imagenEntrega: m.imagenEntrega,
           descripcion: m.descripcion,
           fechaEntrega: m.fechaEntrega,
-          status: m.status,
-          respuestaSolicitud: m.respuestaSolicitud
+          status: m.status
         }
       })
 
-      // Devolver los resultados validar si hay resultados mandar vacio
+      logger.logOperation('GET_ALL_MEZCLAS', 'completed', {
+        ...logContext,
+        count: resultadosFormateados.length,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener todas las mezclas', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 
-  static async obtenerTablaMezclasValidados ({ status, empresa, confirmacion }) {
+  //
+  static async obtenerMezclasMichoacan () {
+    const logContext = {
+      operation: 'GET_MEZCLAS_MICHOACAN',
+      timestamp: new Date().toISOString()
+    }
+
     try {
-      // Validar datos
-      if (!status || !empresa) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+      logger.logOperation('GET_MEZCLAS_MICHOACAN', 'started', logContext)
+
+      const mezclas = await Solicitud.findAll({
+        where: {
+          empresa: {
+            [Op.or]: ['Moras Finas', 'Bayas del Centro']
+          }
+        },
+        include: [
+          {
+            model: Usuario,
+            attributes: ['nombre']
+          }
+        ],
+        attributes: [
+          'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+          'folio', 'temporada', 'cantidad', 'presentacion',
+          'metodoAplicacion', 'descripcion', 'status',
+          'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega'
+        ]
+      })
+
+      logger.logModelOperation('Solicitud', 'found', {
+        count: mezclas.length,
+        empresas: ['Moras Finas', 'Bayas del Centro']
+      })
+
+      const resultadosFormateados = mezclas.map(mezcla => {
+        const m = mezcla.toJSON()
+        logger.debug('Procesando mezcla', {
+          id: m.id,
+          usuario: m.usuario?.nombre
+        })
+
+        return {
+          id: m.id,
+          Solicita: m.usuario?.nombre || 'Usuario no encontrado',
+          fechaSolicitud: m.fechaSolicitud,
+          ranchoDestino: m.ranchoDestino,
+          notaMezcla: m.notaMezcla,
+          empresa: m.empresa,
+          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
+          variedad: m.variedad,
+          FolioReceta: m.folio,
+          temporada: m.temporada,
+          cantidad: m.cantidad,
+          prensetacion: m.presentacion,
+          metodoAplicacion: m.metodoAplicacion,
+          imagenEntrega: m.imagenEntrega,
+          descripcion: m.descripcion,
+          fechaEntrega: m.fechaEntrega,
+          status: m.status
+        }
+      })
+
+      logger.logOperation('GET_MEZCLAS_MICHOACAN', 'completed', {
+        ...logContext,
+        count: resultadosFormateados.length,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
+      return {
+        message: 'Mezclas obtenidas correctamente',
+        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []
       }
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener mezclas de Michoacán', {
+        originalError: error.message,
+        context: logContext
+      })
+    }
+  }
+
+  //
+  static async obtenerTablaMezclasEmpresa ({ status, empresa, confirmacion, idUsuario, logContext, logger }) {
+    return await DbHelper.executeQuery(async () => {
+      return this.#ejecutarConsulta('GET_MEZCLAS_EMPRESA', async () => {
+        this.#validarDatos({ status, empresa }, ['status', 'empresa'])
+        const mezclas = await Solicitud.findAll({
+          where: {
+            empresa,
+            status,
+            confirmacion
+          },
+          include: [
+            {
+              model: Usuario,
+              attributes: ['nombre']
+            },
+            {
+              model: Centrocoste,
+              attributes: ['centroCoste']
+            }
+          ],
+          attributes: [
+            'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+            'folio', 'temporada', 'cantidad', 'presentacion',
+            'metodoAplicacion', 'descripcion', 'status',
+            'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega',
+            'respuestaSolicitud'
+          ]
+        })
+
+        logger.logModelOperation('Solicitud', 'found', {
+          count: mezclas.length,
+          empresa,
+          status
+        })
+
+        const resultadosFormateados = mezclas.map(mezcla => {
+          const m = mezcla.toJSON()
+          return {
+            id: m.id,
+            Solicita: m.usuario?.nombre || 'Usuario no encontrado',
+            fechaSolicitud: m.fechaSolicitud,
+            ranchoDestino: m.ranchoDestino,
+            notaMezcla: m.notaMezcla,
+            empresa: m.empresa,
+            centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
+            variedad: m.variedad,
+            FolioReceta: m.folio,
+            temporada: m.temporada,
+            cantidad: m.cantidad,
+            prensetacion: m.presentacion,
+            metodoAplicacion: m.metodoAplicacion,
+            imagenEntrega: m.imagenEntrega,
+            descripcion: m.descripcion,
+            fechaEntrega: m.fechaEntrega,
+            status: m.status,
+            respuestaSolicitud: m.respuestaSolicitud
+          }
+        })
+
+        return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+      }, logContext)
+    })
+  }
+
+  //
+  static async obtenerTablaMezclasValidados ({ status, empresa, confirmacion, idUsuario }) {
+    if (!status || !empresa) {
+      throw new ValidationError('Datos requeridos no proporcionados', {
+        required: ['status', 'empresa'],
+        received: { status, empresa }
+      })
+    }
+    try {
+      logger.info('Iniciando consulta de tablas de mezclas validadas', {
+        status,
+        empresa,
+        confirmacion,
+        userId: idUsuario
+      })
       // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
         where: {
           empresa,
           status,
           confirmacion, // Solo mezclas no confirmadas
+          id: {
+            [Op.ne]: 33 // Excluir ID 33
+          },
           idUsuarioSolicita: {
             [Op.ne]: 33 // Excluir ID 33
           }
@@ -304,9 +926,22 @@ export class MezclaModel {
         ]
       })
 
+      // 4. Logging de resultados encontrados
+      logger.debug('Mezclas encontradas', {
+        count: mezclas.length,
+        empresa,
+        status
+      })
+
       // Transformar los resultados
       const resultadosFormateados = mezclas.map(mezcla => {
         const m = mezcla.toJSON()
+        // Logging detallado para debugging
+        logger.debug('Procesando mezcla', {
+          id: m.id,
+          usuario: m.usuario?.nombre,
+          centroCoste: m.centrocoste?.centroCoste
+        })
         return {
           id: m.id,
           Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
@@ -328,309 +963,281 @@ export class MezclaModel {
           respuestaSolicitud: m.respuestaSolicitud
         }
       })
-      // logger.debug('obtenerTablaMezclasEmpresa: resultadosFormateados', resultadosFormateados)
-      // Devolver los resultados validar si hay resultados mandar vacio
+      // 6. Logging final
+      logger.info('Consulta completada exitosamente', {
+        resultados: resultadosFormateados.length,
+        empresa,
+        status
+      })
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
-    }
-  }
+    } catch (error) {
+    // 8. Manejo de errores
+      logger.error('Error al obtener mezclas por empresa', {
+        error: error.message,
+        stack: error.stack,
+        params: { empresa, status, confirmacion }
+      })
 
-  static async obtenerTablaMezclasJalisco ({ status, empresa, confirmacion }) {
-    try {
-      // Validar datos
-      if (!status || !empresa) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+      // Re-throw de errores conocidos
+      if (error instanceof CustomError) {
+        throw error
       }
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
+
+      // Error general de base de datos
+      throw new DatabaseError('Error al obtener las mezclas', {
+        originalError: error.message,
+        context: {
           empresa,
           status,
-          confirmacion // Solo mezclas no confirmadas
-        },
-        include: [
-          {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
-          },
-          {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-          }
-        ],
-        attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'notaMezcla',
-          'folio',
-          'temporada',
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud',
-          'imagenEntrega',
-          'fechaEntrega',
-          'respuestaSolicitud'
-        ]
-      })
-
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON()
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status,
-          respuestaSolicitud: m.respuestaSolicitud
+          confirmacion
         }
       })
-      // logger.debug('obtenerTablaMezclasEmpresa: resultadosFormateados', resultadosFormateados)
-      // Devolver los resultados validar si hay resultados mandar vacio
-      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
     }
   }
 
-  static async obtenerTablaMezclasValidadosMichoacan ({ status, confirmacion }) {
-    try {
-      // Validar datos
-      if (!status || !confirmacion) {
-        throw new ValidationError('Datos requeridos no proporcionados')
-      }
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          empresa: {
-            [Op.or]: ['Moras Finas', 'Bayas del Centro']
-          },
-          status,
-          confirmacion // Solo mezclas no confirmadas
-        },
-        include: [
-          {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
-          },
-          {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-          }
-        ],
-        attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'notaMezcla',
-          'folio',
-          'temporada',
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud',
-          'imagenEntrega',
-          'fechaEntrega',
-          'respuestaSolicitud'
-        ]
-      })
+  //
+  static async obtenerTablaMezclasValidadosMichoacan ({ status, confirmacion, idUsuario, logContext, logger }) {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        logger.logOperation('GET_MEZCLAS_VALIDADAS_MICHOACAN', 'started', logContext)
 
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON()
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status,
-          respuestaSolicitud: m.respuestaSolicitud
+        // Validación de datos
+        if (!status || !confirmacion) {
+          throw new ValidationError('Datos requeridos no proporcionados', {
+            required: ['status', 'confirmacion'],
+            received: { status, confirmacion }
+          })
         }
-      })
-      // logger.debug('obtenerTablaMezclasEmpresa: resultadosFormateados', resultadosFormateados)
-      // Devolver los resultados validar si hay resultados mandar vacio
-      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
-    }
+
+        const mezclas = await Solicitud.findAll({
+          where: {
+            empresa: {
+              [Op.or]: ['Moras Finas', 'Bayas del Centro']
+            },
+            status,
+            confirmacion
+          },
+          include: [
+            {
+              model: Usuario,
+              attributes: ['nombre']
+            },
+            {
+              model: Centrocoste,
+              attributes: ['centroCoste']
+            }
+          ],
+          attributes: [
+            'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+            'folio', 'temporada', 'cantidad', 'presentacion',
+            'metodoAplicacion', 'descripcion', 'status',
+            'empresa', 'fechaSolicitud', 'imagenEntrega',
+            'fechaEntrega', 'respuestaSolicitud'
+          ]
+        })
+
+        logger.logModelOperation('Solicitud', 'found', {
+          count: mezclas.length,
+          empresas: ['Moras Finas', 'Bayas del Centro']
+        })
+
+        const resultadosFormateados = mezclas.map(mezcla => {
+          const m = mezcla.toJSON()
+          logger.debug('Procesando mezcla', {
+            id: m.id,
+            usuario: m.usuario?.nombre,
+            centroCoste: m.centrocoste?.centroCoste
+          })
+
+          return {
+            id: m.id,
+            Solicita: m.usuario?.nombre || 'Usuario no encontrado',
+            fechaSolicitud: m.fechaSolicitud,
+            ranchoDestino: m.ranchoDestino,
+            notaMezcla: m.notaMezcla,
+            empresa: m.empresa,
+            centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
+            variedad: m.variedad,
+            FolioReceta: m.folio,
+            temporada: m.temporada,
+            cantidad: m.cantidad,
+            prensetacion: m.presentacion,
+            metodoAplicacion: m.metodoAplicacion,
+            imagenEntrega: m.imagenEntrega,
+            descripcion: m.descripcion,
+            fechaEntrega: m.fechaEntrega,
+            status: m.status,
+            respuestaSolicitud: m.respuestaSolicitud
+          }
+        })
+
+        logger.logOperation('GET_MEZCLAS_VALIDADAS_MICHOACAN', 'completed', {
+          ...logContext,
+          count: resultadosFormateados.length,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
+        })
+
+        return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al obtener mezclas validadas de Michoacán', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
   }
 
-  // uso
-  static async obtenerTablaMezclasRancho ({ status, ranchoDestino, confirmacion }) {
-    try {
-      // Validar datos
-      if (!status || !ranchoDestino) {
-        throw new ValidationError('Datos requeridos no proporcionados')
-      }
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
+  //
+  static async obtenerTablaMezclasRancho ({ status, ranchoDestino, confirmacion, idUsuario, logContext, logger }) {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        logger.logOperation('GET_MEZCLAS_RANCHO_modelo', 'started', logContext)
+
+        // Validación de datos
+        if (!status || !ranchoDestino) {
+          throw new ValidationError('Datos requeridos no proporcionados', {
+            required: ['status', 'ranchoDestino'],
+            received: { status, ranchoDestino }
+          })
+        }
+
+        const mezclas = await Solicitud.findAll({
+          where: {
+            ranchoDestino,
+            status,
+            confirmacion
+          },
+          include: [
+            {
+              model: Usuario,
+              attributes: ['nombre']
+            },
+            {
+              model: Centrocoste,
+              attributes: ['centroCoste']
+            }
+          ],
+          attributes: [
+            'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+            'folio', 'temporada', 'cantidad', 'presentacion',
+            'metodoAplicacion', 'descripcion', 'status',
+            'empresa', 'fechaSolicitud', 'imagenEntrega',
+            'fechaEntrega', 'respuestaSolicitud'
+          ]
+        })
+
+        logger.logModelOperation('Solicitud', 'found', {
+          count: mezclas.length,
           ranchoDestino,
-          status,
-          confirmacion // Solo mezclas confirmadas
-        },
-        include: [
-          {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
-          },
-          {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+          status
+        })
+
+        const resultadosFormateados = mezclas.map(mezcla => {
+          const m = mezcla.toJSON()
+          return {
+            id: m.id,
+            Solicita: m.usuario?.nombre || 'Usuario no encontrado',
+            fechaSolicitud: m.fechaSolicitud,
+            ranchoDestino: m.ranchoDestino,
+            notaMezcla: m.notaMezcla,
+            empresa: m.empresa,
+            centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
+            variedad: m.variedad,
+            FolioReceta: m.folio,
+            temporada: m.temporada,
+            cantidad: m.cantidad,
+            prensetacion: m.presentacion,
+            metodoAplicacion: m.metodoAplicacion,
+            imagenEntrega: m.imagenEntrega,
+            descripcion: m.descripcion,
+            fechaEntrega: m.fechaEntrega,
+            status: m.status,
+            respuestaSolicitud: m.respuestaSolicitud
           }
-        ],
-        attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'notaMezcla',
-          'folio',
-          'temporada',
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud',
-          'imagenEntrega',
-          'fechaEntrega',
-          'respuestaSolicitud'
-        ]
-      })
+        })
 
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
+        logger.logOperation('GET_MEZCLAS_RANCHO', 'completed', {
+          ...logContext,
+          count: resultadosFormateados.length,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
+        })
+
+        return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al obtener mezclas por rancho', {
+          originalError: error.message,
+          context: logContext
+        })
       }
-
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON()
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status,
-          respuestaSolicitud: m.respuestaSolicitud
-        }
-      })
-
-      // Devolver los resultados
-      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
-    }
+    })
   }
 
-  // uso
-  static async obtenerTablaMezclasUsuario ({ status, idUsuarioSolicita, confirmacion }) {
+  static async obtenerTablaMezclasUsuario ({ status, idUsuarioSolicita, confirmacion, logContext, logger }) {
     try {
-      // Validar datos
-      if (!status || !idUsuarioSolicita) {
-        throw new ValidationError('Datos requeridos no proporcionados')
-      }
-      logger.info('Obteniendo tabla de mezclas por status y usuario: ' + status + ' y ' + idUsuarioSolicita + ' y ' + confirmacion)
+      logger.logOperation('GET_MEZCLAS_USUARIO_modelo', 'started', logContext)
 
-      // Consulta para obtener las mezclas filtradas por empresa y status
+      // Validación de datos
+      if (!status || !idUsuarioSolicita) {
+        throw new ValidationError('Datos requeridos no proporcionados', {
+          required: ['status', 'idUsuarioSolicita'],
+          received: { status, idUsuarioSolicita }
+        })
+      }
+
       const mezclas = await Solicitud.findAll({
         where: {
           idUsuarioSolicita,
           status,
-          confirmacion // Solo mezclas no confirmadas
+          confirmacion
         },
         include: [
           {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
+            model: Usuario,
+            attributes: ['nombre']
           },
           {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+            model: Centrocoste,
+            attributes: ['centroCoste']
           }
         ],
         attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'notaMezcla',
-          'folio',
-          'temporada',
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud',
-          'imagenEntrega',
-          'fechaEntrega',
-          'respuestaSolicitud',
-          'respuestaMezclador'
+          'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+          'folio', 'temporada', 'cantidad', 'presentacion',
+          'metodoAplicacion', 'descripcion', 'status',
+          'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega',
+          'respuestaSolicitud', 'respuestaMezclador'
         ]
       })
 
-      // Transformar los resultados
+      logger.logModelOperation('Solicitud', 'found', {
+        solicitudId: idUsuarioSolicita,
+        count: mezclas.length
+      })
+
       const resultadosFormateados = mezclas.map(mezcla => {
         const m = mezcla.toJSON()
         return {
           id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          Solicita: m.usuario?.nombre || 'Usuario no encontrado',
           fechaSolicitud: m.fechaSolicitud,
           ranchoDestino: m.ranchoDestino,
           notaMezcla: m.notaMezcla,
           empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
           variedad: m.variedad,
           FolioReceta: m.folio,
           temporada: m.temporada,
@@ -646,143 +1253,286 @@ export class MezclaModel {
         }
       })
 
-      // Devolver los resultados
+      logger.logOperation('GET_MEZCLAS_USUARIO', 'completed', {
+        ...logContext,
+        count: resultadosFormateados.length,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener mezclas de usuario', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 
-  static async obtenerTablaMezclasCancelada ({ idUsuario, confirmacion, rol }) {
-    try {
+  static async obtenerTablaMezclasCancelada ({ idUsuario, confirmacion, rol, logContext, logger }) {
+    return await DbHelper.executeQuery(async () => {
       let mezclas
-      // Validar datos
-      if (!idUsuario || !rol) {
-        throw new ValidationError('Datos requeridos no proporcionados')
-      }
+      try {
+        logger.logOperation('GET_MEZCLAS_CANCELADAS', 'started', logContext)
 
-      logger.info('Obteniendo tabla de mezclas por status y usuario: ' + idUsuario + ' y ' + rol)
-      // Validar rol
-      if (rol === 'adminMezclador') {
-        mezclas = await Solicitud.findAll({
-          where: {
-            idUsuarioValida: idUsuario,
-            confirmacion // Solo mezclas no confirmadas
-          },
-          include: [
-            {
-              model: Usuario, // Modelo de Usuario
-              attributes: ['nombre'] // Campos que quieres obtener del usuario
-            },
-            {
-              model: Centrocoste, // Modelo de CentroCoste
-              attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-            }
-          ],
-          attributes: [
-            'id',
-            'ranchoDestino',
-            'variedad',
-            'notaMezcla',
-            'folio',
-            'temporada',
-            'cantidad',
-            'presentacion',
-            'metodoAplicacion',
-            'descripcion',
-            'status',
-            'empresa',
-            'fechaSolicitud',
-            'imagenEntrega',
-            'fechaEntrega',
-            'respuestaSolicitud',
-            'respuestaMezclador',
-            'motivoCancelacion'
-          ]
-        })
-      } else if (rol === 'solicita' || rol === 'solicita2') {
-        mezclas = await Solicitud.findAll({
-          where: {
-            idUsuarioSolicita: idUsuario,
-            confirmacion // Solo mezclas no confirmadas
-          },
-          include: [
-            {
-              model: Usuario, // Modelo de Usuario
-              attributes: ['nombre'] // Campos que quieres obtener del usuario
-            },
-            {
-              model: Centrocoste, // Modelo de CentroCoste
-              attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-            }
-          ],
-          attributes: [
-            'id',
-            'ranchoDestino',
-            'variedad',
-            'notaMezcla',
-            'folio',
-            'temporada',
-            'cantidad',
-            'presentacion',
-            'metodoAplicacion',
-            'descripcion',
-            'status',
-            'empresa',
-            'fechaSolicitud',
-            'imagenEntrega',
-            'fechaEntrega',
-            'respuestaSolicitud',
-            'respuestaMezclador',
-            'motivoCancelacion'
-          ]
-        })
-      } else if (rol === 'administrativo') {
-        mezclas = await Solicitud.findAll({
-          where: {
-            confirmacion // Solo mezclas no confirmadas
-          },
-          include: [
-            {
-              model: Usuario, // Modelo de Usuario
-              attributes: ['nombre'] // Campos que quieres obtener del usuario
-            },
-            {
-              model: Centrocoste, // Modelo de CentroCoste
-              attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-            }
-          ],
-          attributes: [
-            'id',
-            'ranchoDestino',
-            'variedad',
-            'notaMezcla',
-            'folio',
-            'temporada',
-            'cantidad',
-            'presentacion',
-            'metodoAplicacion',
-            'descripcion',
-            'status',
-            'empresa',
-            'fechaSolicitud',
-            'imagenEntrega',
-            'fechaEntrega',
-            'respuestaSolicitud',
-            'respuestaMezclador',
-            'motivoCancelacion'
-          ]
-        })
-        // Verificar si se encontraron resultados
-        if (mezclas.length === 0) {
-          throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
+        if (!idUsuario || !rol) {
+          throw new ValidationError('Datos requeridos no proporcionados', {
+            required: ['idUsuario', 'rol'],
+            received: { idUsuario, rol }
+          })
         }
+
+        const queryConfig = {
+          where: { confirmacion },
+          include: [
+            {
+              model: Usuario,
+              attributes: ['nombre']
+            },
+            {
+              model: Centrocoste,
+              attributes: ['centroCoste']
+            }
+          ],
+          attributes: [
+            'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+            'folio', 'temporada', 'cantidad', 'presentacion',
+            'metodoAplicacion', 'descripcion', 'status',
+            'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega',
+            'respuestaSolicitud', 'respuestaMezclador', 'motivoCancelacion'
+          ]
+        }
+
+        if (rol === 'adminMezclador') {
+          queryConfig.where.idUsuarioValida = idUsuario
+        } else if (rol === 'solicita' || rol === 'solicita2') {
+          queryConfig.where.idUsuarioSolicita = idUsuario
+        } else if (rol !== 'administrativo') {
+          throw new ValidationError('Rol no válido')
+        }
+
+        mezclas = await Solicitud.findAll(queryConfig)
+
+        logger.logModelOperation('Solicitud', 'found', {
+          count: mezclas.length,
+          rol,
+          userId: idUsuario
+        })
+
+        const resultadosFormateados = mezclas.map(mezcla => {
+          const m = mezcla.toJSON()
+          return {
+            id: m.id,
+            Solicita: m.usuario?.nombre || 'Usuario no encontrado',
+            fechaSolicitud: m.fechaSolicitud,
+            ranchoDestino: m.ranchoDestino,
+            notaMezcla: m.notaMezcla,
+            empresa: m.empresa,
+            centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
+            variedad: m.variedad,
+            FolioReceta: m.folio,
+            temporada: m.temporada,
+            cantidad: m.cantidad,
+            prensetacion: m.presentacion,
+            metodoAplicacion: m.metodoAplicacion,
+            imagenEntrega: m.imagenEntrega,
+            descripcion: m.descripcion,
+            fechaEntrega: m.fechaEntrega,
+            status: m.status,
+            motivoCancelacion: m.motivoCancelacion
+          }
+        })
+
+        logger.logOperation('GET_MEZCLAS_CANCELADAS', 'completed', {
+          ...logContext,
+          count: resultadosFormateados.length,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
+        })
+
+        return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al obtener mezclas canceladas', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
+  }
+
+  //
+  static async obtenerTablaMezclasId ({ id, usuario, logContext, logger }) {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        logger.logOperation('GET_MEZCLA_BY_ID_modelo', 'started', logContext)
+
+        // Validación de datos
+        if (!id || !usuario) {
+          throw new ValidationError('Datos requeridos no proporcionados', {
+            required: ['id', 'usuario'],
+            received: { id: !!id, usuario: !!usuario }
+          })
+        }
+
+        // Consulta de mezclas
+        const mezclas = await Solicitud.findAll({
+          where: { id },
+          include: [
+            {
+              model: Usuario,
+              attributes: ['nombre']
+            },
+            {
+              model: Centrocoste,
+              attributes: ['centroCoste']
+            }
+          ],
+          attributes: [
+            'id', 'ranchoDestino', 'variedad', 'folio',
+            'temporada', 'cantidad', 'presentacion',
+            'metodoAplicacion', 'descripcion', 'status',
+            'empresa', 'fechaSolicitud', 'imagenSolicitud'
+          ]
+        })
+
+        logger.logModelOperation('Solicitud', 'found', {
+          solicitudId: id,
+          count: mezclas.length
+        })
+
+        const resultadosFormateados = mezclas.map(mezcla => {
+          const m = mezcla.toJSON()
+          logger.debug('Procesando mezcla', {
+            id: m.id,
+            usuario: m.usuario?.nombre,
+            centroCoste: m.centrocoste?.centroCoste
+          })
+
+          return {
+            id: m.id,
+            Solicita: m.usuario?.nombre || 'Usuario no encontrado',
+            fechaSolicitud: m.fechaSolicitud,
+            ranchoDestino: m.ranchoDestino,
+            empresa: m.empresa,
+            centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
+            variedad: m.variedad,
+            FolioReceta: m.folio,
+            temporada: m.temporada,
+            cantidad: m.cantidad,
+            prensetacion: m.presentacion,
+            metodoAplicacion: m.metodoAplicacion,
+            imagen: m.imagenSolicitud,
+            descripcion: m.descripcion,
+            status: m.status
+          }
+        })
+
+        logger.logOperation('GET_MEZCLA_BY_ID', 'completed', {
+          ...logContext,
+          count: resultadosFormateados.length,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
+        })
+
+        return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al obtener mezcla por ID', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
+  }
+
+  //
+  static async obtenerTablaMezclasJalisco ({ status, confirmacion }) {
+    const logContext = {
+      operation: 'GET_MEZCLAS_JALISCO',
+      status,
+      confirmacion,
+      timestamp: new Date().toISOString()
+    }
+
+    try {
+      logger.logOperation('GET_MEZCLAS_JALISCO', 'started', logContext)
+
+      // Validar datos
+      if (!status) {
+        throw new ValidationError('Datos requeridos no proporcionados', {
+          required: ['status'],
+          received: { status }
+        })
       }
 
-      // Transformar los resultados
+      const mezclas = await Solicitud.findAll({
+        where: {
+          ranchoDestino: {
+            [Op.or]: ['', 'La Loma', 'Zapote', 'Ojo de Agua']
+          },
+          status,
+          confirmacion
+        },
+        include: [
+          {
+            model: Usuario,
+            attributes: ['nombre']
+          },
+          {
+            model: Centrocoste,
+            attributes: ['centroCoste']
+          }
+        ],
+        attributes: [
+          'id',
+          'ranchoDestino',
+          'variedad',
+          'notaMezcla',
+          'folio',
+          'temporada',
+          'cantidad',
+          'presentacion',
+          'metodoAplicacion',
+          'descripcion',
+          'status',
+          'empresa',
+          'fechaSolicitud',
+          'imagenEntrega',
+          'fechaEntrega',
+          'respuestaSolicitud'
+        ]
+      })
+
+      logger.logModelOperation('Solicitud', 'found', {
+        count: mezclas.length,
+        ranchos: ['La Loma', 'Zapote', 'Ojo de Agua']
+      })
+
       const resultadosFormateados = mezclas.map(mezcla => {
         const m = mezcla.toJSON()
+        logger.debug('Procesando mezcla', {
+          id: m.id,
+          usuario: m.usuario?.nombre,
+          centroCoste: m.centrocoste?.centroCoste
+        })
+
         return {
           id: m.id,
           Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
@@ -801,236 +1551,160 @@ export class MezclaModel {
           descripcion: m.descripcion,
           fechaEntrega: m.fechaEntrega,
           status: m.status,
-          motivoCancelacion: m.motivoCancelacion
+          respuestaSolicitud: m.respuestaSolicitud
         }
       })
 
-      // Devolver los resultados
-      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
-    }
-  }
-
-  // uso
-  static async obtenerTablaMezclasId ({ id }) {
-    try {
-      // validar que el id sea un numero
-      if (isNaN(id)) throw new ValidationError('El id debe ser un numero')
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          id
-        },
-        include: [
-          {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
-          },
-          {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-          }
-        ],
-        attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'folio',
-          'temporada',
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud'
-        ]
-      })
-
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
-      }
-
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON()
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagen: m.imagenSolicitud,
-          descripcion: m.descripcion,
-          status: m.status
-        }
+      logger.logOperation('GET_MEZCLAS_JALISCO', 'completed', {
+        ...logContext,
+        count: resultadosFormateados.length,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
       })
 
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener mezclas de Jalisco', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 
+  //
   static async obtenerPorcentajes ({ id }) {
+    const logContext = {
+      operation: 'GET_PORCENTAJES',
+      solicitudId: id,
+      timestamp: new Date().toISOString()
+    }
+
     try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
+      logger.logOperation('GET_PORCENTAJES', 'started', logContext)
+
+      if (!id) {
+        throw new ValidationError('ID es requerido', {
+          required: ['id'],
+          received: { id }
+        })
+      }
+
       const mezclas = await Solicitud.findAll({
-        where: {
-          id
-        },
-        attributes: [
-          'porcentajes',
-          'variedad'
-        ]
+        where: { id },
+        attributes: ['porcentajes', 'variedad']
       })
 
-      // Verificar si se encontraron resultados
+      logger.logModelOperation('Solicitud', 'found', {
+        solicitudId: id,
+        count: mezclas.length
+      })
+
       if (mezclas.length === 0) {
-        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
+        throw new NotFoundError('No se encontraron mezclas', {
+          solicitudId: id
+        })
       }
-      // Devolver los resultados
+
+      logger.logOperation('GET_PORCENTAJES', 'completed', {
+        ...logContext,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
       return Array.isArray(mezclas) ? mezclas : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener porcentajes', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 
-  // uso para actualizar el estado de proceso
-  static async estadoProceso ({ id, data }) {
+  //
+  static async obtenerDatosSolicitud ({ id }) {
+    const logContext = {
+      operation: 'GET_DATOS_SOLICITUD',
+      solicitudId: id,
+      timestamp: new Date().toISOString()
+    }
+
     try {
-      // validamos datos
-      if (!id || !data) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+      logger.logOperation('GET_DATOS_SOLICITUD', 'started', logContext)
+
+      if (!id) {
+        throw new ValidationError('ID es requerido', {
+          required: ['id'],
+          received: { id }
+        })
       }
 
-      // Verificamos si existe la solicitud con el id proporcionado
-      const solicitud = await Solicitud.findByPk(id)
-      if (!solicitud) throw new NotFoundError('Solicitud con ID ' + id + ' no encontrada')
-
-      // Actualiza solo los campos que se han proporcionado
-      if (data.notaMezcla) solicitud.notaMezcla = data.notaMezcla
-      if (data.status) solicitud.status = data.status
-
-      await solicitud.save()
-
-      return { message: 'Solicitud Guardada correctamente', idUsuarioSolicita: solicitud.idUsuarioSolicita }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al actualizar solicitud')
-    }
-  }
-
-  // uso
-  static async mensajeSolicita ({ id, mensajes, idUsuario }) {
-    try {
-      // validamos datos
-      if (!id || !mensajes || !idUsuario) {
-        throw new ValidationError('Datos requeridos no proporcionados')
-      }
-      // Verificamos si existe la solicitud con el id proporcionado
-      const solicitud = await Solicitud.findByPk(id)
-      if (!solicitud) throw new NotFoundError('Solicitud no encontrada')
-
-      // Actualiza solo los campos que se han proporcionado
-      if (mensajes) solicitud.respuestaSolicitud = mensajes
-
-      await solicitud.save()
-
-      // creamos la notificacion para mostrarla a los usuarios
-      await NotificacionModel.create({ idSolicitud: id, mensaje: `Respuesta para solicitud:${id}`, idUsuario })
-
-      return { message: 'Notificacion Guadada Correctamente' }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al actualizar solicitud')
-    }
-  }
-
-  // uso
-  static async getAll () {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
       const mezclas = await Solicitud.findAll({
-        include: [
-          {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
-          },
-          {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
-          }
-        ],
+        where: { id },
         attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'notaMezcla',
-          'folio',
-          'temporada',
           'cantidad',
           'presentacion',
           'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud',
-          'imagenEntrega',
-          'fechaEntrega'
+          'descripcion'
         ]
       })
 
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
-      }
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON()
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status
-        }
+      logger.logModelOperation('Solicitud', 'found', {
+        solicitudId: id,
+        count: mezclas.length
       })
 
-      // Devolver los resultados
-      return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
+      logger.logOperation('GET_DATOS_SOLICITUD', 'completed', {
+        ...logContext,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
+      return Array.isArray(mezclas) ? mezclas : []
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener datos de solicitud', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 
+  //
   static async getOneSolicita ({ id, idSolicita }) {
+    const logContext = {
+      operation: 'GET_ONE_SOLICITA',
+      solicitudId: id,
+      userId: idSolicita,
+      timestamp: new Date().toISOString()
+    }
+
     try {
+      logger.logOperation('GET_ONE_SOLICITA', 'started', logContext)
+
+      if (!id || !idSolicita) {
+        throw new ValidationError('Datos requeridos no proporcionados', {
+          required: ['id', 'idSolicita'],
+          received: { id, idSolicita }
+        })
+      }
+
       const solicitud = await Solicitud.findOne({
         where: {
           id,
@@ -1041,20 +1715,59 @@ export class MezclaModel {
           'respuestaMezclador'
         ]
       })
-      // Verificar si se encontraron resultados
+
+      logger.logModelOperation('Solicitud', 'found', {
+        solicitudId: id,
+        encontrado: !!solicitud
+      })
+
       if (!solicitud) {
-        throw new NotFoundError('No se encontraron respuestas del mezclador')
+        throw new NotFoundError('No se encontraron respuestas del mezclador', {
+          solicitudId: id,
+          idSolicita
+        })
       }
 
+      logger.logOperation('GET_ONE_SOLICITA', 'completed', {
+        ...logContext,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
       return solicitud
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al respuesta del mezclador')
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener respuesta del mezclador', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 
-  static async getOneMesclador ({ id, idSolicita }) {
+  //
+  static async getOneMezclador ({ id, idSolicita }) {
+    const logContext = {
+      operation: 'GET_ONE_MEZCLADOR',
+      solicitudId: id,
+      mezcladorId: idSolicita,
+      timestamp: new Date().toISOString()
+    }
+
     try {
+      logger.logOperation('GET_ONE_MEZCLADOR', 'started', logContext)
+
+      if (!id || !idSolicita) {
+        throw new ValidationError('Datos requeridos no proporcionados', {
+          required: ['id', 'idSolicita'],
+          received: { id, idSolicita }
+        })
+      }
+
       const solicitud = await Solicitud.findOne({
         where: {
           id,
@@ -1062,12 +1775,12 @@ export class MezclaModel {
         },
         include: [
           {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
+            model: Usuario,
+            attributes: ['nombre']
           },
           {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+            model: Centrocoste,
+            attributes: ['centroCoste']
           }
         ],
         attributes: [
@@ -1087,97 +1800,116 @@ export class MezclaModel {
         ]
       })
 
-      // Verificar si se encontraron resultados
+      logger.logModelOperation('Solicitud', 'found', {
+        solicitudId: id,
+        encontrado: !!solicitud
+      })
+
       if (!solicitud) {
-        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
+        throw new NotFoundError('No se encontró la mezcla especificada', {
+          solicitudId: id,
+          mezcladorId: idSolicita
+        })
       }
 
-      // Transformar el resultado
-      const m = solicitud.toJSON()
       const resultadoFormateado = {
-        id: m.id,
-        Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-        fechaSolicitud: m.fechaSolicitud,
-        ranchoDestino: m.ranchoDestino,
-        empresa: m.empresa,
-        centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-        variedad: m.variedad,
-        FolioReceta: m.folio,
-        temporada: m.temporada,
-        cantidad: m.cantidad,
-        prensetacion: m.presentacion,
-        metodoAplicacion: m.metodoAplicacion,
-        descripcion: m.descripcion,
-        respuestaSolicitud: m.respuestaSolicitud,
-        respuestaMezclador: m.respuestaMezclador
+        id: solicitud.id,
+        Solicita: solicitud.usuario?.nombre || 'Usuario no encontrado',
+        fechaSolicitud: solicitud.fechaSolicitud,
+        ranchoDestino: solicitud.ranchoDestino,
+        empresa: solicitud.empresa,
+        centroCoste: solicitud.centrocoste?.centroCoste || 'Centro no encontrado',
+        variedad: solicitud.variedad,
+        FolioReceta: solicitud.folio,
+        temporada: solicitud.temporada,
+        cantidad: solicitud.cantidad,
+        prensetacion: solicitud.presentacion,
+        metodoAplicacion: solicitud.metodoAplicacion,
+        descripcion: solicitud.descripcion,
+        respuestaSolicitud: solicitud.respuestaSolicitud,
+        respuestaMezclador: solicitud.respuestaMezclador
       }
 
-      // Devolver los resultados
+      logger.logOperation('GET_ONE_MEZCLADOR', 'completed', {
+        ...logContext,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
       return {
         message: 'Mezcla obtenida correctamente',
         data: resultadoFormateado
       }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener la mezcla')
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener mezcla', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 
-  // uso
-  static async getAllGeneral ({ status }) {
+  //
+  static async getAllGeneral ({ status, confirmacion, idUsuario }) {
+    const logContext = {
+      operation: 'GET_ALL_GENERAL',
+      status,
+      confirmacion,
+      userId: idUsuario,
+      timestamp: new Date().toISOString()
+    }
+
     try {
-      // Validar datos
-      if (!status) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+      logger.logOperation('GET_ALL_GENERAL', 'started', logContext)
+
+      if (!status || !confirmacion || !idUsuario) {
+        throw new ValidationError('Datos requeridos no proporcionados', {
+          required: ['status', 'confirmacion', 'idUsuario'],
+          received: { status, confirmacion, idUsuario }
+        })
       }
+
       const mezclas = await Solicitud.findAll({
-        where: {
-          status
-        },
+        where: { status, confirmacion },
         include: [
           {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
+            model: Usuario,
+            attributes: ['nombre']
           },
           {
-            model: Centrocoste, // Modelo de CentroCoste
-            attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste
+            model: Centrocoste,
+            attributes: ['centroCoste']
           }
         ],
         attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'notaMezcla',
-          'folio',
-          'temporada',
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud',
-          'imagenEntrega',
-          'fechaEntrega'
+          'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+          'folio', 'temporada', 'cantidad', 'presentacion',
+          'metodoAplicacion', 'descripcion', 'status',
+          'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega'
         ]
       })
 
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
-      }
-      // Transformar los resultados
+      logger.logModelOperation('Solicitud', 'found', {
+        count: mezclas.length,
+        status,
+        confirmacion
+      })
+
       const resultadosFormateados = mezclas.map(mezcla => {
         const m = mezcla.toJSON()
         return {
           id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
+          Solicita: m.usuario?.nombre || 'Usuario no encontrado',
           fechaSolicitud: m.fechaSolicitud,
           ranchoDestino: m.ranchoDestino,
           notaMezcla: m.notaMezcla,
           empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
+          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',
           variedad: m.variedad,
           FolioReceta: m.folio,
           temporada: m.temporada,
@@ -1191,285 +1923,337 @@ export class MezclaModel {
         }
       })
 
-      // Devolver los resultados
+      logger.logOperation('GET_ALL_GENERAL', 'completed', {
+        ...logContext,
+        count: resultadosFormateados.length,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al obtener mezclas generales', {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 
-  static async obtenerMezclasMichoacan () {
-    try {
-      // Validar datos
-      // Agregar condición para empresas específicas
-      const mezclas = await Solicitud.findAll({
-        where: {
-          empresa: {
-            [Op.or]: ['Moras Finas', 'Bayas del Centro']
-          }
-        },
-        include: [
-          {
-            model: Usuario, // Modelo de Usuario
-            attributes: ['nombre'] // Campos que quieres obtener del usuario
-          }
-        ],
-        attributes: [
-          'id',
-          'ranchoDestino',
-          'variedad',
-          'notaMezcla',
-          'folio',
-          'temporada',
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion',
-          'status',
-          'empresa',
-          'fechaSolicitud',
-          'imagenEntrega',
-          'fechaEntrega'
-        ]
-      })
-
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new NotFoundError('No se encontraron mezclas para los criterios especificados')
-      }
-
-      // Transformar los resultados
-      const resultadosFormateados = mezclas.map(mezcla => {
-        const m = mezcla.toJSON()
-        return {
-          id: m.id,
-          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',
-          fechaSolicitud: m.fechaSolicitud,
-          ranchoDestino: m.ranchoDestino,
-          notaMezcla: m.notaMezcla,
-          empresa: m.empresa,
-          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',
-          variedad: m.variedad,
-          FolioReceta: m.folio,
-          temporada: m.temporada,
-          cantidad: m.cantidad,
-          prensetacion: m.presentacion,
-          metodoAplicacion: m.metodoAplicacion,
-          imagenEntrega: m.imagenEntrega,
-          descripcion: m.descripcion,
-          fechaEntrega: m.fechaEntrega,
-          status: m.status
-        }
-      })
-
-      // Devolver los resultados
-      return {
-        message: 'Mezclas obtenidas correctamente',
-        data: resultadosFormateados
-      }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
-    }
-  }
-
-  // uso
-  static async obtenerDatosSolicitud ({ id }) {
-    try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
-      const mezclas = await Solicitud.findAll({
-        where: {
-          id
-        },
-        attributes: [
-          'cantidad',
-          'presentacion',
-          'metodoAplicacion',
-          'descripcion'
-        ]
-      })
-      // Verificar si se encontraron resultados
-      if (mezclas.length === 0) {
-        throw new NotFoundError('No se encontraron datos para la solicitud')
-      }
-      // Devolver los resultados
-      return Array.isArray(mezclas) ? mezclas : []
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener datos para la solicitud')
-    }
-  }
-
-  static async validacion ({ data, idUsuario, user }) {
+  // Métodos auxiliares y utilitarios
+  static #validarDatosEntrada ({ data, idUsuario }) {
+    const errores = []
+    // Validar que los datos requeridos estén presentes
     if (!data) {
-      throw new ValidationError('Datos requeridos no proporcionados')
+      errores.push('la data es requerida')
     }
 
-    const transaction = await sequelize.transaction()
+    if (!idUsuario) {
+      errores.push('El campo idUsuario es requerido')
+    }
 
-    try {
-      const resultados = await Promise.all(data.map(async (estado) => {
-        // Procesar cada solicitud de manera independiente
-        const resultado = await procesarSolicitud({
-          estado,
-          idUsuario,
-          user,
-          transaction
-        })
-        return resultado
-      }))
+    if (errores.length > 0) {
+      throw new ValidationError('Datos requeridos no proporcionados', {
+        errores,
+        received: data
+      })
+    }
+  }
 
-      await transaction.commit()
+  static async #procesarVariedades ({ data, transaction }) {
+    if (data.variedad !== 'todo') {
       return {
-        message: 'Solicitudes guardadas correctamente',
-        resultados
+        variedad: data.variedad,
+        porcentajes: '100'
       }
-    } catch (e) {
-      logger.error('Error al validar solicitud:', e)
-      await transaction.rollback()
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al validar datos')
+    }
+
+    const variedades = await CentroCosteModel.getVariedadPorCentroCoste({
+      id: data.centroCoste
+    })
+
+    const { variedadesFiltradas, porcentajesFiltrados } = this.#filtrarVariedades(
+      variedades[0].dataValues
+    )
+
+    return {
+      variedad: variedadesFiltradas.join(','),
+      porcentajes: porcentajesFiltrados.join(',')
     }
   }
 
-  static async cancelar ({ idSolicitud, data, idUsuario }) {
-    let solicitud
-    let solicita
-    let validacion
-    if (!idSolicitud || !data || !idUsuario) {
-      throw new ValidationError('Datos requeridos no proporcionados')
+  static #filtrarVariedades (datos) {
+    const variedadesArray = datos.variedad.split(',').slice(0, -1)
+    const porcentajesArray = datos.porcentajes.split(',').slice(0, -1)
+
+    return variedadesArray.reduce((acc, variedad, index) => {
+      if (parseInt(porcentajesArray[index].trim()) !== 0) {
+        acc.variedadesFiltradas.push(variedad)
+        acc.porcentajesFiltrados.push(porcentajesArray[index])
+      }
+      return acc
+    }, { variedadesFiltradas: [], porcentajesFiltrados: [] })
+  }
+
+  static #procesarProductos = async ({ productos, idSolicitud, transaction }) => {
+    const productosValidos = productos.filter(producto =>
+      producto.id_producto &&
+      producto.unidad_medida &&
+      producto.cantidad
+    )
+    // Validar que haya productos
+    if (productosValidos.length === 0) {
+      throw new ValidationError('No se encontraron productos válidos para procesar')
     }
-    const transaction = await sequelize.transaction()
-    try {
-      solicitud = await Solicitud.findByPk(idSolicitud)
-      if (!solicitud) {
-        throw new NotFoundError('Solicitud no encontrada')
+
+    return Promise.all(productosValidos.map(async (producto, index) => {
+      const productoData = {
+        id_solicitud: idSolicitud,
+        id_producto: parseInt(producto.id_producto),
+        unidad_medida: producto.unidad_medida,
+        cantidad: producto.cantidad
       }
-      if (data.validacion === false) {
-        validacion = 'Cancelada'
+      await SolicitudProductos.create(productoData, { transaction })
+    }))
+  }
+
+  static #crearSolicitudBase = async ({ data, variedad, porcentajes, idUsuario, rol, transaction }) => {
+    let solicitudData = {}
+    // Validar que los datos para darle autorizacion especial adminMezclador
+    // estas mesclaz pasan autorizadas
+    if (rol === 'adminMezclador') {
+      solicitudData = {
+        idUsuarioSolicita: idUsuario,
+        cantidad: data.cantidad || null,
+        idCentroCoste: data.centroCoste,
+        empresa: data.empresaPertece,
+        folio: data.folio || '',
+        metodoAplicacion: data.metodoAplicacion || null,
+        presentacion: data.presentacion,
+        ranchoDestino: data.rancho,
+        temporada: data.temporada,
+        variedad,
+        descripcion: data.descripcion || null,
+        porcentajes,
+        confirmacion: 'Confirmada'
       }
-      solicitud.confirmacion = validacion
-      solicitud.idUsuarioValida = idUsuario
-      solicitud.motivoCancelacion = data.motivo
+    } else {
+      solicitudData = {
+        idUsuarioSolicita: idUsuario,
+        cantidad: data.cantidad || null,
+        idCentroCoste: data.centroCoste,
+        empresa: data.empresaPertece,
+        folio: data.folio || '',
+        metodoAplicacion: data.metodoAplicacion || null,
+        presentacion: data.presentacion,
+        ranchoDestino: data.rancho,
+        temporada: data.temporada,
+        variedad,
+        descripcion: data.descripcion || null,
+        porcentajes
+      }
+    }
+    return Solicitud.create(solicitudData, { transaction })
+  }
 
-      await solicitud.save({ transaction })
+  // Métodos auxiliares para cerrarSolicitud
+  static #validarDatosCierre ({ data, idUsuario }) {
+    const errores = []
 
-      logger.info('Solicitud actual:', solicitud)
-      logger.info(`empresa:${solicitud.empresa}, fecha:${format(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss')}, confirmacion rancho:${solicitud.ranchoDestino}`)
-      // obtener datos para mandar correo al mezclador
+    if (!idUsuario) {
+      errores.push('El ID de usuario es requerido')
+    }
 
-      solicita = await UsuarioModel.getOneId({ id: solicitud.idUsuarioSolicita })
+    if (!data?.idSolicitud) {
+      errores.push('El ID de solicitud es requerido')
+    }
 
-      logger.info('Solicitante actual:', solicita)
+    if (!data?.imagen) {
+      errores.push('La imagen de entrega es requerida')
+    }
 
-      logger.info(`nombre:${solicita.nombre}, correo:${solicita.email}`)
-      const respues = await enviarCorreo({
-        type: 'cancelacion',
-        email: solicita.email,
-        nombre: solicita.nombre,
-        solicitudId: solicitud.id,
-        usuario: {
-          empresa: solicitud.empresa,
-          ranchos: solicitud.ranchoDestino
-        },
-        data: {
-          motivo: data.motivo
+    if (errores.length > 0) {
+      throw new ValidationError('Datos requeridos no proporcionados', {
+        errores,
+        received: {
+          idUsuario,
+          idSolicitud: data?.idSolicitud,
+          tieneImagen: !!data?.imagen
         }
       })
-      if (respues.error) {
-        logger.error('Error al enviar correo:', respues.error)
-      } else {
-        logger.info('Correo enviado:', respues.messageId)
-      }
-
-      await transaction.commit()
-      return { message: 'Solicitudes Guardada correctamente' }
-    } catch (e) {
-      logger.error('Error al cancelar solicitud:', e)
-      await transaction.rollback()
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al validar datos')
     }
   }
 
-  static async mezclaConfirmar ({ idSolicitud, data, usuario }) {
-    let solicitud
-    let solicita
-    const validacion = 'Pendiente'
-    if (!idSolicitud || !data) {
-      throw new ValidationError('Datos requeridos no proporcionados')
-    }
-    const transaction = await sequelize.transaction()
-    try {
-      solicitud = await Solicitud.findByPk(idSolicitud)
-
+  static async #buscarSolicitud ({ id, transaction }) {
+    const solicitud = await Solicitud.findByPk({ id }, { transaction })
+    if (!solicitud) {
       if (!solicitud) {
-        throw new NotFoundError('Solicitud no encontrada')
+        throw new NotFoundError(`Solicitud con ID ${id} no encontrada`, {
+          solicitudId: id
+        })
+      }
+    }
+    return solicitud
+  }
+
+  static async #actualizarSolicitud ({ solicitud, data, idUsuario, transaction, logContext }) {
+    try {
+      const cambios = {
+        status: 'Completada',
+        idUsuarioMezcla: idUsuario,
+        fechaEntrega: data.fecha || new Date()
       }
 
-      solicitud.confirmacion = validacion
-      if (data.comentarios) solicitud.comentarios = data.comentarios
-      if (data.fechaSolicitud) solicitud.fechaSolicitud = data.fechaSolicitud
-      if (data.empresa) solicitud.empresa = data.empresa
-      if (data.ranchoDestino) solicitud.ranchoDestino = data.ranchoDestino
-      if (data.descripcion) solicitud.descripcion = data.descripcion
-      if (data.folio) solicitud.folio = data.folio
-      if (data.temporada) solicitud.temporada = data.temporada
-      if (data.cantidad) solicitud.cantidad = data.cantidad
-      if (data.presentacion) solicitud.presentacion = data.presentacion
-      if (data.metodoAplicacion) solicitud.metodoAplicacion = data.metodoAplicacion
-      if (data.descripcion) solicitud.descripcion = data.descripcion
+      if (data.imagenPath) {
+        const { relativePath } = await this.#procesarImagen({ imagen: data.imagenPath })
+        cambios.imagenEntrega = relativePath
+      }
+
+      Object.assign(solicitud, cambios)
 
       await solicitud.save({ transaction })
 
-      logger.info('Solicitud actual:', solicitud)
-      // obtener datos para mandar correo al mezclador
-
-      solicita = await UsuarioModel.getOneId({ id: solicitud.idUsuarioValida })
-
-      logger.info(`nombre:${solicita.nombre}, correo:${solicita.email}`)
-      const respues = await enviarCorreo({
-        type: 'reevaluacion',
-        email: solicita.email,
-        nombre: usuario.nombre,
-        solicitudId: solicitud.id,
-        usuario: {
-          empresa: usuario.empresa,
-          ranchos: solicita.ranchoDestino
-        },
-        data: {
-          folio: solicitud.folio || 'No Aplica',
-          cantidad: solicitud.cantidad || 'No Aplica',
-          presentacion: solicitud.presentacion || 'No Aplica',
-          metodoAplicacion: solicitud.metodoAplicacion,
-          motivo: solicitud.motivoCancelacion,
-          comentarios: solicitud.comentario || 'Por favor, revisar las proporciones de los productos'
+      return {
+        solicitudActualizada: solicitud,
+        cambiosRealizados: cambios
+      }
+    } catch (error) {
+      logger.error('Error al actualizar solicitud', {
+        ...logContext,
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          code: error.code
         }
       })
-      if (respues.error) {
-        logger.error('Error al enviar correo:', respues.error)
-      } else {
-        logger.info('Correo enviado:', respues.messageId)
+      throw error
+    }
+  }
+
+  static async #procesarImagen ({ imagen }) {
+    try {
+      const response = await guardarImagen({ imagen })
+
+      if (!response?.relativePath) {
+        throw new Error('No se pudo guardar la imagen')
       }
 
-      await transaction.commit()
-      return { message: 'Solicitudes Guardada correctamente' }
-    } catch (e) {
-      logger.error('Error al cancelar solicitud:', e)
-      await transaction.rollback()
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al validar datos')
+      return response
+    } catch (error) {
+      throw new DatabaseError('Error al procesar la imagen', {
+        originalError: error.message
+      })
+    }
+  }
+
+  static async #notificarCierreSolicitud ({ solicitud, idUsuario }) {
+    try {
+      const solicitante = await UsuarioModel.getOneId({
+        id: solicitud.idUsuarioSolicita
+      })
+
+      if (solicitante?.email) {
+        await enviarCorreo({
+          type: 'cierre_solicitud',
+          email: solicitante.email,
+          nombre: solicitante.nombre,
+          solicitudId: solicitud.id,
+          data: {
+            fechaEntrega: solicitud.fechaEntrega,
+            status: solicitud.status
+          }
+        })
+      }
+    } catch (error) {
+      logger.warn('Error al enviar notificación de cierre', {
+        error: error.message,
+        solicitudId: solicitud.id,
+        userId: idUsuario
+      })
+    // No lanzamos el error para no interrumpir el flujo principal
+    }
+  }
+
+  static async #procesarSolicitud ({ estado, idUsuario, user, transaction }) {
+    const solicitud = await Solicitud.findByPk(estado.id_solicitud)
+    if (!solicitud) {
+      throw new NotFoundError(`Solicitud ${estado.id_solicitud} no encontrada`)
+    }
+
+    solicitud.confirmacion = estado.validacion === false ? 'Cancelada' : solicitud.confirmacion
+    solicitud.idUsuarioValida = idUsuario
+    solicitud.motivoCancelacion = estado.motivo || null
+
+    await solicitud.save({ transaction })
+
+    if (estado.validacion === false) {
+      await NotificacionModel.create({
+        idSolicitud: solicitud.id,
+        mensaje: `Solicitud ${solicitud.id} cancelada: ${estado.motivo || 'Sin motivo especificado'}`,
+        idUsuario: solicitud.idUsuarioSolicita
+      }, { transaction })
+    }
+
+    return {
+      id: solicitud.id,
+      status: 'Procesado',
+      message: estado.validacion ? 'Validación exitosa' : 'Solicitud cancelada'
+    }
+  }
+
+  static async #ejecutarConsulta (operacion, callback, logContext) {
+    try {
+      logger.logOperation(operacion, 'started', logContext)
+
+      const resultado = await callback()
+
+      logger.logOperation(operacion, 'completed', {
+        ...logContext,
+        count: Array.isArray(resultado) ? resultado.length : 1,
+        duration: Date.now() - new Date(logContext.timestamp).getTime()
+      })
+
+      return resultado
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
+      })
+
+      if (error instanceof CustomError) throw error
+
+      throw new MezclaOperationError('QUERY', `Error al ejecutar consulta ${operacion}`, {
+        originalError: error.message,
+        context: logContext
+      })
     }
   }
 } // fin modelo
 
 // Función auxiliar para procesar cada solicitud
+/**
+ * Procesa una solicitud de mezcla
+ * @param {Object} params Parámetros de la solicitud
+ * @param {string} params.estado Estado actual de la solicitud
+ * @param {number} params.idUsuario ID del usuario que procesa
+ * @returns {Promise<Object>} Resultado del procesamiento
+ * @throws {ValidationError} Si los datos son inválidos
+ */
 async function procesarSolicitud ({ estado, idUsuario, user, transaction }) {
   // Buscar la solicitud
   const solicitud = await Solicitud.findByPk(estado.id_solicitud)
   if (!solicitud) {
-    throw new NotFoundError(`Solicitud ${estado.id_solicitud} no encontrada`)
+    throw new NotFoundError(`Solicitud ${estado.id_solicitud} no encontrada`, {
+      id: estado.id_solicitud,
+      userId: idUsuario,
+      user: user.nombre
+    })
   }
 
   // Actualizar solicitud
@@ -1499,21 +2283,28 @@ async function procesarSolicitud ({ estado, idUsuario, user, transaction }) {
 
   // Enviar correos si se tienen los datos necesarios
   if (mezclador?.[0] && solicitante) {
-    logger.info(`nombre mezclador:${mezclador[0].nombre}, correo:${mezclador[0].email}`)
+    let respues
     logger.info(`nombre solicitante:${solicitante.nombre}, correo:${solicitante.email}`)
-    const respues = await enviarCorreo({
-      type: 'solicitud',
-      email: mezclador[0].email,
-      nombre: mezclador[0].nombre,
-      solicitudId: solicitud.id,
-      fechaSolicitud: format(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss'),
-      data: solicitud,
-      usuario: {
-        nombre: solicitante.nombre,
-        empresa: solicitante.empresa,
-        ranchos: solicitud.ranchoDestino
-      }
+
+    // enviar correo a todos los mezcladores
+    mezclador.map(async (mezclador) => {
+      logger.info(`nombre mezclador:${mezclador.nombre}, correo:${mezclador.email}`)
+
+      respues = await enviarCorreo({
+        type: 'solicitud',
+        email: mezclador.email,
+        nombre: mezclador.nombre,
+        solicitudId: solicitud.id,
+        fechaSolicitud: format(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss'),
+        data: solicitud,
+        usuario: {
+          nombre: solicitante.nombre,
+          empresa: solicitante.empresa,
+          ranchos: solicitud.ranchoDestino
+        }
+      })
     })
+
     const respuesSolicitante = await enviarCorreo({
       type: 'aprobada',
       email: solicitante.email,

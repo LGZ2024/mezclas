@@ -2,20 +2,16 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>
-        <%= titulo %>
-    </title>
+
+    %- include("../../templates/head-pwa") %>
     <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
     <link rel="stylesheet" href="../../css/spinner.css">
-
     <%- include("../../templates/mezclas/cabeceraNotificacion") %>
 </head>
 
 <body>
     <input type="hidden" id="mensajes" value="<%= respuestaMezclador %>" disabled>
-    <input type="hidden" id="idSolicitud" value="<%= idSolicitud %>" disabled >
+    <input type="hidden" id="idSolicitud" value="<%= idSolicitud %>" disabled>
     <input type="hidden" id="idMezclador" value="<%= idMezclador %>" disabled>
     <input type="hidden" id="idNotificacion" value="<%= idNotificacion %>" disabled>
     <!-- spinner -->
@@ -26,131 +22,125 @@
         </div>
     </div>
     <!-- header -->
-    <header>
-        <div class="barra contenedor">
-            <div class="barra__logo">
-                <img src="../../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
-            </div>
+    <%- include("../../templates/mezclas/headerNav") %>
 
-            <nav class="barra__navegacion">
-                <a class="barra__link" id="inicio"></a>
-            </nav>
 
-            <nav class="barra__login">
-                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
-            </nav>
-        </div>
-    </header>
-  
-    <section class="tablas">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="titulo">
-                                <div class="col">
-                                    <button class="formulario__submit" id="regresar"><span
-                                            class="mdi mdi-arrow-left-bold"></span></button>
-                                </div>
-                            </div>
-                            <div class="notification-card-body">
-                                <div class="header-section">
-                                    <h4 class="mb-0">Notificación de Productos No Disponibles</h4>
-                                    <p class="text-muted mt-2">Solicitud #<%= idSolicitud %>
-                                    </p>
-                                </div>
+        <section class="tablas">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="titulo">
+                                    <div class="col">
+                                        <div
+                                            style="display: flex; flex-direction: column; align-items: start; width: 20%;">
 
-                                <p class="lead">Estimado(a) <strong>
-                                        <%= nombre %>
-                                    </strong>,</p>
-                                <p>Le informamos que algunos productos de su solicitud no están disponibles en este
-                                    momento. A continuación el detalle:</p>
-
-                            <% if (Array.isArray(productos) && productos.length> 0) { %>
-                                <div class="products-list">
-                                        <% productos.forEach(producto=> { %>
-                                            <div class="product-item">
-                                                <div class="product-grid">
-                                                    <div>
-                                                        <small class="text-muted">ID SAP</small>
-                                                        <p class="mb-2"><strong>
-                                                                <%= producto.id_sap %>
-                                                            </strong></p>
-                                                    </div>
-                                                    <div>
-                                                        <small class="text-muted">Cantidad</small>
-                                                        <p class="mb-2"><strong>
-                                                                <%= producto.cantidad %>
-                                                                    <%= producto.unidad_medida %>
-                                                            </strong></p>
-                                                    </div>
-                                                    <div class="col-span-2">
-                                                        <small class="text-muted">Producto</small>
-                                                        <p class="mb-0"><strong>
-                                                                <%= producto.nombre_producto %>
-                                                            </strong></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <% }); %>
-                                </div>
-
-                                <div class="message-section">
-                                    <form id="formMensaje">
-                                        <div class="mb-3">
-                                            <label class="form-label fw-bold" for="mensaje">¿Cómo desea proceder?</label>
-                                            <textarea class="form-control" name="mensaje" id="mensaje" rows="4"
-                                                placeholder="Indique si desea alternativas similares o prefiere omitir estos productos..." required></textarea>
+                                            <button class="formulario__submit" id="regresar"><span
+                                                    class="mdi mdi-arrow-left-bold"></span></button>
                                         </div>
-                                        <div class="formulario__campo">
-                                            <button type="submit" class="formulario__submit">Enviar
-                                                Respuesta</button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                            <% } else { %>
-                                    <div class="product-item">
-                                        <p>No hay productos no disponibles para mostrar</p>
                                     </div>
-                            <% } %>
+                                </div>
+                                <div class="notification-card-body">
+                                    <div class="header-section">
+                                        <h4 class="mb-0">Notificación de Productos No Disponibles</h4>
+                                        <p class="text-muted mt-2">Solicitud #<%= idSolicitud %>
+                                        </p>
+                                    </div>
 
-                                        <div class="footer-section">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <small class="text-muted">Encargado de almacén</small>
-                                                    <p class="mb-2"><strong>
-                                                            <%= nombreMezclador %>
-                                                        </strong></p>
+                                    <p class="lead">Estimado(a) <strong>
+                                            <%= nombre %>
+                                        </strong>,</p>
+                                    <p>Le informamos que algunos productos de su solicitud no están disponibles en este
+                                        momento. A continuación el detalle:</p>
+
+                                    <% if (Array.isArray(productos) && productos.length> 0) { %>
+                                        <div class="products-list">
+                                            <% productos.forEach(producto=> { %>
+                                                <div class="product-item">
+                                                    <div class="product-grid">
+                                                        <div>
+                                                            <small class="text-muted">ID SAP</small>
+                                                            <p class="mb-2"><strong>
+                                                                    <%= producto.id_sap %>
+                                                                </strong></p>
+                                                        </div>
+                                                        <div>
+                                                            <small class="text-muted">Cantidad</small>
+                                                            <p class="mb-2"><strong>
+                                                                    <%= producto.cantidad %>
+                                                                        <%= producto.unidad_medida %>
+                                                                </strong></p>
+                                                        </div>
+                                                        <div class="col-span-2">
+                                                            <small class="text-muted">Producto</small>
+                                                            <p class="mb-0"><strong>
+                                                                    <%= producto.nombre_producto %>
+                                                                </strong></p>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted">Empresa</small>
-                                                    <p class="mb-2"><strong>
-                                                            <%= empresa %>
-                                                        </strong></p>
-                                                </div>
-                                            </div>
-                                            <p class="text-muted mt-3 mb-0">
-                                                Si tiene alguna pregunta, no dude en contactar a nuestro equipo de
-                                                almacén.<br>
-                                                <small>Atentamente, El equipo de Grupo LG</small>
-                                            </p>
+                                                <% }); %>
                                         </div>
-                            </div>
 
+                                        <div class="message-section">
+                                            <form id="formMensaje">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold" for="mensaje">¿Cómo desea
+                                                        proceder?</label>
+                                                    <textarea class="form-control" name="mensaje" id="mensaje" rows="4"
+                                                        placeholder="Indique si desea alternativas similares o prefiere omitir estos productos..."
+                                                        required></textarea>
+                                                </div>
+                                                <div class="formulario__campo">
+                                                    <button type="submit" class="formulario__submit">Enviar
+                                                        Respuesta</button>
+                                                </div>
+                                            </form>
+                                        </div>
+
+                                        <% } else { %>
+                                            <div class="product-item">
+                                                <p>No hay productos no disponibles para mostrar</p>
+                                            </div>
+                                            <% } %>
+
+                                                <div class="footer-section">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <small class="text-muted">Encargado de almacén</small>
+                                                            <p class="mb-2"><strong>
+                                                                    <%= nombreMezclador %>
+                                                                </strong></p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <small class="text-muted">Empresa</small>
+                                                            <p class="mb-2"><strong>
+                                                                    <%= empresa %>
+                                                                </strong></p>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-muted mt-3 mb-0">
+                                                        Si tiene alguna pregunta, no dude en contactar a nuestro equipo
+                                                        de
+                                                        almacén.<br>
+                                                        <small>Atentamente, El equipo de Grupo LG</small>
+                                                    </p>
+                                                </div>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-                <!--notificaion-->
-                <%- include("../../templates/mezclas/notificacion") %>
+        </section>
+        <!--notificaion-->
+        <%- include("../../templates/mezclas/notificacion") %>
 
-    <!-- Firebase Configuración y funciones -->
-    <%- include("../../templates/mezclas/scriptsNotificaciones") %>
-    <script type="module" src="../../app/notificaciones/main.js"></script>
+            <!-- Firebase Configuración y funciones -->
+            <%- include("../../templates/mezclas/scriptsNotificaciones") %>
+                <script type="module" src="../../app/notificaciones/main.js"></script>
 
 </body>
 

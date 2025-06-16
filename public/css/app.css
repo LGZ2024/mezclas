@@ -188,12 +188,15 @@ html {
 :before {
   box-sizing: inherit
 }
-
+section{
+  display: block;
+  margin-top: 4vh;
+}
 body {
   margin: 0;
   font-family: Lexend, sans-serif;
   font-size: 1.6rem;
-  background-image: url(../img/paisaje.jpg);
+  background-image: url(../images/paise2.webp);
   background-position: center;
   background-size: cover;
   padding: 3rem 0;

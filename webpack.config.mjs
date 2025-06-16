@@ -1,28 +1,51 @@
+import webpack from 'webpack'
 import { fileURLToPath } from 'url'
 import path, { dirname } from 'path'
 import nodeExternals from 'webpack-node-externals'
+import dotenv from 'dotenv'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
+const getNodeTarget = (mode) => {
+  return mode === 'production' ? 'node24.0' : 'node21.6'
+}
 
 export default ({ mode }) => {
-  const isDevelopment = mode === 'development'
   const isProduction = mode === 'production'
+  const envPath = path.resolve(process.cwd(), `.env.${mode}`)
+  const envVars = dotenv.config({ path: envPath }).parsed || {}
 
   return {
-    target: 'node',
+    target: getNodeTarget(mode),
     mode,
-    node: { global: true }, // Agregamos esta opción para habilitar la compatibilidad con Node 16
     entry: './src/app.mjs',
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: 'bundle.mjs',
       chunkFormat: 'module',
-      libraryTarget: 'module', // Añade esta línea
-      clean: true // Limpia el directorio de salida antes de compilar
+      libraryTarget: 'module',
+      clean: true,
+      environment: {
+        // Solo características compatibles
+        arrowFunction: true,
+        const: true,
+        destructuring: true,
+        dynamicImport: true,
+        module: true
+      }
+    },
+    // Agregar optimizaciones para producción
+    optimization: {
+      minimize: isProduction,
+      moduleIds: 'deterministic',
+      splitChunks: {
+        chunks: 'all'
+      }
     },
     experiments: {
       outputModule: true,
-      topLevelAwait: true // Añade soporte para top-level await
+      topLevelAwait: true
     },
     module: {
       rules: [
@@ -38,44 +61,30 @@ export default ({ mode }) => {
             options: {
               presets: [
                 ['@babel/preset-env', {
-                  targets: { node: 'current' },
+                  targets: {
+                    node: isProduction ? '24' : '21'
+                  },
                   modules: false
                 }]
               ]
             }
           }
-        },
-        // Agrega reglas adicionales para cargar otros tipos de archivos
-        {
-          test: /\.(jpg|png|gif)$/,
-          use: {
-            loader: 'file-loader',
-            options: {
-              name: '[name].[ext]',
-              outputPath: 'images/'
-            }
-          }
-        },
-        {
-          test: /\.css$/,
-          use: ['style-loader', 'css-loader']
         }
       ]
     },
     resolve: {
-      extensions: ['.js', '.cjs', '.mjs', '.ejs'],
-      fullySpecified: false // Importante para módulos ES
+      extensions: ['.js', '.mjs', '.ejs'],
+      fullySpecified: false
     },
     externals: [nodeExternals({
-      importType: 'module' // Asegura que las importaciones sean de módulos
+      importType: 'module'
     })],
-    optimization: {
-      minimize: isProduction
-    },
-    stats: {
-      errorDetails: true
-    },
-    devtool: isDevelopment ? 'source-map' : false,
-    cache: true
+    // Mejorar manejo de variables de entorno
+    plugins: [
+      new webpack.DefinePlugin({
+        ...envVars,
+        NODE_ENV: JSON.stringify(mode)
+      })
+    ]
   }
 }

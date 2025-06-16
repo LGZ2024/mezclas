@@ -4,6 +4,7 @@ import sequelize from '../db/db.js'
 const productosConfig = {
   id_producto: {
     type: DataTypes.INTEGER,
+    field: 'id_producto',
     primaryKey: true,
     autoIncrement: true
   },
@@ -63,5 +64,8 @@ const productosConfig = {
 
 export const Productos = sequelize.define('productos', productosConfig, {
   tableName: 'productos', // Nombre de la tabla en la base de datos
-  timestamps: true // Agrega createdAt y updatedAt automáticamente
+  timestamps: true, // Agrega createdAt y updatedAt automáticamente
+  underscored: true, // Agregar esta línea para usar snake_case
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 })

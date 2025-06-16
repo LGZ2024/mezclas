@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/solicitudProductos.css">
+            <link rel="stylesheet" href="../css/spinner.css">
+            <script src="../vendors/sweetalert/sweetalert.js"> </script>
+</head>
+
+<body>
+    <%- include("../../templates/mezclas/headerNav") %>
+        <!-- spinner -->
+        <div class="spinner-overlay" id="spinner" style="display: none;">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <p class="spinner-text">Procesando...</p>
+            </div>
+        </div>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="recetaForm" novalidate>
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit" id="regresar">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    <p id="titulo"></p>
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="fechaSolicitud">Fecha de
+                                                solicitud</label>
+                                            <input type="date" id="fechaSolicitud" class="producto-input" required>
+                                        </div>
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="listaDeUsuarios">Solicitante</label>
+                                            <select name="listaDeUsuarios" id="listaDeUsuarios" class="producto">
+
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="rancho">Rancho destino</label>
+                                            <select id="rancho" class="producto-input" required>
+                                                <option value="">Seleccione un rancho</option>
+                                                <% ranchos.forEach(function(rancho) { %>
+                                                    <option value="<%= rancho %>">
+                                                        <%= rancho %>
+                                                    </option>
+                                                    <% }); %>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="centroCoste">Centro de coste</label>
+                                            <select id="centroCoste" class="producto-input" required>
+                                                <option value="">Seleccione un centro de coste</option>
+                                                <!-- Se poblará dinámicamente con JavaScript -->
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="variedad">Variedades</label>
+                                            <select id="variedad" class="formulario__input" required>
+                                                <option value="">Seleccione una variedad</option>
+                                                <!-- Se poblará dinámicamente con JavaScript -->
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoFolio" style="display: block;">
+                                            <label class="formulario__label" for="folio">Folio de receta</label>
+                                            <input type="text" id="folio" class="formulario__input"
+                                                placeholder="Ingrese el folio de receta" required>
+                                        </div>
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="temporada">Temporada</label>
+                                            <select id="temporada" class="formulario__input" required>
+                                                <option value="">Seleccione una temporada</option>
+                                                <option value="Julio23-Junio24">Julio23-Junio24</option>
+                                                <option value="Julio24-Junio25">Julio24-Junio25</option>
+                                                <option value="Julio25-Junio26">Julio25-Junio26</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoUnidad" style="display: block;">
+                                            <label class="formulario__label" for="presentacion">Presentación de
+                                                mezcla</label>
+                                            <select id="presentacion" class="formulario__input" required>
+                                                <option value="">Seleccione una presentación</option>
+                                                <option value="Willi">Willi</option>
+                                                <option value="Barril">Barril</option>
+                                                <option value="Garrafa">Garrafa</option>
+                                                <option value="Otro">Otro</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoCantidad" style="display: block;">
+                                            <label class="formulario__label" for="cantidad">Cantidad de mezcla</label>
+                                            <input type="text" id="cantidad" class="formulario__input"
+                                                placeholder="Ingrese la cantidad de mezcla" required>
+                                        </div>
+
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="metodoAplicacion">Método de
+                                                Aplicación</label>
+                                            <select id="metodoAplicacion" class="formulario__input" required>
+                                                <option value="">Seleccione un método</option>
+                                                <option value="Foliar">Foliar</option>
+                                                <option value="Drench">Drench</option>
+                                                <option value="Trampeo">Trampeo</option>
+                                                <option value="Herbicida">Herbicida</option>
+                                                <option value="Termonebulizacion">Termonebulización</option>
+                                                <option value="Filtro">Filtro</option>
+                                                <option value="Riego">Riego</option>
+                                                <option value="Preparacion de Tierras">Preparación de Tierras</option>
+                                                <option value="Enmienda">Enmienda</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="fechaEntrega">Fecha de entrega</label>
+                                            <input type="date" id="fechaEntrega" class="formulario__input" required>
+                                        </div>
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="descripcion">Descripción</label>
+                                            <textarea id="descripcion" class="formulario__input"
+                                                placeholder="Ingrese una descripción" rows="3"></textarea>
+                                        </div>
+
+                                        <!-- imputs para tomar o subir imagen -->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="tomarFoto">Imagen de entrega</label>
+                                            <button type="button" class="formulario__submit" id="tomarFoto">Tomar
+                                                foto</button>
+                                            <br>
+                                            <button type="button" class="formulario__submit" id="subirFoto">Subir
+                                                foto</button>
+                                        </div>
+                                        <textarea type="text" id="fileInput" hidden></textarea>
+                                        <div class="formulario__campo" id="InputImage" style="display: none;">
+                                            <label class="formulario__label" for="fileInput">Imagen producto</label>
+                                            <br>
+                                            <select name="listaDeDispositivos" id="listaDeDispositivos"
+                                                class="formulario__input"></select>
+                                            <button class="formulario__submit btnTomarFoto"
+                                                style="display: block;">Tomar
+                                                foto</button>
+                                            <button class=" formulario__submit btnOtraFoto" style="display: none;">Tomar
+                                                otra
+                                                foto</button>
+                                            <p id="estado"></p>
+                                            <video muted="muted" id="video"></video>
+                                            <canvas id="canvas" style="display: none;"></canvas> <!--ojo-->
+                                            <img src="" alt="" class="photo" />
+                                        </div>
+                                        <div class="formulario__campo" id="fileImage" style="display: none;">
+                                            <label for="imageFile" class="formulario__label">Subir Imagen:</label>
+                                            <input type="file" name="imageFile" id="imageFile" class="formulario__input"
+                                                placeholder="Seleciona Una imagen" accept="image/*">
+                                            <canvas id="canvas1" style="display: none;">
+                                            </canvas>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label">Productos</label>
+                                            <div id="productosContainer" class="productos-lista">
+                                                <!-- Los productos se agregarán aquí dinámicamente -->
+                                            </div>
+                                        </div>
+
+                                        <!-- Botón normal para agregar productos -->
+                                        <div class="formulario__campo hide-on-mobile">
+                                            <button type="button" class="formulario__submit" id="agregarProducto">
+                                                + Agregar Producto
+                                            </button>
+                                        </div>
+
+                                        <!-- Botón flotante para móvil -->
+                                        <button type="button" class="btn-agregar-flotante" id="agregarProductoMovil">
+                                            +
+                                        </button>
+
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit" id="btnSolicitar">
+                                                Solicitar Mezcla
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- agrgamos modal -->
+        <%- include("../../templates/mezclas/modalCambioPorcentaje") %>
+            <!-- Firebase Configuración y funciones -->
+            <%- include("../../templates/mezclas/scripts") %>
+                <script type="module" src="../../app/solicitud/solicitarMezcla.js"></script>
+</body>
+
+</html>

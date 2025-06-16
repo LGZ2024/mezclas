@@ -70,7 +70,7 @@ export class ProduccionModel {
           )
         } else if (empresa === 'General') {
           data = await sequelize.query(
-            'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bayas del Centro" OR `empresa`="Moras Finas"'
+            'SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`="Bayas del Centro" OR `empresa`="Moras Finas" OR `empresa`="Bioagricultura"'
           )
         } else if (empresa === 'Lugar Agricola') {
           data = await sequelize.query(

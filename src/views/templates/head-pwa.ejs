@@ -1,0 +1,53 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="Aplicación para gestión de solicitudes de mezclas y productos">
+
+<!-- PWA manifest y configuración -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d6efd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+
+<!-- Iconos para diferentes plataformas -->
+<link rel="icon" type="image/webp" href="/images/LogoTransp.webp">
+<link rel="icon" type="image/png" href="/images/LogoTransp.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/LogoTransp.webp">
+<link rel="mask-icon" href="/images/LogoTransp.w" color="#0d6efd">
+
+<!-- Configuración para dispositivos Apple -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Solicitudes Almacen">
+<meta name="apple-touch-fullscreen" content="yes">
+
+<!-- Splash screens para iOS -->
+<link rel="apple-touch-startup-image" href="/images/splash/apple-splash-2048-2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1668-2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1536-2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
+<link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1125-2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+<link rel="apple-touch-startup-image" href="/images/splash/apple-splash-828-1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+
+<!-- Otros metadatos -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="msapplication-tap-highlight" content="no">
+<meta name="msapplication-TileColor" content="#0d6efd">
+
+<!-- Optimizaciones para PWA -->
+<link rel="dns-prefetch" href="//fonts.googleapis.com">
+<link rel="preconnect" href="//fonts.googleapis.com">
+<link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
+
+<!-- Estilos y scripts -->
+<link rel="stylesheet" href="/css/pwa.css">
+<script type="module" src="/js/app.js"></script>
+
+<!-- Toast para notificaciones de conexión -->
+<div id="connectionToast" class="connection-toast hide" role="alert" aria-live="polite"></div>
+
+<!-- Botón de instalación PWA -->
+<button id="installPwa" class="install-button" aria-label="Instalar aplicación">
+    Instalar aplicación
+</button>
+
+<button id="btnNotificaciones" class="install-button">🔔 Activar notificaciones</button>
+

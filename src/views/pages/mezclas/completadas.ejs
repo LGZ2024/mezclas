@@ -2,29 +2,14 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Mezclas</title>
+    <%- include("../../templates/head-pwa") %>
     <%- include("../../templates/mezclas/cabecera") %>
 </head>
 
 
 <body>
-    <header>
-        <div class="barra contenedor">
-            <div class="barra__logo">
-                <img src="../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
-            </div>
+    <%- include("../../templates/mezclas/headerNav") %>
 
-            <nav class="barra__navegacion">
-                <a class="barra__link" id="inicio"></a>
-            </nav>
-
-            <nav class="barra__login">
-                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
-            </nav>
-        </div>
-    </header>
     <input type="hidden" value="<%= rol %>" id="rol">
     <section class="tablas">
         <div class="container">
@@ -35,8 +20,11 @@
 
                             <div class="titulo">
                                 <div class="col">
+                                                                                    <div style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+
                                     <button class="formulario__submit" id="regresar"><span
                                             class="mdi mdi-arrow-left-bold"></span></button>
+                                </div>
                                 </div>
                                 <div class="text-center">
                                     <h3>Mezclas Completadas</h3>

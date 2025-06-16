@@ -2,17 +2,73 @@
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Aplicación para gestión de solicitudes de mezclas y productos">
+
+  <!-- PWA manifest y configuración -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0d6efd" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
+
+  <!-- Iconos para diferentes plataformas -->
+  <link rel="icon" type="image/webp" href="/images/LogoTransp.webp">
+  <link rel="icon" type="image/png" href="/images/LogoTransp.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/LogoTransp.webp">
+  <link rel="mask-icon" href="/images/LogoTransp.w" color="#0d6efd">
+
+  <!-- Configuración para dispositivos Apple -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Solicitudes Almacen">
+  <meta name="apple-touch-fullscreen" content="yes">
+
+  <!-- Splash screens para iOS -->
+  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-2048-2732.png"
+    media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1668-2388.png"
+    media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1536-2048.png"
+    media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
+  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1125-2436.png"
+    media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-828-1792.png"
+    media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
+
+  <!-- Otros metadatos -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="msapplication-TileColor" content="#0d6efd">
+
+  <!-- Optimizaciones para PWA -->
+  <link rel="dns-prefetch" href="//fonts.googleapis.com">
+  <link rel="preconnect" href="//fonts.googleapis.com">
+  <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
+
+  <!-- Estilos y scripts -->
+  <link rel="stylesheet" href="/css/pwa.css">
+  <script type="module" src="/js/app.js"></script>
+
+  <!-- Toast para notificaciones de conexión -->
+  <div id="connectionToast" class="connection-toast hide" role="alert" aria-live="polite"></div>
+
+  <!-- Botón de instalación PWA -->
+  <button id="installPwa" class="install-button " aria-label="Instalar aplicación">
+    Instalar aplicación
+  </button>
+ <button id="btnNotificaciones">Activar notificaciones</button>
+  <!--  -->
   <title>Login Mezclas</title>
-  <link rel="icon" type="image/svg+xml" href="./img/LogoTransp.png">
+  <link rel="icon" type="image/webp" href="./images/LogoTransp.webp">
   <link rel="stylesheet" type="text/css" href="./vendors/toastify/toastify.min.css">
 </head>
 <style>
-body {
+  body {
     margin: 0;
     padding: 0;
-    background: url(./img/paise2.jpg) no-repeat center top;
+    background: url(./images/paise2.webp) no-repeat center top;
     background-size: cover;
     font-family: 'Roboto', sans-serif;
     min-height: 100vh;
@@ -20,7 +76,7 @@ body {
     justify-content: center;
     align-items: center;
   }
-  
+
   .login-box {
     position: relative;
     width: 90%;
@@ -31,7 +87,7 @@ body {
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   }
-  
+
   .login-box::before {
     content: '';
     position: absolute;
@@ -40,22 +96,22 @@ body {
     transform: translateX(-50%);
     width: 120px;
     height: 120px;
-    background: url(./img/LogoTransp.png) no-repeat center center;
+    background: url(./images/LogoTransp.webp) no-repeat center center;
     background-size: contain;
   }
-  
+
   .login-box h1 {
     margin: 0 0 20px;
     text-align: center;
     font-size: 24px;
   }
-  
+
   .login-box label {
     margin: 0 0 10px;
     font-weight: bold;
     display: block;
   }
-  
+
   .login-box input {
     width: 100%;
     padding: 10px;
@@ -67,11 +123,11 @@ body {
     font-size: 16px;
     transition: background 0.3s ease;
   }
-  
+
   .login-box input:focus {
     background: rgba(255, 255, 255, 0.3);
   }
-  
+
   .login-box input[type="submit"] {
     background: #5629a8;
     color: #fff;
@@ -82,11 +138,11 @@ body {
     cursor: pointer;
     transition: background 0.3s ease;
   }
-  
+
   .login-box input[type="submit"]:hover {
     background: #df9b86;
   }
-  
+
   .login-box a {
     display: block;
     text-align: center;
@@ -94,11 +150,12 @@ body {
     color: darkgrey;
     font-size: 14px;
   }
-  
+
   .login-box a:hover {
     color: #333;
   }
 </style>
+
 <body>
 
   <div class="login-box">
@@ -109,7 +166,8 @@ body {
       <input type="text" id="email" name="email" autocomplete="username" placeholder="Ingresa el usuario">
       <!-- Contraseña INPUT -->
       <label for="password">Contraseña</label>
-      <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Ingresa la contraseña">
+      <input type="password" id="password" name="password" autocomplete="current-password"
+        placeholder="Ingresa la contraseña">
       <input type="submit" value="Iniciar sesión">
     </form>
   </div>
@@ -163,7 +221,7 @@ body {
         window.location.href = '/protected/admin';
       }, 3000)
     } else {
-        return  Toastify({
+      return Toastify({
         text: data.message,
         className: "error",
         style: {
@@ -175,7 +233,8 @@ body {
         close: true,
         duration: 1000
       }).showToast()
-      
+
     }
   }
+
 </script>

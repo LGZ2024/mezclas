@@ -4,16 +4,39 @@
   "description": "programa para mezclas LG",
   "main": "dist/bundle.mjs",
   "type": "module",
+  "engines": {
+    "node": ">=21.6.2 <=24.0.1",
+    "npm": ">=10.2.4"
+  },
   "scripts": {
-    "start": "node _passenger.cjs",
-    "dev": "node --watch src/app.mjs",
-    "devC": "console-ninja node --watch src/app.mjs",
-    "lint": "eslint . --ext .js,.mjs",
+    "dev": "cross-env NODE_ENV=development node --watch src/app.mjs  src/app.mjs",
+    "dev:ninja": "cross-env NODE_ENV=development NODE_OPTIONS='--inspect' node --watch src/app.mjs",
+    "verify:pwa": "node scripts/verify-pwa.mjs",
+    "lint": "eslint src/**/*.{js,mjs}",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "docs": "jsdoc -c jsdoc.json",
-    "build": "webpack --config webpack.config.mjs --mode production",
-    "buildD": "webpack --config webpack.config.mjs --mode development --stats-error-details"
+    "tree":"node tree.mjs",
+    "clean": "rimraf dist",
+    "build:dev": "webpack --config webpack.config.mjs --mode development",
+    "build:prod": "cross-env NODE_ENV=production webpack --config webpack.config.mjs --mode production",
+    "build:clean": "npm run clean && npm run build:prod",
+    "verify": "node scripts/verify-all.mjs",
+    "verify:db": "cross-env NODE_ENV=development node scripts/verify-db.mjs",
+    "verify:env": "cross-env NODE_ENV=development node scripts/verify-env.mjs",
+    "verify:plesk": "node scripts/check-plesk.mjs",
+    "check-port": "node scripts/check-port.mjs",
+    "check-version": "node scripts/check-version.mjs",
+    "start": "node dist/bundle.mjs",
+    "start:prod": "cross-env NODE_ENV=production node dist/bundle.mjs",
+    "start:plesk": "node _passenger.cjs",
+    "deploy:plesk": "cross-env PLESK_MODE=true NODE_ENV=production npm run build:clean && npm run start:plesk",
+    "predeploy": "npm run verify",
+    "logs:rotate": "node scripts/rotate-logs.mjs",
+    "logs:clean": "rimraf logs/*.log",
+    "security": "npm audit",
+    "install:prod": "npm ci --only=production",
+    "install:dev": "npm ci",
+    "prepare": "husky install",
+    "prestart:plesk": "node scripts/check-version.mjs"
   },
   "jest": {
     "testEnvironment": "node",
@@ -29,6 +52,29 @@
     ],
     "verbose": true
   },
+  "browserslist": {
+    "development": [
+      "node >= 21"
+    ],
+    "production": [
+      "node >= 24"
+    ]
+  },
+  "version-management": {
+    "major": 1,
+    "release": 0,
+    "maintenance": 0
+  },
+  "plesk": {
+    "env": "production",
+    "node_version": "24.0.1",
+    "startup_file": "_passenger.cjs",
+    "domains": [
+      "http://solicitudMezclas.portalrancho.com.mx"
+    ],
+    "memory_limit": "256M",
+    "startup_timeout": 60
+  },
   "author": "Darcka",
   "license": "LG",
   "keywords": [
@@ -41,48 +87,68 @@
     "url": "https://github.com/tu-usuario/tu-repositorio.git"
   },
   "dependencies": {
+    "acorn-import-attributes": "1.9.5",
     "bcryptjs": "2.4.3",
-    "body-parser": "1.19.0",
-    "compression": "^1.8.0",
-    "cookie-parser": "1.4.6",
+    "body-parser": "1.20.3",
+    "compression": "1.7.4",
+    "cookie-parser": "1.4.7",
     "cors": "2.8.5",
-    "date-fns": "^4.1.0",
+    "cross-env": "7.0.3",
+    "date-fns": "4.1.0",
     "dotenv": "16.4.5",
-    "ejs": "^3.1.10",
+    "ejs": "3.1.10",
     "env-var": "7.5.0",
-    "esm": "3.2.25",
-    "exceljs": "^4.4.0",
-    "express": "4.19.2",
+    "exceljs": "4.4.0",
+    "express": "4.21.2",
     "express-fileupload": "1.5.0",
-    "express-rate-limit": "^7.5.0",
-    "fs": "0.0.1-security",
-    "helmet": "^8.1.0",
-    "js": "^0.1.0",
+    "express-rate-limit": "7.5.0",
+    "glob": "9.3.5",
+    "helmet": "8.1.0",
+    "husky": "9.1.7",
     "jsonwebtoken": "9.0.2",
-    "morgan": "1.10.0",
+    "lru-cache": "10.0.1",
     "multer": "1.4.5-lts.1",
     "mysql2": "3.10.1",
-    "nodemailer": "^6.9.16",
+    "nodemailer": "6.9.16",
+    "rimraf": "5.0.5",
+    "semver": "7.5.4",
     "sequelize": "6.37.3",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "uuid": "^11.1.0",
-    "web-push": "^3.6.7",
-    "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "swagger-jsdoc": "6.2.8",
+    "swagger-ui-express": "5.0.1",
+    "uuid": "11.1.0",
+    "web-push": "3.6.7",
+    "winston": "3.11.0",
+    "winston-daily-rotate-file": "5.0.0"
   },
   "devDependencies": {
-    "@babel/core": "7.24.7",
-    "@babel/preset-env": "7.24.7",
+    "@babel/core": "7.23.7",
+    "@babel/preset-env": "7.23.7",
     "babel-loader": "9.1.3",
-    "jest": "^29.7.0",
-    "nodemon": "3.1.3",
+    "core-js": "3.35.0",
+    "cross-env": "7.0.3",
+    "css-loader": "6.8.1",
+    "ejs-loader": "0.5.0",
+    "eslint": "8.57.0",
+    "eslint-config-standard": "17.1.0",
+    "eslint-plugin-import": "2.29.1",
+    "eslint-plugin-n": "16.6.2",
+    "eslint-plugin-promise": "6.1.1",
+    "file-loader": "6.2.0",
+    "jest": "29.7.0",
+    "lint-staged": "^15.2.0",
     "standard": "17.1.0",
-    "webpack": "5.92.1",
+    "style-loader": "3.3.3",
+    "webpack": "5.99.8",
     "webpack-cli": "5.1.4",
     "webpack-node-externals": "3.0.0"
   },
   "eslintConfig": {
     "extends": "standard"
+  },
+  "lint-staged": {
+    "*.{js,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }

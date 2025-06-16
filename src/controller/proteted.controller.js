@@ -23,17 +23,44 @@ export class ProtetedController {
     const { user } = req.session
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // usuario
+    logger.debug('Usuario en la ruta protegida:', user)
+
     // Separar los ranchos en un array
     const ranchos = user.ranchos.split(',')
+    const almacenes = [] // Cambiado de almacen a almacenes para mayor claridad
 
-    res.render('pages/mezclas/solicitud', { ranchos })
+    // validadmos los ranchos, para saber el almacen al que pertenece
+    const almacenAtemajac = ['Atemajac', 'Seccion 7 Fresas']
+    const almacenAhualulco = ['Ahualulco']
+    const almacenCasasAltos = ['Casas de Altos', 'Romero', 'Potrero']
+    const almacenOjoDeAgua = ['Ojo de Agua', 'La Loma', 'Zapote']
+
+    ranchos.forEach(rancho => {
+      if (almacenAtemajac.includes(rancho)) {
+        almacenes.push('Almacen Atemajac (Bioagricultura)')
+      } else if (almacenAhualulco.includes(rancho)) {
+        almacenes.push('Almacen Ahualulco (Bioagricultura)')
+      } else if (almacenCasasAltos.includes(rancho)) {
+        almacenes.push('Almacen Casas Altos (Moras Finas)')
+      } else if (almacenOjoDeAgua.includes(rancho)) {
+        almacenes.push('Almacen Ojo de Agua (Bayas del Centro)')
+      }
+    })
+    // eliminamos los duplicados
+    const uniqueAlmacenes = [...new Set(almacenes)]
+    // Log para debuggear
+    logger.debug('Ranchos:', ranchos)
+    logger.debug('Almacenes:', uniqueAlmacenes)
+
+    res.render('pages/mezclas/solicitud', { ranchos, almacen: uniqueAlmacenes || [], nombre: user.nombre, rol: user.rol })
   }
 
   solicitudes = async (req, res) => {
     const { user } = req.session
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
-    res.render('pages/mezclas/pendientes', { rol: user.rol })
+    res.render('pages/mezclas/pendientes', { rol: user.rol, nombre: user.nombre })
   }
 
   proceso = async (req, res) => {
@@ -41,7 +68,7 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
 
-    res.render('pages/mezclas/proceso', { rol: user.rol })
+    res.render('pages/mezclas/proceso', { rol: user.rol, nombre: user.nombre })
   }
 
   completadas = async (req, res) => {
@@ -49,7 +76,7 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
 
-    res.render('pages/mezclas/completadas', { rol: user.rol })
+    res.render('pages/mezclas/completadas', { rol: user.rol, nombre: user.nombre })
   }
 
   tablaSolicitudes = async (req, res) => {
@@ -223,7 +250,7 @@ export class ProtetedController {
     }
 
     try {
-      res.render('pages/mezclas/confirmaSolicitud', { rol: user.rol, user })
+      res.render('pages/mezclas/confirmaSolicitud', { rol: user.rol, user, nombre: user.nombre })
     } catch (error) {
       return res.status(403).render('errorPage', {
         title: '403 - Sin Autorisacion',
@@ -269,6 +296,16 @@ export class ProtetedController {
         errorMsg: error.message
       })
     }
+  }
+
+  RegitrarSolicitud = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    const ranchos = user.ranchos.split(',')
+
+    res.render('pages/mezclas/registrarSolicitud', { ranchos, rol: user.rol })
   }
 
   // cerras sesion

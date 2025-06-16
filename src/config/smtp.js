@@ -87,7 +87,8 @@ const validateEmailData = (type, data) => {
     respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
     cancelacion: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
     aprobada: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
-    confirmacionInicial: ['email', 'nombre', 'solicitudId', 'data', 'usuario']
+    confirmacionInicial: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    devolucion: ['email', 'nombre', 'usuario', 'data']
   }
 
   const fields = requiredFields[type] || []
@@ -110,6 +111,9 @@ export const enviarCorreo = async (params) => {
     usuario = {},
     data = {}
   } = params
+  // Definir constantes de desarrollo
+  const DEV_EMAIL = 'zaragoza051@lgfrutas.com.mx'
+  const PRODUCTION_MODE = 'Produccion'
 
   // Validar datos requeridos según el tipo
   validateEmailData(type, params)
@@ -494,7 +498,74 @@ export const enviarCorreo = async (params) => {
           <p>Atentamente,<br>El equipo de Grupo LG</p>
         </div>
       </body>`
+    },
+    devolucion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Nueva Solicitud de Devolución - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+        <h1>Grupo LG - Nueva Devolución</h1>
+      </div>
+      
+      <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+        <h2>Nueva Solicitud de Devolución de Productos</h2>
+        
+        <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #2196F3;">Información del Solicitante:</h4>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>Solicitante:</strong> ${nombre}</li>
+            <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+            <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+            <li><strong>Fecha de Solicitud:</strong> ${new Date().toLocaleDateString()}</li>
+          </ul>
+        </div>
+
+        <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+          <h4 style="margin-top: 0;">Productos a Devolver:</h4>
+          <div style="margin: 10px 0;">
+            ${Array.isArray(data.productos)
+              ? data.productos.map(producto => `
+                <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                  <strong>Producto:</strong> ${producto.nombre}<br>
+                  <strong>Cantidad:</strong> ${producto.cantidad} ${producto.unidad_medida}
+                </div>
+              `).join('')
+              : '<p>No hay productos especificados</p>'
+            }
+          </div>
+        </div>
+
+        <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #FFA500; margin: 20px 0;">
+          <h4 style="margin-top: 0;">Detalles Adicionales:</h4>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>Almacén:</strong> ${data.almacen}</li>
+            <li><strong>Temporada:</strong> ${data.temporada}</li>
+            <li><strong>Descripción:</strong> ${data.descripcion || 'Sin descripción'}</li>
+          </ul>
+        </div>
+
+        <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+          <strong>Acción Requerida:</strong> Por favor revise y procese esta solicitud de devolución.
+        </p>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="https://solicitudmezclas.portalrancho.com.mx/protected/devoluciones" 
+             style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+             Gestionar Devolución
+          </a>
+        </div>
+
+        <hr style="border: 1px solid #eee; margin: 20px 0;">
+        
+        <p style="color: #666; font-size: 0.9em;">
+          Este es un mensaje automático. Por favor, procese la devolución lo antes posible.
+        </p>
+        
+        <p>Atentamente,<br>El equipo de Grupo LG</p>
+      </div>
+    </body>`
     }
+
   }
 
   try {
@@ -503,9 +574,19 @@ export const enviarCorreo = async (params) => {
       throw new ValidationError(`Tipo de mensaje "${type}" no válido`)
     }
 
+    logger.debug('Enviando correo con los siguientes datos:', {
+      MODE: envs.MODE,
+      type,
+      to: envs.MODE !== PRODUCTION_MODE
+        ? DEV_EMAIL
+        : usuario?.email || DEV_EMAIL
+    })
+    // Configurar el mensaje
     const message = {
       ...template,
-      to: email // Reemplazar con el correo del cliente
+      to: envs.MODE !== PRODUCTION_MODE
+        ? DEV_EMAIL
+        : usuario?.email || DEV_EMAIL
     }
 
     const result = await sendMail(message)

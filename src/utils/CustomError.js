@@ -41,3 +41,56 @@ export class BusinessError extends CustomError {
     super(message, 422, 'BUSINESS_ERROR', details)
   }
 }
+export class UnauthorizedError extends CustomError {
+  constructor (message = 'No autorizado', details = {}) {
+    super(message, 401, 'UNAUTHORIZED', details)
+  }
+}
+export class ForbiddenError extends CustomError {
+  constructor (message = 'Acceso denegado', details = {}) {
+    super(message, 403, 'FORBIDDEN', details)
+  }
+}
+export class ConflictError extends CustomError {
+  constructor (message = 'Conflicto', details = {}) {
+    super(message, 409, 'CONFLICT', details)
+  }
+}
+export class InternalServerError extends CustomError {
+  constructor (message = 'Error interno del servidor', details = {}) {
+    super(message, 500, 'INTERNAL_SERVER_ERROR', details)
+  }
+}
+export class ServiceUnavailableError extends CustomError {
+  constructor (message = 'Servicio no disponible', details = {}) {
+    super(message, 503, 'SERVICE_UNAVAILABLE', details)
+  }
+}
+export class RateLimitError extends CustomError {
+  constructor (message = 'Límite de solicitudes alcanzado', details = {}) {
+    super(message, 429, 'RATE_LIMIT', details)
+  }
+}
+export class TimeoutError extends CustomError {
+  constructor (message = 'Tiempo de espera agotado', details = {}) {
+    super(message, 504, 'TIMEOUT', details)
+  }
+}
+export class NotImplementedError extends CustomError {
+  constructor (message = 'Funcionalidad no implementada', details = {}) {
+    super(message, 501, 'NOT_IMPLEMENTED', details)
+  }
+}
+export class BadRequestError extends CustomError {
+  constructor (message = 'Solicitud incorrecta', details = {}) {
+    super(message, 400, 'BAD_REQUEST', details)
+  }
+}
+export class MezclaOperationError extends CustomError {
+  constructor (operation, message, details = {}) {
+    super(message, 500, `MEZCLA_${operation}_ERROR`, {
+      operation,
+      ...details
+    })
+  }
+}

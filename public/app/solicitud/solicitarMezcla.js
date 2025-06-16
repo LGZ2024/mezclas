@@ -5,6 +5,7 @@ import { showSpinner, hideSpinner } from '../spinner.js'
 class SolicitudFormulario {
   constructor () {
     this.productosData = [] // Variable para almacenar productos
+    this.tipo = '' // Variable para almacenar productos
     this.initElements()
     this.bindEvents()
     this.iniciarTipoSolicitud()
@@ -81,7 +82,8 @@ class SolicitudFormulario {
       setTimeout(() => {
         resolve({
           Mezcla: 'Mezcla',
-          Fertilizantes: 'Fertilizantes'
+          Fertilizantes: 'Fertilizantes',
+          Devoluciones: 'Devoluciones'
         })
       }, 500)
     })
@@ -110,39 +112,82 @@ class SolicitudFormulario {
 
     // Si se seleccionó un tipo, procesar la selección
     if (result.value) {
-      const tipo = result.value
+      this.tipo = result.value
       const titulo = document.getElementById('titulo')
       const campofolio = document.getElementById('campoFolio')
       const campoCantidad = document.getElementById('campoCantidad')
       const campoPresentacion = document.getElementById('campoUnidad')
+      const campoRancho = document.getElementById('campoRancho')
+      const campoCentro = document.getElementById('campoCentro')
+      const campoAlmacen = document.getElementById('campoAlmacen')
+      const campoVariedad = document.getElementById('campoVariedad')
+      const campoUnidad = document.getElementById('campoUnidad')
+      const campoDescripcion = document.getElementById('campoDescripcion')
+      const campoMetodo = document.getElementById('campoMetodo')
 
-      await Swal.fire({ html: `Seleccionastes: ${tipo}` })
+      await Swal.fire({ html: `Seleccionastes: ${this.tipo}` })
 
-      if (tipo === 'Mezcla') {
+      if (this.tipo === 'Mezcla') {
         titulo.innerHTML = 'Solicitud de Mezcla'
-        campofolio.style.display = 'block'
-        campoCantidad.style.display = 'block'
-        campoPresentacion.style.display = 'block'
-        folio.disabled = false
-        folio.required = true
-        cantidad.disabled = false
-        cantidad.required = true
-        presentacion.disabled = false
-        presentacion.required = true
-      } else if (tipo === 'Fertilizantes') {
+
+        campoAlmacen.style.display = 'none'
+
+        campofolio.disabled = true
+
+        campoAlmacen.required = false
+        campoDescripcion.required = false
+      } else if (this.tipo === 'Fertilizantes') {
         titulo.innerHTML = 'Solicitud de Fertilizantes'
+
         campofolio.style.display = 'none'
         campoCantidad.style.display = 'none'
         campoPresentacion.style.display = 'none'
-        folio.disabled = true
-        folio.required = false
-        folio.value = ''
-        cantidad.disabled = true
-        cantidad.required = false
-        cantidad.value = ''
-        presentacion.disabled = true
-        presentacion.required = false
-        presentacion.value = ''
+        campoAlmacen.style.display = 'none'
+
+        campofolio.disabled = true
+        campoCantidad.disabled = true
+        campoPresentacion.disabled = true
+        campofolio.disabled = true
+
+        campofolio.required = false
+        campoCantidad.required = false
+        campoPresentacion.required = false
+        campoAlmacen.required = false
+        campoDescripcion.required = false
+
+        campofolio.value = ''
+        campoCantidad.value = ''
+        campoPresentacion.value = ''
+        campoAlmacen.value = ''
+      } else if (this.tipo === 'Devoluciones') {
+        titulo.innerHTML = 'Solicitud de Devolucion'
+
+        campofolio.style.display = 'none'
+        campoCantidad.style.display = 'none'
+        campoPresentacion.style.display = 'none'
+        campoRancho.style.display = 'none'
+        campoCentro.style.display = 'none'
+        campoVariedad.style.display = 'none'
+        campoUnidad.style.display = 'none'
+        campoMetodo.style.display = 'none'
+
+        campofolio.disabled = true
+        campoCantidad.disabled = true
+        campoPresentacion.disabled = true
+        campoRancho.disabled = true
+        campoCentro.disabled = true
+        campoVariedad.disabled = true
+        campoUnidad.disabled = true
+        campoMetodo.disabled = true
+
+        campofolio.required = false
+        campoCantidad.required = false
+        campoPresentacion.required = false
+        campoRancho.required = false
+        campoCentro.required = false
+        campoVariedad.required = false
+        campoUnidad.required = false
+        campoMetodo.required = false
       }
     }
   }
@@ -165,10 +210,22 @@ class SolicitudFormulario {
 
   // Métodos de validación
   validarFormulario () {
-    const camposRequeridos = [
-      'rancho', 'centroCoste', 'variedad',
-      'temporada', 'metodoAplicacion'
-    ]
+    let camposRequeridos = []
+    if (this.tipo === 'Mezcla') {
+      camposRequeridos = [
+        'rancho', 'centroCoste', 'variedad', 'folio',
+        'temporada', 'presentacion', 'cantidad', 'metodoAplicacion'
+      ]
+    } else if (this.tipo === 'Fertilizantes') {
+      camposRequeridos = [
+        'rancho', 'centroCoste', 'variedad',
+        'temporada', 'metodoAplicacion'
+      ]
+    } else if (this.tipo === 'Devoluciones') {
+      camposRequeridos = [
+        'almacen', 'temporada', 'descripcion'
+      ]
+    }
 
     const camposInvalidos = camposRequeridos.filter(campo => {
       const elemento = document.getElementById(campo)
@@ -192,8 +249,11 @@ class SolicitudFormulario {
 
     const errores = []
 
+    if (!productos || !unidadesMedida || !cantidades) {
+      this.mostrarError('Agregar almenos un producto')
+    }
     productos.forEach((productoSelect, index) => {
-      // Obtener el valor del select
+    // Obtener el valor del select
       const selectedOption = productoSelect.options[productoSelect.selectedIndex]
       const producto = selectedOption ? selectedOption.value : ''
       const unidad = unidadesMedida[index].value
@@ -324,10 +384,12 @@ class SolicitudFormulario {
       }
 
       // Recopilación de datos
-      const datosReceta = this.recopilarDatosReceta()
+      const { url, receta } = await this.recopilarDatosReceta()
 
+      console.log('Datos a enviar:', receta)
+      console.log('URL a enviar:', url)
       // Envío de datos al servidor
-      const respuesta = await this.enviarReceta(datosReceta)
+      const respuesta = await this.enviarReceta({ url, receta })
 
       // Procesar respuesta
       this.procesarRespuestaReceta(respuesta)
@@ -366,38 +428,51 @@ class SolicitudFormulario {
   }
 
   // Métodos de procesamiento de datos
-  recopilarDatosReceta () {
-    // OBTENEMOS DATOS DEL CENTRO DE COTE PARA SABER LA EMPRESA A LA QUE PERTENECE
-    const centroCosteSelect = document.getElementById('centroCoste')
-    const selectedIndex = centroCosteSelect.selectedIndex
-    const selectedOption = centroCosteSelect.options[selectedIndex]
-    const selectedText = selectedOption.text.trim()
-    let empresaPertece = ''
+  recopilarDatosReceta = async () => {
+    let receta
+    let url = ''
+    if (this.tipo === 'Fertilizantes' || this.tipo === 'Mezcla') {
+      url = '/api/solicitudes'
+      // OBTENEMOS DATOS DEL CENTRO DE COTE PARA SABER LA EMPRESA A LA QUE PERTENECE
+      const centroCosteSelect = document.getElementById('centroCoste')
+      const selectedIndex = centroCosteSelect.selectedIndex
+      const selectedOption = centroCosteSelect.options[selectedIndex]
+      const selectedText = selectedOption.text.trim()
+      let empresaPertece = ''
 
-    if (selectedText.substring(0, 3) === 'MFI') {
-      empresaPertece = 'Moras Finas'
-    } else if (selectedText.substring(0, 3) === 'BCE') {
-      empresaPertece = 'Bayas del Centro'
-    } else if (selectedText.substring(0, 3) === 'BIO') {
-      empresaPertece = 'Bioagricultura'
-    } else if (selectedText.substring(0, 3) === 'EPA') {
-      empresaPertece = 'Lugar Agricola'
+      if (selectedText.substring(0, 3) === 'MFI') {
+        empresaPertece = 'Moras Finas'
+      } else if (selectedText.substring(0, 3) === 'BCE') {
+        empresaPertece = 'Bayas del Centro'
+      } else if (selectedText.substring(0, 3) === 'BIO') {
+        empresaPertece = 'Bioagricultura'
+      } else if (selectedText.substring(0, 3) === 'EPA') {
+        empresaPertece = 'Lugar Agricola'
+      }
+      receta = {
+        tipo: this.tipo,
+        rancho: document.getElementById('rancho').value.trim(),
+        centroCoste: document.getElementById('centroCoste').value.trim(),
+        variedad: document.getElementById('variedad').value.trim(),
+        folio: document.getElementById('folio').value.trim(),
+        temporada: document.getElementById('temporada').value.trim(),
+        cantidad: document.getElementById('cantidad').value.trim(),
+        presentacion: document.getElementById('presentacion').value.trim(),
+        metodoAplicacion: document.getElementById('metodoAplicacion').value.trim(),
+        descripcion: document.getElementById('descripcion').value.trim(),
+        productos: this.recopilarProductos(),
+        empresaPertece
+      }
+    } else if (this.tipo === 'Devoluciones') {
+      url = '/api/devoluciones'
+      receta = {
+        almacen: document.getElementById('almacen').value.trim(),
+        temporada: document.getElementById('temporada').value.trim(),
+        descripcion: document.getElementById('descripcion').value.trim(),
+        productos: this.recopilarProductos()
+      }
     }
-    const receta = {
-      rancho: document.getElementById('rancho').value.trim(),
-      centroCoste: document.getElementById('centroCoste').value.trim(),
-      variedad: document.getElementById('variedad').value.trim(),
-      folio: document.getElementById('folio').value.trim(),
-      temporada: document.getElementById('temporada').value.trim(),
-      cantidad: document.getElementById('cantidad').value.trim(),
-      presentacion: document.getElementById('presentacion').value.trim(),
-      metodoAplicacion: document.getElementById('metodoAplicacion').value.trim(),
-      descripcion: document.getElementById('descripcion').value.trim(),
-      productos: this.recopilarProductos(),
-      empresaPertece
-    }
-
-    return receta
+    return { url, receta }
   }
 
   recopilarProductos () {
@@ -463,13 +538,13 @@ class SolicitudFormulario {
   }
 
   // Métodos de envío
-  enviarReceta = async (datosReceta) => {
-    const respuesta = await fetch('/api/solicitudes', {
+  enviarReceta = async ({ url, receta }) => {
+    const respuesta = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(datosReceta)
+      body: JSON.stringify(receta)
     })
 
     if (!respuesta.ok) {

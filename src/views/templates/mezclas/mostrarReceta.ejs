@@ -3,42 +3,34 @@
     <div class="modal-dialog modal-lg modal-fullscreen-md-down">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title fs-5">Receta</h3>
+                <h3 class="modal-title">Detalles de la Receta</h3>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-2">
+            <div class="modal-body p-0">
                 <div class="card border-0">
                     <div class="card-body p-3">
-                        <div class="titulo  mb-4">
-                            <div class="text-center">
-                                <h3>Receta</h3>
-                            </div>
-                        </div>
                         <% if ( rol==="mezclador" || rol==="administrativo" ) { %>
-                            <button id="nuevoProducto" type="button" class="btn formulario__submit mb-3 w-100">
-                                <i class="mdi mdi-plus-circle"></i>Agregar Producto
+                            <button id="nuevoProducto" type="button" class="btn btn-primary mb-3">
+                                <i class="mdi mdi-plus-circle me-1"></i>
+                                <span>Agregar Producto</span>
                             </button>
-                            <% } %>
-                                <hr>
-                               
-                                    <div class="table-responsive">
-                                        <table class="table table-striped tanle table-bordered table-hover align-middle mobile-table w-100 table-sm"
-                                            id="tbReceta" style="white-space: nowrap;">
-                                            <thead class="table-primary">
-                                                <tr >
-                                                    <th>id</th>
-                                                    <th>id_sap</th>
-                                                    <th>Producto</th>
-                                                    <th>Unidad Medida</th>
-                                                    <th>Cantidad</th>
-                                                    <th>Confirmacion</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <!-- Contenido de la tabla -->
-                                            </tbody>
-                                        </table>
-                                    </div>
+                        <% } %>                        <div class="table-responsive">
+                            <table class="table table-hover table-striped align-middle" id="tbReceta">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="text-nowrap">ID</th>
+                                        <th scope="col" class="text-nowrap">ID SAP</th>
+                                        <th scope="col" class="text-nowrap">Producto</th>
+                                        <th scope="col" class="text-nowrap">Unidad Medida</th>
+                                        <th scope="col" class="text-nowrap">Cantidad</th>
+                                        <th scope="col" class="text-nowrap">Confirmación</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="table-group-divider">
+                                    <!-- El contenido de la tabla se llenará dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
                                 
                                 <!-- <hr>
                                 <% if ( rol==="mezclador" || rol==="administrativo" ) { %>
@@ -51,7 +43,7 @@
                                     <% } %> -->
                     </div>
                 </div>
-            </div>
+            </div>            
             <div class="modal-footer">
                 <div class="d-flex gap-2 w-100 justify-content-end">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>

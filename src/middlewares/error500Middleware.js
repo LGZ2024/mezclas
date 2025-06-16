@@ -1,4 +1,5 @@
 import logger from '../utils/logger.js'
+import { CustomError } from '../utils/CustomError.js'
 import { envs } from '../config/env.mjs'
 
 export const error404 = async (req, res, next) => {
@@ -6,30 +7,46 @@ export const error404 = async (req, res, next) => {
 }
 
 export const errorHandler = (err, req, res, next) => {
-  err.statusCode = err.statusCode || 500
-  err.status = err.status || 'error'
-
-  // Log del error
-  logger.logError({
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
+  const errorContext = {
+    url: req.originalUrl,
     method: req.method,
-    statusCode: err.statusCode
-  })
+    userId: req.session?.user?.id,
+    userRole: req.session?.user?.rol,
+    ip: req.ip,
+    userAgent: req.headers['user-agent']
+  }
 
-  if (envs.MODE === 'development') {
-    res.status(err.statusCode).json({
-      status: err.status,
-      error: err,
+  logger.logError(err, errorContext)
+
+  // Errores conocidos
+  if (err instanceof CustomError) {
+    return res.status(err.statusCode).json({
+      error: err.errorCode,
       message: err.message,
-      stack: err.stack
-    })
-  } else {
-    // Producción: no enviar detalles del error
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.isOperational ? err.message : 'Algo salió mal'
+      details: envs.MODE === 'development' ? err.details : undefined,
+      timestamp: err.timestamp
     })
   }
+
+  // Error de Sequelize
+  if (err.name === 'SequelizeValidationError') {
+    return res.status(400).json({
+      error: 'VALIDATION_ERROR',
+      message: 'Error de validación en la base de datos',
+      details: err.errors.map(e => ({
+        field: e.path,
+        message: e.message
+      }))
+    })
+  }
+
+  // Error no controlado
+  const statusCode = err.statusCode || 500
+  return res.status(statusCode).json({
+    error: 'INTERNAL_SERVER_ERROR',
+    message: envs.MODE === 'production'
+      ? 'Error interno del servidor'
+      : err.message,
+    timestamp: new Date().toISOString()
+  })
 }

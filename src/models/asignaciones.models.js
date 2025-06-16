@@ -23,54 +23,121 @@ export class AsignacionesModel {
  * @throws {DatabaseError} Si hay un error en la base de datos
  */
   static async agregarAsignacion ({ usuarioId, equipoId, fechaAsignacion, ubicacion, responsiva }) {
-    const transaction = await sequelize.transaction()
+    const logContext = {
+      operation: 'AGREGAR_ASIGNACION',
+      userId: usuarioId,
+      equipoId,
+      timestamp: new Date().toISOString()
+    }
+
     try {
-      // validamos datos
+      logger.logOperation('AGREGAR_ASIGNACION', 'started', logContext)
+
+      // Validación de datos de entrada
       if (!usuarioId || !equipoId || !fechaAsignacion || !ubicacion || !responsiva) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+        throw new ValidationError('Datos requeridos no proporcionados', {
+          required: ['usuarioId', 'equipoId', 'fechaAsignacion', 'ubicacion', 'responsiva'],
+          received: { usuarioId, equipoId, fechaAsignacion, ubicacion, responsiva }
+        })
       }
 
       if (new Date(fechaAsignacion) > new Date()) {
         throw new ValidationError('La fecha de asignación no puede ser futura')
       }
 
-      logger.info('Iniciando asignación de equipo', {
-        usuarioId,
-        equipoId,
-        fechaAsignacion
+      const transaction = await sequelize.transaction()
+
+      try {
+        logger.logDBTransaction('AGREGAR_ASIGNACION', 'started', {
+          userId: usuarioId,
+          correlationId: logContext.correlationId
+        })
+
+        // Verificar empleado
+        const empleado = await Empleados.findByPk(usuarioId, {
+          attributes: ['nombre', 'apellido_paterno', 'estado'],
+          transaction
+        })
+
+        if (!empleado) {
+          throw new NotFoundError('Empleado no encontrado')
+        }
+
+        if (empleado.estado !== 'disponible') {
+          throw new ValidationError('El empleado no está disponible para asignaciones')
+        }
+
+        // Verificar equipo
+        const equipo = await Equipos.findByPk(equipoId, {
+          transaction
+        })
+
+        if (!equipo) {
+          throw new NotFoundError('Equipo no encontrado')
+        }
+
+        if (equipo.estado !== 'disponible') {
+          throw new ValidationError('El equipo no está disponible para asignación')
+        }
+
+        // Crear asignación
+        const asignacion = await Asignaciones.create({
+          id_empleado: usuarioId,
+          id_equipo: equipoId,
+          fecha_asignacion: fechaAsignacion,
+          ubicacion,
+          responsiva
+        }, { transaction })
+
+        // Actualizar estado del equipo
+        await equipo.update({ estado: 'asignado' }, { transaction })
+
+        // Actualizar estado del empleado si es necesario
+        await empleado.update({ estado: 'asignado' }, { transaction })
+
+        await transaction.commit()
+
+        logger.logDBTransaction('AGREGAR_ASIGNACION', 'committed', {
+          asignacionId: asignacion.id,
+          correlationId: logContext.correlationId
+        })
+
+        logger.logOperation('AGREGAR_ASIGNACION', 'completed', {
+          ...logContext,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
+        })
+
+        return {
+          message: 'Asignación creada correctamente',
+          asignacion: {
+            id: asignacion.id,
+            empleado: empleado.nombre + ' ' + empleado.apellido_paterno,
+            equipo: equipo.equipo,
+            fechaAsignacion
+          }
+        }
+      } catch (error) {
+        await transaction.rollback()
+
+        logger.logDBTransaction('AGREGAR_ASIGNACION', 'rolled_back', {
+          error: error.message,
+          correlationId: logContext.correlationId
+        })
+
+        throw error
+      }
+    } catch (error) {
+      logger.logError(error, {
+        ...logContext,
+        stack: error.stack
       })
-      // obtenemos datos de empleado
-      const empleado = await Empleados.findByPk({
-        where: { id: usuarioId },
-        attributes: ['nombre', 'apellido_paterno', 'estado'],
-        transaction
+
+      if (error instanceof CustomError) throw error
+
+      throw new DatabaseError('Error al crear asignación', {
+        originalError: error.message,
+        context: logContext
       })
-      if (!empleado) throw new NotFoundError(`No se encontraron datos del Empleado con id:${usuarioId}`)
-
-      // guardamos responsiva en directorio
-      const { relativePath } = await guardarResponsiva({ documento: responsiva, empleado: `${empleado.nombre}_${empleado.apellido_paterno}` })
-
-      // actualizamos estado de empleado
-      empleado.estado = 'asignado'
-      await empleado.save({ transaction })
-
-      // actulizar equipo
-      const equipo = await Equipos.findByPk({ id: equipoId })
-      equipo.estado = 'asignado'
-      await equipo.save({ transaction })
-
-      // creamos asginacion
-      await Asignaciones.create({ id_empleado: usuarioId, id_equipo: equipoId, fecha_asignacion: fechaAsignacion, ubicacion, responsiva: relativePath }, { transaction })
-      await transaction.commit()
-      logger.info('Asignación completada exitosamente', {
-        empleadoId: usuarioId,
-        equipoId
-      })
-      return { message: `Aginacion de equipo agregada correctamente a:${empleado.nombre}` }
-    } catch (e) {
-      await transaction.rollback()
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al crear al usuario')
     }
   }
 }

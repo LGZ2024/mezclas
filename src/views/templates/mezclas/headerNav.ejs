@@ -2,11 +2,11 @@
     <div class="header__container">
         <!-- Logo -->
         <div class="header__logo">
-            <img src="../img/LogoTransp.svg" alt="Logo Empresa" class="logo__img" loading="lazy">
+            <img src="../images/LogoTransp.webp" alt="Logo Empresa" class="logo__img" loading="lazy">
         </div>
 
         <!-- Navegación Principal -->
-        <nav class="header__nav" role="navigation">
+        <!-- <nav class="header__nav" role="navigation">
             <ul class="nav__list">
                 <li class="nav__item">
                     <a href="/protected/admin" class="nav__link">
@@ -15,9 +15,10 @@
                     </a>
                 </li>
             </ul>
-        </nav>
+        </nav> -->
 
         <!-- Área de Usuario y Notificaciones -->
+        <% if ( rol==="mezclador" || rol==="solicita" || rol==="solicita2" ) { %>
         <div class="header__user">
             <!-- Notificaciones -->
             <div class="notifications" role="complementary">
@@ -37,28 +38,28 @@
             </div>
 
             <!-- Perfil Usuario -->
-            <div class="user-profile">
-                <button class="user-profile__btn" aria-label="Menú de usuario">
-                    <span class="user-profile__name">
-                        <%= nombre %>
-                    </span>
-                    <i class="fas fa-chevron-down"></i>
-                </button>
-                <div class="user-profile__dropdown" id="userDropdown">
-                    <a href="/protected/admin" class="dropdown__link">
-                        <i class="fas fa-user"></i>
-                        <span>Mi Perfil</span>
-                    </a>
-                    <a href="/protected/cerrarSesion" class="dropdown__link" id="cerrarSesion">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Cerrar Sesión</span>
-                    </a>
+                <div class="user-profile">
+                    <button class="user-profile__btn" aria-label="Menú de usuario">
+                        <span class="user-profile__name">
+                            <%= nombre %>
+                        </span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-profile__dropdown" id="userDropdown">
+                        <a href="/protected/admin" class="dropdown__link">
+                            <i class="fas fa-user"></i>
+                            <span>Mi Perfil</span>
+                        </a>
+                        <a href="/protected/cerrarSesion" class="dropdown__link" id="cerrarSesion">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Cerrar Sesión</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
+        <% } %>
     </div>
 </header>
 
 <!-- Backdrop para móviles -->
 <div class="dropdown-backdrop" id="dropdownBackdrop"></div>
-

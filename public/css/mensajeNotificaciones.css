@@ -1,5 +1,128 @@
+/* Variables y configuración base */
+:root {
+  --primary: #007bff;
+  --success: #28a745;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --light: #f8f9fa;
+  --dark: #343a40;
+  --border: #dee2e6;
+  --radius: 0.375rem;
+  --shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-    /* Variables CSS */
+/* Estructura básica */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Mejoras de formularios */
+.formulario__campo {
+  margin-bottom: 1.5rem;
+}
+
+.formulario__label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.formulario__input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease-in-out;
+}
+
+.formulario__input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.formulario__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  font-weight: 500;
+  color: white;
+  background-color: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.formulario__submit:hover {
+  background-color: #0056b3;
+}
+
+/* Optimizaciones táctiles y móviles */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+
+  .formulario__input,
+  .formulario__submit {
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  .formulario__submit {
+    width: 100%;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 0.625rem 1rem;
+  }
+
+  .table-responsive {
+    margin: 0 -1rem;
+    width: calc(100% + 2rem);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table th,
+  .table td {
+    white-space: nowrap;
+  }
+}
+
+/* Estados de botones y elementos interactivos */
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-success {
+  background-color: var(--success);
+  border-color: var(--success);
+}
+
+.btn-warning {
+  background-color: var(--warning);
+  border-color: var(--warning);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Variables CSS */
 :root {
     --color-primario: #4a90e2;
     --color-borde: #ddd;
@@ -148,4 +271,161 @@
 .notification-show {
     display: block;
     animation: slideIn 0.3s ease forwards;
+}
+
+/* Contenedor principal */
+.formularios {
+  padding: 1rem;
+}
+
+/* Cards y contenedores */
+.card {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Formularios */
+.formulario__campo {
+  margin-bottom: 1.5rem;
+}
+
+.formulario__label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.formulario__input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+}
+
+.formulario__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  touch-action: manipulation;
+}
+
+/* Tablas responsivas */
+.table-responsive {
+  margin-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optimizaciones móviles */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+
+  .formulario__input,
+  .formulario__submit,
+  .btn {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  .formulario__submit {
+    width: 100%;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 0.625rem 1rem;
+  }
+
+  .table-responsive {
+    margin: 0 -1rem;
+    width: calc(100% + 2rem);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table th,
+  .table td {
+    white-space: nowrap;
+  }
+
+  .products-list {
+    margin: 0 -1rem;
+  }
+
+  .message-section {
+    padding: 1rem 0;
+  }
+
+  /* Mejorar legibilidad */
+  .text-muted {
+    font-size: 0.875rem;
+  }
+
+  .small {
+    font-size: 0.8125rem;
+  }
+
+  h3, .h3 {
+    font-size: 1.5rem;
+  }
+
+  h4, .h4 {
+    font-size: 1.25rem;
+  }
+
+  /* Mejor interacción táctil */
+  .btn:active,
+  .formulario__submit:active {
+    transform: scale(0.98);
+  }
+
+  .notification-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Notificaciones */
+.notification {
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.notification-body {
+  margin-top: 0.5rem;
+}
+
+/* Elementos específicos */
+#spinner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }

@@ -124,15 +124,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const url = '/api/mezclasConfirmar/' + idSolicitud
       try {
         const response = await fetchApi(url, 'PATCH')
-        console.log(response)
+        const responseData = await response.json()
         if (!response.ok) {
           return mostrarMensaje({
-            msg: response.message,
+            msg: responseData.message,
             type: 'error'
           })
         }
         mostrarMensaje({
-          msg: response.message,
+          msg: responseData.message,
           type: 'success',
           redirectUrl: '/protected/admin'
         })

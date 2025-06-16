@@ -2,175 +2,182 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Mezclas</title>
-    <%- include("../../templates/mezclas/cabecera") %>
-    <link rel="stylesheet" href="../css/solicitudProductos.css">
-    <link rel="stylesheet" href="../css/spinner.css">
-    <script src="../vendors/sweetalert/sweetalert.js"> </script>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/solicitudProductos.css">
+            <link rel="stylesheet" href="../css/spinner.css">
+            <script src="../vendors/sweetalert/sweetalert.js"> </script>
 </head>
 
 <body>
-    <!-- spinner -->
-    <div class="spinner-overlay" id="spinner" style="display: none;">
-        <div class="spinner-container">
-            <div class="spinner"></div>
-            <p class="spinner-text">Procesando...</p>
-        </div>
-    </div>
-    <header>
-        <div class="barra contenedor">
-            <div class="barra__logo">
-                <img src="../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
+    <%- include("../../templates/mezclas/headerNav") %>
+        <!-- spinner -->
+        <div class="spinner-overlay" id="spinner" style="display: none;">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <p class="spinner-text">Procesando...</p>
             </div>
-
-            <nav class="barra__navegacion">
-                <a class="barra__link" id="inicio"></a>
-            </nav>
-
-            <nav class="barra__login">
-                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
-            </nav>
         </div>
-    </header>
 
-    <section class="formularios">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <form class="form" id="recetaForm" novalidate>
-                                <div class="card">
-                                    <div class="titulo">
-                                        <div class="col">
-                                            <button type="button" class="formulario__submit" id="regresar">
-                                                <span class="mdi mdi-arrow-left-bold"></span>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="recetaForm" novalidate>
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit" id="regresar">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    <p id="titulo"></p>
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+
+                                        <div class="formulario__campo" id="campoRancho" style="display: block;">
+                                            <label class="formulario__label" for="rancho">Rancho destino</label>
+                                            <select id="rancho" class="formulario__input" required>
+                                                <option value="">Seleccione un rancho</option>
+                                                <% ranchos.forEach(function(rancho) { %>
+                                                    <option value="<%= rancho %>">
+                                                        <%= rancho %>
+                                                    </option>
+                                                    <% }); %>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoCentro" style="display: block;">
+                                            <label class="formulario__label" for="centroCoste">Centro de coste</label>
+                                            <select id="centroCoste" class="formulario__input" required>
+                                                <option value="">Seleccione un centro de coste</option>
+                                                <!-- Se poblará dinámicamente con JavaScript -->
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoVariedad" style="display: block;">
+                                            <label class="formulario__label" for="variedad">Variedades</label>
+                                            <select id="variedad" class="formulario__input" required>
+                                                <option value="">Seleccione una variedad</option>
+                                                <!-- Se poblará dinámicamente con JavaScript -->
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoFolio" style="display: block;">
+                                            <label class="formulario__label" for="folio">Folio de receta</label>
+                                            <input type="text" id="folio" class="formulario__input"
+                                                placeholder="Ingrese el folio de receta" required>
+                                        </div>
+
+
+                                        <div class="formulario__campo" id='campoAlmacen' style="display: block;">
+                                            <label class="formulario__label" for="almacen">Almacen</label>
+                                            <select id="almacen" class="formulario__input" required>
+                                                <option value="">Seleccione un almacén</option>
+                                                <% if (typeof almacen !=='undefined' && almacen.length> 0) { %>
+                                                    <% almacen.forEach(function(almacen) { %>
+                                                        <option value="<%= almacen %>">
+                                                            <%= almacen %>
+                                                        </option>
+                                                        <% }); %>
+                                                            <% } else { %>
+                                                                <option value="">No hay almacenes disponibles</option>
+                                                                <% } %>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="temporada">Temporada</label>
+                                            <select id="temporada" class="formulario__input" required>
+                                                <option value="">Seleccione una temporada</option>
+                                                <option value="Julio23-Junio24">Julio23-Junio24</option>
+                                                <option value="Julio24-Junio25">Julio24-Junio25</option>
+                                                <option value="Julio25-Junio26">Julio25-Junio26</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoUnidad" style="display: block;">
+                                            <label class="formulario__label" for="presentacion">Presentación de
+                                                mezcla</label>
+                                            <select id="presentacion" class="formulario__input" required>
+                                                <option value="">Seleccione una presentación</option>
+                                                <option value="Willi">Willi</option>
+                                                <option value="Barril">Barril</option>
+                                                <option value="Garrafa">Garrafa</option>
+                                                <option value="Otro">Otro</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoCantidad" style="display: block;">
+                                            <label class="formulario__label" for="cantidad">Cantidad de mezcla</label>
+                                            <input type="text" id="cantidad" class="formulario__input"
+                                                placeholder="Ingrese la cantidad de mezcla" required>
+                                        </div>
+
+
+                                        <div class="formulario__campo" id="campoMetodo" style="display: block;">
+                                            <label class="formulario__label" for="metodoAplicacion">Método de
+                                                Aplicación</label>
+                                            <select id="metodoAplicacion" class="formulario__input" required>
+                                                <option value="">Seleccione un método</option>
+                                                <option value="Foliar">Foliar</option>
+                                                <option value="Drench">Drench</option>
+                                                <option value="Trampeo">Trampeo</option>
+                                                <option value="Herbicida">Herbicida</option>
+                                                <option value="Termonebulizacion">Termonebulización</option>
+                                                <option value="Filtro">Filtro</option>
+                                                <option value="Riego">Riego</option>
+                                                <option value="Preparacion de Tierras">Preparación de Tierras</option>
+                                                <option value="Enmienda">Enmienda</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoDescripcion" style="display: block;">
+                                            <label class="formulario__label" for="descripcion">Descripción</label>
+                                            <textarea id="descripcion" class="formulario__input"
+                                                placeholder="Ingrese una descripción" rows="3" required></textarea>
+                                        </div>
+                                        <label class="formulario__label">Productos</label>
+                                        <div id="productosContainer">
+
+                                            <!-- Agregar más campos de producto según sea necesario -->
+                                        </div>
+
+
+                                        <div class="formulario__campo">
+                                            <button type="button" class="formulario__submit" id="agregarProducto">
+                                                + Agregar Producto
                                             </button>
                                         </div>
-                                        <div class="text-center">
-                                            <h3><p id="titulo"></p></h3>
+
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit" id="btnSolicitar">
+                                                Solicitar Mezcla
+                                            </button>
                                         </div>
                                     </div>
-                                    <hr>
-
-                                    <div class="formulario__campo">
-                                        <label class="formulario__label" for="rancho">Rancho destino</label>
-                                        <select id="rancho" class="formulario__input" required>
-                                            <option value="">Seleccione un rancho</option>
-                                            <% ranchos.forEach(function(rancho) { %>
-                                                <option value="<%= rancho %>">
-                                                    <%= rancho %>
-                                                </option>
-                                                <% }); %>
-                                        </select>
-                                    </div>
-
-                                    <div class="formulario__campo">
-                                        <label class="formulario__label" for="centroCoste">Centro de coste</label>
-                                        <select id="centroCoste" class="formulario__input" required>
-                                            <option value="">Seleccione un centro de coste</option>
-                                            <!-- Se poblará dinámicamente con JavaScript -->
-                                        </select>
-                                    </div>
-
-                                    <div class="formulario__campo">
-                                        <label class="formulario__label" for="variedad">Variedades</label>
-                                        <select id="variedad" class="formulario__input" required>
-                                            <option value="">Seleccione una variedad</option>
-                                            <!-- Se poblará dinámicamente con JavaScript -->
-                                        </select>
-                                    </div>
-
-                                    <div class="formulario__campo" id="campoFolio" style="display: block;">
-                                        <label class="formulario__label" for="folio">Folio de receta</label>
-                                        <input type="text" id="folio" class="formulario__input"
-                                            placeholder="Ingrese el folio de receta" required>
-                                    </div>
-
-                                    <div class="formulario__campo">
-                                        <label class="formulario__label" for="temporada">Temporada</label>
-                                        <select id="temporada" class="formulario__input" required>
-                                            <option value="">Seleccione una temporada</option>
-                                            <option value="Julio23-Junio24">Julio23-Junio24</option>
-                                            <option value="Julio24-Junio25">Julio24-Junio25</option>
-                                            <option value="Julio25-Junio26">Julio25-Junio26</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="formulario__campo" id="campoUnidad" style="display: block;">
-                                        <label class="formulario__label" for="presentacion">Presentación de
-                                            mezcla</label>
-                                        <select id="presentacion" class="formulario__input" required>
-                                            <option value="">Seleccione una presentación</option>
-                                            <option value="Willi">Willi</option>
-                                            <option value="Barril">Barril</option>
-                                            <option value="Garrafa">Garrafa</option>
-                                            <option value="Otro">Otro</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="formulario__campo" id="campoCantidad" style="display: block;">
-                                        <label class="formulario__label" for="cantidad">Cantidad de mezcla</label>
-                                        <input type="text" id="cantidad" class="formulario__input"
-                                            placeholder="Ingrese la cantidad de mezcla" required>
-                                    </div>
-
-
-                                    <div class="formulario__campo">
-                                        <label class="formulario__label" for="metodoAplicacion">Método de
-                                            Aplicación</label>
-                                        <select id="metodoAplicacion" class="formulario__input" required>
-                                            <option value="">Seleccione un método</option>
-                                            <option value="Foliar">Foliar</option>
-                                            <option value="Drench">Drench</option>
-                                            <option value="Trampeo">Trampeo</option>
-                                            <option value="Herbicida">Herbicida</option>
-                                            <option value="Termonebulizacion">Termonebulización</option>
-                                            <option value="Filtro">Filtro</option>
-                                            <option value="Riego">Riego</option>
-                                            <option value="Preparacion de Tierras">Preparación de Tierras</option>
-                                            <option value="Enmienda">Enmienda</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="formulario__campo">
-                                        <label class="formulario__label" for="descripcion">Descripción</label>
-                                        <textarea id="descripcion" class="formulario__input"
-                                            placeholder="Ingrese una descripción" rows="3"></textarea>
-                                    </div>
-                                    <label class="formulario__label">Productos</label>
-                                    <div id="productosContainer">
-  
-                                        <!-- Agregar más campos de producto según sea necesario -->
-                                    </div>
-
-
-                                    <div class="formulario__campo">
-                                        <button type="button" class="formulario__submit" id="agregarProducto">
-                                            + Agregar Producto
-                                        </button>
-                                    </div>
-
-                                    <div class="formulario__campo">
-                                        <button type="submit" class="formulario__submit" id="btnSolicitar">
-                                            Solicitar Mezcla
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-    <!-- agrgamos modal -->
-    <%- include("../../templates/mezclas/modalCambioPorcentaje") %>
-        <!-- Firebase Configuración y funciones -->
-        <%- include("../../templates/mezclas/scripts") %>
-            <script type="module" src="../../app/solicitud/solicitarMezcla.js"></script>
+        </section>
+
+        <!-- agrgamos modal -->
+        <%- include("../../templates/mezclas/modalCambioPorcentaje") %>
+            <!-- Firebase Configuración y funciones -->
+            <%- include("../../templates/mezclas/scripts") %>
+                <script type="module" src="../app/main.js"></script>
+                <script type="module" src="../../app/solicitud/solicitarMezcla.js"></script>
 </body>
 
 </html>

@@ -5,6 +5,7 @@ import { Solicitud } from '../schema/mezclas.js'
 import { SolicitudProductos } from '../schema/solicitud_receta.js'
 import { Productos } from '../schema/productos.js'
 import { Recetas } from '../schema/recetas.js'
+import { Devoluciones } from '../schema/devoluciones.js'
 // logger
 import logger from '../utils/logger.js'
 
@@ -14,12 +15,12 @@ export function setupAssociations () {
     foreignKey: 'idUsuarioSolicita'
   })
 
-  // Solicitud.belongsTo(Usuario, {
-  //   foreignKey: 'idUsuarioMezcla'
-  // })
-
   Solicitud.belongsTo(Centrocoste, {
     foreignKey: 'idCentroCoste'
+  })
+
+  Devoluciones.belongsTo(Usuario, {
+    foreignKey: 'idUsuarioSolicita'
   })
 
   // Asociaciones para productos Solicitud

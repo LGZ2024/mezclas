@@ -19,6 +19,7 @@ export const createProtetedRouter = () => {
   router.get('/notificacion/:idSolicitud', asistenciaController.notificacion)
   router.get('/confirmacion', asistenciaController.confirmacion)
   router.get('/canceladas/', asistenciaController.canceladas)
+  router.get('/registrarSolicitud/', asistenciaController.RegitrarSolicitud) // registrar solicitud completadas
 
   // cerrar sesion
   router.get('/cerrarSesion', asistenciaController.logout) // logear usuario

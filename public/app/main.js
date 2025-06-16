@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   // Llamar después de initializeEventListeners
-  initializeMobileEvents()
+  // initializeMobileEvents()
 
   // Modificar initializeEventListeners para usar los handlers globales
   const initializeEventListeners = () => {
@@ -296,35 +296,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // obtenemos las notificaciones del usuario
-  const obtenerNotificaciones = async () => {
-    try {
-      const response = await fetch('/api/notificaciones')
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const data = await response.json()
+  // const obtenerNotificaciones = async () => {
+  //   try {
+  //     const response = await fetch('/api/notificaciones')
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`)
+  //     }
+  //     const data = await response.json()
 
-      // Mostrar notificaciones no leídas
-      // data.filter(notif => !notif.leida).forEach(async (element) => {
-      //   await window.addNotification(element.mensaje, element.id_solicitud, element.id)
-      // })
+  //     // Mostrar notificaciones no leídas
+  //     // data.filter(notif => !notif.leida).forEach(async (element) => {
+  //     //   await window.addNotification(element.mensaje, element.id_solicitud, element.id)
+  //     // })
 
-      return data
-    } catch (error) {
-      console.error('Error fetching notificaciones:', error)
-      throw error
-    }
-  }
+  //     return data
+  //   } catch (error) {
+  //     console.error('Error fetching notificaciones:', error)
+  //     throw error
+  //   }
+  // }
 
-  obtenerNotificaciones().then((data) => {
-    // Mostrar notificaciones no leídas
-    data.filter(notif => !notif.leida).forEach(async (element) => {
-      await window.addNotification(element.mensaje, element.id_solicitud, element.id)
-    })
-  }).catch(error => {
-    console.error('Error al cargar notificaciones:', { error })
-    showError('Error al cargar las notificaciones')
-  })
+  // obtenerNotificaciones().then((data) => {
+  //   // Mostrar notificaciones no leídas
+  //   data.filter(notif => !notif.leida).forEach(async (element) => {
+  //     await window.addNotification(element.mensaje, element.id_solicitud, element.id)
+  //   })
+  // }).catch(error => {
+  //   console.error('Error al cargar notificaciones:', { error })
+  //   showError('Error al cargar las notificaciones')
+  // })
 
   const showError = (message) => {
     console.error(message)
@@ -380,7 +380,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }, 100)
-
   const updateNotificationCount = (increment = true) => {
     const count = parseInt(elements.notifCount.textContent) || 0
     const newCount = increment ? count + 1 : count - 1
@@ -403,6 +402,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const btnSolicitar = document.getElementById('solicitar')
+  const btnSolicitud = document.getElementById('solicitud')
+  const btnPreparadas = document.getElementById('preparadas')
+  const btnEntregadas = document.getElementById('entregadas')
+  const canceladas = document.getElementById('canceladas')
   if (btnSolicitar) {
     btnSolicitar.addEventListener('click', () => {
       window.location.href = '/protected/solicitud'
@@ -410,17 +413,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     console.log('No se encontró el botón')
   }
-
-  document.getElementById('solicitud').addEventListener('click', () => {
-    window.location.href = '/protected/solicitudes'
-  })
-  document.getElementById('preparadas').addEventListener('click', () => {
-    window.location.href = '/protected/proceso'
-  })
-  document.getElementById('entregadas').addEventListener('click', () => {
-    window.location.href = '/protected/completadas'
-  })
-  document.getElementById('canceladas').addEventListener('click', () => {
-    window.location.href = '/protected/canceladas'
-  })
+  if (canceladas) {
+    canceladas.addEventListener('click', () => {
+      window.location.href = '/protected/canceladas'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+  if (btnSolicitud) {
+    btnSolicitud.addEventListener('click', () => {
+      window.location.href = '/protected/solicitudes'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+  if (btnPreparadas) {
+    btnPreparadas.addEventListener('click', () => {
+      window.location.href = '/protected/proceso'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+  if (btnEntregadas) {
+    btnEntregadas.addEventListener('click', () => {
+      window.location.href = '/protected/completadas'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
 })

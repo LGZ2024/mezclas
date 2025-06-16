@@ -4,6 +4,17 @@ import jwt from 'jsonwebtoken'
 import { Op } from 'sequelize'
 import { envs } from '../config/env.mjs'
 import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
+import logger from '../utils/logger.js'
+import { DbHelper } from '../utils/dbHelper.js'
+/**
+Los operadores de Sequelize (Op) son necesarios para realizar consultas complejas. Algunos operadores comunes son:
+Op.eq: Igual
+Op.ne: No igual
+Op.gt: Mayor que
+Op.lt: Menor que
+Op.in: Dentro de un array
+Op.like: Búsqueda con comodín
+ */
 export class UsuarioModel {
   // obtener todos los datos
   static async getAll () {
@@ -19,6 +30,64 @@ export class UsuarioModel {
     } catch (e) {
       if (e instanceof CustomError) throw e
       throw new DatabaseError('Error al obtener todos los usuarios')
+    }
+  }
+
+  static async getUsuarios ({ nombre, rol, empresa }) {
+    const logContext = {
+      operation: 'getUsuarios Model',
+      nombre,
+      rol,
+      empresa,
+      timestamp: new Date().toISOString()
+    }
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!nombre || !rol || !empresa) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
+
+      // Filtrar por empresa y rancho no nulo
+      if (empresa === 'Bioagricultura' && rol === 'adminMezclador') {
+        const usuario = await Usuario.findAll({
+          attributes: ['id', 'nombre', 'rol', 'empresa', 'ranchos'],
+          where: {
+            empresa,
+            rol: { [Op.in]: ['solicita', 'solicita2'] }, // Filtrar por rol
+            ranchos: { [Op.ne]: 'Ahualulco' } // Filtrar por rancho no nulo
+          }
+        })
+        // Verificar si se encontraron resultados
+        if (usuario.length === 0) {
+          throw new NotFoundError('No se encontraron usuarios para los criterios especificados')
+        }
+        return usuario
+      } else if (empresa === 'General' && rol === 'adminMezclador') {
+        const usuario = await Usuario.findAll({
+          attributes: ['id', 'nombre', 'rol', 'empresa', 'ranchos'],
+          where: {
+            empresa,
+            rol: { [Op.in]: ['solicita', 'solicita2'] }, // Filtrar por rol
+            ranchos: { [Op.eq]: 'Ahualulco' } // Filtrar por rancho no nulo
+          }
+        })
+        // Verificar si se encontraron resultados
+        if (usuario.length === 0) {
+          throw new NotFoundError('No se encontraron usuarios para los criterios especificados')
+        }
+        return usuario
+      }
+      return { message: 'No se encontraron usuarios para los criterios especificados' }
+    } catch (e) {
+      logger.logError(e, {
+        ...logContext,
+        stack: e.stack
+      })
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener todos los usuarios', {
+        originalError: e.message,
+        context: logContext
+      })
     }
   }
 
@@ -62,6 +131,30 @@ export class UsuarioModel {
         where: {
           rol, // Se filtra por rol
           empresa, // Se filtra por empresa
+          ranchos: rancho // Se filtra por rancho
+        }
+      })
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new NotFoundError('No se encontraron usuarios para los criterios especificados')
+      }
+      return usuario
+    } catch (e) {
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener todos los usuarios')
+    }
+  }
+
+  static async getUserEmailRanchoRol ({ rol, rancho }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !rancho) {
+        throw new ValidationError('Datos requeridos no proporcionados')
+      }
+      const usuario = await Usuario.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol, // Se filtra por rol
           ranchos: rancho // Se filtra por rancho
         }
       })
@@ -141,8 +234,15 @@ export class UsuarioModel {
         throw new NotFoundError('No se encontraron usuarios para los criterios especificados')
       }
       return usuario
-    } catch (e) {
-      if (e instanceof CustomError) throw e
+    } catch (error) {
+      logger.error('Error al determinar destinatarios de notificación', {
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        }
+      })
+      if (error instanceof CustomError) throw error
       throw new DatabaseError('Error al obtener todos los usuarios')
     }
   }
@@ -230,43 +330,55 @@ export class UsuarioModel {
   }
 
   // funcion login
-  static async login ({ user, password }) {
-    try {
+  static async login ({ user, password, logContext, logger }) {
+    return await DbHelper.executeQuery(async () => {
+      try {
       // Verificar si se proporcionaron los parámetros requeridos
-      if (!user || !password) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+        if (!user || !password) {
+          throw new ValidationError('Datos requeridos no proporcionados')
+        }
+
+        const usuario = await Usuario.findOne({ where: { usuario: user } })
+        if (!usuario) throw new NotFoundError('Usuario no encontrado')
+
+        const isValidPassword = await bcrypt.compare(password, usuario.password)
+        if (!isValidPassword) throw new ValidationError('Contraseña incorrecta')
+
+        // creamos jwt
+        const token = jwt.sign({ id: usuario.id, nombre: usuario.nombre, rol: usuario.rol, empresa: usuario.empresa, ranchos: usuario.ranchos, cultivo: usuario.variedad }, envs.SECRET_JWT_KEY, { expiresIn: '24h' })
+
+        return { message: 'Usuario logueado correctamente', token, rol: usuario.rol }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          error: error.message
+        })
+        if (error instanceof CustomError) throw error
+        throw new DatabaseError('Error al iniciar sesión')
       }
-
-      const usuario = await Usuario.findOne({ where: { usuario: user } })
-      if (!usuario) throw new NotFoundError('Usuario no encontrado')
-
-      const isValidPassword = await bcrypt.compare(password, usuario.password)
-      if (!isValidPassword) throw new ValidationError('Contraseña incorrecta')
-
-      // creamos jwt
-      const token = jwt.sign({ id: usuario.id, nombre: usuario.nombre, rol: usuario.rol, empresa: usuario.empresa, ranchos: usuario.ranchos, cultivo: usuario.variedad }, envs.SECRET_JWT_KEY, { expiresIn: '24h' })
-
-      return { message: 'Usuario logueado correctamente', token, rol: usuario.rol }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al iniciar sesión')
-    }
+    })
   }
 
   // funcion cambiar contraseña usuario
-  static async changePassword ({ id, oldPassword, newPassword }) {
-    try {
-      const usuario = await Usuario.findByPk(id)
-      if (!usuario) return { error: 'usuario no encontrado' }
-      const isValidPassword = await bcrypt.compare(oldPassword, usuario.password)
-      if (!isValidPassword) return { error: 'contraseña actual incorrecta' }
-      usuario.password = newPassword
-      await usuario.save()
-      return { message: 'contraseña cambiada correctamente' }
-    } catch (e) {
-      console.error(e.message)
-      return { error: 'Error al cambiar contraseña' }
-    }
+  static async changePassword ({ id, oldPassword, newPassword, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        const usuario = await Usuario.findByPk(id)
+        if (!usuario) return { error: 'usuario no encontrado' }
+        const isValidPassword = await bcrypt.compare(oldPassword, usuario.password)
+        if (!isValidPassword) return { error: 'contraseña actual incorrecta' }
+        usuario.password = newPassword
+        await usuario.save({ transaction })
+        return { message: 'contraseña cambiada correctamente' }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          error: error.message
+        })
+        if (error instanceof CustomError) throw error
+        throw new ValidationError('Error al actulizar la contraseña')
+      }
+    })
   }
 
   // funcion cambiar contraseña Admin

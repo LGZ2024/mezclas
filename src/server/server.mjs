@@ -19,9 +19,9 @@ import { paths } from '../config/paths.js'
 import { corsMiddleware } from '../middlewares/cors.js'
 import { validateJSON } from '../middlewares/validateJsonMiddleware.js'
 import { error404, errorHandler } from '../middlewares/error500Middleware.js'
-import { apiLimiter } from '../middlewares/rateLimit.js'
+// import { apiLimiter } from '../middlewares/rateLimit.js'
 import { authenticate } from '../middlewares/authMiddleware.js'
-
+import { correlationMiddleware } from '../middlewares/correlationMiddleware.js'
 // Rutas
 import { createProtetedRouter } from '../routes/proteted.routes.js' // protegidas
 import { createUsuarioRouter } from '../routes/usuario.routes.js'
@@ -34,7 +34,7 @@ import { createNotificacionesRouter } from '../routes/notificaciones.routes.js'
 import { createEquiposRouter } from '../routes/equipos.routes.js'
 import { createEmpleadosRouter } from '../routes/empleados.routes.js'
 import { createUploadsRouter } from '../routes/uploads.routes.js'
-
+import { createDevolucionRouter } from '../routes/devolucion.routes.js'
 // Models
 import { UsuarioModel } from '../models/usuario.models.js'
 import { CentroCosteModel } from '../models/centro.models.js'
@@ -45,7 +45,7 @@ import { ProduccionModel } from '../models/produccion.models.js'
 import { NotificacionModel } from '../models/notificaciones.models.js'
 import { EquiposModel } from '../models/equipos.models.js'
 import { EmpleadosModel } from '../models/empleados.models.js'
-
+import { DevolucionModel } from '../models/devolucion.models.js'
 // Asociaciones
 import { setupAssociations } from '../models/modelAssociations.js'
 
@@ -69,13 +69,11 @@ export const startServer = async (options) => {
   // Middlewares
   if (MODE === 'development') {
     loggerWiston.info('🔧 Modo de desarrollo')
-    // console.log('🔧 Modo de desarrollo')
-    // app.use(logger('dev'))
   } else {
     loggerWiston.info('📦 Modo de producción')
-    // console.log('📦 Modo de producción')
-    // app.use(logger('combined'))
   }
+  // Agregar middleware de correlación
+  app.use(correlationMiddleware)
 
   app.use(compression({
     filter: (req, res) => {
@@ -136,10 +134,10 @@ export const startServer = async (options) => {
     extended: true
   }))
 
-  if (MODE !== 'development') {
-    loggerWiston.info('🔒 limite de peticiones por IP Activado')
-    app.use(apiLimiter) // Limitar el número de peticiones por IP
-  }
+  // if (MODE !== 'development') {
+  //   loggerWiston.info('🔒 limite de peticiones por IP Activado') // eslint-disable-line no-console
+  //   app.use(apiLimiter) // Limitar el número de peticiones por IP
+  // }
 
   // Validar que la documentación está disponible solo en desarrollo
   if (MODE === 'development') {
@@ -154,9 +152,9 @@ export const startServer = async (options) => {
   app.use('/api/', authenticate, createProductosSoliRouter({ productossModel: SolicitudRecetaModel }))
   app.use('/api/', authenticate, createNotificacionesRouter({ notificacionModel: NotificacionModel }))
   app.use('/api/', authenticate, createProduccionRouter({ produccionModel: ProduccionModel }))
-  app.use('/api/', authenticate, createProductosRouter({ productosModel: ProductosModel }))
   app.use('/api/', authenticate, createEquiposRouter({ equiposModel: EquiposModel }))
   app.use('/api/', authenticate, createEmpleadosRouter({ empleadosModel: EmpleadosModel }))
+  app.use('/api/', createDevolucionRouter({ devolucionModel: DevolucionModel }))
 
   // rutas Protegidas
   app.use('/protected/', authenticate, createProtetedRouter())
@@ -172,7 +170,6 @@ export const startServer = async (options) => {
     res.render('main', { error: null, registerError: null })
   })
 
-  // contenido estatico que ponemos disponible
   app.use(express.static(paths.public))
 
   // Manejo de errores 404
@@ -180,16 +177,28 @@ export const startServer = async (options) => {
 
   // Manejo de errores 500
   app.use(errorHandler)
-
   try {
-    // Configurar asociaciones antes de sincronizar
+    // Verificar conexión a la base de datos antes de iniciar
+    await sequelize.authenticate({
+      retry: {
+        max: 3,
+        timeout: 10000
+      }
+    })
+    // asociaciones antes de sincronizar
     setupAssociations()
     await sequelize.sync()
     loggerWiston.info('📦 Base de datos conectada y sincronizada')
     // Iniciamos el servidor en el puerto especificado
     app.listen(PORT, () => loggerWiston.info(`🚀 Servidor corriendo en puerto ${PORT}`))
   } catch (error) {
-    loggerWiston.error('❌ Error al iniciar:', error)
-    // process.exit(1)
+    loggerWiston.error('❌ Error al iniciar:', {
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      }
+    })
+    process.exit(1)
   }
 }

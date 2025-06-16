@@ -5,7 +5,7 @@ import { inicializarFormulario } from './listaProductos.js'
 import { mostrarMensaje } from '../mensajes.js'
 import { enviarEstadoProductos } from './enviarEstado.js'
 import { descargarExcel, descargarReporte } from './reporte.js'
-import { closeNotification, mostrarNotificacion } from '../notificacion.js'
+import { closeNotification } from '../notificacion.js'
 import { showSpinner, hideSpinner } from '../spinner.js'
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabla = document.getElementById('tbSolicitadas')
   const reporte = document.getElementById('reporte')
   const formEmpresa = document.getElementById('empresaForm')
-  const mensajess = document.getElementById('mensajes')
-  const idSolicitud = document.getElementById('idSolicitud')
+  // const mensajess = document.getElementById('mensajes')
+  // const idSolicitud = document.getElementById('idSolicitud')
 
   // metodo boton receta
   document.getElementById('receta').addEventListener('click', async (e) => {
@@ -158,10 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       try {
         const response = await fechSolicitudProceso({ data, id: idSolicitud })
+
         if (response.error) {
           hideSpinner()
           return mostrarMensaje({
-            msg: response.error,
+            msg: response.message,
             type: 'error'
           })
         }
@@ -285,9 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('Button with ID "reporte" not found.')
   }
 
-  if (mensajess && idSolicitud) {
-    mostrarNotificacion(mensajess.value, new Date(), idSolicitud.value)
-  } else {
-    console.warn('Mensaje no encontrado')
-  }
+  // if (mensajess && idSolicitud) {
+  //   mostrarNotificacion(mensajess.value, new Date(), idSolicitud.value)
+  // } else {
+  //   console.warn('Mensaje no encontrado')
+  // }
 })

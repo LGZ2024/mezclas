@@ -116,10 +116,13 @@ const verRegistro = async () => {
             data: 'id',
             render: function (data, type, row) {
               // al boton le pasaremos data para obtenerlo con el evento del botton
-              return `
+              if (rol === 'admin') {
+                return `
                     <button type="button" data-id="${data}" id="btnEdit" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop")"><i class="mdi mdi-border-color"></i></button>
                     <button type="button" data-id="${data}" id="btnDelete" class="btn btn-danger")"><i class="mdi mdi-delete"></i></button>
                   `
+              }
+              return 'No autorizado'
             }
           }
         ]

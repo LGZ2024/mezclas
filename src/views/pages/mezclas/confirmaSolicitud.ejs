@@ -2,12 +2,10 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Mezclas</title>
-    <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
-    <link rel="stylesheet" href="../../css/spinner.css">
-    <%- include("../../templates/mezclas/cabecera") %>
+    <%- include("../../templates/head-pwa") %>
+        <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
+        <link rel="stylesheet" href="../../css/spinner.css">
+        <%- include("../../templates/mezclas/cabecera") %>
 
 </head>
 
@@ -20,83 +18,75 @@
             <p class="spinner-text">Procesando...</p>
         </div>
     </div>
-    <header>
-        <div class="barra contenedor">
-            <div class="barra__logo">
-                <img src="../img/LogoTransp.svg" alt="Logo de Viaje" style="width: 50px; height: 50px;margin: 10px">
-            </div>
 
-            <nav class="barra__navegacion">
-                <a class="barra__link" id="inicio"></a>
-            </nav>
+    <%- include("../../templates/mezclas/headerNav") %>
+        <input type="hidden" value="<%= rol %>" id="rol">
 
-            <nav class="barra__login">
-                <a class="barra__link" href="/protected/cerrarSesion" id="cerrarSesion">Cerrar Sesion</a>
-            </nav>
-        </div>
-    </header>
-    <input type="hidden" value="<%= rol %>" id="rol">
-    
-    <section id="tablaFuciones" class="tablas" style="display: block;">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-11">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <div class="titulo">
-                                <div class="col">
-                                    <button class="formulario__submit" id="regresarInicio"><span
-                                            class="mdi mdi-arrow-left-bold"></span></button>
-                                </div>
-                                <div class="row mb-12 justify-content-end">
-                                    <div class="col-md-2 d-flex gap-2 m-2">
-                                        <button type="button" class="btn btn-primary btn-fw" id="validacion">Confirmar
-                                        Solicitudes</button>
-                                        <!-- <button type="button" class="btn btn-primary btn-fw" id="reporte">Descargar
+        <section id="tablaFuciones" class="tablas" style="display: block;">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-11">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="titulo">
+                                    <div class="col">
+                                        <div
+                                            style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+
+                                            <button class="formulario__submit" id="regresarInicio"><span
+                                                    class="mdi mdi-arrow-left-bold"></span></button>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-12 justify-content-end">
+                                        <div class="col-md-2 d-flex gap-2 m-2">
+                                            <button type="button" class="btn btn-primary btn-fw"
+                                                id="validacion">Confirmar
+                                                Solicitudes</button>
+                                            <!-- <button type="button" class="btn btn-primary btn-fw" id="reporte">Descargar
                                             Solicitudes</button> -->
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h3>Solicitudes</h3>
                                     </div>
                                 </div>
-                                <div class="text-center">
-                                    <h3>Solicitudes</h3>
+                                <hr>
+                                <div class="table-responsive">
+                                    <table
+                                        class="table table-striped table-bordered table-hover align-middle mobile-table w-100 table-sm"
+                                        id="tbSolicitadas" style="white-space: nowrap;">
+                                        <thead class="table-primary">
+                                            <tr class="bg-primary">
+                                                <th>Solicitud</th>
+                                                <th>Solicita</th>
+                                                <th>Fecha de Solicitud</th>
+                                                <th>Rancho destino</th>
+                                                <th>Empresa</th>
+                                                <th>Confirmacion</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Contenido de la tabla -->
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </div>
-                            <hr>
-                            <div class="table-responsive">
-                                <table
-                                    class="table table-striped table-bordered table-hover align-middle mobile-table w-100 table-sm"
-                                    id="tbSolicitadas" style="white-space: nowrap;">
-                                    <thead class="table-primary">
-                                        <tr class="bg-primary">
-                                            <th>Solicitud</th>
-                                            <th>Solicita</th>
-                                            <th>Fecha de Solicitud</th>
-                                            <th>Rancho destino</th>
-                                            <th>Empresa</th>
-                                            <th>Confirmacion</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Contenido de la tabla -->
-                                    </tbody>
-                                </table>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-   
-   
 
-    <!-- Modal mostar receta -->
-    <%- include("../../templates/mezclas/modalCancelacion") %>
-    <%- include("../../templates/mezclas/modalRecetaConfirmacion") %>
 
-        <!-- Firebase Configuración y funciones -->
-        <%- include("../../templates/mezclas/scripts") %>
-            <script type="module" src="../../app/confirmacion/confirmacion.js"></script>
+
+        <!-- Modal mostar receta -->
+        <%- include("../../templates/mezclas/modalCancelacion") %>
+            <%- include("../../templates/mezclas/modalRecetaConfirmacion") %>
+
+                <!-- Firebase Configuración y funciones -->
+                <%- include("../../templates/mezclas/scripts") %>
+                    <script type="module" src="../../app/confirmacion/confirmacion.js"></script>
 
 </body>
 
