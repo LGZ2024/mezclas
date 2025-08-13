@@ -46,6 +46,20 @@ const equiposConfig = {
       }
     }
   },
+  no_economico: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'El numero economico es Requerido'
+      },
+      len: {
+        args: [1, 20],
+        msg: 'El numero economico debe tener entre 1 y 20 caracteres'
+      }
+    }
+  },
   ns: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -74,37 +88,28 @@ const equiposConfig = {
   },
   url_factura: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     validate: {
-      notEmpty: {
-        msg: 'La url de la factura es requerida'
-      },
       len: {
-        args: [3, 50],
-        msg: 'La url de la factura debe tener entre 3 y 50 caracteres'
+        args: [1, 100],
+        msg: 'La url de la factura debe tener entre 1 y 100 caracteres'
       }
     }
   },
   foto: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     validate: {
-      notEmpty: {
-        msg: 'La foto es requerida'
-      },
       len: {
-        args: [3, 50],
-        msg: 'La foto debe tener entre 3 y 50 caracteres'
+        args: [1, 100],
+        msg: 'La foto debe tener entre 1 y 100 caracteres'
       }
     }
   },
   empresa_pertenece: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     validate: {
-      notEmpty: {
-        msg: 'La empresa pertenece es requerida'
-      },
       len: {
         args: [3, 50],
         msg: 'La empresa pertenece debe tener entre 3 y 50 caracteres'
@@ -113,11 +118,8 @@ const equiposConfig = {
   },
   centro_coste: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     validate: {
-      notEmpty: {
-        msg: 'El centro de coste es requerido'
-      },
       len: {
         args: [3, 50],
         msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
@@ -126,7 +128,7 @@ const equiposConfig = {
   },
   fecha_baja: {
     type: DataTypes.DATE,
-    allowNull: false,
+    allowNull: true,
     validate: {
       notEmpty: {
         msg: 'La fecha de baja es requerida'
@@ -135,38 +137,23 @@ const equiposConfig = {
   },
   documento_baja: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
     validate: {
-      notEmpty: {
-        msg: 'El documento de baja es requerido'
-      },
       len: {
-        args: [3, 50],
+        args: [3, 100],
         msg: 'El documento de baja debe tener entre 3 y 50 caracteres'
       }
     }
   },
   fecha_creacion: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'La fecha de creación es requerida'
-      }
-    }
+    defaultValue: DataTypes.NOW
   },
   status: {
     type: DataTypes.STRING,
     allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El estado es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El estado debe tener entre 3 y 50 caracteres'
-      }
-    }
+    defaultValue: 'disponible'
   }
 }
 

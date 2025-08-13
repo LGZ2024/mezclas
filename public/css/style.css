@@ -14289,3 +14289,20 @@ dl {
     color: #b1b1b1; }
 
 /*# sourceMappingURL=style.css.map */
+  .password-container {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.toggle-password:hover {
+    color: #333;
+}

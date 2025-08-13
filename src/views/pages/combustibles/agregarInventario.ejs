@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/spinner.css">
+</head>
+
+<body>
+    <%- include("../../templates/combustibles/navCombustibles") %>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="formAgregarInv">
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit"
+                                                        id="regresarInicio">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    Agregar Inventario
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <!-- Razon Social-->
+                                        <div class="formulario__campo">
+                                            <label for="factura" class="formulario__label">Factura</label>
+                                            <input type="text" class="formulario__input" id="factura" name="factura"
+                                                placeholder="Agregar Factura o Folio" required>
+                                        </div>
+                                        <!-- variedades -->
+                                        <div class="formulario__campo">
+                                            <label for="fecha" class="formulario__label ">Fecha de Ingreso</label>
+                                            <input type="date" class="formulario__input" id="fecha" name="fecha"
+                                                required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="almacen" class="formulario__label">Rancho o Almacen</label>
+                                            <select id="almacen" name="almacen" class="formulario__input" required>
+                                                <option value="">Seleccionar un rancho...</option>
+                                                <option value="Ojo de agua-(OA1N)">Ojo de agua-(OA1N)</option>
+                                                <option value="Zapote-(ZA1)">Zapote-(ZA1)</option>
+                                                <option value="La loma-(LL1)">La loma-(LL1)</option>
+                                                <option value="Romero-(RO2S2)">Romero-(RO2S2)</option>
+                                                <option value="Ario-(AR1)">Ario-(AR1)</option>
+                                                <option value="San juan-(SJ1)">San juan-(SJ1)</option>
+                                                <option value="Casa de altos-(CA4S1)">Casa de altos-(CA4S1)</option>
+                                                <option value="Ahualulco-(AH1S)">Ahualulco-(AH1S)</option>
+                                                <option value="Atemajac-(AT2S1)">Atemajac-(AT2S1)</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="centro_coste" class="formulario__label">Centros de Coste</label>
+                                            <select id="centro_coste" name="centro_coste" class="formulario__input"
+                                                required>
+
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="combustible" class="formulario__label ">Tipo de Combustible</label>
+                                            <select name="combustible" id="combustible" name="combustible" class="formulario__input" required>
+                                                <option value="0">Selecione una opcion</option>
+                                                <option value="Diesel">Diesel</option>
+                                                <option value="Magna">Magna</option>
+                                                <option value="Premium">Premium</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="cantidad" class="formulario__label">Litros Recibidos</label>
+                                            <input type="number" class="formulario__input" id="cantidad" name="cantidad"
+                                                placeholder="Cantidad" required  step="any"  min="0">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="proveedor" class="formulario__label">Proveedor</label>
+                                            <input type="text" class="formulario__input" id="proveedor" name="proveedor"
+                                                placeholder="Nombre del proveedor" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="traslada" class="formulario__label">Traslada</label>
+                                            <input type="text" class="formulario__input" id="traslada"
+                                                name="traslada" placeholder="Nombre de Chofer" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="recibe" class="formulario__label">Recibe</label>
+                                            <input type="text" class="formulario__input" id="recibe" name="recibe"
+                                                placeholder="Quien recibe" required>
+                                        </div>
+            
+                                        <div class="formulario__campo">
+                                            <label for="comentario" class="formulario__label">Comentario:</label>
+                                            <textarea class="formulario__input" name="comentario" id="comentario"  cols="30" rows="5" placeholder="Comentario" ></textarea>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit" id="btnRegistrar">
+                                                Registrar Entrada
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/combustibles/main.js"></script>
+
+</body>
+
+</html>

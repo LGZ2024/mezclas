@@ -1,0 +1,31 @@
+    <div class="modal fade" id="miModalEquipo" tabindex="-1" role="dialog" aria-labelledby="miModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="miModalLabel" style="color: black;">Agregar Foto Activo</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="formFoto">
+                <input type="text" class="form-control" name="id" id="id" hidden readonly>
+                <div class="form-group">
+                  <label class="form-label" for="foto">Foto</label>
+                  <input type="file" name="foto" id="foto" class="file-upload-default">
+                  <div class="input-group col-xs-11">
+                    <input type="text" class="form-control file-upload-info" id="nombreFoto" disabled="" placeholder="Foto">
+                    <span class="input-group-append">
+                      <button class="file-upload-browse btn btn-primary" style="height: 1.875rem;padding: 0.3rem 1.375rem;" type="button">Subir</button>
+                    </span>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="submit" form="formFoto" class="btn btn-primary" id="btnRegistrar">Agregar</button>
+            </div>
+          </div>
+        </div>
+      </div>

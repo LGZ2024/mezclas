@@ -17,7 +17,7 @@ if (typeof jQuery === 'undefined') {
       formularioUsuario.mostrarContraseñaR()
       formularioUsuario.agregarNuevoRancho()
       formularioUsuario.agregarNuevoVariedad()
-      formularioUsuario.manejarCambioCentroCoste()
+      // formularioUsuario.manejarCambioCentroCoste()
 
       // Iniciar tabla y sus funciones
       iniciarRegistros()

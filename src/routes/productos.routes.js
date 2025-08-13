@@ -8,6 +8,9 @@ export const createProductosRouter = ({ productosModel }) => {
 
   // Obtener todos los productos
   router.get('/productos', productosController.getAll)
+  router.post('/productos', productosController.create)
+  router.put('/productos/:id', productosController.update)
+  router.delete('/productos/:id', productosController.delete)
 
   return router
 }

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
+        <link rel="stylesheet" href="../../css/spinner.css">
+        <%- include("../../templates/mezclas/cabecera") %>
+
+</head>
+
+
+<body>
+    <%- include("../../templates/combustibles/navCombustibles") %>
+
+        <input type="hidden" value="<%= rol %>" id="rol">
+        <section>
+            <div class="container">
+                <div class="row ">
+                    <div class="col-md-12">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="titulo">
+                                    <div class="col">
+                                        <div
+                                            style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                            <button class="formulario__submit" id="regresarInicio"><span
+                                                    class="mdi mdi-arrow-left-bold"></span></button>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <h3>Tabla de Entradas</h3>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="table-responsive">
+                                    <table
+                                        class="table table-striped table-bordered table-hover table-sm table-compac border-0"
+                                        id="tbEntrada" style="white-space: nowrap;">
+                                        <thead class="bg-primary">
+                                            <tr class="bg-primary">
+                                                <th>ID Entrada</th>
+                                                <th>Area Logistica</th>
+                                                <th>Centro de Coste</th>
+                                                <th>Combustible</th>
+                                                <th>Litros Entrantes</th>
+                                                <th>Fecha de Ingreso</th>
+                                                <th>Folio o Factura</th>
+                                                <th>Proveedor</th>
+                                                <th>Traslada</th>
+                                                <th>Recibe</th>
+                                                <th>Comentarios</th>
+                                                <th>No.pedido</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Los datos se llenarán dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <%- include("../../templates/combustibles/modalAbrirTicket") %>
+            <%- include("../../templates/mezclas/scripts") %>
+                <script type="module" src="../../app/combustibles/main.js"></script>
+
+</body>
+
+</html>

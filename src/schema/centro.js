@@ -10,6 +10,7 @@ const centroConfig = {
   centroCoste: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
     field: 'centroCoste', // Nombre de columna en la base de datos
     validate: {
       notEmpty: {
@@ -18,6 +19,35 @@ const centroConfig = {
       len: {
         args: [3, 50],
         msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  CustomCentrocoste: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    field: 'CustomCentrocoste', // Nombre de columna en la base de datos
+    validate: {
+      notEmpty: {
+        msg: 'El centro de coste es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  cc: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'El centro de coste es requerido'
+      },
+      len: {
+        args: [3, 10],
+        msg: 'El centro de coste debe tener entre 3 y 10 caracteres'
       }
     }
   },

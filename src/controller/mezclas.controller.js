@@ -162,163 +162,134 @@ export class MezclasController {
       name: user.nombre,
       userId: user.id,
       userRole: user.rol,
+      id_solocitud: idSolicitud,
       requestBody: req.body
     }
-    try {
-      // Validación inicial
-      this.#validarRolYPermisos(user, 'UPDATE_MEZCLAS')
 
-      this.#validarDatosActualizacionEstado(req.body)
+    // Validación inicial
+    this.#validarRolYPermisos(user, 'UPDATE_MEZCLAS')
 
-      logger.info('Iniciando actualización de estado', logContext)
+    this.#validarDatosActualizacionEstado(req.body)
 
-      // Actualizar estado
-      const result = await this.mezclaModel.estadoProceso({
-        id: idSolicitud,
-        data: req.body,
-        usuario: user,
-        logContext,
-        logger
-      })
+    logger.info('Iniciando actualización de estado', logContext)
 
-      logger.debug('Estado actualizado, obteniendo información del solicitante', {
-        ...logContext,
-        nuevoEstado: req.body.status
-      })
+    // Actualizar estado
+    const result = await this.mezclaModel.estadoProceso({
+      id: idSolicitud,
+      data: req.body,
+      usuario: user,
+      logContext,
+      logger
+    })
 
-      // Obtener información del solicitante
-      const solicitante = await UsuarioModel.getOneId({
-        id: result.idUsuarioSolicita
-      })
+    logger.debug('Estado actualizado, obteniendo información del solicitante', {
+      ...logContext,
+      nuevoEstado: req.body.status
+    })
 
-      if (!solicitante) {
-        throw new ValidationError('No se encontró el solicitante')
-      }
+    // Obtener información del solicitante
+    const solicitante = await UsuarioModel.getOneId({
+      id: result.idUsuarioSolicita
+    })
 
-      // Enviar notificación
-      logger.debug('Enviando notificación por correo', {
-        ...logContext,
-        solicitante: {
-          id: solicitante.id,
-          email: solicitante.email
-        }
-      })
-
-      await enviarCorreo({
-        type: 'status',
-        email: solicitante.email,
-        nombre: solicitante.nombre,
-        solicitudId: idSolicitud,
-        status: req.body.status,
-        usuario: user,
-        data: {
-          observaciones: req.body.observaciones,
-          fecha: new Date().toISOString()
-        }
-      })
-
-      logger.info('Estado actualizado exitosamente', {
-        ...logContext,
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
-
-      return res.json({
-        success: true,
-        message: result.message,
-        data: {
-          id: result.id,
-          status: result.status,
-          updatedAt: result.updatedAt
-        }
-      })
-    } catch (error) {
-      logger.error('Error al actualizar estado', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          code: error.code
-        }
-      })
-      throw error
+    if (!solicitante) {
+      throw new ValidationError('No se encontró el solicitante')
     }
+
+    // Enviar notificación
+    logger.debug('Enviando notificación por correo', {
+      ...logContext,
+      solicitante: {
+        id: solicitante.id,
+        email: solicitante.email
+      }
+    })
+
+    await enviarCorreo({
+      type: 'status',
+      email: solicitante.email,
+      nombre: solicitante.nombre,
+      solicitudId: idSolicitud,
+      status: req.body.status,
+      usuario: user,
+      data: {
+        observaciones: req.body.observaciones,
+        fecha: new Date().toISOString()
+      }
+    })
+
+    logger.info('Estado actualizado exitosamente', {
+      ...logContext,
+      duration: Date.now() - new Date(logContext.timestamp).getTime()
+    })
+
+    return res.json({
+      success: true,
+      message: result.message,
+      data: {
+        id: result.id,
+        status: result.status,
+        updatedAt: result.updatedAt
+      }
+    })
   })
 
   cerrarSolicitid = asyncHandler(async (req, res) => {
     const { user } = req.session
+    const { idSolicitud } = req.params
     const logger = req.logger // Logger with correlation
-
+    const archivo = req.file
+    console.log(archivo)
     const logContext = {
-      operation: 'CLOSE_SOLICITUD',
+      operation: 'Cerrar Solicitud',
       name: user.nombre,
       userId: user.id,
       userRole: user.rol,
-      requestBody: {
-        ...req.body,
-        // Truncar la imagen en el log
-        imagen: req.body.imagen ? this.truncateBase64(req.body.imagen) : null
+      idSolicitud
+    }
+
+    logger.info('Iniciando actualización de estado', logContext)
+
+    const result = await this.mezclaModel.cerrarSolicitud({
+      imagen: archivo,
+      idSolicitud,
+      idUsuario: user.id,
+      logContext,
+      logger
+    })
+
+    const solicitante = await UsuarioModel.getOneId({ id: result.idUsuarioSolicita })
+
+    logger.debug('Notificación enviada', {
+      solicitante: {
+        id: solicitante.id,
+        email: solicitante.email
       }
-    }
-    try {
-      logger.info('Iniciando actualización de estado', logContext)
+    })
 
-      const result = await this.mezclaModel.cerrarSolicitud({
-        data: req.body,
-        idUsuario: user.id,
-        logContext,
-        logger
-      })
+    await enviarCorreo({
+      type: 'status',
+      email: solicitante.email,
+      nombre: solicitante.nombre,
+      solicitudId: result.id,
+      status: result.status,
+      usuario: user,
+      data: {
+        rancho: result.rancho || req.body.rancho,
+        descripcion: result.descripcion || req.body.descripcion,
+        folio: result.folio || req.body.folio
+      }
+    })
 
-      logger.debug('Solicitud cerrada exitosamente', {
-        resultado: result.message,
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
+    logger.info('Operación cerrar solicitud exitosa', {
+      ...logContext,
+      duration: Date.now() - new Date(logContext.timestamp).getTime()
+    })
 
-      const solicitante = await UsuarioModel.getOneId({ id: result.idUsuarioSolicita })
-
-      logger.debug('Notificación enviada', {
-        solicitante: {
-          id: solicitante.id,
-          email: solicitante.email
-        }
-      })
-
-      await enviarCorreo({
-        type: 'status',
-        email: solicitante.email,
-        nombre: solicitante.nombre,
-        solicitudId: result.id,
-        status: result.status,
-        usuario: user,
-        data: {
-          rancho: result.rancho || req.body.rancho,
-          descripcion: result.descripcion || req.body.descripcion,
-          folio: result.folio || req.body.folio
-        }
-      })
-
-      logger.info('Operación cerrar solicitud exitosa', {
-        ...logContext,
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
-
-      return res.json({
-        success: true,
-        message: result.message
-      })
-    } catch (error) {
-      logger.error('Error al cerrar solicitud', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          code: error.code
-        }
-      })
-      throw error
-    }
+    return res.json({
+      success: true,
+      message: result.message
+    })
   })
 
   //
@@ -404,48 +375,31 @@ export class MezclasController {
       name: user.nombre,
       status,
       empresa: user.empresa,
-      rancho: user.ranchos,
-      timestamp: new Date().toISOString(),
-      correlationId: req.correlationId // Añadir ID de correlación
+      rancho: user.ranchos
     }
 
-    try {
-      logger.info('Iniciando obtención de mezclas', logContext)
+    logger.info('Iniciando obtención de mezclas', logContext)
 
-      // Validación inicial
-      if (!status) {
-        logger.warn('Status no proporcionado', logContext)
-        throw new ValidationError('El estado es requerido')
-      }
-
-      // Parámetros base
-      const params = {
-        status,
-        confirmacion: 'Confirmada',
-        idUsuario: user.id
-      }
-
-      // Obtener resultados según rol
-      const result = await this.#obtenerMezclasSegunRol(user, params, logContext, logger)
-
-      // Log de finalización
-      logger.info('Consulta completada exitosamente', {
-        resultCount: Array.isArray(result) ? result.length : 1,
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
-
-      return res.json(result.data || result)
-    } catch (error) {
-      logger.error('Error al obtener mezclas', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      })
-      throw error
+    // Validación inicial
+    if (!status) {
+      logger.warn('Status no proporcionado', logContext)
+      throw new ValidationError('El estado es requerido')
     }
+
+    // Parámetros base
+    const params = {
+      status,
+      confirmacion: 'Confirmada',
+      idUsuario: user.id
+    }
+
+    // Obtener resultados según rol
+    const result = await this.#obtenerMezclasSegunRol(user, params, logContext, logger)
+
+    // Log de finalización
+    logger.info('Consulta completada exitosamente', logContext)
+
+    return res.json(result.data || result)
   })
 
   //
@@ -503,79 +457,68 @@ export class MezclasController {
       userEmpresa: user.empresa
     }
 
-    try {
-      logger.info('GET_TABLAS_CONFIRMAR started', logContext)
+    logger.info('GET_TABLAS_CONFIRMAR started', logContext)
 
-      let result = []
-      const confirmacion = 'Pendiente'
+    let result = []
+    const confirmacion = 'Pendiente'
 
-      if (user.rol === 'adminMezclador' && user.empresa === 'General') {
-        logger.info('GET_TABLAS_CONFIRMAR', 'fetching_michoacan')
+    if (user.rol === 'adminMezclador' && user.empresa === 'General') {
+      logger.info('GET_TABLAS_CONFIRMAR', 'fetching_michoacan')
 
-        const [res2, res1] = await Promise.all([
-          this.mezclaModel.obtenerTablaMezclasValidadosMichoacan({
-            status: 'Pendiente',
-            confirmacion,
-            idUsuario: user.id,
-            logContext,
-            logger
-          }),
-          this.mezclaModel.obtenerTablaMezclasRancho({
-            status: 'Pendiente',
-            ranchoDestino: 'Ahualulco',
-            confirmacion,
-            idUsuario: user.id,
-            logContext,
-            logger
-          })
-        ])
+      const [res2, res1] = await Promise.all([
+        this.mezclaModel.obtenerTablaMezclasValidadosMichoacan({
+          status: 'Pendiente',
+          confirmacion,
+          idUsuario: user.id,
+          logContext,
+          logger
+        }),
+        this.mezclaModel.obtenerTablaMezclasRancho({
+          status: 'Pendiente',
+          ranchoDestino: 'Ahualulco',
+          confirmacion,
+          idUsuario: user.id,
+          logContext,
+          logger
+        })
+      ])
 
-        if (Array.isArray(res2)) result = result.concat(res2)
-        if (Array.isArray(res1)) result = result.concat(res1)
-      } else if (user.rol === 'adminMezclador' && user.empresa === 'Bioagricultura') {
-        logger.info('GET_TABLAS_CONFIRMAR fetching_bioagricultura', logContext)
+      if (Array.isArray(res2)) result = result.concat(res2)
+      if (Array.isArray(res1)) result = result.concat(res1)
+    } else if (user.rol === 'adminMezclador' && user.empresa === 'Bioagricultura') {
+      logger.info('GET_TABLAS_CONFIRMAR fetching_bioagricultura', logContext)
 
-        const [res2, res1] = await Promise.all([
-          this.mezclaModel.obtenerTablaMezclasRancho({
-            status: 'Pendiente',
-            ranchoDestino: 'Atemajac',
-            confirmacion,
-            idUsuario: user.id,
-            logContext,
-            logger
-          }),
-          this.mezclaModel.obtenerTablaMezclasUsuario({
-            status: 'Pendiente',
-            idUsuarioSolicita: user.id,
-            confirmacion,
-            logContext,
-            logger
-          })
-        ])
+      const [res2, res1] = await Promise.all([
+        this.mezclaModel.obtenerTablaMezclasRancho({
+          status: 'Pendiente',
+          ranchoDestino: 'Atemajac',
+          confirmacion,
+          idUsuario: user.id,
+          logContext,
+          logger
+        }),
+        this.mezclaModel.obtenerTablaMezclasUsuario({
+          status: 'Pendiente',
+          idUsuarioSolicita: user.id,
+          confirmacion,
+          logContext,
+          logger
+        })
+      ])
 
-        if (Array.isArray(res2)) result = result.concat(res2)
-        if (Array.isArray(res1)) result = result.concat(res1)
-      }
-
-      const uniqueResults = this.#eliminarDuplicados(result)
-
-      logger.info('GET_TABLAS_CONFIRMAR', 'completed', {
-        resultCount: uniqueResults.length,
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
-
-      return res.json(uniqueResults)
-    } catch (error) {
-      logger.error('Error al obtener mezclas', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      })
-      throw error
+      if (Array.isArray(res2)) result = result.concat(res2)
+      if (Array.isArray(res1)) result = result.concat(res1)
+    } else if (user.rol === 'master') {
+      result = await this.mezclaModel.obtenerTablaMezclasAll({ status: 'Pendiente', confirmacion, rol: user.rol, logContext, logger })
     }
+    const uniqueResults = this.#eliminarDuplicados(result)
+
+    logger.info('GET_TABLAS_CONFIRMAR', 'completed', {
+      resultCount: uniqueResults.length,
+      duration: Date.now() - new Date(logContext.timestamp).getTime()
+    })
+
+    return res.json(uniqueResults)
   })
 
   //
@@ -593,36 +536,22 @@ export class MezclasController {
       requestBody: req.body
     }
 
-    try {
-      logger.info('CONFIRM_MEZCLA started', logContext)
+    logger.info('CONFIRM_MEZCLA started', logContext)
 
-      const response = await this.mezclaModel.mezclaConfirmar({
-        idSolicitud,
-        data: req.body,
-        usuario: user,
-        logContext,
-        logger
-      })
+    const response = await this.mezclaModel.mezclaConfirmar({
+      idSolicitud,
+      data: req.body,
+      usuario: user,
+      logContext,
+      logger
+    })
 
-      logger.info('CONFIRM_MEZCLA completed', {
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
+    logger.info('CONFIRM_MEZCLA completed', logContext)
 
-      return res.json({
-        success: true,
-        message: response.message
-      })
-    } catch (error) {
-      logger.error('Error al obtener mezclas', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      })
-      throw error
-    }
+    return res.json({
+      success: true,
+      message: response.message
+    })
   })
 
   obtenerTablasCancelada = asyncHandler(async (req, res) => {
@@ -635,36 +564,23 @@ export class MezclasController {
       userId: user.id,
       userRole: user.rol
     }
+    logger.info('GET_CANCELLED_MEZCLAS started', logContext)
 
-    try {
-      logger.info('GET_CANCELLED_MEZCLAS started', logContext)
+    const confirmacion = 'Cancelada'
+    const resultado = await this.mezclaModel.obtenerTablaMezclasCancelada({
+      confirmacion,
+      idUsuario: user.id,
+      rol: user.rol,
+      logContext,
+      logger
+    })
 
-      const confirmacion = 'Cancelada'
-      const resultado = await this.mezclaModel.obtenerTablaMezclasCancelada({
-        confirmacion,
-        idUsuario: user.id,
-        rol: user.rol,
-        logContext,
-        logger
-      })
+    logger.info('GET_CANCELLED_MEZCLAS completed', {
+      resultCount: Array.isArray(resultado) ? resultado.length : 0,
+      duration: Date.now() - new Date(logContext.timestamp).getTime()
+    })
 
-      logger.info('GET_CANCELLED_MEZCLAS completed', {
-        resultCount: Array.isArray(resultado) ? resultado.length : 0,
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
-
-      return res.json(resultado)
-    } catch (error) {
-      logger.error('Error al obtener mezclas', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      })
-      throw error
-    }
+    return res.json(resultado)
   })
 
   validacion = asyncHandler(async (req, res) => {
@@ -673,44 +589,30 @@ export class MezclasController {
     const logger = req.logger // Logger with correlation
 
     const logContext = {
-      operation: 'VALIDATE_MEZCLA',
+      operation: 'Confirmacion de mezcla',
       username: user.nombre,
       userId: user.id,
       userRole: user.rol,
       requestBody: data
     }
-    try {
-      logger.info('VALIDATE_MEZCLA started', logContext)
 
-      const result = await this.mezclaModel.validacion({
-        data,
-        idUsuario: user.id,
-        user,
-        logContext,
-        logger
-      })
+    logger.info('VALIDATE_MEZCLA started', logContext)
 
-      logger.info('VALIDATE_MEZCLA', 'completed', {
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
+    const result = await this.mezclaModel.validacion({
+      data,
+      idUsuario: user.id,
+      user,
+      logContext,
+      logger
+    })
 
-      return res.json(result)
-    } catch (error) {
-      logger.error('Error al validar mezclas', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      })
-      throw error
-    }
+    logger.info('VALIDATE_MEZCLA Finish')
+    return res.json(result)
   })
 
   cancelar = asyncHandler(async (req, res) => {
     const { user } = req.session
-    const idSolicitud = req.params.idSolicitud
+    const { idSolicitud } = req.params
     const data = req.body
     const logger = req.logger // Logger with correlation
 
@@ -722,34 +624,19 @@ export class MezclasController {
       requestBody: data
     }
 
-    try {
-      logger.info('CANCEL_MEZCLA INICIADO', logContext)
+    logger.info('CANCEL_MEZCLA INICIADO', logContext)
 
-      const result = await this.mezclaModel.cancelar({
-        idSolicitud,
-        data,
-        idUsuario: user.id,
-        logContext,
-        logger
-      })
+    const result = await this.mezclaModel.cancelar({
+      idSolicitud,
+      data,
+      idUsuario: user.id,
+      logContext,
+      logger
+    })
 
-      logger.info('CANCEL_MEZCLA COMPLETADO', {
-        ...logContext,
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
+    logger.info('CANCEL_MEZCLA COMPLETADO', { ...logContext })
 
-      return res.json(result)
-    } catch (error) {
-      logger.error('Error al cancelar mezclas', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      })
-      throw error
-    }
+    return res.json(result)
   })
 
   // funciones auxiliares y utilitarios
@@ -987,8 +874,11 @@ export class MezclasController {
       case 'adminMezclador':
         return await this.#obtenerMezclasParaAdminMezclador(user, params, logContext, confirmacion)
 
+      case 'master':
+        return await this.mezclaModel.getAllGeneral({ status: params.status, confirmacion: params.confirmacion, logger, logContext })
+
       default:
-        loggerWiston.warn('Rol no autorizado', { ...logContext, rol: user.rol })
+        logger.warn('Rol no autorizado', { ...logContext, rol: user.rol })
         throw new ValidationError('Rol no autorizado')
     }
   }
@@ -1160,11 +1050,11 @@ export class MezclasController {
   // Helper adicional para validar roles y permisos
   #validarRolYPermisos = (user, operacion) => {
     const rolesPermitidos = {
-      GET_MEZCLAS: ['mezclador', 'solicita', 'solicita2', 'supervisor', 'administrativo', 'adminMezclador'],
-      VALIDATE_MEZCLAS: ['adminMezclador', 'supervisor'],
-      CONFIRM_MEZCLAS: ['adminMezclador'],
-      CANCEL_MEZCLAS: ['adminMezclador', 'supervisor'],
-      UPDATE_MEZCLAS: ['adminMezclador', 'supervisor', 'administrativo', 'mezclador']
+      GET_MEZCLAS: ['mezclador', 'solicita', 'solicita2', 'supervisor', 'administrativo', 'adminMezclador', 'master'],
+      VALIDATE_MEZCLAS: ['adminMezclador', 'supervisor', 'master'],
+      CONFIRM_MEZCLAS: ['adminMezclador', 'master'],
+      CANCEL_MEZCLAS: ['adminMezclador', 'supervisor', 'master'],
+      UPDATE_MEZCLAS: ['adminMezclador', 'supervisor', 'administrativo', 'mezclador', 'master']
     }
 
     if (!rolesPermitidos[operacion]?.includes(user.rol)) {

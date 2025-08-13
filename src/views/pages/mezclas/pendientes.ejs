@@ -13,31 +13,26 @@
 <body>
     <%- include("../../templates/mezclas/headerNav") %>
 
-        <!-- Spinner de carga -->
-        <div class="spinner-overlay" id="spinner" style="display: none;">
-            <div class="spinner-container">
-                <div class="spinner"></div>
-                <p class="spinner-text">Procesando...</p>
-            </div>
-        </div>
+
 
         <input type="hidden" value="<%= rol %>" id="rol">
         <section id="tablaFuciones" style="display: block;">
             <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
+                <div class="row ">
+                    <div class="col-md-12">
                         <div class="card text-center">
                             <div class="card-body">
                                 <div class="titulo">
                                     <div class="col">
-                                        <div style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                        <div
+                                            style="display: flex; flex-direction: column; align-items: start; width: 20%;">
                                             <button class="formulario__submit" id="regresarInicio"><span
                                                     class="mdi mdi-arrow-left-bold"></span></button>
                                         </div>
                                     </div>
-                                    <% if (rol==="mezclador" || rol==="administrativo" ) { %>
+                                    <% if (rol==="mezclador" || rol==="administrativo" || rol==="master" ) { %>
                                         <div class="col-md-12 d-flex justify-content-end">
-                                            <button class="btn btn-primary" id="reporte">Descargar Solicitudes</button>
+                                            <button class="btn btn-primary" id="btnReporte">Descargar Solicitudes</button>
                                         </div>
                                         <% } %>
                                             <div class="text-center">
@@ -48,7 +43,7 @@
                                 <div class="table-responsive">
                                     <table
                                         class="table table-striped table-bordered table-hover table-sm table-compac border-0"
-                                        id="tbSolicitadas" style="white-space: nowrap;">
+                                        id="tbPendientes" style="white-space: nowrap;">
                                         <thead class="bg-primary">
                                             <tr class="bg-primary">
                                                 <th scope="col">Solicitud</th>
@@ -92,14 +87,14 @@
                                         </div>
                                         <hr>
                                         <input type="text" id="idSolicitud" disabled hidden>
-                                        <% if (rol==="mezclador" || rol==="administrativo" || rol==="adminMezclador" ) {
-                                            %>
+                                        <% if (rol==="mezclador" || rol==="administrativo" || rol==="adminMezclador" ||
+                                            rol==="master" ) { %>
                                             <div class="formulario__campo"
                                                 style="display: flex; flex-direction: column; align-items: center;">
                                                 <label class="formulario__label" for="folioi">Descargar
                                                     Solicitud</label>
                                                 <button type="button" class="btn btn-primary formulario__submit"
-                                                    id="descargar">
+                                                    id="btnDescargar">
                                                     Descargar
                                                 </button>
                                             </div>
@@ -164,18 +159,19 @@
                                                 <div class="formulario__campo">
                                                     <label class="formulario__label"
                                                         for="descripcioni">Descripcion</label>
-                                                    <input type="text" class="formulario__input" id="descripcioni"
-                                                        disabled>
+                                                    <textarea name="" id="descripcioni" cols="10" rows="4"
+                                                        disabled></textarea>
                                                 </div>
                                                 <div class="formulario__campo"
                                                     style="display: flex; flex-direction: column; align-items: center;">
                                                     <label class="formulario__label">Productos</label>
                                                     <button type="button" class="btn btn-primary formulario__submit"
-                                                        id="receta" data-bs-toggle="modal">
+                                                        id="btnReceta">
                                                         Mostrar Receta
                                                     </button>
                                                 </div>
-                                                <% if (rol==="mezclador" || rol==="administrativo" ) { %>
+                                                <% if (rol==="mezclador" || rol==="administrativo" || rol==="master" ) {
+                                                    %>
                                                     <form id="formSolicutudes">
                                                         <div class="formulario__campo">
                                                             <label class="formulario__label" for="notaMezcla">Nota de
@@ -212,7 +208,7 @@
                     <%- include("../../templates/mezclas/modalSelecionEmpresa") %>
                         <!-- Firebase Configuración y funciones -->
                         <%- include("../../templates/mezclas/scripts") %>
-                            <script type="module" src="../../app/pendientes/FuncionesAlmacen.js"></script>
+                            <script type="module" src="../../app/mezclas/main.js"></script>
 
 </body>
 

@@ -1,0 +1,30 @@
+   <div class="modal fade" id="editarAsignacion" tabindex="-1" role="dialog" aria-labelledby="mieditarAsignacion" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="mieditarAsignacion" style="color: black;">Editar Asigacion</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="formEditarAsignacion">
+                <input type="text" id="asignacion_id" name="asignacion_id" readonly hidden>
+                <div class="form-group">
+                  <label for="estadoTabEdit">Estado:</label>
+                  <select class="custom-select" name="estadoTabEdit" id="estadoTabEdit" >
+                    <option value="">Seleccionar....</option>
+                    <option value="recepcion">Recepcion de Equipo</option>
+                    <option value="cambio">Cambio de Equipo</option>
+                    <option value="actulizar">Actualizar Responiva</option>
+                  </select>
+                </div>
+              </form>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                  <button type="submit" form="formEditarAsignacion" class="btn btn-primary" id="btnRegistrar">Actualizar</button>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>

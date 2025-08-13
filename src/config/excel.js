@@ -69,7 +69,6 @@ async function obtenerDatosSolicitud (idSolicitud) {
   try {
     // Asumiendo que este método existe en tu modelo
     const solicitudes = await MezclaModel.obtenerDatosSolicitud({ id: idSolicitud })
-    logger.debug('solicitudes', solicitudes)
     // Verificamos que se hayan obtenido datos
     if (!solicitudes || solicitudes.length === 0) {
       throw new NotFoundError(`No se encontraron datos para la solicitud ${idSolicitud}`)
@@ -586,12 +585,8 @@ export const reporteSolicitudV2 = async (parametros) => {
 
       // obtenemos datos de la variedad
       for (const dato of datos) {
-        // // obtenemos datos faltantes de la solicitud
         const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id)
-        console.log('Datos de la solicitud:', datosF)
-        console.log('Datos de la solicitud:', datosF[0].descripcion)
 
-        // // Obtener productos de la base de datos
         const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id)
         // console.log('Productos obtenidos:', productos)
         // Crear el arreglo de datos
@@ -1028,8 +1023,6 @@ const ajustarColumnasExcel = (hojaGeneral) => {
 // uso
 export const reporteSolicitudv3 = async (parametros) => {
   try {
-    logger.debug('reporteSolicitudv3', parametros)
-
     const datos = Array.isArray(parametros) ? parametros : parametros.datos || []
     if (!datos.length) throw new NotFoundError('No hay datos para generar el Excel')
 

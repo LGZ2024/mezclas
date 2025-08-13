@@ -188,10 +188,12 @@ html {
 :before {
   box-sizing: inherit
 }
-section{
+
+section {
   display: block;
-  margin-top: 4vh;
+  margin-top: 10vh;
 }
+
 body {
   margin: 0;
   font-family: Lexend, sans-serif;
@@ -199,8 +201,30 @@ body {
   background-image: url(../images/paise2.webp);
   background-position: center;
   background-size: cover;
-  padding: 3rem 0;
+  padding: 0;
   background-attachment: fixed;
+}
+
+/* Optimizaciones para reducir reflow */
+.modal {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.table-container {
+  contain: content;
+  will-change: contents;
+}
+
+.form-control {
+  will-change: contents;
+  transform: translateZ(0);
+}
+
+/* Prevenir FOUC y parpadeos */
+.js-loading * {
+  transition: none !important;
 }
 
 p {
@@ -281,11 +305,13 @@ a {
     display: inline-block
   }
 }
+
 .barra {
   align-items: center;
   display: flex;
   justify-content: space-between;
 }
+
 /* Media queries para dispositivos pequeños */
 @media (max-width: 768px) {
   .barra {
@@ -304,6 +330,7 @@ a {
     padding: 0.5rem 0;
   }
 }
+
 @media (min-width:768px) {
   .barra {
     align-items: center;
@@ -926,7 +953,7 @@ table {
   .table-responsive-md>.table-bordered {
     border: 0;
   }
-  
+
 }
 
 @media (max-width: 991.98px) {
@@ -1113,7 +1140,7 @@ table {
 #videoC,
 #canvas1,
 #canvas2 {
-width: 100%;
+  width: 100%;
   border-radius: 15px;
 }
 
@@ -1123,22 +1150,30 @@ width: 100%;
   width: 70px;
   height: 61px;
   margin: 10px;
-  border-radius: 50%; /* Hacemos que el logo sea redondo */
-  overflow: hidden; /* Evitamos que el logo se desborde */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Agregamos una sombra suave */
-  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Preparamos la animación */
+  border-radius: 50%;
+  /* Hacemos que el logo sea redondo */
+  overflow: hidden;
+  /* Evitamos que el logo se desborde */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  /* Agregamos una sombra suave */
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /* Preparamos la animación */
 }
 
 .barra__logo img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Hacemos que la imagen se ajuste al tamaño del contenedor */
-  border-radius: 50%; /* Hacemos que la imagen sea redonda */
+  object-fit: cover;
+  /* Hacemos que la imagen se ajuste al tamaño del contenedor */
+  border-radius: 50%;
+  /* Hacemos que la imagen sea redonda */
 }
 
 .barra__logo:hover {
-  transform: scale(1.1); /* Animación de zoom al pasar el cursor */
-  box-shadow: inset -1px 0px 0px 0px rgba(0, 0, 0, 0.4); /* Animación de sombra al pasar el cursor */
+  transform: scale(1.1);
+  /* Animación de zoom al pasar el cursor */
+  box-shadow: inset -1px 0px 0px 0px rgba(0, 0, 0, 0.4);
+  /* Animación de sombra al pasar el cursor */
 }
 
 .barra__logo::before {
@@ -1150,10 +1185,43 @@ width: 100%;
   height: 100%;
   border-radius: 50%;
 
-  opacity: 0.5; /* Opacidad del fondo */
-  transition: opacity 0.5s ease-in-out; /* Preparamos la animación */
+  opacity: 0.5;
+  /* Opacidad del fondo */
+  transition: opacity 0.5s ease-in-out;
+  /* Preparamos la animación */
 }
 
 .barra__logo:hover::before {
-  opacity: 0.8; /* Animación de opacidad al pasar el cursor */
+  opacity: 0.8;
+  /* Animación de opacidad al pasar el cursor */
+}
+
+#agregarProductoReceta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#agregarProductoReceta i.mdi {
+  font-size: 1.1rem;
+}
+
+#agregarProductoReceta:hover i.mdi {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+.modal-footer .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-footer .btn i.mdi {
+  font-size: 1.2rem;
+}
+
+.modal-footer .btn:hover i.mdi {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
 }

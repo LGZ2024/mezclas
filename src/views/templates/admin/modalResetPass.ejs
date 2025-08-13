@@ -6,26 +6,31 @@
       </div>
       <div class="modal-body">
         <form class="forms-sample" id="formResetPass">
-          <!-- Envoltura de la contraseña y repetir contraseña -->
           <div class="form-group">
-            <label for="contrasena">Contraseña</label>
-            <input type="password" class="form-control"
-              title="Ingrese una contraseña válida, debe tener al menos 8 caracteres, letras mayúsculas, minúsculas, números y símbolos"
-              placeholder="Contraseña" id="contrasenaRes" required>
-            <a href="#" id="mostrarPassRes">Mostrar contraseña</a>
-          </div>
-          <div class="form-group">
-            <label for="contrasenaRep">Repetir Contraseña</label>
-            <input type="password" class="form-control" title="Repetir Contraseña" placeholder="Repetir Contraseña"
-              id="contrasenaRepRes" required>
-            <a href="#" id="mostrarPassRRes">Mostrar contraseña</a>
+            <label for="contrasenaRes">Contraseña</label>
+            <div class="password-container">
+              <input type="password" class="form-control" name="contrasenaRes" id="contrasenaRes" title="La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial (@ $ ! % * ? & .)" required>
+              <a href="#" class="toggle-password" id="mostrarPassRes">
+                <i class="mdi mdi-eye"></i>
+              </a>
+            </div>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-            <button type="submit" class="btn btn-primary">Guardar</button>
+          <div class="form-group">
+            <label for="contrasenaRepRes">Repetir Contraseña</label>
+            <div class="password-container">
+              <input type="password" class="form-control" name="contrasenaRepRes" id="contrasenaRepRes" title="Repertir la contraseña" required>
+              <a href="#" class="toggle-password" id="mostrarPassRRes">
+                <i class="mdi mdi-eye"></i>
+              </a>
+            </div>
           </div>
         </form>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          <button type="submit" form="formResetPass" class="btn btn-primary" id="btnRegistrar">Guardar</button>
+        </div>
+
       </div>
     </div>
   </div>

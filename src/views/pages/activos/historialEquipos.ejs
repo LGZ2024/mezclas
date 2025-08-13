@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/master/cabecera") %>
+</head>
+
+<body>
+    <div class="container-scroller">
+        <!-- navcabecera -->
+        <%- include("../../templates/master/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <!-- nav lateral -->
+                <%- include("../../templates/master/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="page-header">
+                                <h3 class="page-title">Historial de Activos</h3>
+                                <!-- boton para abrir modal de bosstrap -->
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#">Activos</a></li>
+                                    </ol>
+                                </nav>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="table-responsive w-100">
+                                                <table class="table table-striped table-bordered w-100"
+                                                    id="tbHistorialEquipos">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">No Economico</th>
+                                                            <th scope="col">Marca</th>
+                                                            <th scope="col">Modelo</th>
+                                                            <th scope="col">SN</th>
+                                                            <th scope="col">ST</th>
+                                                            <th scope="col">Categoria</th>
+                                                            <th scope="col">Estado</th>
+                                                            <th scope="col">Motivo Registro</th>
+                                                            <th scope="col">Fecha Registro</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- content-wrapper ends -->
+                        <!-- partial:partials/_footer.html -->
+                        <%- include("../../templates/master/footer") %>
+                            <!-- partial -->
+                    </div>
+                    <!-- main-panel ends -->
+            </div>
+            <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    <%- include("../../templates/master/scripts") %>
+        <script type="module" src="../../../app/activos/main.js"></script>
+
+</body>
+
+</html>

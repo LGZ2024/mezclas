@@ -1,0 +1,49 @@
+      <div class="modal fade" id="miModalFactura" tabindex="-1" role="dialog" aria-labelledby="miModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="miModalLabel" style="color: black;">Agregar factura</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="formfacturas">
+                <input type="text" class="form-control" name="idF" id="idF" readonly hidden>
+                <div class="form-group">
+                  <label for="empresa_pertenece">Aque empresa pertenese la factura</label>
+                  <select class="form-control" id="empresa_pertenece" name="empresa_pertenece">
+                    <option value="">Selecciona Una Opcion</option>
+                    <option value="Moras Finas">Moras Finas</option>
+                    <option value="Bayas del Centro">Bayas del Centro</option>
+                    <option value="Bioagricultura">Bioagricultura</option>
+                    <option value="Lugar Agricola">Lugar Agricola</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="centro_coste">Centro de coste:</label>
+                  <!-- <input type="text" class="form-control" name="centro_coste" id="centro_coste" placeholder="Centro de coste"> -->
+                   <select class="form-control"  name="centro_coste" id="centro_coste">
+
+                   </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="factura">Factura</label>
+                  <input type="file" name="factura" id="factura" class="file-upload-default">
+                  <div class="input-group col-xs-12">
+                    <input type="text" class="form-control file-upload-info" id="nombreFact" disabled="" placeholder="Factura">
+                    <span class="input-group-append">
+                      <button class="file-upload-browse btn btn-primary" style="height: 1.875rem;padding: 0.3rem 1.375rem;" type="button">Subir</button>
+                    </span>
+                  </div>
+                </div>
+
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="submit" form="formfacturas" class="btn btn-primary" id="btnRegistrar">Agregar</button>
+            </div>
+          </div>
+        </div>
+      </div>

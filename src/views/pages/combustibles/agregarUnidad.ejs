@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/spinner.css">
+</head>
+
+<body>
+    <%- include("../../templates/combustibles/nav") %>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="formUnidad">
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit"
+                                                        id="regresarInicio">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    Registrar Unidades
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <!-- Razon Social-->
+                                        <div class="formulario__campo">
+                                            <label for="no_economico" class="formulario__label">Numero
+                                                Economico*:</label>
+                                            <input type="text" class="formulario__input" id="no_economico"
+                                                name="no_economico" placeholder="Numero Economico" required>
+                                        </div>
+                                        <!-- variedades -->
+                                        <div class="formulario__campo">
+                                            <label for="marca" class="formulario__label ">Marca*:</label>
+                                            <input type="text" class="formulario__input" id="marca" name="marca""
+                                                placeholder=" Marca del vehiculo" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="tipo" class="formulario__label">Tipo de veiculo*:</label>
+                                            <input type="text" class="formulario__input" id="tipo" name="tipo"
+                                                placeholder="Tipo de Vehiculo" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="modelo" class="formulario__label ">Modelo*:</label>
+                                            <input type="text" class="formulario__input" id="modelo" name="modelo"
+                                                placeholder="Modelo" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="ano" class="formulario__label">Año*:</label>
+                                            <input type="number" class="formulario__input" id="ano" name="ano"
+                                                placeholder="Año del Vehiculo" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="no_serie" class="formulario__label">Numero de serie:</label>
+                                            <input type="text" class="formulario__input" id="no_serie" name="no_serie"
+                                                placeholder="Numero de seria" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="numero_motor" class="formulario__label">Numero de Motor:</label>
+                                            <input type="text" class="formulario__input" id="numero_motor"
+                                                name="numero_motor" placeholder="Numero de Motor" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="placas" class="formulario__label"> Placas*:</label>
+                                            <input type="text" class="formulario__input" id="placas" name="placas"
+                                                placeholder="Placas" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="tipoCombustible" class="formulario__label ">Tipo de
+                                                Combustible*:</label>
+                                            <select id="tipoCombustible" name="tipoCombustible"
+                                                class="formulario__input" required>
+                                                <option value="">Selecciona una opcion</option>
+                                                <option value="Diesel">Diesel</option>
+                                                <option value="Magna">Magna</option>
+                                                <option value="Premium">Premium</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="medida_llanta" class="formulario__label ">Medida Llanta:</label>
+                                            <input type="text" class="formulario__input" id="medida_llanta"
+                                                name="medida_llanta" placeholder="Medida Llantas" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="cia_seguro" class="formulario__label ">Cia Seguro:</label>
+                                            <input type="text" class="formulario__input" id="cia_seguro"
+                                                name="cia_seguro" placeholder="Cia Seguro" required>
+
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="no_poliza" class="formulario__label ">Numero de Poliza:</label>
+                                            <input type="text" class="formulario__input" id="no_poliza" name="no_poliza"
+                                                placeholder="Numero de Poliza" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit" id="btnRegistrar">
+                                                Registar Unidad
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/vehiculos/main.js"></script>
+
+</body>
+
+</html>

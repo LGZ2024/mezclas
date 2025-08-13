@@ -12,11 +12,7 @@ const asignacionesConfig = {
     allowNull: false,
     validate: {
       notEmpty: {
-        msg: 'El centro de coste es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
+        msg: 'El id de empleado es requerido'
       }
     }
   },
@@ -25,11 +21,7 @@ const asignacionesConfig = {
     allowNull: false,
     validate: {
       notEmpty: {
-        msg: 'Empresa pertenece es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'La Empresa debe tener entre 3 y 50 caracteres'
+        msg: 'El id de equipo es requerido'
       }
     }
   },
@@ -67,8 +59,8 @@ const asignacionesConfig = {
         msg: 'La Responsiva es requerida'
       },
       len: {
-        args: [3, 50],
-        msg: 'La Responsiva debe tener entre 3 y 50 caracteres'
+        args: [3, 100],
+        msg: 'La Responsiva debe tener entre 3 y 100 caracteres'
       }
     }
   },

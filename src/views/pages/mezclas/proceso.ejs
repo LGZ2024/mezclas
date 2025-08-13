@@ -13,24 +13,19 @@
 <body>
     <%- include("../../templates/mezclas/headerNav") %>
         <!-- Spinner de carga -->
-        <div class="spinner-overlay" id="spinner" style="display: none;">
-            <div class="spinner-container">
-                <div class="spinner"></div>
-                <p class="spinner-text">Procesando...</p>
-            </div>
-        </div>
+
         <input type="hidden" value="<%= rol %>" id="rol">
         <section class="tablas" id="tablaFuciones" style="display: block;">
             <div class="container">
                 <div class="row justify-content-center">
-                    <div class="col-md-8">
+                    <div class="col-md-12">
                         <div class="card text-center">
                             <div class="card-body">
                                 <div class="titulo">
                                     <div class="col">
                                         <div
                                             style="display: flex; flex-direction: column; align-items: start; width: 20%;">
-                                            <button class="formulario__submit" id="regresar"><span
+                                            <button class="formulario__submit" id="regresarInicio"><span
                                                     class="mdi mdi-arrow-left-bold"></span></button>
                                         </div>
                                     </div>
@@ -42,7 +37,7 @@
                                 <div class="table-responsive">
                                     <table
                                         class="table table-striped table-bordered table-hover table-sm table-compac border-0"
-                                        id="tbPreparadas" style="white-space: nowrap;">
+                                        id="tbProceso" style="white-space: nowrap;">
                                         <thead class="bg-primary">
                                             <tr class="bg-primary">
                                                 <th>Solicitud</th>
@@ -137,8 +132,8 @@
                                         </div>
                                         <div class="formulario__campo">
                                             <label class="formulario__label">Productos</label>
-                                            <button type="button" class="btn btn-primary formulario__submit" id="receta"
-                                                data-bs-toggle="modal">
+                                            <button type="button" class="btn btn-primary formulario__submit"
+                                                id="btnReceta" data-bs-toggle="modal">
                                                 Mostrar Receta
                                             </button>
                                         </div>
@@ -146,7 +141,7 @@
                                             <label class="formulario__label" for="notaMezcla">Nota de mezclador</label>
                                             <textarea id="notaMezcla" class="formulario__input" disabled></textarea>
                                         </div>
-                                        <% if (rol==="mezclador" || rol==="administrativo" ) { %>
+                                        <% if (rol==="mezclador" || rol==="administrativo" || rol==="master" ) { %>
                                             <div class="formulario__campo">
                                                 <button type="button" class="formulario__submit"
                                                     id="btnCerrarMescla">Cerrar Mezcla</button>
@@ -163,85 +158,141 @@
 
         </section>
 
-        <section id="formCerrar" class="" style="display: none;">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <div class="form">
-                                    <div class="titulo">
-                                        <div class="col">
-                                                                                    <div style="display: flex; flex-direction: column; align-items: start; width: 20%;">
-
-                                            <button class="formulario__submit" id="regresarCerrar"><span
-                                                    class="mdi mdi-arrow-left-bold"></span></button>
-                                        </div>
-                                        </div>
-                                        <div  class="text-center">
-                                            <h3>Cerrar Mezcla</h3>
-                                        </div>
+<section id="formCerrar" class="camera-section" style="display: none;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="form">
+                            <!-- Cabecera con el estilo anterior -->
+                            <div class="titulo">
+                                <div class="col">
+                                    <div style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                        <button class="formulario__submit" id="regresarCerrar">
+                                            <span class="mdi mdi-arrow-left-bold"></span>
+                                        </button>
                                     </div>
-                                    <hr>
-                                    <div class="formulario__campo">
-                                        <label class="formulario__label" for="idMesclas">Folio Receta</label>
-                                        <input type="text" class="formulario__input" id="idMesclas" readonly>
-                                    </div>
-
-                                    <!-- imputs para tomar o subir imagen -->
-                                    <div class="formulario__campo">
-                                        <label class="formulario__label" for="tomarFoto">Imagen Receta</label>
-                                        <button type="button" class="formulario__submit" id="tomarFoto">Tomar
-                                            foto</button>
-                                        <br>
-                                        <button type="button" class="formulario__submit" id="subirFoto">Subir
-                                            foto</button>
-                                    </div>
-                                    <textarea type="text" id="fileInput" hidden></textarea>
-                                    <div class="formulario__campo" id="InputImage" style="display: none;">
-                                        <label class="formulario__label" for="fileInput">Imagen producto</label>
-                                        <br>
-                                        <select name="listaDeDispositivos" id="listaDeDispositivos"
-                                            class="formulario__input"></select>
-                                        <button class="formulario__submit btnTomarFoto" style="display: block;">Tomar
-                                            foto</button>
-                                        <button class="formulario__submit btnOtraFoto" style="display: none;">Tomar otra
-                                            foto</button>
-                                        <p id="estado"></p>
-                                        <video muted="muted" id="video"></video>
-                                        <canvas id="canvas" style="display: none;"></canvas> <!--ojo-->
-                                        <img src="" alt="" class="photo" />
-                                    </div>
-                                    <div class="formulario__campo" id="fileImage" style="display: none;">
-                                        <label for="imageFile" class="formulario__label">Subir Imagen:</label>
-                                        <input type="file" name="imageFile" id="imageFile" class="formulario__input"
-                                            placeholder="Seleciona Una imagen" accept="image/*">
-                                        <canvas id="canvas1" style="display: none;">
-                                        </canvas>
-                                    </div>
-
-                                    <div class="formulario__campo">
-                                        <button class="formulario__submit" id="btnEntregada">Cerras Mezcla</button>
-                                    </div>
-
                                 </div>
+                                <div class="text-center">
+                                    <h3>Cerrar Mezcla</h3>
+                                </div>
+                            </div>
+                            <hr>
 
+                            <!-- Folio con el estilo anterior -->
+                            <div class="formulario__campo">
+                                <label class="formulario__label" for="idMesclas">Folio Receta</label>
+                                <input type="text" class="formulario__input" id="idMesclas" readonly>
+                            </div>
 
+                            <!-- Controles de imagen con el estilo anterior -->
+                            <div class="formulario__campo">
+                                <label class="formulario__label">Imagen Receta</label>
+                                <button type="button" class="formulario__submit" id="tomarFoto">
+                                    <i class="mdi mdi-camera"></i> Tomar foto
+                                </button>
+                                <br>
+                                <button type="button" class="formulario__submit" id="subirFoto">
+                                    <i class="mdi mdi-upload"></i> Subir foto
+                                </button>
+                            </div>
+
+                            <!-- Sección de cámara con mejor estructura -->
+                            <div class="formulario__campo" id="InputImage" style="display: none;">
+                                <label class="formulario__label">Imagen producto</label>
+                                <br>
+                                <select name="listaDeDispositivos" id="listaDeDispositivos" 
+                                        class="formulario__input">
+                                </select>
+                                <div class="camera-preview">
+                                    <video muted="muted" id="video" class="w-100"></video>
+                                    <canvas id="canvas" style="display: none;"></canvas>
+                                    <img src="" alt="" class="photo w-100" style="display: none;"/>
+                                </div>
+                                <div class="camera-controls">
+                                    <button class="formulario__submit btnTomarFoto">
+                                        <i class="mdi mdi-camera"></i> Tomar foto
+                                    </button>
+                                    <button class="formulario__submit btnOtraFoto" style="display: none;">
+                                        <i class="mdi mdi-camera-retake"></i> Tomar otra foto
+                                    </button>
+                                </div>
+                                <p id="estado"></p>
+                            </div>
+
+                            <!-- Sección de subir archivo con el estilo anterior -->
+                            <div class="formulario__campo" id="fileImage" style="display: none;">
+                                <label class="formulario__label" for="imageFile">Subir Imagen:</label>
+                                <input type="file" 
+                                       name="imageFile" 
+                                       id="imageFile" 
+                                       class="formulario__input"
+                                       accept="image/*" 
+                                       capture="environment">
+                                <canvas id="canvas1" style="display: none;"></canvas>
+                            </div>
+
+                            <!-- Botón de envío con el estilo anterior -->
+                            <div class="formulario__campo">
+                                <button class="formulario__submit" id="btnEntregada">
+                                    <i class="mdi mdi-check"></i> Cerrar Mezcla
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-
+        </div>
+    </div>
+</section>
 
         <!-- Modal mostar receta -->
         <%- include("../../templates/mezclas/mostrarRecetaProceso") %>
 
             <!-- Firebase Configuración y funciones -->
             <%- include("../../templates/mezclas/scripts") %>
-                <script type="module" src="../../app/proceso/main.js"></script>
+                <script type="module" src="../../app/mezclas/main.js"></script>
 
 </body>
 
 </html>
+<style>
+.camera-preview {
+    margin: 15px 0;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.camera-preview video,
+.camera-preview .photo {
+    width: 100%;
+    max-height: 50vh;
+    object-fit: cover;
+}
+
+.camera-controls {
+    margin: 15px 0;
+}
+
+#estado {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+}
+
+#estado.error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+@media (max-width: 768px) {
+    .camera-preview video,
+    .camera-preview .photo {
+        max-height: 40vh;
+    }
+}
+</style>

@@ -14,11 +14,22 @@ export async function fetchApi (url, method, data) {
     console.error('Error:', error.message)
   }
 }
+export async function fetchApiDoc (url, method, data) {
+  try {
+    const response = await fetch(url, {
+      method,
+      body: data
+    })
+    return response
+  } catch (error) {
+    console.error('Error:', error.message)
+  }
+}
 
 // Función para mostrar mensajes de éxito o error del fech
 export async function showMessage (response) {
   const data = await response.json()
-  if (data.message) {
+  if (response.ok) {
     Swal.fire({
       title: 'Existo',
       text: data.message,
@@ -26,14 +37,16 @@ export async function showMessage (response) {
       showConfirmButton: false,
       timer: 3000
     })
+    return true
   } else {
-    return Swal.fire({
+    Swal.fire({
       title: 'Error',
-      text: data.error,
+      text: data.message,
       icon: 'error',
       showConfirmButton: false,
       timer: 3000
     })
+    return false
   }
 }
 
@@ -54,6 +67,44 @@ export async function mostrarMensaje (msg, type, buton) {
     showConfirmButton: buton || false,
     timer: 1500
   })
+}
+
+export async function MensajeEliminacion (url, method, data) {
+  try {
+    // Mostrar diálogo de confirmación
+    const result = await Swal.fire({
+      title: 'Esta seguro de eliminar registro?',
+      text: '¡No podrás revertir esto!',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6'
+    })
+
+    // Si el usuario confirma
+    if (result.isConfirmed) {
+      // Realizar la petición de eliminación
+      const res = await fetchApi(url, method, data)
+
+      if (!res) {
+        throw new Error('Error en la petición')
+      }
+
+      // Mostrar mensaje de respuesta
+      await showMessage(res)
+      return true
+    } else {
+      // Si el usuario cancela
+      await mostrarMensaje('Operación cancelada', 'info')
+      return false
+    }
+  } catch (error) {
+    console.error('Error en eliminación:', error)
+    await mostrarMensaje('Error al eliminar elemento', 'error')
+    return false
+  }
 }
 // Funciones para convertir fechas y horas
 export async function convertHourTo24Format (hour) {
@@ -104,4 +155,48 @@ export async function convertFechFormatDate (fecha) {
 
   const fechaFormateada = `${ano}-${mes}-${dia}`
   return fechaFormateada
+}
+
+// funcion para obtener documento e imagenes
+export async function obtenerDocumento (url) {
+  fetch(url, { method: 'HEAD' })
+    .then(response => {
+      if (response.ok) {
+        // Determinar el tipo de archivo por su extensión
+        const extension = url.split('.').pop().toLowerCase()
+        const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(extension)
+
+        if (isImage) {
+          // Configurar el modal para imágenes
+          $('#pdfEmbed').replaceWith(`
+                        <div class="image-container" style="display: flex; justify-content: center; align-items: center; height: 500px; padding: 20px;">
+                            <img id="imagePreview" src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                        </div>
+                    `)
+          $('#pdfModalLabel').text('Visualizar Imagen')
+        } else {
+          // Configurar el modal para PDFs
+          $('#pdfEmbed').replaceWith(`
+                        <embed id="pdfEmbed" src="${url}" type="application/pdf" width="100%" height="500px" />
+                    `)
+          $('#pdfModalLabel').text('Visualizar PDF')
+        }
+
+        $('#pdfModal').modal('show')
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'El archivo no existe.'
+        })
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al cargar el archivo.'
+      })
+    })
 }

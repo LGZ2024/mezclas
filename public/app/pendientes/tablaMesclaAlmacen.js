@@ -71,11 +71,13 @@ const obtenerSolicitudes = async () => {
 // Configuración de tabla de solicitudes
 const verSolicitud = () => {
   $('#tbSolicitadas').DataTable({
-    paging: false,
+    paging: true,
     order: [[0, 'desc']],
     responsive: true,
-    pageLength: -1,
-    searching: false,
+    dom: '<"d-flex justify-content-between"fl>t<"d-xl-flex justify-content-between align-items-center"ip><"clear">',
+    pageLength: 10,
+    lengthMenu: [10, 25, 50, 100],
+    searching: true,
     language: {
       lengthMenu: 'Mostrar _MENU_ registros',
       zeroRecords: 'No se encontraron resultados',

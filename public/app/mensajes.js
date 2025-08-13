@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 // Versión con más opciones de configuración
-export function mostrarMensaje (config) {
+export async function mostrarMensaje (config) {
   const {
     msg,
     type,
@@ -37,6 +37,36 @@ export function mostrarMensaje (config) {
     }
   }).showToast()
 }
+export async function showMessage (respuesta) {
+  const data = await respuesta.json()
+  if (respuesta.status === 200) {
+    Toastify({
+      text: data.message,
+      newWindow: true,
+      close: true,
+      gravity: 'top',
+      position: 'left',
+      stopOnFocus: true,
+      style: {
+        background: 'linear-gradient(to right, #00b09b, #96c93d)'
+      }
+    }).showToast()
+    return true
+  } else {
+    Toastify({
+      text: data.message,
+      newWindow: true,
+      close: true,
+      gravity: 'top',
+      position: 'left',
+      stopOnFocus: true,
+      style: {
+        background: 'red'
+      }
+    }).showToast()
+    return false
+  }
+}
 export async function fetchApi (url, method, data) {
   try {
     const response = await fetch(url, {
@@ -51,6 +81,7 @@ export async function fetchApi (url, method, data) {
     console.error('Error:', error.message)
   }
 }
+
 // Ejemplos de uso
 // mostrarMensaje({
 //   msg: 'Operación exitosa',

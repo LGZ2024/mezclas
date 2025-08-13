@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/spinner.css">
+</head>
+
+<body>
+    <%- include("../../templates/combustibles/nav") %>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="formTaller">
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit" id="regresarInicio">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    <p id="titulo"></p>
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+
+                                        <!-- Razon Social-->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="razon_social">Razon Social</label>
+                                            <input type="text" id="razon_social" name="razon_social" class="formulario__input"
+                                                placeholder="Razon Social..." required>
+                                        </div>
+                                        <!-- variedades -->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="domicilio">Domicilio</label>
+                                            <input type="text" id="domicilio" name="domicilio" class="formulario__input"
+                                                placeholder="Domicilio..." required>
+                                        </div>
+                                        <!-- folio -->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="contacto">Contacto</label>
+                                            <input type="text" id="contacto" name="contacto" class="formulario__input"
+                                                placeholder="Contacto..." required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="tipo_pago">Forma de Pago</label>
+                                            <select id="tipo_pago" name="tipo_pago" class="formulario__input">
+                                                <option value="">Selecionas una Forma de Pago...</option>
+                                                <option value="CREDITO">Credito</option>
+                                                <option value="DEBITO">Debito</option>
+                                                <option value="EFECTIVO">Efectivo</option>
+                                                <option value="MIXTO">Mixto</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit" id="btnRegistrar">
+                                                Registar Taller
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+                    <script type="module" src="../../app/vehiculos/main.js"></script>
+
+</body>
+
+</html>

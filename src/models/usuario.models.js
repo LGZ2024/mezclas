@@ -268,21 +268,28 @@ export class UsuarioModel {
   }
 
   // eliminar usuario
-  static async delete ({ id }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!id) throw new ValidationError('Datos requeridos no proporcionados')
+  static async delete ({ id, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        // Verificar si se proporcionaron los parámetros requeridos
+        if (!id) {
+          throw new ValidationError('ID no proporcionados')
+        }
+        const usuario = await Usuario.findByPk(id)
+        if (!usuario) throw new NotFoundError('Usuario no encontrado')
 
-      const usuario = await Usuario.findByPk(id)
+        await usuario.destroy({ transaction })
 
-      if (!usuario) throw new NotFoundError('Usuario no encontrado')
-
-      await usuario.destroy()
-      return { message: `usuario eliminada correctamente con id ${id}` }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al eliminar usuario')
-    }
+        return { message: `Usuario eliminado correctamente con id ${id}` }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          error: error.message
+        })
+        if (error instanceof CustomError) throw error
+        throw new DatabaseError('Error al eliminar usuario')
+      }
+    })
   }
 
   // crear usuario
@@ -382,20 +389,27 @@ export class UsuarioModel {
   }
 
   // funcion cambiar contraseña Admin
-  static async changePasswordAdmin ({ id, newPassword }) {
-    try {
-      // Verificar si se proporcionaron los parámetros requeridos
-      if (!id || !newPassword) {
-        throw new ValidationError('Datos requeridos no proporcionados')
+  static async changePasswordAdmin ({ id, newPassword, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        console.log('cambiar contraseña Admin', id, newPassword)
+        // Verificar si se proporcionaron los parámetros requeridos
+        if (!id || !newPassword) {
+          throw new ValidationError('Datos requeridos no proporcionados')
+        }
+        const usuario = await Usuario.findByPk(id)
+        if (!usuario) throw new NotFoundError('usuario no encontrado')
+        usuario.password = newPassword
+        await usuario.save({ transaction })
+        return { message: 'Contraseña cambiada correctamente' }
+      } catch (e) {
+        logger.logError(e, {
+          ...logContext,
+          error: e.message
+        })
+        if (e instanceof CustomError) throw e
+        throw new DatabaseError('Error al cambiar contraseña')
       }
-      const usuario = await Usuario.findByPk(id)
-      if (!usuario) throw new NotFoundError('usuario no encontrado')
-      usuario.password = newPassword
-      await usuario.save()
-      return { message: 'Contraseña cambiada correctamente' }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al cambiar contraseña')
-    }
+    })
   }
 }

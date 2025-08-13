@@ -14,6 +14,10 @@ export const createCentroCosteRouter = ({ centroModel }) => {
 
   // obtener todos los centros de costo
   router.get('/centroCoste', centroController.getAll)
+  router.post('/centroCoste', centroController.create)
+  router.delete('/centroCoste/:id', centroController.delete)
+
+  router.get('/centroCostess', centroController.getAllOption)
 
   // actualizar los datos del porcentaje de las variedades de contros de costo
   router.post('/porcentajeVariedad', centroController.porcentajeVariedad)

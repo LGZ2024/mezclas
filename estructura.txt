@@ -4,14 +4,78 @@
 │       └───new-model.yaml
 ├───.env.development
 ├───.gitignore
+├───.husky
+│   └───_
+│       ├───.gitignore
+│       ├───applypatch-msg
+│       ├───commit-msg
+│       ├───h
+│       ├───husky.sh
+│       ├───post-applypatch
+│       ├───post-checkout
+│       ├───post-commit
+│       ├───post-merge
+│       ├───post-rewrite
+│       ├───pre-applypatch
+│       ├───pre-auto-gc
+│       ├───pre-commit
+│       ├───pre-merge-commit
+│       ├───pre-push
+│       ├───pre-rebase
+│       └───prepare-commit-msg
+├───.npmrc
+├───.vscode
+│   ├───launch.json
+│   ├───mcp.json
+│   ├───settings.json
+│   └───tasks.json
 ├───babel.config.js
 ├───deploy.config.mjs
 ├───logs
-├───manifest.json
+│   ├───.4176896c53a7ccb8f0e545b5a60068da0a808d2f-audit.json
+│   ├───.e9565a9d9a6161b209aa60846908fac5de488900-audit.json
+│   ├───combined-2025-07-11.log
+│   ├───combined-2025-07-12.log
+│   ├───combined-2025-07-13.log
+│   ├───combined-2025-07-14.log
+│   ├───combined-2025-07-15.log
+│   ├───combined-2025-07-16.log
+│   ├───combined-2025-07-17.log
+│   ├───combined-2025-07-18.log
+│   ├───combined-2025-07-20.log
+│   ├───combined-2025-07-21.log
+│   ├───combined-2025-07-22.log
+│   ├───combined-2025-07-23.log
+│   ├───combined-2025-07-24.log
+│   ├───combined-2025-07-25.log
+│   ├───error-2025-07-09.log
+│   ├───error-2025-07-10.log
+│   ├───error-2025-07-11.log
+│   ├───error-2025-07-12.log
+│   ├───error-2025-07-13.log
+│   ├───error-2025-07-14.log
+│   ├───error-2025-07-15.log
+│   ├───error-2025-07-16.log
+│   ├───error-2025-07-17.log
+│   ├───error-2025-07-18.log
+│   ├───error-2025-07-21.log
+│   ├───error-2025-07-22.log
+│   ├───error-2025-07-23.log
+│   ├───error-2025-07-24.log
+│   ├───error-2025-07-25.log
+│   └───pm2
 ├───package-lock.json
 ├───package.json
 ├───public
 │   ├───app
+│   │   ├───activos
+│   │   │   ├───main.js
+│   │   │   ├───tablaActivos.js
+│   │   │   ├───tablaActivosBaja.js
+│   │   │   ├───tablaAsignaciones.js
+│   │   │   ├───tablaEmpleados.js
+│   │   │   ├───tablaHistorialAsignaciones.js
+│   │   │   └───tablaHistorialEquipos.js
 │   │   ├───admin
 │   │   │   ├───graficas.js
 │   │   │   ├───main.js
@@ -28,6 +92,12 @@
 │   │   │   ├───solicitarMezcla.js
 │   │   │   └───tablaViviendas.js
 │   │   ├───CentrosCoste.js
+│   │   ├───combustibles
+│   │   │   ├───main.js
+│   │   │   ├───tablaCargas.js
+│   │   │   ├───tablaEntradas.js
+│   │   │   ├───tablaInventario.js
+│   │   │   └───tablaSalidas.js
 │   │   ├───completadas
 │   │   │   ├───completadas.js
 │   │   │   └───Funciones.js
@@ -35,6 +105,10 @@
 │   │   │   ├───confirmacion.js
 │   │   │   ├───enviarEstado.js
 │   │   │   └───tablaConfirmacion.js
+│   │   ├───devolucion
+│   │   │   ├───devolucion.js
+│   │   │   ├───Funciones.js
+│   │   │   └───main.js
 │   │   ├───funciones.js
 │   │   ├───main.js
 │   │   ├───mensajes.js
@@ -43,7 +117,6 @@
 │   │   │   └───main.js
 │   │   ├───notififcaiones.js
 │   │   ├───pendientes
-│   │   │   ├───enviarEstado copy.js
 │   │   │   ├───enviarEstado.js
 │   │   │   ├───FuncionesAlmacen.js
 │   │   │   ├───listaProductos.js
@@ -68,11 +141,31 @@
 │   │   │   ├───reporte.js
 │   │   │   └───solicitudes.js
 │   │   ├───spinner.js
-│   │   └───usuarios
-│   │       ├───funcionesFormulario.js
-│   │       ├───main.js
-│   │       ├───postList.js
-│   │       └───tablaUsuarios.js
+│   │   ├───usuarios
+│   │   │   ├───funcionesFormulario.js
+│   │   │   ├───main.js
+│   │   │   ├───postList.js
+│   │   │   └───tablaUsuarios.js
+│   │   ├───vehiculos
+│   │   │   ├───main.js
+│   │   │   ├───tablaCorrectivos.js
+│   │   │   ├───tablaManteniminetos.js
+│   │   │   ├───tablaPreventivos.js
+│   │   │   ├───tablaServicios.js
+│   │   │   ├───tablaTalleres.js
+│   │   │   ├───tablaTikets.js
+│   │   │   ├───tablaTiketsCerrados.js
+│   │   │   └───tablaUnidades.js
+│   │   └───veiculos
+│   │       ├───funciones.js
+│   │       ├───mantenimiento.js
+│   │       ├───servicioCorrectivo.js
+│   │       ├───servicioPreventivo.js
+│   │       ├───Servicios.js
+│   │       ├───tablaUnidades.js
+│   │       ├───talleres.js
+│   │       ├───tickets.js
+│   │       └───ticketsCerrados.js
 │   ├───css
 │   │   ├───animate.css
 │   │   ├───app.css
@@ -82,6 +175,14 @@
 │   │   ├───foodhut.css
 │   │   ├───headerNotificaciones.css
 │   │   ├───mdi
+│   │   │   ├───css
+│   │   │   │   ├───materialdesignicons.min.css
+│   │   │   │   └───materialdesignicons.min.css.map
+│   │   │   └───fonts
+│   │   │       ├───materialdesignicons-webfont.eot
+│   │   │       ├───materialdesignicons-webfont.ttf
+│   │   │       ├───materialdesignicons-webfont.woff
+│   │   │       └───materialdesignicons-webfont.woff2
 │   │   ├───mensajeNotificaciones.css
 │   │   ├───mezclas-modals.css
 │   │   ├───mobile-fixes.css
@@ -95,7 +196,140 @@
 │   │   └───style.css.map
 │   ├───fonts
 │   │   ├───Nunito
+│   │   │   ├───Nunito-Black.eot
+│   │   │   ├───Nunito-Black.ttf
+│   │   │   ├───Nunito-Black.woff
+│   │   │   ├───Nunito-Black.woff2
+│   │   │   ├───Nunito-Bold.eot
+│   │   │   ├───Nunito-Bold.ttf
+│   │   │   ├───Nunito-Bold.woff
+│   │   │   ├───Nunito-Bold.woff2
+│   │   │   ├───Nunito-Light.eot
+│   │   │   ├───Nunito-Light.ttf
+│   │   │   ├───Nunito-Light.woff
+│   │   │   ├───Nunito-Light.woff2
+│   │   │   ├───Nunito-Regular.eot
+│   │   │   ├───Nunito-Regular.ttf
+│   │   │   ├───Nunito-Regular.woff
+│   │   │   ├───Nunito-Regular.woff2
+│   │   │   ├───Nunito-SemiBold.eot
+│   │   │   ├───Nunito-SemiBold.ttf
+│   │   │   ├───Nunito-SemiBold.woff
+│   │   │   └───Nunito-SemiBold.woff2
 │   │   └───Ubuntu
+│   │       ├───Ubuntu-Bold.eot
+│   │       ├───Ubuntu-Bold.ttf
+│   │       ├───Ubuntu-Bold.woff
+│   │       ├───Ubuntu-Bold.woff2
+│   │       ├───Ubuntu-Light.eot
+│   │       ├───Ubuntu-Light.ttf
+│   │       ├───Ubuntu-Light.woff
+│   │       ├───Ubuntu-Light.woff2
+│   │       ├───Ubuntu-Medium.eot
+│   │       ├───Ubuntu-Medium.ttf
+│   │       ├───Ubuntu-Medium.woff
+│   │       ├───Ubuntu-Medium.woff2
+│   │       ├───Ubuntu-Regular.eot
+│   │       ├───Ubuntu-Regular.ttf
+│   │       ├───Ubuntu-Regular.woff
+│   │       └───Ubuntu-Regular.woff2
+│   ├───Fpdf
+│   │   ├───bajaEquipo.php
+│   │   ├───DejaVuSansCondensed-Bold.ttf
+│   │   ├───DejaVuSansCondensed.ttf
+│   │   ├───doc
+│   │   │   ├───acceptpagebreak.htm
+│   │   │   ├───addfont.htm
+│   │   │   ├───addlink.htm
+│   │   │   ├───addpage.htm
+│   │   │   ├───aliasnbpages.htm
+│   │   │   ├───cell.htm
+│   │   │   ├───close.htm
+│   │   │   ├───error.htm
+│   │   │   ├───footer.htm
+│   │   │   ├───getpageheight.htm
+│   │   │   ├───getpagewidth.htm
+│   │   │   ├───getstringwidth.htm
+│   │   │   ├───getx.htm
+│   │   │   ├───gety.htm
+│   │   │   ├───header.htm
+│   │   │   ├───image.htm
+│   │   │   ├───index.htm
+│   │   │   ├───line.htm
+│   │   │   ├───link.htm
+│   │   │   ├───ln.htm
+│   │   │   ├───multicell.htm
+│   │   │   ├───output.htm
+│   │   │   ├───pageno.htm
+│   │   │   ├───rect.htm
+│   │   │   ├───setauthor.htm
+│   │   │   ├───setautopagebreak.htm
+│   │   │   ├───setcompression.htm
+│   │   │   ├───setcreator.htm
+│   │   │   ├───setdisplaymode.htm
+│   │   │   ├───setdrawcolor.htm
+│   │   │   ├───setfillcolor.htm
+│   │   │   ├───setfont.htm
+│   │   │   ├───setfontsize.htm
+│   │   │   ├───setkeywords.htm
+│   │   │   ├───setleftmargin.htm
+│   │   │   ├───setlinewidth.htm
+│   │   │   ├───setlink.htm
+│   │   │   ├───setmargins.htm
+│   │   │   ├───setrightmargin.htm
+│   │   │   ├───setsubject.htm
+│   │   │   ├───settextcolor.htm
+│   │   │   ├───settitle.htm
+│   │   │   ├───settopmargin.htm
+│   │   │   ├───setx.htm
+│   │   │   ├───setxy.htm
+│   │   │   ├───sety.htm
+│   │   │   ├───text.htm
+│   │   │   ├───write.htm
+│   │   │   └───__construct.htm
+│   │   ├───doc.pdf
+│   │   ├───font
+│   │   │   ├───courier.php
+│   │   │   ├───courierb.php
+│   │   │   ├───courierbi.php
+│   │   │   ├───courieri.php
+│   │   │   ├───helvetica.php
+│   │   │   ├───helveticab.php
+│   │   │   ├───helveticabi.php
+│   │   │   ├───helveticai.php
+│   │   │   ├───symbol.php
+│   │   │   ├───times.php
+│   │   │   ├───timesb.php
+│   │   │   ├───timesbi.php
+│   │   │   ├───timesi.php
+│   │   │   └───zapfdingbats.php
+│   │   ├───fpdf.css
+│   │   ├───fpdf.php
+│   │   ├───install.txt
+│   │   ├───license.txt
+│   │   └───makefont
+│   │       ├───cp1250.map
+│   │       ├───cp1251.map
+│   │       ├───cp1252.map
+│   │       ├───cp1253.map
+│   │       ├───cp1254.map
+│   │       ├───cp1255.map
+│   │       ├───cp1257.map
+│   │       ├───cp1258.map
+│   │       ├───cp874.map
+│   │       ├───iso-8859-1.map
+│   │       ├───iso-8859-11.map
+│   │       ├───iso-8859-15.map
+│   │       ├───iso-8859-16.map
+│   │       ├───iso-8859-2.map
+│   │       ├───iso-8859-4.map
+│   │       ├───iso-8859-5.map
+│   │       ├───iso-8859-7.map
+│   │       ├───iso-8859-9.map
+│   │       ├───koi8-r.map
+│   │       ├───koi8-u.map
+│   │       ├───makefont.php
+│   │       └───ttfparser.php
 │   ├───images
 │   │   ├───faces
 │   │   │   ├───pic-1.png
@@ -103,17 +337,32 @@
 │   │   │   ├───pic-3.png
 │   │   │   └───pic-4.png
 │   │   ├───inicio.jpg
+│   │   ├───inicio.webp
+│   │   ├───LogoTransp.png
+│   │   ├───logotransp.svg
+│   │   ├───LogoTransp.webp
+│   │   ├───LogoTransp2.svg
+│   │   ├───moras.jpg
+│   │   ├───moras.webp
+│   │   ├───paisaje.jpg
+│   │   ├───paisaje.webp
+│   │   ├───paise2.jpg
+│   │   ├───paise2.webp
+│   │   ├───splash
+│   │   └───trash.svg
 │   ├───js
 │   │   ├───app.js
 │   │   ├───chart.js
 │   │   ├───codemirror.js
 │   │   ├───dashboard.js
 │   │   ├───file-upload.js
+│   │   ├───firebase-config.js
 │   │   ├───hoverable-collapse.js
 │   │   ├───misc.js
 │   │   ├───off-canvas.js
 │   │   ├───select2.js
 │   │   ├───settings.js
+│   │   ├───sw-updates.js
 │   │   ├───todolist.js
 │   │   └───typeahead.js
 │   ├───manifest.json
@@ -179,7 +428,41 @@
 │       │   └───moment.min.js
 │       ├───SearchBuilder-1.7.0
 │       │   ├───css
+│       │   │   ├───searchBuilder.bootstrap.css
+│       │   │   ├───searchBuilder.bootstrap.min.css
+│       │   │   ├───searchBuilder.bootstrap4.css
+│       │   │   ├───searchBuilder.bootstrap4.min.css
+│       │   │   ├───searchBuilder.bootstrap5.css
+│       │   │   ├───searchBuilder.bootstrap5.min.css
+│       │   │   ├───searchBuilder.bulma.css
+│       │   │   ├───searchBuilder.bulma.min.css
+│       │   │   ├───searchBuilder.dataTables.css
+│       │   │   ├───searchBuilder.dataTables.min.css
+│       │   │   ├───searchBuilder.foundation.css
+│       │   │   ├───searchBuilder.foundation.min.css
+│       │   │   ├───searchBuilder.jqueryui.css
+│       │   │   ├───searchBuilder.jqueryui.min.css
+│       │   │   ├───searchBuilder.semanticui.css
+│       │   │   └───searchBuilder.semanticui.min.css
 │       │   └───js
+│       │       ├───dataTables.searchBuilder.js
+│       │       ├───dataTables.searchBuilder.min.js
+│       │       ├───searchBuilder.bootstrap.js
+│       │       ├───searchBuilder.bootstrap.min.js
+│       │       ├───searchBuilder.bootstrap4.js
+│       │       ├───searchBuilder.bootstrap4.min.js
+│       │       ├───searchBuilder.bootstrap5.js
+│       │       ├───searchBuilder.bootstrap5.min.js
+│       │       ├───searchBuilder.bulma.js
+│       │       ├───searchBuilder.bulma.min.js
+│       │       ├───searchBuilder.dataTables.js
+│       │       ├───searchBuilder.dataTables.min.js
+│       │       ├───searchBuilder.foundation.js
+│       │       ├───searchBuilder.foundation.min.js
+│       │       ├───searchBuilder.jqueryui.js
+│       │       ├───searchBuilder.jqueryui.min.js
+│       │       ├───searchBuilder.semanticui.js
+│       │       └───searchBuilder.semanticui.min.js
 │       ├───select2
 │       │   ├───select2.min.css
 │       │   └───select2.min.js
@@ -213,15 +496,24 @@
 │   ├───controller
 │   │   ├───asignaciones.controller.js
 │   │   ├───centro.controller.js
+│   │   ├───combustible_carga.controller.js
+│   │   ├───combustible_entrada.controller.js
+│   │   ├───combustible_inventario.controller.js
+│   │   ├───combustible_salida.controller.js
 │   │   ├───devolucion.controller.js
 │   │   ├───empleados.controller.js
 │   │   ├───equipos.controller.js
+│   │   ├───mantenimiento.controller.js
 │   │   ├───mezclas.controller.js
 │   │   ├───notificaciones.controller.js
 │   │   ├───produccion.controller.js
 │   │   ├───productos.controller.js
 │   │   ├───productosSolicitud.controller.js
 │   │   ├───proteted.controller.js
+│   │   ├───servicios.controller.js
+│   │   ├───solicitudServicio.controller.js
+│   │   ├───taller.controller.js
+│   │   ├───unidad.controller.js
 │   │   ├───uploads.controller.js
 │   │   └───usuario.controller.js
 │   ├───db
@@ -233,16 +525,22 @@
 │   │   ├───cors.js
 │   │   ├───error500Middleware.js
 │   │   ├───rateLimit.js
+│   │   ├───upload.js
 │   │   ├───validateFormatoImg.js
 │   │   └───validateJsonMiddleware.js
 │   ├───models
 │   │   ├───asignaciones.models.js
 │   │   ├───centro.models.js
+│   │   ├───combustible_carga.models.js
+│   │   ├───combustible_entrada.models.js
+│   │   ├───combustible_inventario.models.js
+│   │   ├───combustible_salida.models.js
 │   │   ├───CRUDModels.js
 │   │   ├───devolucion.models.js
 │   │   ├───ejemplo.models.js
 │   │   ├───empleados.models.js
 │   │   ├───equipos.models.js
+│   │   ├───mantenimiento.models.js
 │   │   ├───mezclas.models.js
 │   │   ├───modelAssociations.js
 │   │   ├───notificaciones.models.js
@@ -250,40 +548,111 @@
 │   │   ├───productos.models.js
 │   │   ├───productosSolicitud.models.js
 │   │   ├───recetas.models.js
+│   │   ├───servicios.models.js
+│   │   ├───solicitudServicio.models.js
+│   │   ├───taller.models.js
+│   │   ├───unidad.models.js
 │   │   └───usuario.models.js
 │   ├───routes
 │   │   ├───asignaciones.routes.js
 │   │   ├───centro.routes.js
+│   │   ├───combustible_carga.routes.js
+│   │   ├───combustible_entrada.routes.js
+│   │   ├───combustible_inventario.routes.js
+│   │   ├───combustible_salida.routes.js
 │   │   ├───devolucion.routes.js
 │   │   ├───empleados.routes.js
 │   │   ├───equipos.routes.js
+│   │   ├───mantenimiento.routes.js
 │   │   ├───mezclas.routes.js
 │   │   ├───notificaciones.routes.js
+│   │   ├───pdf.routes.js
 │   │   ├───produccion.routes.js
 │   │   ├───productos.routes.js
 │   │   ├───productosSolitud.routes.js
 │   │   ├───proteted.routes.js
+│   │   ├───servicios.routes.js
+│   │   ├───solicitudServicio.routes.js
+│   │   ├───taller.routes.js
+│   │   ├───unidad.routes.js
 │   │   ├───uploads.routes.js
 │   │   └───usuario.routes.js
 │   ├───schema
 │   │   ├───asignaciones.js
+│   │   ├───catalogo_no_economico.js
+│   │   ├───catalogo_taller.js
+│   │   ├───catalogo_unidad.js
+│   │   ├───catalogo_unidad_combustible.js
 │   │   ├───centro.js
+│   │   ├───combustible_carga.js
+│   │   ├───combustible_entrada.js
+│   │   ├───combustible_inventario.js
+│   │   ├───combustible_salida.js
 │   │   ├───devoluciones.js
 │   │   ├───empleados.js
 │   │   ├───equipos.js
+│   │   ├───historial_equipo.js
+│   │   ├───mantenimiento.js
 │   │   ├───mezclas.js
 │   │   ├───notificaciones.js
 │   │   ├───productos.js
 │   │   ├───recetas.js
 │   │   ├───recetas_productos.js
+│   │   ├───servicios.js
 │   │   ├───solicitud_receta.js
+│   │   ├───solicitud_servicio.js
 │   │   └───usuarios.js
 │   ├───server
 │   │   └───server.mjs
 │   ├───uploads
-│   │   └───images
-│   │       ├───image_1748898091989_ftpsg9nkz9o.png
-│   │       └───image_1749101576043_ileadel1te.png
+│   │   ├───activos
+│   │   │   ├───baja
+│   │   │   │   ├───baja_1753123315868_vc64xitf8x.pdf
+│   │   │   │   ├───baja_1753123840701_a63ijeeeen7.pdf
+│   │   │   │   ├───baja_1753123936252_n9ulc872oa.pdf
+│   │   │   │   └───baja_1753124038183_qs5h4wi0u5.pdf
+│   │   │   ├───factura
+│   │   │   │   ├───factura_1752686716517_qfw5tkp59om.pdf
+│   │   │   │   ├───factura_1752686948936_dlcwavhf0q7.pdf
+│   │   │   │   ├───factura_1752687063499_yyhuvskkuyi.pdf
+│   │   │   │   ├───factura_1752687457082_kpxe2gzo27r.pdf
+│   │   │   │   ├───factura_1752687481348_xodq0cmlqv.pdf
+│   │   │   │   ├───factura_1752688165130_2ob14zmjjes.pdf
+│   │   │   │   ├───factura_1752880104493_omhwz8t4md.pdf
+│   │   │   │   ├───factura_1752880157057_214dp1csnj.pdf
+│   │   │   │   ├───factura_1753386616590_b4idmldrho8.pdf
+│   │   │   │   └───factura_1753387563513_smyi9xtimx.pdf
+│   │   │   └───foto
+│   │   │       ├───foto_1752682149709_0z5qs7culo39.png
+│   │   │       ├───foto_1752682187654_4kbumtsvbkg.png
+│   │   │       ├───foto_1752682384082_7vig68oq4t2.jpg
+│   │   │       ├───foto_1752683070153_lfcbkxs32yg.jpg
+│   │   │       ├───foto_1752687403855_vngp8buf1g9.jpg
+│   │   │       ├───foto_1752880086712_b0zm2qe3hcg.jpeg
+│   │   │       ├───foto_1753386097152_2zd5psyeq6a.png
+│   │   │       └───foto_1753387607140_nvrofy6wxfd.png
+│   │   ├───fotos_mezclas
+│   │   ├───images
+│   │   │   ├───image_1748898091989_ftpsg9nkz9o.png
+│   │   │   └───image_1749101576043_ileadel1te.png
+│   │   └───responsivas_activos
+│   │       ├───responsiva_1752858921715_q9b1h6ebvwo.pdf
+│   │       ├───responsiva_1752860164243_faa8jn53ac.pdf
+│   │       ├───responsiva_1752860317973_4wpghci17w3.pdf
+│   │       ├───responsiva_1752860485828_7w1qs75zp3b.pdf
+│   │       ├───responsiva_1752860642866_rca8lfaspfm.pdf
+│   │       ├───responsiva_1752860654053_q0w2lk2kp2l.pdf
+│   │       ├───responsiva_1752860749014_z1j6p14nhg.pdf
+│   │       ├───responsiva_1752860859475_o2oflu6qc8.pdf
+│   │       ├───responsiva_1752860954514_j1o9n8nek0d.pdf
+│   │       ├───responsiva_1752861134132_zw7ivuod99.pdf
+│   │       ├───responsiva_1752861180607_eh10y6rp4it.pdf
+│   │       ├───responsiva_1752861375055_5czfu0bs9.pdf
+│   │       ├───responsiva_1752861783513_weuou8ftg0k.pdf
+│   │       ├───responsiva_1752872941958_c8wa81n8p2u.pdf
+│   │       ├───responsiva_1752873244021_ls4sox2r2b.pdf
+│   │       ├───responsiva_1752877138738_fwo1x05mos8.pdf
+│   │       └───responsiva_1752877238828_l4zzgzycj3.pdf
 │   ├───utils
 │   │   ├───asyncHandler.js
 │   │   ├───cache.js
@@ -301,16 +670,48 @@
 │   │   ├───errorSesion.ejs
 │   │   ├───main.ejs
 │   │   ├───pages
+│   │   │   ├───activos
+│   │   │   │   ├───asignados.ejs
+│   │   │   │   ├───asignarEquipos.ejs
+│   │   │   │   ├───baja.ejs
+│   │   │   │   ├───empleados.ejs
+│   │   │   │   ├───historal.ejs
+│   │   │   │   ├───historialEquipos.ejs
+│   │   │   │   ├───inactivos.ejs
+│   │   │   │   └───main.ejs
 │   │   │   ├───admin
 │   │   │   │   ├───centrosCoste.ejs
 │   │   │   │   ├───productos.ejs
 │   │   │   │   ├───solicitudes.ejs
 │   │   │   │   ├───solicitudesCanceladas.ejs
 │   │   │   │   └───usuarios.ejs
+│   │   │   ├───combustibles
+│   │   │   │   ├───abrirTicket.ejs
+│   │   │   │   ├───agregarCombustible.ejs
+│   │   │   │   ├───agregarInventario.ejs
+│   │   │   │   ├───agregarSalida.ejs
+│   │   │   │   ├───agregarServicio.ejs
+│   │   │   │   ├───agregarTalleres.ejs
+│   │   │   │   ├───agregarUnidad.ejs
+│   │   │   │   ├───cargasCombustible.ejs
+│   │   │   │   ├───cerrarTicket.ejs
+│   │   │   │   ├───correctivos.ejs
+│   │   │   │   ├───entradaInventario.ejs
+│   │   │   │   ├───inventario.ejs
+│   │   │   │   ├───main.ejs
+│   │   │   │   ├───mantenimientos.ejs
+│   │   │   │   ├───preventivos.ejs
+│   │   │   │   ├───salidaInventario.ejs
+│   │   │   │   ├───servicios.ejs
+│   │   │   │   ├───talleres.ejs
+│   │   │   │   ├───tickets.ejs
+│   │   │   │   ├───ticketsCerrados.ejs
+│   │   │   │   └───unidades.ejs
 │   │   │   └───mezclas
 │   │   │       ├───canceladas.ejs
 │   │   │       ├───completadas.ejs
 │   │   │       ├───confirmaSolicitud.ejs
+│   │   │       ├───devoluciones.ejs
 │   │   │       ├───main.ejs
 │   │   │       ├───notificaciones.ejs
 │   │   │       ├───notificacionesMesclador.ejs
@@ -319,6 +720,23 @@
 │   │   │       ├───registrarSolicitud.ejs
 │   │   │       └───solicitud.ejs
 │   │   └───templates
+│   │       ├───activos
+│   │       │   ├───cabecera.ejs
+│   │       │   ├───footer.ejs
+│   │       │   ├───modalAgregarActivo.ejs
+│   │       │   ├───modalAsignarActivo.ejs
+│   │       │   ├───modalBajaActivo.ejs
+│   │       │   ├───modalBajasActivo.ejs
+│   │       │   ├───modalEditarActivo.ejs
+│   │       │   ├───modalEditarAsignacion.ejs
+│   │       │   ├───modalEditarResponsiva.ejs
+│   │       │   ├───modalFacturaActivo.ejs
+│   │       │   ├───modalFotoActivo.ejs
+│   │       │   ├───modalPdf.ejs
+│   │       │   ├───modalUsuarios.ejs
+│   │       │   ├───navCabecera.ejs
+│   │       │   ├───navLateral.ejs
+│   │       │   └───scripts.ejs
 │   │       ├───admin
 │   │       │   ├───cabecera.ejs
 │   │       │   ├───footer.ejs
@@ -330,6 +748,15 @@
 │   │       │   ├───navCabecera.ejs
 │   │       │   ├───navLateral.ejs
 │   │       │   └───scripts.ejs
+│   │       ├───combustibles
+│   │       │   ├───LGZ2024.code-workspace
+│   │       │   ├───modalAbrirTicket.ejs
+│   │       │   ├───modalCerrarTicket.ejs
+│   │       │   ├───modalTaller.ejs
+│   │       │   ├───modalUnidad.ejs
+│   │       │   ├───nav.ejs
+│   │       │   ├───navCombustibles.ejs
+│   │       │   └───navVehiculos.ejs
 │   │       ├───head-pwa.ejs
 │   │       └───mezclas
 │   │           ├───cabecera.ejs

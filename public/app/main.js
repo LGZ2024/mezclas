@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       elements.backdrop?.classList.remove('show')
       elements.body.style.overflow = ''
     },
-
     toggle: (dropdown) => {
       if (!dropdown) return
       const isOpen = dropdown.classList.contains('show')
@@ -187,6 +186,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // eslint-disable-next-line no-unused-vars
   const initializeMobileEvents = () => {
     if (utils.isMobile() && elements.notifList) {
       // Cambiamos passive: true por false para permitir preventDefault()
@@ -248,7 +248,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     return eventHandlers
   }
+
   // Inicializar
+  // eslint-disable-next-line no-unused-vars
   const eventHandlers = initializeEventListeners()
   // Cleanup de eventos cuando el componente se desmonta
   const cleanup = () => {
@@ -367,6 +369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       throw error
     }
   }
+  // eslint-disable-next-line no-unused-vars
   const debouncedScroll = utils.debounce(() => {
     const notifList = elements.notifList
     if (notifList) {
@@ -406,6 +409,57 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnPreparadas = document.getElementById('preparadas')
   const btnEntregadas = document.getElementById('entregadas')
   const canceladas = document.getElementById('canceladas')
+  const btnVehiculos = document.getElementById('vehiculos')
+  const btncombustibles = document.getElementById('combustibles')
+  const btnTalleres = document.getElementById('talleres')
+  const btnUnidades = document.getElementById('unidades')
+  const btnTickets = document.getElementById('Tickets')
+  const btnRegistrarM = document.getElementById('registrarM')
+  // const btnReportes = document.getElementById('reportes')
+
+  if (btnUnidades) {
+    btnUnidades.addEventListener('click', () => {
+      window.location.href = '/protected/unidades'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+  if (btnRegistrarM) {
+    btnRegistrarM.addEventListener('click', () => {
+      window.location.href = '/protected/mantenimientos'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+  if (btnTalleres) {
+    btnTalleres.addEventListener('click', () => {
+      window.location.href = '/protected/talleres'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+  if (btncombustibles) {
+    btncombustibles.addEventListener('click', () => {
+      const contenedorMenu = document.getElementById('ContenedorMenu')
+      const contenerdorCombustibles = document.getElementById('contenerdorCombustibles')
+      contenedorMenu.style.display = 'none'
+      contenerdorCombustibles.style.display = 'block'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+
+  if (btnVehiculos) {
+    btnVehiculos.addEventListener('click', () => {
+      const contenedorMenu = document.getElementById('ContenedorMenu')
+      const contenerdorVehiculos = document.getElementById('contenerdorVehiculos')
+      contenedorMenu.style.display = 'none'
+      contenerdorVehiculos.style.display = 'block'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+
   if (btnSolicitar) {
     btnSolicitar.addEventListener('click', () => {
       window.location.href = '/protected/solicitud'
@@ -413,6 +467,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     console.log('No se encontró el botón')
   }
+
   if (canceladas) {
     canceladas.addEventListener('click', () => {
       window.location.href = '/protected/canceladas'
@@ -420,6 +475,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     console.log('No se encontró el botón')
   }
+
   if (btnSolicitud) {
     btnSolicitud.addEventListener('click', () => {
       window.location.href = '/protected/solicitudes'
@@ -427,6 +483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     console.log('No se encontró el botón')
   }
+
   if (btnPreparadas) {
     btnPreparadas.addEventListener('click', () => {
       window.location.href = '/protected/proceso'
@@ -434,9 +491,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     console.log('No se encontró el botón')
   }
+
   if (btnEntregadas) {
     btnEntregadas.addEventListener('click', () => {
       window.location.href = '/protected/completadas'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+
+  if (btnTickets) {
+    btnTickets.addEventListener('click', () => {
+      window.location.href = '/protected/tickets'
     })
   } else {
     console.log('No se encontró el botón')

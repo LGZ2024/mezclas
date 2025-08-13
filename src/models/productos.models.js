@@ -1,13 +1,14 @@
 import logger from '../utils/logger.js'
 import { Productos } from '../schema/productos.js'
 import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
-
+import { DbHelper } from '../utils/dbHelper.js'
+import { Op } from 'sequelize'
 export class ProductosModel {
   // uso
   static async getAll () {
     try {
       const productos = await Productos.findAll({
-        attributes: ['id_producto', 'nombre', 'descripcion', 'unidad_medida']
+        attributes: ['id_producto', 'id_sap', 'nombre', 'descripcion', 'unidad_medida']
       })
 
       if (!productos) throw new NotFoundError('productos no encontrados')
@@ -35,70 +36,107 @@ export class ProductosModel {
     }
   }
 
-  static async delete ({ id }) {
-    try {
-      const producto = await Productos.findByPk(id)
+  static async delete ({ id, logger, logContext }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        const producto = await Productos.findByPk(id)
+        console.log('producto', producto)
+        if (!producto) {
+          throw new NotFoundError(`Producto con ID ${id} no encontrado`)
+        }
 
-      if (!producto) {
-        throw new NotFoundError(`Producto con ID ${id} no encontrado`)
+        await producto.destroy({ transaction })
+
+        return { message: `Producto eliminada correctamente con id ${id}` }
+      } catch (error) {
+        logger.error('Error al eliminar el producto:', {
+          ...logContext,
+          error: error.message,
+          id
+        })
+        if (error instanceof CustomError) throw error
+        throw new DatabaseError('Error al eliminar el producto')
       }
-
-      await producto.destroy()
-
-      return { message: `producto eliminada correctamente con id ${id}` }
-    } catch (error) {
-      if (error instanceof CustomError) throw error
-      throw new DatabaseError('Error al eliminar el producto')
-    }
+    })
   }
 
   // crear producto
-  static async create ({ data }) {
-    try {
-      // verificamos que no exista el producto
-      const producto = await Productos.findOne({ where: { producto: data.producto } })
+  static async create ({ datos, logger, logContext }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        if (!datos) {
+          throw new ValidationError('Datos para la operación son requeridos')
+        }
+        const existingProduct = await Productos.findOne({
+          where: {
+            [Op.or]: [
+              { id_sap: datos.id_sap },
+              { nombre: datos.nombre }
+            ]
+          },
+          transaction
+        })
+        if (existingProduct) {
+          const duplicateField = existingProduct.id_sap === datos.id_sap ? 'ID SAP' : 'nombre'
+          logger.warn({
+            message: 'Intento de crear producto duplicado',
+            existingProduct: {
+              id: existingProduct.id_producto,
+              field: duplicateField
+            },
+            attemptedData: datos,
+            context: logContext
+          })
+          throw new ValidationError(`Ya existe un producto con el mismo ${duplicateField}`)
+        }
 
-      if (producto) throw new ValidationError('Producto ya existe')
+        await Productos.create(datos, { transaction })
 
-      // creamos el producto
-      await Productos.create({ ...data })
-      return { message: `Producto registrado exitosamente ${data.nombre}` }
-    } catch (e) {
-      logger.error({
-        message: 'Error al crear producto',
-        error: e.message,
-        stack: e.stack,
-        method: 'ProductosModel.create'
-      })
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al crear el producto')
-    }
+        return { message: 'Entrada registrada correctamente' }
+      } catch (error) {
+        logger.error('Error al registrar entrada de combustible:', {
+          ...logContext,
+          error: error.message,
+          datos
+        })
+        if (error instanceof NotFoundError) throw error
+        throw new DatabaseError('Error al crear el producto')
+      }
+    })
   }
 
   // para actualizar datos de producto
-  static async update ({ id, data }) {
-    try {
+  static async update ({ id, datos, logger, logContext }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      if (!id) {
+        throw new ValidationError('El ID del producto es requerido para actualizar')
+      }
+      try {
       // verificamos si existe alguna empresa con el id proporcionado
-      const producto = await Productos.findByPk(id)
-      if (!producto) throw new NotFoundError(`Producto con ID ${id} no encontrado`)
-      // Actualiza solo los campos que se han proporcionado
-      if (data.nombre) producto.nombre = data.nombre
-      if (data.email) producto.email = data.email
-      if (data.rol) producto.rol = data.rol
-      if (data.empresa) producto.empresa = data.empresa
+        const producto = await Productos.findByPk(id)
 
-      await producto.save()
+        if (!producto) throw new NotFoundError(`Producto con ID ${id} no encontrado`)
+        // Actualiza solo los campos que se han proporcionado
+        if (datos.nombre) producto.nombre = datos.nombre
+        if (datos.id_sap) producto.id_sap = datos.id_sap
+        if (datos.descripcion) producto.descripcion = datos.descripcion
+        if (datos.unidad_medida) producto.unidad_medida = datos.unidad_medida
 
-      return { message: 'producto actualizada correctamente', rol: data.rol }
-    } catch (e) {
-      logger.error({
-        message: 'Error al actualizar producto',
-        error: e.message,
-        stack: e.stack,
-        method: 'ProductosModel.update'
-      })
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al actualizar el producto')
-    }
+        await producto.save({ transaction })
+
+        return { message: `Producto con ID ${id} actualizada correctamente` }
+      } catch (e) {
+        logger.error({
+          message: 'Error al actualizar producto',
+          error: e.message,
+          stack: e.stack,
+          context: {
+            ...logContext
+          }
+        })
+        if (e instanceof CustomError) throw e
+        throw new DatabaseError('Error al actualizar el producto')
+      }
+    })
   }
 }

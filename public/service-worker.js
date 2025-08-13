@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 
-const CACHE_NAME = 'solicitudes-v24'
+const CACHE_NAME = 'solicitudes-v32'
+const VERSION = '1.1.1' // Añadir control de versión
+
 const STATIC_ASSETS = [
   '/',
   '/app/solicitud/cerrarMezcla.js',
@@ -34,16 +36,20 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activado')
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames
-          .filter(cacheName => cacheName !== CACHE_NAME)
-          .map(cacheName => caches.delete(cacheName))
-      )
-    })
-      .then(() => self.clients.claim())
+    Promise.all([
+      // Limpieza de cachés antiguos
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames
+            .filter(cacheName => cacheName !== CACHE_NAME)
+            .map(cacheName => caches.delete(cacheName))
+        )
+      }),
+      // Notificar a todos los clientes sobre la actualización
+      clients.claim(),
+      notifyClientsOfUpdate()
+    ])
   )
 })
 
@@ -101,3 +107,28 @@ self.addEventListener('fetch', (event) => {
       })
   )
 })
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'UPDATE_AVAILABLE',
+          version: CACHE_NAME
+        })
+      })
+    })
+  )
+})
+
+// Función para notificar actualización
+const notifyClientsOfUpdate = async () => {
+  const clients = await self.clients.matchAll()
+  clients.forEach(client => {
+    client.postMessage({
+      type: 'UPDATE_AVAILABLE',
+      version: VERSION,
+      cacheName: CACHE_NAME
+    })
+  })
+}

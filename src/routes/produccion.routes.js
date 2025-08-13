@@ -14,6 +14,11 @@ export const createProduccionRouter = ({ produccionModel }) => {
   router.post('/descargarReporte-v2', produccionController.descargarReporteV2)// uso
   router.get('/reporte-pendientes', produccionController.descargarReportePendientes)// uso
   router.get('/reporte-pendientes/:empresa', produccionController.descargarReportePendientes)// uso
+  router.get('/activos_fijos', produccionController.ObtenerActivosFijos)
+  router.get('/asignacion_activos', produccionController.ObtenerAsignacionActivos)
+  router.get('/activos_baja', produccionController.ObtenerActivosBaja)
+  router.get('/asignacion_historial', produccionController.ObtenerAsignacionHistorial)
+  router.get('/equipo_historial', produccionController.ObtenerEquipoHistorial)
 
   return router
 }

@@ -7,6 +7,7 @@ export class SolicitudFormulario {
     this.initElements()
     this.bindEvents()
     this.cameraHandler = null
+    this.imagenBlob = null
   }
 
   initElements () {
@@ -30,6 +31,24 @@ export class SolicitudFormulario {
     this.elementos.btnSubirFoto.addEventListener('click', this.mostrarSeccionSubida.bind(this))
     this.elementos.imageFile.addEventListener('change', this.manejarSeleccionArchivo.bind(this))
     this.elementos.btnEntregada.addEventListener('click', this.validarYEnviarSolicitud.bind(this))
+    // Agregar evento para captura de foto
+    const btnTomarFoto = document.querySelector('.btnTomarFoto')
+    if (btnTomarFoto) {
+      btnTomarFoto.addEventListener('click', async () => {
+        try {
+          if (this.cameraHandler) {
+            this.imagenBlob = await this.cameraHandler.capturarFoto()
+            if (this.imagenBlob) {
+              this.elementos.canvas.style.display = 'block'
+              console.log('Foto capturada correctamente')
+            }
+          }
+        } catch (error) {
+          console.error('Error al capturar foto:', error)
+          this.mostrarError('Error al capturar la foto. Por favor, intente nuevamente.')
+        }
+      })
+    }
   }
 
   mostrarSeccionCamara () {
@@ -77,23 +96,28 @@ export class SolicitudFormulario {
     return true
   }
 
-  procesarImagen (fuenteImagen) {
+  async procesarImagen (fuenteImagen) {
     const imagen = new Image()
-    imagen.onload = () => {
-      const { ancho, alto } = this.calcularDimensiones(imagen)
 
-      this.elementos.canvas.width = ancho
-      this.elementos.canvas.height = alto
+    // Crear una promesa para manejar la carga de la imagen
+    await new Promise((resolve) => {
+      imagen.onload = resolve
+      imagen.src = fuenteImagen
+    })
 
-      const contexto = this.elementos.canvas.getContext('2d')
-      contexto.drawImage(imagen, 0, 0, ancho, alto)
+    const { ancho, alto } = this.calcularDimensiones(imagen)
+    this.elementos.canvas.width = ancho
+    this.elementos.canvas.height = alto
 
-      const imagenBase64 = this.elementos.canvas.toDataURL('image/png')
+    const contexto = this.elementos.canvas.getContext('2d')
+    contexto.drawImage(imagen, 0, 0, ancho, alto)
 
-      this.elementos.canvas.style.display = 'block'
-      this.elementos.fileInput.value = imagenBase64
-    }
-    imagen.src = fuenteImagen
+    // Almacenar el blob para usarlo después
+    this.imagenBlob = await new Promise(resolve => {
+      this.elementos.canvas.toBlob(resolve, 'image/jpeg', 0.8)
+    })
+
+    this.elementos.canvas.style.display = 'block'
   }
 
   calcularDimensiones (imagen, anchoMaximo = 640, altoMaximo = 480) {
@@ -115,7 +139,11 @@ export class SolicitudFormulario {
   }
 
   validarYEnviarSolicitud () {
-    const fotoTomada = this.elementos.fileInput.value.trim() !== ''
+    // Agregar log para depuración
+    console.log('Estado del blob:', this.imagenBlob)
+    console.log('Estado de archivos:', this.elementos.imageFile.files)
+
+    const fotoTomada = this.imagenBlob !== null
     const archivoSubido = this.elementos.imageFile.files.length > 0
 
     if (!fotoTomada && !archivoSubido) {
@@ -127,41 +155,43 @@ export class SolicitudFormulario {
   }
 
   async enviarSolicitud (fotoTomada, archivoSubido) {
-    const datosFormulario = {}
-    if (fotoTomada) {
-      datosFormulario.imagen = this.elementos.fileInput.value // Base64
-      datosFormulario.idSolicitud = document.getElementById('idSolicitud').value
-    } else if (archivoSubido) {
-      const archivo = this.elementos.imageFile.files[0]
-      const reader = new FileReader()
+    try {
+      const formData = new FormData()
+      const id = document.getElementById('idSolicitud').value
+      formData.append('idSolicitud', id)
 
-      reader.onload = (event) => {
-        datosFormulario.imagen = event.target.result // Base64 del archivo subido
-        this.realizarEnvio(datosFormulario)
+      if (fotoTomada && this.imagenBlob) {
+        console.log('Enviando foto tomada')
+        formData.append('imagen', this.imagenBlob, 'foto_camara.jpg')
+      } else if (archivoSubido) {
+        console.log('Enviando archivo subido')
+        const archivo = this.elementos.imageFile.files[0]
+        if (!this.validarArchivo(archivo)) return
+        formData.append('imagen', archivo)
       }
 
-      reader.readAsDataURL(archivo)
-      return
+      await this.realizarEnvio(formData)
+    } catch (error) {
+      this.manejarError(error)
     }
-
-    this.realizarEnvio(datosFormulario)
   }
 
-  async realizarEnvio (datosFormulario) {
+  async realizarEnvio (formData) {
+    const id = document.getElementById('idSolicitud').value
     try {
       showSpinner()
-      const response = await fetch('/api/CerrarSolicitud', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datosFormulario)
+      const url = `/api/CerrarSolicitud/${id}`
+      const response = await fetch(url, {
+        method: 'PUT',
+        body: formData
       })
+
       const data = await response.json()
       if (response.ok) {
         return this.mostrarExito(data.message)
       }
       this.mostrarError(data.message)
     } catch (error) {
-      hideSpinner()
       this.manejarError(error)
     } finally {
       hideSpinner()
@@ -172,7 +202,7 @@ export class SolicitudFormulario {
     mostrarMensaje({
       msg: mensaje,
       type: 'success',
-      redirectUrl: '/protected/admin',
+      redirectUrl: '/protected/proceso',
       redirectDelay: 500
     })
   }

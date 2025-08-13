@@ -1,0 +1,65 @@
+<div class="modal fade" id="asignarEquipo" tabindex="-1" role="dialog" aria-labelledby="asignarEquipoLabel"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="asignarEquipoLabel" style="color: black;">Asignar Equipo</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="formAsignarActivo">
+
+          <div class="form-group">
+            <label for="usuarioTab">Usuario:</label>
+            <input type="text" class="form-control" id="usuarioTab" name="usuarioTab" list="usuario" placeholder="Nombre de usuario">
+            <datalist id="usuario" name="usuario">
+            </datalist>
+          </div>
+
+          <div class="form-group">
+            <label for="noEquipo">Equipo:</label>
+            <input type="text" class="form-control" id="noEquipo" name="noEquipo" list="equipo"
+              placeholder="Numero de serie del equipo">
+            <datalist id="equipo" name="equipo">
+            </datalist>
+          </div>
+
+          <div class="form-group">
+            <label for="clienteAsig">Ubicacion:</label>
+            <!-- <input type="text" class="form-control" name="ubicacion" id="ubicacion" placeholder="Ubicacion donde encontrara el equipo"> -->
+            <select class="form-control" name="ubicacion" id="ubicacion">
+              <option value="">Seleciona una Opcion</option>
+              <% ubicaciones.forEach(function(ubicaciones) { %>
+                <option value="<%= ubicaciones %>">
+                  <%= ubicaciones %>
+                </option>
+                <% }); %>
+            </select>
+          </div>
+          <div class="form-group">
+                  <label for="fecha">Fecha asignacion:</label>
+                  <input type="date" class="form-control" name="fecha" id="fecha">
+                </div>
+          <div class="form-group">
+            <label>Responsiva firmada</label>
+            <input type="file" name="archivoRespon" id="archivoRespon" class="file-upload-default">
+            <div class="input-group col-xs-12">
+              <input type="text" class="form-control file-upload-info" id="nombreResp" disabled
+                placeholder="Responsiva">
+              <span class="input-group-append">
+                <button class="file-upload-browse btn btn-primary" style="height: 1.875rem;padding: 0.3rem 1.375rem;"
+                  type="button">Subir</button>
+              </span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        <button type="submit" form="formAsignarActivo" class="btn btn-primary" id="btnRegistrar">Asignar</button>
+      </div>
+    </div>
+  </div>
+</div>

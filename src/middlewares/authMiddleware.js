@@ -30,17 +30,17 @@ const verifyToken = async (token) => {
   }
 }
 
-const isAdmin = (req, res, next) => {
-  if (req.userRole !== 'admin') return res.status(403).render('errorPage', { codeError: 403, title: 'Sin Autorizacion', errorMsg: 'No autorizado' })
+const isMaster = (req, res, next) => {
+  if (req.userRole !== 'master') return res.status(403).render('errorPage', { codeError: 403, title: 'Sin Autorizacion', errorMsg: 'No autorizado' })
   next()
 }
 const isGeneral = (req, res, next) => {
-  if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo' && req.userRole !== 'admin' && req.userRole !== 'adminMezclador') return res.status(403).render('errorPage', { codeError: 403, errorMsg: 'No autorizado', title: 'Sin Autorizacion' })
+  if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo' && req.userRole !== 'master' && req.userRole !== 'adminMezclador' && req.userRole !== 'encargado_combusible') return res.status(403).render('errorPage', { codeError: 403, errorMsg: 'No autorizado', title: 'Sin Autorizacion' })
   next()
 }
 
-const isAdminsitrativoOrAdmin = (req, res, next) => {
-  if (req.userRole !== 'administrativo' && req.userRole !== 'admin') return res.status(403).render('errorPage', { codeError: 403, title: 'Sin Autorizacion', errorMsg: 'No autorizado' })
+const isAdministrativoOrMaster = (req, res, next) => {
+  if (req.userRole !== 'administrativo' && req.userRole !== 'master') return res.status(403).render('errorPage', { codeError: 403, title: 'Sin Autorizacion', errorMsg: 'No autorizado' })
   next()
 }
 const isSolicitaOrMezclador = (req, res, next) => {
@@ -52,4 +52,14 @@ const isaAdminMezclador = (req, res, next) => {
   next()
 }
 
-export { authenticate, isAdmin, isSolicitaOrMezclador, isAdminsitrativoOrAdmin, isGeneral, isaAdminMezclador }
+const isEncargadoCombustible = (req, res, next) => {
+  if (req.userRole !== 'encargado_combusible') return res.status(403).render('errorPage', { codeError: 403, title: 'Sin Autorizacion', errorMsg: 'No autorizado' })
+  next()
+}
+
+const isActivosFijos = (req, res, next) => {
+  if (req.userRole !== 'Activos Fijos') return res.status(403).render('errorPage', { codeError: 403, title: 'Sin Autorizacion', errorMsg: 'No autorizado' })
+  next()
+}
+
+export { authenticate, isMaster, isSolicitaOrMezclador, isAdministrativoOrMaster, isGeneral, isaAdminMezclador, isEncargadoCombustible, isActivosFijos }

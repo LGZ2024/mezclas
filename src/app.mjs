@@ -23,7 +23,7 @@ async function bootstrap () {
       config
     })
 
-    logger.info('Servidor iniciado correctamente', {
+    logger.info('✅ Servidor iniciado correctamente', {
       port: envs.PORT,
       mode: envs.MODE
     })

@@ -4,6 +4,7 @@ import { MezclaModel } from '../models/mezclas.models.js'
 // utils
 import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
 import logger from '../utils/logger.js'
+import { DbHelper } from '../utils/dbHelper.js'
 export class ProduccionModel {
   static async ObtenerGastoUsuario ({ tipo }) {
     // comprobar que el objeto tipo tenga alguno de los siguientes datos Usuario,temporada, empresa entre otros antes de proceder a la consulta
@@ -166,13 +167,13 @@ export class ProduccionModel {
   }
 
   // uso
-  static async descargarReportePendientes ({ empresa }) {
+  static async descargarReportePendientes ({ empresa, logger, logContext }) {
     try {
       if (!empresa) {
         throw new ValidationError('Se requiere especificar una empresa')
       }
 
-      const datos = await MezclaModel.obtenerTablaMezclasEmpresa({ status: 'Pendiente', empresa, confirmacion: 'Confirmada' })
+      const datos = await MezclaModel.obtenerTablaMezclasEmpresa({ status: 'Pendiente', empresa, confirmacion: 'Confirmada', logger, logContext })
 
       // Validar que hay datos para procesar
       if (!datos) {
@@ -183,26 +184,45 @@ export class ProduccionModel {
 
       return excel
     } catch (error) {
-      if (error instanceof CustomError) throw error
-      throw error
+      logger.error('Error al obtener datos para el reporte', {
+        ...logContext,
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          code: error.code
+        }
+      })
+      if (error instanceof NotFoundError) throw error
+      throw new DatabaseError('Error al buscar Reporte')
     }
   }
 
   // uso
-  static async descargarReportePendientesCompleto () {
+  static async descargarReportePendientesCompleto ({ logger, logContext }) {
     try {
-      const datos = await MezclaModel.getAllGeneral({ status: 'Pendiente' })
+      const datos = await MezclaModel.getAllGeneral({ status: 'Pendiente', confirmacion: 'Confirmada', logger, logContext })
+
       // Validar que hay datos para procesar
       if (!datos) {
         throw new NotFoundError('No se encontraron datos para esta empresa')
       }
 
-      const excel = await reporteSolicitudv3(datos.data)
+      const excel = await reporteSolicitudv3(datos)
 
       return excel
     } catch (error) {
-      if (error instanceof CustomError) throw error
-      throw error
+      logger.error('Error al obtener datos para el reporte', {
+        ...logContext,
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          code: error.code
+        }
+      })
+      if (error instanceof NotFoundError) throw error
+      throw new DatabaseError('Error al buscar Reporte')
     }
   }
 
@@ -253,5 +273,108 @@ export class ProduccionModel {
         message: error.message || 'Error desconocido'
       }
     }
+  }
+
+  static async ObtenerActivosFijos () {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        const data = await sequelize.query(
+          'SELECT * FROM activos_fijos'
+        )
+        const uniqueData = Array.from(new Map(data.map(item => [item.id, item])).values())
+        // Si llegamos aquí, la ejecución fue exitosa
+        return uniqueData
+      } catch (error) {
+        // Manejo de errores
+        console.error('Error al procesar activos fijos', error)
+        return {
+          status: 'error',
+          message: error.message || 'Error desconocido'
+        }
+      }
+    })
+  }
+
+  static async ObtenerAsignacionActivos () {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        const data = await sequelize.query(
+          'SELECT * FROM aignacionesactivo',
+          { type: sequelize.QueryTypes.SELECT }
+        )
+        if (!data) {
+          throw new NotFoundError('No se encontraron asignaciones')
+        }
+
+        return data
+      } catch (error) {
+        logger.error({
+          message: 'Error al obtener asignaciones de activos',
+          error
+        })
+        if (error instanceof CustomError) throw error
+        throw new DatabaseError('Error al obtener asignaciones de activos')
+      }
+    })
+  }
+
+  static async ObtenerActivosBaja () {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        const data = await sequelize.query(
+          'SELECT * FROM activosbaja'
+        )
+        const uniqueData = Array.from(new Map(data.map(item => [item.id, item])).values())
+        // Si llegamos aquí, la ejecución fue exitosa
+        return uniqueData
+      } catch (error) {
+        // Manejo de errores
+        console.error('Error al procesar activos fijos', error)
+        return {
+          status: 'error',
+          message: error.message || 'Error desconocido'
+        }
+      }
+    })
+  }
+
+  static async ObtenerAsignacionHistorial () {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        const data = await sequelize.query(
+          'SELECT * FROM historial_asigancion'
+        )
+        const uniqueData = Array.from(new Map(data.map(item => [item.id, item])).values())
+        // Si llegamos aquí, la ejecución fue exitosa
+        return uniqueData
+      } catch (error) {
+        // Manejo de errores
+        console.error('Error al procesar activos fijos', error)
+        return {
+          status: 'error',
+          message: error.message || 'Error desconocido'
+        }
+      }
+    })
+  }
+
+  static async ObtenerEquipoHistorial () {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        const data = await sequelize.query(
+          'SELECT * FROM historial_equipo_vista'
+        )
+        const uniqueData = Array.from(new Map(data.map(item => [item.id, item])).values())
+        // Si llegamos aquí, la ejecución fue exitosa
+        return uniqueData
+      } catch (error) {
+        // Manejo de errores
+        console.error('Error al procesar activos fijos', error)
+        return {
+          status: 'error',
+          message: error.message || 'Error desconocido'
+        }
+      }
+    })
   }
 } // fin modelo

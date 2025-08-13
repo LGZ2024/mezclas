@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/spinner.css">
+</head>
+
+<body>
+    <%- include("../../templates/combustibles/nav") %>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="formServicios">
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit"
+                                                        id="regresarInicio">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    Mantenimiento Vehicular
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+
+                                        <!-- Razon Social-->
+                                        <div class="formulario__campo">
+                                            <label for="tipo_Servm" class="formulario__label ">Tipo de servicio a
+                                                aplicar:</label>
+                                            <select id="tipo_Servm" name="tipo_Servm" class="formulario__input Tipo_servicio">
+                                                <option value="0">Seleccionar una opcion</option>
+                                                <option value="servicio">Servicio cambio de aceite por Km</option>
+                                                <option value="mantenimiento">Servicio de reparacion o mantenimiento
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <!-- variedades -->
+                                        <div class="formulario__campo">
+                                            <label for="fecha_solicitud" class="formulario__label ">Fecha
+                                                Solicitud:</label>
+                                            <input type="date" class="formulario__input" id="fecha_solicitud" name="fecha_solicitud" required>
+                                        </div>
+                                        <!-- folio -->
+                                        <div class="formulario__campo">
+                                            <label for="no_economico" class="formulario__label ">Numero
+                                                Economico:</label>
+                                            <select class="formulario__input num_Economico" id="no_economico" name="no_economico"">
+
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="tipo_servicio" class="formulario__label ">Tipo de
+                                                servicio:</label>
+                                            <select id="tipo_servicio" name="tipo_servicio" class="formulario__input">
+                                                <option value="0">Seleccionar una opcion...</option>
+                                                <option value="Preventivo">Preventivo</option>
+                                                <option value="Correctivo">Correctivo</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="prioridad" class="formulario__label">Prioridad:</label>
+                                            <select id="prioridad" name="prioridad" class="formulario__input">
+                                                <option value="">Seleccionar una opcion</option>
+                                                <option value="Baja">Baja</option>
+                                                <option value="Media">Media</option>
+                                                <option value="Alta">Alta</option>
+                                                <option value="Urguente">Urguente</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo Quitar"  style="display: block;">
+                                            <label for="detalle" class="formulario__label">Detalles de
+                                                reparacion:</label>
+                                            <input type="text" class="formulario__input" id="detalle" name="detalle"
+                                                placeholder="Detalle del servicio o la reparacion">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="taller_asignado" class="formulario__label">Taller
+                                                Asignado:</label>
+                                            <select class="formulario__input" id="taller_asignado" name="taller_asignado">
+
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="fechaSalida" class="formulario__label ">Fecha de salida del
+                                            taller:
+                                            </label>
+                                            <input type="date" class="formulario__input" id="fechaSalida" name="fechaSalida">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="responsable" class="formulario__label ">Responsable:</label>
+                                            <input type="text" class="formulario__input" id="responsable" name="responsable" required
+                                                placeholder="Responsable del vehiculo">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label  class="formulario__label">Centro de coste</label>
+                                            <div>
+                                                <input class="form-check-input" type="radio" name="noCentroCoste" id="1"
+                                                    value="1">
+                                                <label class="form-check-label" id="label1" for="1">1</label>
+
+                                                <input class="form-check-input" type="radio" name="noCentroCoste" id="2"
+                                                    value="2">
+                                                <label class="form-check-label" id="label2" for="2">2</label>
+
+                                                <input class="form-check-input" type="radio" name="noCentroCoste" id="3"
+                                                    value="3">
+                                                <label class="form-check-label" id="label3" for="3">3</label>
+
+                                                <input class="form-check-input" type="radio" name="noCentroCoste" id="4"
+                                                    value="4">
+                                                <label class="form-check-label" id="label4" for="3">4</label>
+
+                                                <input class="form-check-input" type="radio" name="noCentroCoste" id="5"
+                                                    value="5">
+                                                <label class="form-check-label" id="label5" for="5">5</label>
+                                            </div>
+                                        </div>
+                                        <div class="formulario__campo" id="idCentroCoste1" style="display:none">
+                                            <label for="rancho1" class="formulario__label ">Rancho o centro de
+                                                coste:</label>
+                                            <select id="rancho1" class="formulario__input centroCoste">
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo" id="idCentroCoste2" style="display:none">
+                                            <label for="rancho2" class="formulario__label ">Rancho o centro de
+                                                coste:</label>
+                                            <select id="rancho2" class="formulario__input centroCoste">
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo" id="idCentroCoste3" style="display:none">
+                                            <label for="rancho3" class="formulario__label ">Rancho o centro de
+                                                coste:</label>
+                                            <select id="rancho3" class="formulario__input centroCoste">
+
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo" id="idCentroCoste4" style="display:none">
+                                            <label for="rancho4" class="formulario__label ">Rancho o centro de
+                                                coste:</label>
+                                            <select id="rancho4" class="formulario__input centroCoste">
+
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo" id="idCentroCoste5" style="display:none">
+                                            <label for="rancho5" class="formulario__label ">Rancho o centro de
+                                                coste:</label>
+                                            <select id="rancho5" class="formulario__input centroCoste">
+
+                                            </select>
+
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="tipo_vehiculo" class="formulario__label ">Tipo de
+                                                Vehiculo:</label>
+                                            <input class="formulario__input" id="tipo_vehiculo" name="tipo_vehiculo"
+                                                placeholder="Tipo de vehiculo" disabled>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="kilometrajeR" class="formulario__label ">Kilometraje del
+                                                vehiculo:</label>
+                                            <input type="number" class="formulario__input" id="kilometrajeR" name="kilometrajeR"
+                                                placeholder="Kilometraje al momento del servicio aplicado">
+                                        </div>
+                                        <div class="formulario__campo Mostrar" style="display: block;">
+                                            <label for="proximoServ" class="formulario__label">Proximo servicio:</label>
+                                            <input class="formulario__input " id="proximoServ" name="proximoServ"
+                                                placeholder="Kilometraje de proximo servicio">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="monto" class="formulario__label ">Monto del servicio:</label>
+                                            <input type="text" class="formulario__input" id="monto" name="monto"
+                                                placeholder="Costo del servicio">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="tipo_pago" class="formulario__label ">Tipo de pago :</label>
+                                            <select id="tipo_pago" name="tipo_pago" class="formulario__input" required>
+                                                <option value="0">Selecionar una opcion</option>
+                                                <option value="Factura">Factura</option>
+                                                <option value="Presupuesto">Presupuesto</option>
+                                                <option value="Nota de Credito">Nota de crédito</option>
+                                                <option value="Nota de Remision">Nota de remisión</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="noFactura" class="formulario__label ">No.Factura:</label>
+                                            <input class="formulario__input" id="noFactura" name="noFactura"
+                                                placeholder="Ingresar Numero de factura">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="estado" class="formulario__label ">Estado:</label>
+                                            <select id="estado" name="estado" class="formulario__input" required>
+                                                <option value="0">Selecciona una opcion</option>
+                                                <option value="Michoacan">Michoacan</option>
+                                                <option value="Jalisco">Jalisco</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="comentario" class="formulario__label">Comentarios:</label>
+                                            <textarea rows="10" cols="5" class="formulario__input" id="comentario"
+                                                name="comentario"
+                                            placeholder="Comentarios"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="formulario__campo">
+                                        <button type="submit" class="formulario__submit" id="btnRegistrar">
+                                            Registrar
+                                        </button>
+                                    </div>
+                            </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/vehiculos/main.js"></script>
+
+</body>
+
+</html>
+
+<script>
+    $("input[name='noCentroCoste']").change(function () {
+        let selectValue = $("input[name='noCentroCoste']:checked").val()
+        if (selectValue == "1") {
+            $('#idCentroCoste1').css('display', 'block');
+            $('#idCentroCoste2').css('display', 'none');
+            $('#idCentroCoste3').css('display', 'none');
+            $('#idCentroCoste4').css('display', 'none');
+            $('#idCentroCoste5').css('display', 'none');
+        } else if (selectValue == "2") {
+            $('#idCentroCoste1').css('display', 'block');
+            $('#idCentroCoste2').css('display', 'block');
+            $('#idCentroCoste3').css('display', 'none');
+            $('#idCentroCoste4').css('display', 'none');
+            $('#idCentroCoste5').css('display', 'none');
+        } else if (selectValue == "3") {
+            $('#idCentroCoste1').css('display', 'block');
+            $('#idCentroCoste2').css('display', 'block');
+            $('#idCentroCoste3').css('display', 'block');
+            $('#idCentroCoste4').css('display', 'none');
+            $('#idCentroCoste5').css('display', 'none');
+        } else if (selectValue == "4") {
+            $('#idCentroCoste1').css('display', 'block');
+            $('#idCentroCoste2').css('display', 'block');
+            $('#idCentroCoste3').css('display', 'block');
+            $('#idCentroCoste4').css('display', 'block');
+            $('#idCentroCoste4').css('display', 'none');
+        } else if (selectValue == "5") {
+            $('#idCentroCoste1').css('display', 'block');
+            $('#idCentroCoste2').css('display', 'block');
+            $('#idCentroCoste3').css('display', 'block');
+            $('#idCentroCoste4').css('display', 'block');
+            $('#idCentroCoste5').css('display', 'block');
+        }
+    })
+</script>

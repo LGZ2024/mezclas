@@ -5,11 +5,13 @@ const empleadosConfig = {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
-    autoIncrement: true
+    autoIncrement: true,
+    allowNull: false // Añadir esta línea
   },
-  id_empleado: {
+  empleado_id: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true, // Añadir esta línea para evitar duplicados
     validate: {
       notEmpty: {
         msg: 'El centro de coste es requerido'

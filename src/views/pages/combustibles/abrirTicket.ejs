@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/spinner.css">
+</head>
+
+<body>
+    <%- include("../../templates/combustibles/nav") %>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="formNuevoTicket">
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit"
+                                                        id="regresarInicio">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    Abrir Ticket
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <!-- Fecha Solicitud-->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="fecha">Fecha
+                                                Solicitud</label>
+                                            <input type="date" id="fecha" name="fecha" class="formulario__input"
+                                                placeholder="Seleciones Fecha...." required>
+                                        </div>
+                                        <!-- Numero economico -->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="no_economico">Numero Economico</label>
+                                            <select type="text" id="no_economico" name="no_economico"
+                                                class="formulario__input num_Economico">
+                                            </select>
+                                        </div>
+                                        <!--centro de coste  -->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="centro_coste">Centro de Coste</label>
+                                            <select id="centro_coste" name="centro_coste" class="formulario__input">
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="prioridad">Prioridad</label>
+                                            <select id="prioridad" name="prioridad" class="formulario__input">
+                                                <option value="">Seleciona Prioridad...</option>
+                                                <option value="Baja">Baja</option>
+                                                <option value="Media">Media</option>
+                                                <option value="Alta">Alta</option>
+                                                <option value="Urguente">Urguente</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="mantenimiento">Mantenimineto</label>
+                                            <select id="mantenimiento" name="mantenimiento" class="formulario__input">
+                                                <option value="">Tipo de Servicio...</option>
+                                                <option value="Preventivo">Preventivo</option>
+                                                <option value="Correctivo">Correctivo</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="taller_asignado">Taller
+                                                Asignado</label>
+                                            <select id="taller_asignado" name="taller_asignado"
+                                                class="formulario__input">
+
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="reparacion_solicitada">Reparacion
+                                                Solicitada</label>
+                                            <input type="text" id="reparacion_solicitada" name="reparacion_solicitada"
+                                                class="formulario__input" placeholder="Seleciones Fecha...." required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="responsable">Nombre de
+                                                Responsable</label>
+                                            <input type="text" id="responsable" name="responsable"
+                                                class="formulario__input" placeholder="Agregar Nombre..." required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="kilometraje">Kilometraje
+                                                Registrado</label>
+                                            <input type="text" id="kilometraje" name="kilometraje"
+                                                class="formulario__input" placeholder="Agregar Kilometraje..." required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="fecha_salida">Termino de
+                                                Reparacion</label>
+                                            <input type="date" id="fecha_salida" name="fecha_salida"
+                                                class="formulario__input" placeholder="Agregar fecha de salida..."
+                                                required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="observacion">Observaciones</label>
+                                            <textarea name="observacion" id="observacion" name="observacion"
+                                                class="formulario__input" cols="30" rows="5"
+                                                placeholder="Agregar Observaciones..."></textarea>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="zona" class="formulario__label">Zona:</label>
+                                            <div class="">
+                                                <input class="form-check-input" type="radio" name="zonaServicio"
+                                                    id="Mich" value="Mich">
+                                                <label class="form-check-label" id="labelMich"
+                                                    for="Mich">Michoacán</label>
+                                                <input class="form-check-input" type="radio" name="zonaServicio"
+                                                    id="Jal" value="Jal">
+                                                <label class="form-check-label" id="labelJal" for="Jal">Jalisco</label>
+                                            </div>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="tipo" class="formulario__label">Pertenece a:</label>
+                                            <div>
+                                                <input class="form-check-input" type="radio" name="noRanchos" id="1"
+                                                    value="1">
+                                                <label class="form-check-label" id="label1" for="1">1</label>
+
+                                                <input class="form-check-input" type="radio" name="noRanchos" id="2"
+                                                    value="2">
+                                                <label class="form-check-label" id="label2" for="2">2</label>
+
+                                                <input class="form-check-input" type="radio" name="noRanchos" id="3"
+                                                    value="3">
+                                                <label class="form-check-label" id="label3" for="3">3</label>
+                                            </div>
+                                        </div>
+                                        <div class="formulario__campo" id="idJalisco1" style="display:none">
+                                            <label for="zona" class="formulario__label">Jalisco:</label>
+                                            <select class="formulario__input" name="idJaliscoOpcion"
+                                                id="idJaliscoOpcion1">
+                                                <option value="">Elige una opcion</option>
+                                                <option value="Atemajac">Atemajac</option>
+                                                <option value="Ahualulco">Ahualulco</option>
+                                                <option value="La soledad">La soledad</option>
+                                                <option value="Administracio">Administracion</option>
+                                            </select>
+
+                                        </div>
+                                        <div class="formulario__campo" id="idJalisco2" style="display:none">
+                                            <label for="zona" class="formulario__label" id="">Jalisco:</label>
+                                            <select class="formulario__input" name="idJaliscoOpcion"
+                                                id="idJaliscoOpcion2">
+                                                <option value="">Elige una opcion</option>
+                                                <option value="Atemajac">Atemajac</option>
+                                                <option value="Ahualulco">Ahualulco</option>
+                                                <option value="La soledad">La soledad</option>
+                                                <option value="Administracio">Administracion</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo" id="idJalisco3" style="display:none">
+                                            <label for="zona" class="formulario__label">Jalisco:</label>
+                                            <select class="formulario__input" name="idJaliscoOpcion"
+                                                id="idJaliscoOpcion3">
+                                                <option value="">Elige una opcion</option>
+                                                <option value="Atemajac">Atemajac</option>
+                                                <option value="Ahualulco">Ahualulco</option>
+                                                <option value="La soledad">La soledad</option>
+                                                <option value="Administracio">Administracion</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo" id="idMich1" style="display:none">
+                                            <label for="zona" class="formulario__label">Michoacán:</label>
+                                            <select class="formulario__input" name="idMichOPcion1" id="idMichOPcion1">
+                                                <option value="">Elige una opcion</option>
+                                                <option value="Casas de altos">Casas de altos</option>
+                                                <option value="Santiaguillo">Santiaguillo</option>
+                                                <option value="Guzman">Guzman</option>
+                                                <option value="Pelillos">Pelillos</option>
+                                                <option value="Paraiso">Paraiso</option>
+                                                <option value="San juan">San juan</option>
+                                                <option value="Potrero">Protero</option>
+                                                <option value="Riego">Riego</option>
+                                                <option value="RH">RH</option>
+                                                <option value="Mantenimiento">Mantenimiento</option>
+                                                <option value="Maquinaria agricola">Maquinaria agricola</option>
+                                                <option value="Administracion">Administracion</option>
+                                                <option value="Inocuidad">Inocuidad</option>
+                                                <option value="Almacen">Almacen</option>
+                                                <option value="La loma">La loma</option>
+                                                <option value="Zapote">Zapote</option>
+                                                <option value="Ojo de agua">Ojo de agua</option>
+                                                <option value="Maquinaria pesada">Maquinaria pesada</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo" id="idMich2" style="display:none">
+                                            <label for="zona" class="formulario__label">Michoacán:</label>
+                                            <select class="formulario__input" name="idMichOPcion2" id="idMichOPcion2">
+                                                <option value="">Elige una opcion</option>
+                                                <option value="Casas de altos">Casas de altos</option>
+                                                <option value="Santiaguillo">Santiaguillo</option>
+                                                <option value="Guzman">Guzman</option>
+                                                <option value="Pelillos">Pelillos</option>
+                                                <option value="Paraiso">Paraiso</option>
+                                                <option value="San juan">San juan</option>
+                                                <option value="Potrero">Protero</option>
+                                                <option value="Riego">Riego</option>
+                                                <option value="RH">RH</option>
+                                                <option value="Mantenimiento">Mantenimiento</option>
+                                                <option value="Maquinaria agricola">Maquinaria agricola</option>
+                                                <option value="Administracion">Administracion</option>
+                                                <option value="Inocuidad">Inocuidad</option>
+                                                <option value="Almacen">Almacen</option>
+                                                <option value="La loma">La loma</option>
+                                                <option value="Zapote">Zapote</option>
+                                                <option value="Ojo de agua">Ojo de agua</option>
+                                                <option value="Maquinaria pesada">Maquinaria pesada</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo" id="idMich3" style="display:none">
+                                            <label for="zona" class="formulario__label">Michoacán:</label>
+                                            <select class="formulario__input" name="idMichOPcion3" id="idMichOPcion3">
+                                                <option value="">Elige una opcion</option>
+                                                <option value="Casas de altos">Casas de altos</option>
+                                                <option value="Santiaguillo">Santiaguillo</option>
+                                                <option value="Guzman">Guzman</option>
+                                                <option value="Pelillos">Pelillos</option>
+                                                <option value="Paraiso">Paraiso</option>
+                                                <option value="San juan">San juan</option>
+                                                <option value="Potrero">Protero</option>
+                                                <option value="Riego">Riego</option>
+                                                <option value="RH">RH</option>
+                                                <option value="Mantenimiento">Mantenimiento</option>
+                                                <option value="Maquinaria agricola">Maquinaria agricola</option>
+                                                <option value="Administracion">Administracion</option>
+                                                <option value="Inocuidad">Inocuidad</option>
+                                                <option value="Almacen">Almacen</option>
+                                                <option value="La loma">La loma</option>
+                                                <option value="Zapote">Zapote</option>
+                                                <option value="Ojo de agua">Ojo de agua</option>
+                                                <option value="Maquinaria pesada">Maquinaria pesada</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit" id="btnRegistrar">
+                                                Abrir Ticket
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/vehiculos/main.js"></script>
+
+</body>
+
+</html>
+<script>
+    $("input[name='zonaServicio']").change(function () {
+        let selectValue = $("input[name='zonaServicio']:checked").val()
+        if (selectValue === "Mich") {
+            $("#1").prop("checked", false);
+            $("#2").prop("checked", false);
+            $("#3").prop("checked", false);
+            $('#labelMich').css('color', 'black');
+            $('#labelJal').css('color', 'gray');
+            var jal1 = $('#idJalisco1');
+            var jal2 = $('#idJalisco2');
+            var jal3 = $('#idJalisco3');
+            jal1.css('display', 'none')
+            jal2.css('display', 'none')
+            jal3.css('display', 'none')
+            var michoacan1 = document.getElementById("idMichOPcion1").value = '';
+            var michoacan2 = document.getElementById("idMichOPcion2").value = '';
+            var michoacan3 = document.getElementById("idMichOPcion3").value = '';
+        } else if (selectValue === "Jal") {
+            $("#1").prop("checked", false);
+            $("#2").prop("checked", false);
+            $("#3").prop("checked", false);
+            $('#labelMich').css('color', 'gray');
+            $('#labelJal').css('color', 'black');
+            var mich1 = $('#idMich1');
+            var mich2 = $('#idMich2');
+            var mich3 = $('#idMich3');
+            mich1.css('display', 'none')
+            mich2.css('display', 'none')
+            mich3.css('display', 'none')
+            var jalisco1 = document.getElementById("idJaliscoOpcion1").value = '';
+            var jalisco2 = document.getElementById("idJaliscoOpcion2").value = '';
+            var jalisco3 = document.getElementById("idJaliscoOpcion3").value = '';
+        }
+    })
+
+    $("input[name='noRanchos']").change(function () {
+        let selectValue = $("input[name='noRanchos']:checked").val()
+        let selectValueZona = $("input[name='zonaServicio']:checked").val()
+
+        if (selectValueZona === 'Mich') {
+
+            if (selectValue === "1") {
+                var michoacan2 = document.getElementById("idMichOPcion2").value = '';
+                var michoacan3 = document.getElementById("idMichOPcion3").value = '';
+                $('#label1').css('color', 'black');
+                $('#label2').css('color', 'gray');
+                $('#label3').css('color', 'gray');
+                //var jalisco  = $('#idJalisco');
+                //jalisco.css('display','none');
+                var mich1 = $('#idMich1');
+                var mich2 = $('#idMich2');
+                var mich3 = $('#idMich3');
+                mich1.css('display', 'block')
+                mich2.css('display', 'none')
+                mich3.css('display', 'none')
+
+            } else if (selectValue === "2") {
+                var michoacan3 = document.getElementById("idMichOPcion3").value = '';
+                $('#label1').css('color', 'gray');
+                $('#label2').css('color', 'black');
+                $('#label3').css('color', 'gray');
+                //var jalisco  = $('#idJalisco');
+                //jalisco.css('display','block')
+                var mich1 = $('#idMich1');
+                var mich2 = $('#idMich2');
+                var mich3 = $('#idMich3');
+                mich1.css('display', 'block')
+                mich2.css('display', 'block')
+                mich3.css('display', 'none')
+            } else if (selectValue === "3") {
+                $('#label1').css('color', 'gray');
+                $('#label2').css('color', 'gray');
+                $('#label3').css('color', 'black');
+
+                var mich1 = $('#idMich1');
+                var mich2 = $('#idMich2');
+                var mich3 = $('#idMich3');
+                mich1.css('display', 'block')
+                mich2.css('display', 'block')
+                mich3.css('display', 'block')
+            }
+        } else if (selectValueZona === 'Jal') {
+
+            if (selectValue === "1") {
+                var jalisco2 = document.getElementById("idJaliscoOpcion2").value = '';
+                var jalisco3 = document.getElementById("idJaliscoOpcion3").value = '';
+                $('#label1').css('color', 'black');
+                $('#label2').css('color', 'gray');
+                $('#label3').css('color', 'gray');
+                //var jalisco  = $('#idJalisco');
+                //jalisco.css('display','none');
+                var jal1 = $('#idJalisco1');
+                var jal2 = $('#idJalisco2');
+                var jal3 = $('#idJalisco3');
+                jal1.css('display', 'block')
+                jal2.css('display', 'none')
+                jal3.css('display', 'none')
+
+            } else if (selectValue === "2") {
+                var jalisco3 = document.getElementById("idJaliscoOpcion3").value = '';
+                $('#label1').css('color', 'gray');
+                $('#label2').css('color', 'black');
+                $('#label3').css('color', 'gray');
+                //var jalisco  = $('#idJalisco');
+                //jalisco.css('display','block')
+                var jal1 = $('#idJalisco1');
+                var jal2 = $('#idJalisco2');
+                var jal3 = $('#idJalisco3');
+                jal1.css('display', 'block')
+                jal2.css('display', 'block')
+                jal3.css('display', 'none')
+            } else if (selectValue === "3") {
+                $('#label1').css('color', 'gray');
+                $('#label2').css('color', 'gray');
+                $('#label3').css('color', 'black');
+
+                var jal1 = $('#idJalisco1');
+                var jal2 = $('#idJalisco2');
+                var jal3 = $('#idJalisco3');
+                jal1.css('display', 'block')
+                jal2.css('display', 'block')
+                jal3.css('display', 'block')
+            }
+        }
+    })
+</script>

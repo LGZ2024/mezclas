@@ -79,12 +79,30 @@ const obtenerRegistro = async () => {
 }
 /* mostrar tala de mezclas Solicitada */
 const verRegistro = async () => {
+  const rol = document.getElementById('rol').value
   try {
     if (!$.fn.dataTable.isDataTable('#tbProductos')) {
       $('#tbProductos').DataTable({
         paging: true,
         order: [[0, 'desc']],
-        dom: '<"d-flex justify-content-between"fl>t<"d-xl-flex justify-content-between align-items-center"ip><"clear">',
+        buttons: [
+          {
+            extend: 'copyHtml5',
+            text: '<a class="mdi mdi-content-copy icon"></a>',
+            titleAttr: 'Copiar'
+          },
+          {
+            extend: 'excelHtml5',
+            text: '<a class="mdi mdi-file-excel icon"></a>',
+            titleAttr: 'Excel'
+          },
+          {
+            extend: 'csvHtml5',
+            text: '<a class="mdi mdi-file-excel-box icon"></a>',
+            titleAttr: 'CSV'
+          }
+        ],
+        dom: '<"d-flex justify-content-between"fBl>t<"d-xl-flex justify-content-between align-items-center"ip><"clear">',
         responsive: false,
         pageLength: 5,
         lengthMenu: [[5, 10, 20, -1], [5, 10, 20, 'Todos']],
@@ -116,10 +134,11 @@ const verRegistro = async () => {
             data: 'id',
             render: function (data, type, row) {
               // al boton le pasaremos data para obtenerlo con el evento del botton
-              if (rol === 'admin') {
+
+              if (rol === 'master') {
                 return `
-                    <button type="button" data-id="${data}" id="btnEdit" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#staticBackdrop")"><i class="mdi mdi-border-color"></i></button>
-                    <button type="button" data-id="${data}" id="btnDelete" class="btn btn-danger")"><i class="mdi mdi-delete"></i></button>
+                    <button type="button" data-id="${data}"  class="btn btn-primary btnEdit"><i class="mdi mdi-border-color"></i></button>
+                    <button type="button" data-id="${data}"  class="btn btn-danger btnDelete"><i class="mdi mdi-delete"></i></button>
                   `
               }
               return 'No autorizado'

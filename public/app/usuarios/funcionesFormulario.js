@@ -123,22 +123,6 @@ class FormularioUsuario {
     return true
   }
 
-  async validarContraseña (contrasena, contrasenaRep) {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/
-
-    if (!regex.test(contrasena)) {
-      await mostrarMensaje('La contraseña no cumple con los requisitos', 'info', true)
-      return false
-    }
-
-    if (contrasena !== contrasenaRep) {
-      await mostrarMensaje('Las contraseñas no coinciden', 'info', true)
-      return false
-    }
-
-    return true
-  }
-
   async recopilarDatosReceta () {
     const ranchos = await this.recopilarProductos()
     if (!ranchos) {
@@ -346,7 +330,7 @@ class FormularioUsuario {
   manejarCambioCentroCoste () {
     document.getElementById('rol').addEventListener('change', (evento) => {
       const rol = evento.target.value
-      document.getElementById('agregarRancho').style.display = rol === 'admin' ? 'none' : 'block'
+      document.getElementById('agregarRancho').style.display = rol === 'master' ? 'none' : 'block'
     })
   }
 

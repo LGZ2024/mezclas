@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/master/cabecera") %>
+</head>
+
+<body>
+    <div class="container-scroller">
+        <!-- navcabecera -->
+        <%- include("../../templates/master/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <!-- nav lateral -->
+                <%- include("../../templates/master/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="d-xl-flex justify-content-between align-items-start">
+                                <!-- <h2 class="text-dark font-weight-bold mb-2"> Dashboard</h2> -->
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Empleados</h4>
+                                            <div class="table-responsive w-100">
+                                                <table class="table table-striped table-bordered w-100"
+                                                    id="tbEmpleados">
+                                                    <thead>
+                                                        <tr>
+                                                            <th scope="col">ID de empleado</th>
+                                                            <th scope="col">Nombre</th>
+                                                            <th scope="col">Apellido paterno</th>
+                                                            <th scope="col">Apellido Materno</th>
+                                                            <th scope="col">Departamento</th>
+                                                            <th scope="col">Estado</th>
+                                                            <th scope="col">Acciones</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- content-wrapper ends -->
+                        <!-- partial:partials/_footer.html -->
+                        <%- include("../../templates/master/footer") %>
+                            <!-- partial -->
+                    </div>
+                    <!-- main-panel ends -->
+            </div>
+            <!-- page-body-wrapper ends -->
+    </div>
+ <%- include("../../templates/activos/modalUsuarios") %> 
+        <!-- container-scroller -->
+        <%- include("../../templates/master/scripts") %>
+                        <script type="module" src="../../../app/activos/main.js"></script>
+</body>
+
+</html>

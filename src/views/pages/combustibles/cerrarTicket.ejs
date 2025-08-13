@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/spinner.css">
+</head>
+
+<body>
+    <%- include("../../templates/combustibles/nav") %>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="formCerrarTicket">
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit"
+                                                        id="regresarInicio">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    Cerrar Ticket
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <!-- Fecha Solicitud-->
+                                        <div class="formulario__campo">
+                                            <label for="id_servicio" class="formulario__label ">Ticket:</label>
+                                            <select class="formulario__input selectId" id="id_servicio">
+                                            </select>
+                                        </div>
+                                        <!--centro de coste  -->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="centro_coste">Centro de Coste</label>
+                                            <input type="text" name="centro_coste" id="centro_coste" class="formulario__input" required disabled>
+                                        </div>
+                                        <!-- Nombre Responsable -->
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="responsable">Nombre de
+                                                Responsable</label>
+                                            <input type="text" id="responsable" class="formulario__input"
+                                                placeholder="Agregar Nombre..." required disabled>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="kilometraje">Kilometraje
+                                                Registrado</label>
+                                            <input type="text" id="kilometraje" class="formulario__input"
+                                                placeholder="Agregar Kilometraje..." required disabled>
+                                        </div>
+                                        <!-- fecha soliciud -->
+                                        <div class="formulario__campo">
+                                            <label for="fecha" class="formulario__label">Fecha de
+                                                Solicitud</label>
+                                            <input type="text" id="fecha" class="formulario__input" required disabled>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="prioridad">Prioridad</label>
+                                            <input type="text" id="prioridad" class="formulario__input"
+                                                placeholder="Agregar Prioridad..." required disabled>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="mantenimiento" class="formulario__label">Mantenimiento*:</label>
+                                            <input type="text" class="formulario__input" name="mantenimiento"
+                                                id="mantenimiento" required disabled>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="reparacion_solicitada" class="formulario__label">Reparacion
+                                                Solicitada*:</label>
+                                            <input type="text" class="formulario__input" name="reparacion_solicitada"
+                                                id="reparacion_solicitada" required disabled>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="taller_asignado" class="formulario__label ">Taller
+                                                Asignado*:</label>
+
+                                            <input type="text" class="formulario__input" name="taller_asignado"
+                                                id="taller_asignado" required disabled>
+
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="fecha_salida">Termino de
+                                                Reparacion</label>
+                                            <input type="date" id="fecha_salida" class="formulario__input"
+                                                required disabled>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label class="formulario__label" for="observaciones">Observaciones</label>
+                                            <textarea class="formulario__input" name="observaciones" id="observaciones"
+                                                cols="30" rows="5" placeholder="Agregar Observaciones..." required disabled></textarea>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="no_economico" class="formulario__label ">Numero
+                                                Economico:</label>
+                                            <input type="text" class="formulario__input" name="no_economico"
+                                                id="no_economico" required disabled>
+
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="temporada" class="formulario__label ">Temporada:</label>
+                                            <select name="temporada" id="temporada" class="formulario__input" required>
+                                                    <option value="">Seleciona Temporada</option>
+                                                    <option value="2023-2024">2023-2024</option>
+                                                    <option value="2024-2025">2024-2025</option>
+                                                    <option value="2025-2026">2025-2026</option>
+                                                </select>
+                                            
+
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="no_factura" class="formulario__label ">Factura:</label>
+                                            <input type="text" class="formulario__input" name="no_factura"
+                                                id="no_factura">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="fecha_factura" class="formulario__label ">Fecha Factura:</label>
+                                            <input type="date" class="formulario__input" name="fecha_factura"
+                                                id="fecha_factura">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="reparacion_efectuada" class="formulario__label">Reparacion
+                                                Efectuada:</label>
+                                            <textarea class="formulario__input" name="reparacion_efectuada"
+                                                id="reparacion_efectuada" cols="10" rows="5" placeholder="Agregar Reparacion Efectuada"></textarea>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="importe_reparacion" class="formulario__label ">Importe
+                                                Reparacion:</label>
+                                            <input type="number" class="formulario__input" name="importe_reparacion"
+                                                id="importe_reparacion">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit" id="btnRegistrar" style="display: none;">
+                                                Cerrar Ticket
+                                            </button>
+                                            <br>
+                                            <button type="button" class="formulario__submit" id="btnPendiete" style="display: none;">
+                                                Pendiente
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/vehiculos/main.js"></script>
+
+</body>
+
+</html>

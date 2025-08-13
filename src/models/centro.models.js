@@ -1,13 +1,28 @@
 import { Centrocoste } from '../schema/centro.js'
 import logger from '../utils/logger.js'
 import { ValidationError, DatabaseError, CustomError, NotFoundError } from '../utils/CustomError.js'
+import { DbHelper } from '../utils/dbHelper.js'
 
 export class CentroCosteModel {
   // uso
   static async getAll () {
     try {
       const centroCoste = await Centrocoste.findAll({
-        attributes: ['id', 'centroCoste', 'empresa', 'rancho', 'cultivo', 'variedad']
+        attributes: ['id', 'centroCoste', 'CustomCentrocoste', 'cc', 'empresa', 'rancho', 'cultivo', 'variedad']
+      })
+      if (!centroCoste) throw new NotFoundError('Centro de coste no encontrados')
+      return centroCoste
+    } catch (e) {
+      if (e instanceof CustomError) throw e
+      throw new DatabaseError('Error al obtener los centros de coste')
+    }
+  }
+
+  static async getAllOption () {
+    try {
+      const centroCoste = await Centrocoste.findAll({
+        attributes: ['id', 'centroCoste', 'CustomCentrocoste', 'cc'],
+        order: [['empresa', 'DESC']]
       })
       if (!centroCoste) throw new NotFoundError('Centro de coste no encontrados')
       return centroCoste
@@ -137,30 +152,48 @@ export class CentroCosteModel {
     }
   }
 
-  static async delete ({ id }) {
-    try {
-      const usuario = await Centrocoste.findByPk(id)
-      if (!usuario) return { error: 'usuario no encontrado' }
+  static async delete ({ id, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        const usuario = await Centrocoste.findByPk(id)
+        if (!usuario) throw ValidationError('No se encontro centro de coste')
 
-      await usuario.destroy()
-      return { message: `usuario eliminada correctamente con id ${id}` }
-    } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al elimiar el usuario' }
-    }
+        await usuario.destroy({ transaction })
+        return { message: `Centro de coste eliminada correctamente con id ${id}` }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+        if (error instanceof CustomError) throw error
+        throw new DatabaseError('Error al eliminar centrop de coste', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
   }
 
-  static async create ({ data }) {
-    try {
+  static async create ({ data, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
       // verificamos que no exista el usuario
-      const usuario = await Centrocoste.findOne({ where: { usuario: data.usuario } })
-      if (usuario) return { error: 'usuario ya existe' }
-      // creamos el usuario
-      await Centrocoste.create({ ...data })
-      return { message: `usuario registrado exitosamente ${data.nombre}` }
-    } catch (e) {
-      console.error(e.message) // Salida: Error la usuario
-      return { error: 'Error al crear al usuario' }
-    }
+        const usuario = await Centrocoste.findOne({ where: { centroCoste: data.centroCoste } })
+        if (usuario) throw ValidationError('Centro de coste ya Registrado')
+        // creamos el usuario
+        await Centrocoste.create({ ...data }, { transaction })
+        return { message: `Centro de coste registrado exitosamente ${data.nombre}` }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+        if (error instanceof CustomError) throw error
+        throw new DatabaseError('Error al crear unidad', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
   }
 }

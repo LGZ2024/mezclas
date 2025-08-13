@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // iniciamos tabla
     iniciarProductosReceta(idSolicitud)
     // iniciamos rol
-    if (rol === 'mezclador' || rol === 'administrativo') {
+    if (rol === 'mezclador' || rol === 'administrativo' || rol === 'master') {
       await verProductosReceta({
         eliminarUltimaColumna: false,
         depuracion: true
@@ -248,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
           hideSpinner()
         }
-      } else if (rol === 'administrativo') {
+      } else if (rol === 'administrativo' || rol === 'master') {
         $('#empresasModal').modal('show')
 
         formEmpresa.addEventListener('submit', async (e) => {

@@ -11,6 +11,7 @@ const productosConfig = {
   id_sap: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
     validate: {
       notEmpty: {
         msg: 'El id del Sap es requerido'
@@ -24,6 +25,7 @@ const productosConfig = {
   nombre: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true,
     validate: {
       notEmpty: {
         msg: 'El nombre del producto es requerido'
@@ -48,15 +50,11 @@ const productosConfig = {
     }
   },
   unidad_medida: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('Litro', 'Kilogramo', 'Unidad'),
     allowNull: false,
     validate: {
       notEmpty: {
-        msg: 'La unidad de medida es requerida para el producto'
-      },
-      len: {
-        args: [2, 20],
-        msg: 'El nombre del producto debe tener entre 2 y 20 caracteres'
+        msg: 'La unidad de medida es requerida'
       }
     }
   }
@@ -64,8 +62,6 @@ const productosConfig = {
 
 export const Productos = sequelize.define('productos', productosConfig, {
   tableName: 'productos', // Nombre de la tabla en la base de datos
-  timestamps: true, // Agrega createdAt y updatedAt automáticamente
-  underscored: true, // Agregar esta línea para usar snake_case
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: false, // Agrega createdAt y updatedAt automáticamente
+  underscored: true // Agregar esta línea para usar snake_case
 })

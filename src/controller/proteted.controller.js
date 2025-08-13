@@ -11,10 +11,16 @@ export class ProtetedController {
     logger.debug('Usuario en la ruta protegida:', user)
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // validamos al usuario
-    if (user.rol === 'admin' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {
+    if (user.rol === 'administrativo' || user.rol === 'adminMezclador') {
       res.status(200).render('pages/admin/solicitudes', { user, rol: user.rol, titulo: 'Bienvenido' })
     } else if (user.rol === 'mezclador' || user.rol === 'solicita' || user.rol === 'supervisor' || user.rol === 'solicita2') {
       res.status(200).render('pages/mezclas/main', { rol: user.rol, nombre: user.nombre })
+    } else if (user.rol === 'encargado_combustible') {
+      res.status(200).render('pages/combustibles/main', { rol: user.rol, nombre: user.nombre })
+    } else if (user.rol === 'Activos Fijos') {
+      res.status(200).render('pages/activos/main', { user, rol: user.rol, titulo: 'Bienvenido' })
+    } else if (user.rol === 'master') {
+      res.status(200).render('pages/master/main', { user, rol: user.rol, titulo: 'Bienvenido' })
     }
   }
 
@@ -61,6 +67,97 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     res.render('pages/mezclas/pendientes', { rol: user.rol, nombre: user.nombre })
+  }
+
+  talleres = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/talleres', { rol: user.rol, nombre: user.nombre })
+  }
+
+  registrarTalleres = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/agregarTalleres', { rol: user.rol, nombre: user.nombre })
+  }
+
+  tickets = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/tickets', { rol: user.rol, nombre: user.nombre })
+  }
+
+  ticketsCerrados = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/ticketsCerrados', { rol: user.rol, nombre: user.nombre })
+  }
+
+  preventivo = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/preventivos', { rol: user.rol, nombre: user.nombre })
+  }
+
+  correctivo = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/correctivos', { rol: user.rol, nombre: user.nombre })
+  }
+
+  servicios = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/servicios', { rol: user.rol, nombre: user.nombre })
+  }
+
+  agregarServicio = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/agregarServicio', { rol: user.rol, nombre: user.nombre })
+  }
+
+  registrarTicket = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/abrirTicket', { rol: user.rol, nombre: user.nombre })
+  }
+
+  cerrarTicket = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/cerrarTicket', { rol: user.rol, nombre: user.nombre })
+  }
+
+  mantenimientos = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/mantenimientos', { rol: user.rol, nombre: user.nombre })
+  }
+
+  unidades = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/unidades', { rol: user.rol, nombre: user.nombre })
+  }
+
+  registrarUnidades = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/combustibles/agregarUnidad', { rol: user.rol, nombre: user.nombre })
   }
 
   proceso = async (req, res) => {
@@ -271,7 +368,7 @@ export class ProtetedController {
       })
     }
     try {
-      if (user.rol === 'admin' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {
+      if (user.rol === 'master' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {
         return res.render('pages/admin/solicitudesCanceladas', {
           user,
           rol: user.rol,
@@ -306,6 +403,111 @@ export class ProtetedController {
     const ranchos = user.ranchos.split(',')
 
     res.render('pages/mezclas/registrarSolicitud', { ranchos, rol: user.rol })
+  }
+
+  agregarInventario = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    const ranchos = user.ranchos.split(',')
+
+    res.render('pages/combustibles/agregarInventario', { ranchos, rol: user.rol })
+  }
+
+  agregarSalidaInventario = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    const ranchos = user.ranchos.split(',')
+
+    res.render('pages/combustibles/agregarSalida', { ranchos, rol: user.rol })
+  }
+
+  agregarCargaCombustible = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    const ranchos = user.ranchos.split(',')
+
+    res.render('pages/combustibles/agregarCombustible', { ranchos, rol: user.rol })
+  }
+
+  entradasCombustible = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+
+    res.render('pages/combustibles/entradaInventario', { rol: user.rol })
+  }
+
+  salidasCombustible = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+
+    res.render('pages/combustibles/salidaInventario', { rol: user.rol })
+  }
+
+  cargasCombustible = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+
+    res.render('pages/combustibles/cargasCombustible', { rol: user.rol })
+  }
+
+  inventario = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+
+    res.render('pages/combustibles/inventario', { rol: user.rol })
+  }
+
+  asignaciones = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    const ubicaciones = ['Atemajac', 'Ahualulco', 'Casas de Altos', 'Ojo de Agua', 'Potrero', 'Romero', 'Seccion 7 Fresas', 'La Loma', 'Zapote', 'Oficina 1', 'Oficina 2']
+    res.render('pages/activos/asignarEquipos', { user, rol: user.rol, titulo: 'Bienvenido', ubicaciones })
+  }
+
+  bajas = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    res.render('pages/activos/baja', { user, rol: user.rol, titulo: 'Bienvenido' })
+  }
+
+  historialA = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    res.render('pages/activos/historal', { user, rol: user.rol, titulo: 'Bienvenido' })
+  }
+
+  historialE = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    res.render('pages/activos/historialEquipos', { user, rol: user.rol, titulo: 'Bienvenido' })
+  }
+
+  empleados = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    res.render('pages/activos/empleados', { user, rol: user.rol, titulo: 'Bienvenido' })
   }
 
   // cerras sesion

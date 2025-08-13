@@ -1,34 +1,42 @@
 import { Empleados } from '../schema/empleados.js'
 import { Op } from 'sequelize' // Agregar esta importación
-/**
-Los operadores de Sequelize (Op) son necesarios para realizar consultas complejas. Algunos operadores comunes son:
-Op.eq: Igual
-Op.ne: No igual
-Op.gt: Mayor que
-Op.lt: Menor que
-Op.in: Dentro de un array
-Op.like: Búsqueda con comodín
- */
-// utils
 import { DatabaseError, CustomError, NotFoundError, ValidationError } from '../utils/CustomError.js'
+import { DbHelper } from '../utils/dbHelper.js'
 export class EmpleadosModel {
   // uso
   static async getAllEmpleados () {
-    try {
-      const equipo = await Empleados.findAll({
-        where: {
-          estado: {
-            [Op.ne]: 'asignado'
-          }
-        },
-        attributes: ['id', 'nombre', 'apellido_paterno']
-      })
-      if (!equipo) throw new NotFoundError('Empleados no encontrados')
-      return equipo
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener los equipos')
-    }
+    return await DbHelper.executeQuery(async (sequelize) => {
+      try {
+        const equipo = await Empleados.findAll({
+          where: {
+            estado: {
+              [Op.ne]: 'asignado'
+            }
+          },
+          attributes: ['id', 'nombre', 'apellido_paterno']
+        })
+        if (!equipo) throw new NotFoundError('Empleados no encontrados')
+        return equipo
+      } catch (e) {
+        if (e instanceof CustomError) throw e
+        throw new DatabaseError('Error al obtener los equipos')
+      }
+    })
+  }
+
+  static async AllEmpleados () {
+    return await DbHelper.executeQuery(async (sequelize) => {
+      try {
+        const equipo = await Empleados.findAll({
+          attributes: ['id', 'empleado_id', 'nombre', 'apellido_paterno', 'apellido_materno', 'departamento', 'estado']
+        })
+        if (!equipo) throw new NotFoundError('Empleados no encontrados')
+        return equipo
+      } catch (e) {
+        if (e instanceof CustomError) throw e
+        throw new DatabaseError('Error al obtener los equipos')
+      }
+    })
   }
 
   static async getDatosEmpleado ({ id }) {
@@ -52,18 +60,31 @@ export class EmpleadosModel {
     }
   }
 
-  static async agregarUsuario ({ data }) {
-    try {
-      // verificamos que no exista el usuario
-      const usuario = await Empleados.findOne({ where: { id_empleado: data.id_empleado } })
-      if (usuario) throw new ValidationError('ya existe un empleado con id ' + data.id_empleado)
-      // creamos el usuario
-      await Empleados.create({ ...data })
-      return { message: `Usuario registrado exitosamente ${data.nombre}` }
-    } catch (e) {
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener los equipos')
-    }
+  static async agregarUsuario ({ logger, logContext, data }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        // Validar que los datos sean correctos
+        if (!data || !data.nombre || !data.apellido_paterno) {
+          throw new ValidationError('Datos incompletos para agregar usuario')
+        }
+
+        // Crear el nuevo empleado
+        const nuevoEmpleado = await Empleados.create(data, { transaction })
+
+        return { message: 'Usuario agregado correctamente', id: nuevoEmpleado.id }
+      } catch (error) {
+        logger.error('Error al agregar usuario', { ...logContext, error })
+        if (error instanceof ValidationError) {
+          throw error
+        }
+
+        if (error.name === 'SequelizeUniqueConstraintError') {
+          throw new ValidationError('Ya existe un empleado con ese número de empleado')
+        }
+
+        throw new DatabaseError('Error al agregar usuario')
+      }
+    })
   }
 
   static async actualizarUsuario ({ id, estado }) {

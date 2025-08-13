@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { UsuarioController } from '../controller/usuario.controller.js'
-import { authenticate, isAdmin } from '../middlewares/authMiddleware.js'
+import { authenticate } from '../middlewares/authMiddleware.js'
 
 export const createUsuarioRouter = ({ usuarioModel }) => {
   const router = Router()
@@ -8,13 +8,13 @@ export const createUsuarioRouter = ({ usuarioModel }) => {
   const usuarioController = new UsuarioController({ usuarioModel })
 
   // Crear un usuario
-  router.post('/', authenticate, isAdmin, usuarioController.create)
+  router.post('/', authenticate, usuarioController.create)
   router.get('/usuarios', authenticate, usuarioController.getUsuarios)
-  router.get('/', authenticate, isAdmin, usuarioController.getAll)
-  router.get('/:id', authenticate, isAdmin, usuarioController.getOne)
-  router.patch('/:id', authenticate, isAdmin, usuarioController.update)
-  router.delete('/:id', authenticate, isAdmin, usuarioController.delete)
-  router.put('/:id', authenticate, isAdmin, usuarioController.changePassword)
+  router.get('/', authenticate, usuarioController.getAll)
+  router.get('/:id', authenticate, usuarioController.getOne)
+  router.patch('/:id', authenticate, usuarioController.update)
+  router.delete('/:id', authenticate, usuarioController.delete)
+  router.put('/:id', authenticate, usuarioController.changePassword)
 
   // rutas de inicio de sesion
   router.post('/login', usuarioController.login) // logear usuario

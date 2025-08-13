@@ -49,8 +49,7 @@
 
   <!-- Estilos y scripts -->
   <link rel="stylesheet" href="/css/pwa.css">
-  <script type="module" src="/js/app.js"></script>
-
+  <!-- <script type="module" src="/js/app.js"></script> -->
   <!-- Toast para notificaciones de conexión -->
   <div id="connectionToast" class="connection-toast hide" role="alert" aria-live="polite"></div>
 
@@ -58,8 +57,10 @@
   <button id="installPwa" class="install-button " aria-label="Instalar aplicación">
     Instalar aplicación
   </button>
- <button id="btnNotificaciones">Activar notificaciones</button>
-  <!--  -->
+<div id="updateNotification" class="update-notification hide">
+  <p>Nueva versión disponible</p>
+  <button onclick="window.location.reload()">Actualizar</button>
+</div>
   <title>Login Mezclas</title>
   <link rel="icon" type="image/webp" href="./images/LogoTransp.webp">
   <link rel="stylesheet" type="text/css" href="./vendors/toastify/toastify.min.css">

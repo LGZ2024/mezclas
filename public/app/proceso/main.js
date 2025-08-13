@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('tablaFuciones').style.display = 'block'
     document.getElementById('formPreparadas').style.display = 'none'
   })
+
   $(document).on('click', '#regresarCerrar', () => {
     document.getElementById('formCerrar').style.display = 'none'
     document.getElementById('formPreparadas').style.display = 'block'

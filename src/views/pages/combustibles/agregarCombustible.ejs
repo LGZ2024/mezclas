@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+            <link rel="stylesheet" href="../css/spinner.css">
+</head>
+
+<body>
+    <%- include("../../templates/combustibles/navCombustibles") %>
+        <section>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <form class="form" id="formCargaCombustible">
+                                    <div class="card">
+                                        <div class="titulo">
+                                            <div class="col">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                    <button type="button" class="formulario__submit"
+                                                        id="regresarInicio">
+                                                        <span class="mdi mdi-arrow-left-bold"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <h3>
+                                                    Carga De Combustible
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="formulario__campo">
+                                            <label for="fecha" class="formulario__label">Fecha</label>
+                                            <input type="date" name="fecha" id="fecha" class="formulario__input">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="no_economico" class="formulario__label">Numero Economico</label>
+                                            <select id="no_economico" name="no_economico" class="formulario__input"
+                                                required>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="centro_coste" class="formulario__label">Centro Coste</label>
+                                            <select id="centro_coste" name="centro_coste" class="formulario__input"
+                                                required>
+
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="cantidad" class="formulario__label">Cantidad de Litros</label>
+                                            <input type="number" class="formulario__input" id="cantidad" name="cantidad"
+                                                placeholder="Cantidad" required step="any" min="0">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="precio" class="formulario__label">Precio Pagado</label>
+                                            <input type="number" class="formulario__input" id="precio" name="precio"
+                                                placeholder="Precio" required step="any" min="0">
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="combustible" class="formulario__label ">Tipo de
+                                                Combustible</label>
+                                            <select name="combustible" id="combustible" name="combustible"
+                                                class="formulario__input" required>
+                                                <option value="0">Selecione una opcion</option>
+                                                <option value="Diesel">Diesel</option>
+                                                <option value="Magna">Magna</option>
+                                                <option value="Premium">Premium</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="responsable" class="formulario__label">Responsable</label>
+                                            <input type="text" class="formulario__input" id="responsable"
+                                                name="responsable" placeholder="Quien recibe" required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="km" class="formulario__label ">kilometraje</label>
+                                            <input type="number" class="formulario__input" id="km" name="km"
+                                                required>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="kilometraje" class="formulario__label ">Ultimo kilometraje</label>
+                                            <input type="number" class="formulario__input" id="kilometraje" name="kilometraje"
+                                                required readonly>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="km_recorridos" class="formulario__label ">kilometraje Recorrido</label>
+                                            <input type="number" class="formulario__input" id="km_recorridos" name="km_recorridos"
+                                                required readonly>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <label for="comentario" class="formulario__label">Comentario:</label>
+                                            <textarea class="formulario__input" name="comentario" id="comentario"
+                                                cols="30" rows="5" placeholder="Comentario"></textarea>
+                                        </div>
+                                        <div class="formulario__campo">
+                                            <button type="submit" class="formulario__submit" id="btnRegistrar">
+                                                Registrar Entrada
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Firebase Configuración y funciones -->
+        <%- include("../../templates/mezclas/scripts") %>
+            <script type="module" src="../../app/combustibles/main.js"></script>
+
+</body>
+
+</html>

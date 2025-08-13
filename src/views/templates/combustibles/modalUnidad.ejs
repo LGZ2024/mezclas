@@ -1,0 +1,53 @@
+<div class="modal fade" id="modalUnidad" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+    aria-labelledby="modalInformacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h4 class="modal-title" id="modalInformacionLabel">
+                    <i class="bi bi-info-circle me-2"></i>Registrar Taller
+                </h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form id="formUnidad" class="form">
+                        <!-- Razon Social-->
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="razon_social">Razon Social</label>
+                            <input type="text" id="razon_social" class="formulario__input" placeholder="Razon Social..."
+                                required>
+                        </div>
+                        <!-- variedades -->
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="domicilio">Domicilio</label>
+                            <input type="text" id="domicilio" class="formulario__input" placeholder="Domicilio...">
+                        </div>
+                        <!-- folio -->
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="contacto">Contacto</label>
+                            <input type="text" id="contacto" class="formulario__input"
+                                placeholder="Contacto..." required>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="forma_pago">Forma de Pago</label>
+                            <select id="forma_pago" class="formulario__input">
+                                <option value="">Selecionas una Forma de Pago...</option>
+                            </select>
+                        </div>
+
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="formulario__submit" id="btnRegistrar">
+                    Registar Unidad
+                </button>
+                <button type="button" class="formulario__submit" data-bs-dismiss="modal">
+                    <i class="mdi mdi-exit-to-app me-2"></i>Cerrar
+                </button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>

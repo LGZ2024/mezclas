@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/mezclas/cabecera") %>
+</head>
+<body>
+    <!-- importamos barra de navegacion -->
+    <div style="display: block;" id="navPrincipal">
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/protected/admin">
+                    <!-- impoirtamos logo de la empresa -->
+                    <img id="logo" src='../images/LogoTransp.svg' style="width:40px;" class="rounded-pill">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mynavbar">
+                    <ul class="navbar-nav me-auto"><!-- inicio nav -->
+                        <!-- Combustibles entadas y salidad -->
+                        <li class="nav-item">
+                            <a class="nav-link" role="button" id="vehiculos"><i class="fa-solid fa-bars"></i>
+                                Vehiculos</a>
+                        </li>
+                        <!--Carga de combustible -->
+                        <li class="nav-item ">
+                            <a class="nav-link " href="../operacionesadm/view/inicio_combustible.php" role="button"
+                                id="combustibles"><i class="fa-solid fa-gas-pump"></i> Combustible</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="../../controller/cerrarSesion.php"><i
+                                    class="fa-solid fa-circle-xmark"></i> Cerrar Sesion</a>
+                        </li>
+                    </ul><!-- fin nav -->
+                </div>
+            </div>
+        </nav>
+    </div>
+    <div style="display: none;" id="navCombustible">
+        <%- include("../../templates/combustibles/navCombustibles") %>
+    </div>
+    <div style="display: none;" id="navVehiculos">
+        <%- include("../../templates/combustibles/navVehiculos") %>
+    </div>
+    <%- include("../../templates/mezclas/scripts") %>
+        <script type="module">
+            document.addEventListener('DOMContentLoaded', () => {
+                const navPrincipal = document.getElementById('navPrincipal');
+                const navCombustible = document.getElementById('navCombustible');
+                const navVehiculos = document.getElementById('navVehiculos');
+
+                const vehiculos = document.getElementById('vehiculos');
+                const combustibles = document.getElementById('combustibles');
+                const inicios = document.querySelectorAll('.menuInicio'); // Selecciona todos
+
+                vehiculos.addEventListener('click', () => {
+                    navPrincipal.style.display = 'none';
+                    navVehiculos.style.display = 'block';
+                });
+                combustibles.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navPrincipal.style.display = 'none';
+                    navCombustible.style.display = 'block';
+                });
+                // Agrega el evento a todos los elementos con la clase menuInicio
+                inicios.forEach(ini => {
+                    ini.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        navPrincipal.style.display = 'block';
+                        navCombustible.style.display = 'none';
+                        navVehiculos.style.display = 'none';
+                    });
+                });
+            });
+        </script>
+</body>
+
+</html>

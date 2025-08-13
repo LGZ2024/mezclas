@@ -4,7 +4,7 @@ export async function descargarExcel () {
   try {
     // Obtener datos filtrados desde DataTable
     const datos = await obtenerDatosSolicitud()
-    console.log(datos)
+
     const response = await fetch('/api/descargar-solicitud', {
       method: 'POST',
       headers: {

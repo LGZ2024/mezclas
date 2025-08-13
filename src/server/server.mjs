@@ -4,7 +4,7 @@ import compression from 'compression'
 import helmet from 'helmet'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
-import fileUpload from 'express-fileupload'
+// import fileUpload from 'express-fileupload'
 
 import { join } from 'path'
 
@@ -22,6 +22,7 @@ import { error404, errorHandler } from '../middlewares/error500Middleware.js'
 // import { apiLimiter } from '../middlewares/rateLimit.js'
 import { authenticate } from '../middlewares/authMiddleware.js'
 import { correlationMiddleware } from '../middlewares/correlationMiddleware.js'
+// import { validateBase64Image } from '../middlewares/validateFormatoImg.js'
 // Rutas
 import { createProtetedRouter } from '../routes/proteted.routes.js' // protegidas
 import { createUsuarioRouter } from '../routes/usuario.routes.js'
@@ -35,6 +36,19 @@ import { createEquiposRouter } from '../routes/equipos.routes.js'
 import { createEmpleadosRouter } from '../routes/empleados.routes.js'
 import { createUploadsRouter } from '../routes/uploads.routes.js'
 import { createDevolucionRouter } from '../routes/devolucion.routes.js'
+import { createUnidadRouter } from '../routes/unidad.routes.js'
+import { createTallerRouter } from '../routes/taller.routes.js'
+import { createSolicitudServicioRouter } from '../routes/solicitudServicio.routes.js'
+import { createManteniminetoRouter } from '../routes/mantenimiento.routes.js'
+import { createServicioRouter } from '../routes/servicios.routes.js'
+import { createEntradaCombustibleRouter } from '../routes/combustible_entrada.routes.js'
+import { createSalidaCombustibleRouter } from '../routes/combustible_salida.routes.js'
+import { createCargaCombustibleRouter } from '../routes/combustible_carga.routes.js'
+import { createInventarioRouter } from '../routes/combustible_inventario.routes.js'
+import { createAsignacionesRouter } from '../routes/asignaciones.routes.js'
+// ruta para creacion de archivops pdf
+import { createPdfRouter } from '../routes/pdf.routes.js'
+
 // Models
 import { UsuarioModel } from '../models/usuario.models.js'
 import { CentroCosteModel } from '../models/centro.models.js'
@@ -46,6 +60,17 @@ import { NotificacionModel } from '../models/notificaciones.models.js'
 import { EquiposModel } from '../models/equipos.models.js'
 import { EmpleadosModel } from '../models/empleados.models.js'
 import { DevolucionModel } from '../models/devolucion.models.js'
+import { UnidadModel } from '../models/unidad.models.js'
+import { TallerModel } from '../models/taller.models.js'
+import { SolicitudServicioModel } from '../models/solicitudServicio.models.js'
+import { MantenimientosModel } from '../models/mantenimiento.models.js'
+import { ServiciosModel } from '../models/servicios.models.js'
+import { EntradaCombustibleModel } from '../models/combustible_entrada.models.js'
+import { SalidaCombustibleModel } from '../models/combustible_salida.models.js'
+import { CargaCombustibleModel } from '../models/combustible_carga.models.js'
+import { InventarioModel } from '../models/combustible_inventario.models.js'
+import { AsignacionesModel } from '../models/asignaciones.models.js'
+
 // Asociaciones
 import { setupAssociations } from '../models/modelAssociations.js'
 
@@ -59,7 +84,7 @@ export const startServer = async (options) => {
 
   // Configura el directorio de uploads
   const uploadsDir = paths.uploads
-  const imagesDir = join(uploadsDir, 'images')
+  const imagesDir = join(uploadsDir)
 
   // MOTOR DE PLANTILLAS EJS
   app.set('views', paths.views)
@@ -127,7 +152,7 @@ export const startServer = async (options) => {
   app.use(corsMiddleware())
   app.disable('x-powered-by')
 
-  app.use(fileUpload())
+  // app.use(fileUpload())
   app.use(bodyParser.json({ limit: '50mb' }))
   app.use(bodyParser.urlencoded({
     limit: '50mb',
@@ -154,7 +179,19 @@ export const startServer = async (options) => {
   app.use('/api/', authenticate, createProduccionRouter({ produccionModel: ProduccionModel }))
   app.use('/api/', authenticate, createEquiposRouter({ equiposModel: EquiposModel }))
   app.use('/api/', authenticate, createEmpleadosRouter({ empleadosModel: EmpleadosModel }))
-  app.use('/api/', createDevolucionRouter({ devolucionModel: DevolucionModel }))
+  app.use('/api/', authenticate, createDevolucionRouter({ devolucionModel: DevolucionModel }))
+  app.use('/api/', authenticate, createUnidadRouter({ unidadModel: UnidadModel }))
+  app.use('/api/', authenticate, createTallerRouter({ tallerModel: TallerModel }))
+  app.use('/api/', authenticate, createSolicitudServicioRouter({ solicitudModel: SolicitudServicioModel }))
+  app.use('/api/', authenticate, createManteniminetoRouter({ mantenimientoModel: MantenimientosModel }))
+  app.use('/api/', authenticate, createServicioRouter({ servicioModel: ServiciosModel }))
+  app.use('/api/', authenticate, createEntradaCombustibleRouter({ entradaCombustibleModel: EntradaCombustibleModel }))
+  app.use('/api/', authenticate, createSalidaCombustibleRouter({ salidaCombustibleModel: SalidaCombustibleModel }))
+  app.use('/api/', authenticate, createCargaCombustibleRouter({ cargaCombustibleModel: CargaCombustibleModel }))
+  app.use('/api/', authenticate, createInventarioRouter({ inventarioModel: InventarioModel }))
+  app.use('/api/', authenticate, createAsignacionesRouter({ asignacionesModel: AsignacionesModel }))
+  // ruta para creacion de pdf
+  app.use('/pdf/', authenticate, createPdfRouter())
 
   // rutas Protegidas
   app.use('/protected/', authenticate, createProtetedRouter())
@@ -162,8 +199,8 @@ export const startServer = async (options) => {
   // Rutas para imágenes (antes de las rutas API)
   app.use('/api/', authenticate, createUploadsRouter())
 
-  // Servir archivos estáticos de imágenes
-  app.use('/api/uploads/images', authenticate, express.static(imagesDir))
+  // Servir archivos estáticos
+  app.use('/api/uploads/', authenticate, express.static(imagesDir))
 
   // PAGINA DE Inicio
   app.get('/', (req, res) => {

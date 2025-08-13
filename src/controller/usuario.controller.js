@@ -1,5 +1,6 @@
 import { enviarCorreo } from '../config/smtp.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
+import { ValidationError } from '../utils/CustomError.js'
 export class UsuarioController {
   constructor ({ usuarioModel }) {
     this.usuarioModel = usuarioModel
@@ -8,7 +9,17 @@ export class UsuarioController {
   // borra usuario
   delete = asyncHandler(async (req, res) => {
     const { id } = req.params
-    const result = await this.usuarioModel.delete({ id })
+    const logger = req.logger
+    const { user } = req.session
+    const logContext = {
+      operation: 'ELIMINAR USUARIO',
+      nombre: user.nombre,
+      rol: user.rol,
+      id_eliminado: id
+    }
+    logger.info('Iniciando controlador', logContext)
+    const result = await this.usuarioModel.delete({ id, logContext, logger })
+    logger.info('Finalizando controlador', logContext)
     res.json({ message: `${result.message}` })
   })
 
@@ -75,31 +86,26 @@ export class UsuarioController {
   // actualizar contraseña del usuario
   changePassword = asyncHandler(async (req, res) => {
     const { id } = req.params
-    const { newPassword } = req.body
+    const { contrasenaRes, contrasenaRepRes } = req.body
     const logger = req.logger
+    const { user } = req.session
     const logContext = {
-      operation: 'CHANGE_PASSWORD',
-      id,
-      newPassword
+      operation: 'Cambio de contraseña',
+      nombre: user.nombre,
+      rol: user.rol,
+      id_cambio: id
     }
-    try {
-      logger.info('CHANGE_PASSWORD started', logContext)
-      const result = await this.usuarioModel.changePasswordAdmin({ id, newPassword, logContext, logger })
-      logger.info('CHANGE_PASSWORD completed', logContext)
-      return res.json({ message: result.message })
-    } catch (error) {
-      // Log detallado del error
-      logger.error('Error al crear mezcla', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          code: error.code
-        }
+    console.log('body', req.body)
+    if (contrasenaRes !== contrasenaRepRes) {
+      throw new ValidationError('Las contraseñas no coinciden', {
+        statusCode: 400,
+        logContext
       })
-      throw error
     }
+    logger.info('Iniciando controlador', logContext)
+    const result = await this.usuarioModel.changePasswordAdmin({ id, newPassword: contrasenaRes, logContext, logger })
+    logger.info('Finalizando controlador', logContext)
+    return res.json({ message: result.message })
   })
 
   // obtener una empresa

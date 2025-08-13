@@ -3,15 +3,15 @@
 
 <head>
     <%- include("../../templates/head-pwa") %>
-    <%- include("../../templates/mezclas/cabecera") %>
+        <%- include("../../templates/mezclas/cabecera") %>
 </head>
 
 
 <body>
     <!-- impórtamos en navegador -->
     <%- include("../../templates/mezclas/headerNav") %>
-        <section class="opciones">
-            <div class="formulario contenedor" id="viaje-form">
+        <section class="opciones" id="ContenedorMenu">
+            <div class="formulario contenedor">
                 <% if (['solicita', 'solicitaVisual' , 'solicita2' ].includes(rol)) { %>
                     <div class="formulario__campo">
                         <button class="formulario__submit" type="button" id="solicitar">Solicitar</button>
@@ -20,16 +20,79 @@
                         <button class="formulario__submit" type="button" id="canceladas">Mezclas Canceldas</button>
                     </div>
                     <% } %>
-                        <div class="formulario__campo">
-                            <button class="formulario__submit" type="button" id="solicitud">Mezclas Solicitadas</button>
-                        </div>
-                        <div class="formulario__campo">
-                            <button class="formulario__submit" type="button" id="preparadas">Mezclas En Proceso</button>
-                        </div>
-                        <div class="formulario__campo">
-                            <button class="formulario__submit" type="button" id="entregadas">Mezclas
-                                Completadas</button>
-                        </div>
+                        <% if (['solicita', 'solicitaVisual' , 'solicita2' , 'mezclador' ].includes(rol)) { %>
+                            <div class="formulario__campo">
+                                <button class="formulario__submit" type="button" id="solicitud">Mezclas
+                                    Solicitadas</button>
+                            </div>
+                            <div class="formulario__campo">
+                                <button class="formulario__submit" type="button" id="preparadas">Mezclas En
+                                    Proceso</button>
+                            </div>
+                            <div class="formulario__campo">
+                                <button class="formulario__submit" type="button" id="entregadas">Mezclas
+                                    Completadas</button>
+                            </div>
+                            <% } %>
+                                <% if (['encargado_combustible'].includes(rol)) { %>
+                                    <div class="formulario__campo">
+                                        <button class="formulario__submit" type="button"
+                                            id="combustibles">Combustibles</button>
+                                    </div>
+                                    <div class="formulario__campo">
+                                        <button class="formulario__submit" type="button"
+                                            id="vehiculos">Vehiculos</button>
+                                    </div>
+                                    <% } %>
+            </div>
+        </section>
+        <section class="opciones" id="contenerdorCombustibles"  style="display: none;">
+            <div class="formulario contenedor">
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="solicitar">Registrar Combustible
+                        Almacen</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="canceladas">Entradas Combustibles</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="solicitud">Registrar Salida
+                        Combustible</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="preparadas">Salidas Combustibles</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="entregadas">Registrar Carga
+                        Combustible</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="combustibles">Cargas Combustibles</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="vehiculos">Inventario</button>
+                </div>
+            </div>
+        </section>
+        <section class="opciones" id="contenerdorVehiculos"  style="display: none;">
+            <div class="formulario contenedor">
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="talleres">Talleres</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="unidades">Unidades</button>
+                </div>
+
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="Tickets">Tickets</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="registrarM">Registar Mantenimineto o
+                        servicio</button>
+                </div>
+                <div class="formulario__campo">
+                    <button class="formulario__submit" type="button" id="reportes">Reportes</button>
+                </div>
             </div>
         </section>
         <%- include("../../templates/mezclas/scripts") %>

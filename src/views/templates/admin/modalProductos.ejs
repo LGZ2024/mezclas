@@ -5,23 +5,32 @@
           <h1 class="modal-title fs-5" id="exampleModalLabel"></h1>
         </div>
         <div class="modal-body">
-          <div class="forms-sample" id="formEditar">
+          <form id="formProducto">
             <div class="form-group">
               <label for="nombre">Nombre</label>
-              <input type="text" class="form-control" id="nombre" placeholder="Nombre"  >
+              <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre del producto"  >
+            </div>
+            <div class="form-group">
+              <label for="id_sap">ID Sap</label>
+              <input type="text" class="form-control" id="id_sap" name="id_sap" placeholder="id de sap"  >
             </div>
             <div class="form-group">
               <label for="descripcion">Descripcion</label>
-              <input type="text" class="form-control" id="descripcion" placeholder="Agregar descripcion" >
+              <input type="text" class="form-control" id="descripcion" name="descripcion" placeholder="Agregar descripcion del producto" >
             </div>
             <div class="form-group">
-              <label for="ubicacion">Direccion</label>
-              <input type="text" class="form-control" placeholder="Direccion donde se encuentra la vivienda"  id="ubicacion"  >
+              <label for="unidad_medida">Unidad de Medida</label>
+              <select name="unidad_medida" class="form-control" id="unidad_medida">
+                <option value="">Seleciona una opcion</option>
+                <option value="Litro">Litro</option>
+                <option value="Kilogramo">Kilogramo</option>
+                <option value="Unidad">Unidad</option>
+              </select>
             </div>
+          </form>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" id="cerrarModal">Cerrar</button>
-              <button type="button" class="btn btn-primary" id="guardar">Guardar</button>
-              <button type="button" class="btn btn-primary" id="editar">Editar</button>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+              <button type="submit" form="formProducto" class="btn btn-primary" id="btnRegistrar">Guardar</button>
             </div>
           </div>
         </div>

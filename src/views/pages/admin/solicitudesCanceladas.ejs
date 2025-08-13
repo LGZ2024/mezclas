@@ -5,16 +5,16 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <%- include("../../templates/head-pwa") %>
-    <%- include("../../templates/admin/cabecera") %>
+    <%- include("../../templates/master/cabecera") %>
 </head>
 
 <body>
     <div class="container-scroller">
         <!-- navcabecera -->
-        <%- include("../../templates/admin/navCabecera") %>
+        <%- include("../../templates/master/navCabecera") %>
             <div class="container-fluid page-body-wrapper">
                 <!-- nav lateral -->
-                <%- include("../../templates/admin/navLateral") %>
+                <%- include("../../templates/master/navLateral") %>
                     <div class="main-panel">
                         <div class="content-wrapper">
                             <div class="d-xl-flex justify-content-between align-items-start">
@@ -24,15 +24,9 @@
                                 <div class="col-md-12 grid-margin stretch-card">
                                     <div class="card">
                                         <div class="card-body">
-                                            <h4 class="card-title">Productos</h4>
-                                            <% if (user.rol==="admin" ) { %>
-                                                <button type="button" class="btn btn-inverse-primary mb-3"
-                                                    id="btnCrear">Agregar
-                                                    Producto</button>
-                                                <% } %>
                                                     <div class="table-responsive w-100">
                                                         <table class="table table-striped table-bordered w-100"
-                                                            id="tablaSolicitudesCanceladas">
+                                                            id="tbSolicitudesCanceladas">
                                                             <thead>
                                                                 <tr>
                                                                     <th> id# </th>
@@ -58,7 +52,7 @@
                         </div>
                         <!-- content-wrapper ends -->
                         <!-- partial:partials/_footer.html -->
-                        <%- include("../../templates/admin/footer") %>
+                        <%- include("../../templates/master/footer") %>
                             <!-- partial -->
                     </div>
                     <!-- main-panel ends -->
@@ -66,11 +60,11 @@
             <!-- page-body-wrapper ends -->
     </div>
     <!-- Modal -->
-    <%- include("../../templates/admin/modalProductos") %>
+        <%- include("../../templates/admin/modalProductos") %>
 
         <!-- container-scroller -->
-        <%- include("../../templates/admin/scripts") %>
-            <script type="module" src="../../../app/canceladas/main.js"></script>
+        <%- include("../../templates/master/scripts") %>
+            <script type="module" src="../../../app/activos/main.js"></script>
 </body>
 
 </html>

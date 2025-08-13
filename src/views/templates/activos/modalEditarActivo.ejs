@@ -1,0 +1,63 @@
+<div class="modal fade" id="editarEquipo" tabindex="-1" role="dialog" aria-labelledby="mieditarAsignacion"
+  aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="mieditarEquipo" style="color: black;">Editar Activo</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditarActivo">
+          <div class="form-group">
+            <input type="text" class="form-control" name="idEquipo" id="idEquipo" readonly hidden>
+            <label for="equipoE">Equipo:</label>
+            <input type="text" class="form-control" name="equipoE" id="equipoE" disabled>
+          </div>
+          <div class="form-group">
+            <label for="marcaE">Marca:</label>
+            <input type="text" class="form-control" name="marcaE" id="marcaE" disabled>
+          </div>
+          <div class="form-group">
+            <label for="noEconomicoE">Numero Economico:</label>
+            <input type="text" class="form-control" name="noEconomicoE" id="noEconomicoE" disabled>
+          </div>
+          <div class="form-group">
+            <label for="modeloE">Modelo:</label>
+            <input type="text" class="form-control" name="modeloE" id="modeloE" disabled>
+          </div>
+          <div class="form-group">
+            <label for="snE">SN:</label>
+            <input type="text" class="form-control" name="snE" id="snE" disabled>
+          </div>
+          <div class="form-group">
+            <label for="tagE">ST:</label>
+            <input type="text" class="form-control" name="tagE" id="tagE" disabled>
+          </div>
+          <div class="form-group">
+            <label for="estadoE">Estado:</label>
+            <select class="custom-select" name="estadoE" id="estadoE">
+              <option value="" selected>Seleccionar...</option>
+              <option value="disponible">Disponible</option>
+              <option value="inactivo">Inactivo</option>
+              <option value="reparacion">Reparacion</option>
+              <option value="mantenimiento">Mantenimiento</option>
+              <option value="editar">Editar Equipo</option>
+              <option value="baja">Baja</option>
+            </select>
+          </div>
+          <div class="form-group" id="campoEstado" style="display: none;">
+            <label for="motivoB">Motivo:</label>
+            <textarea rows="3" class="form-control" name="motivoB" id="motivoB"
+              placeholder="Agregar motivo por el cambio de estado para el historial del activo" disabled ></textarea>
+          </div>
+        </form>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+          <button type="submit" form="formEditarActivo" class="btn btn-primary" id="btnRegistrar">Actualizar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

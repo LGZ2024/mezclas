@@ -20,7 +20,6 @@ async function fechTbrecetas (idSolicitud) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    console.log(data)
     return data
   } catch (error) {
     console.error('Error fetching recetas:', error)
@@ -31,7 +30,6 @@ async function fechTbrecetas (idSolicitud) {
 const iniciarProductosReceta = async (idSolicitud) => {
   // Validar el parámetro de entrada
   if (!idSolicitud) {
-    console.error('ID de solicitud no proporcionado')
     await Swal.fire({
       icon: 'error',
       title: 'Error',
@@ -121,7 +119,7 @@ const verProductosReceta = async (configuracion = {}) => {
       render: function (data, type, row) {
         const rol = document.getElementById('rol').value
 
-        if (rol === 'mezclador' || rol === 'administrativo') {
+        if (rol === 'mezclador' || rol === 'administrativo' || rol === 'master') {
           return `
           <div class="btn-group">
            <button class="btn btn-sm btn-danger btnDelete" 
@@ -321,7 +319,7 @@ const eliminar = async () => {
       if (result.isConfirmed) {
         // Obtener ID de solicitud
         const idSolicitudElement = document.getElementById('idSolicitud') ||
-                                 document.getElementById('idSolicit')
+          document.getElementById('idSolicit')
 
         if (!idSolicitudElement) {
           throw new Error('No se encontró el ID de la solicitud')

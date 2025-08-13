@@ -118,37 +118,6 @@
                             <h5 class="border-bottom pb-2 mb-3">
                                 <i class="bi bi-box-seam me-2"></i>Productos de la Mezcla
                             </h5>
-                            <style>
-                                #agregarProductoReceta {
-                                    display: inline-flex;
-                                    align-items: center;
-                                    gap: 0.5rem;
-                                }
-
-                                #agregarProductoReceta i.mdi {
-                                    font-size: 1.1rem;
-                                }
-
-                                #agregarProductoReceta:hover i.mdi {
-                                    transform: scale(1.1);
-                                    transition: transform 0.2s ease;
-                                }
-
-                                .modal-footer .btn {
-                                    display: inline-flex;
-                                    align-items: center;
-                                    gap: 0.5rem;
-                                }
-
-                                .modal-footer .btn i.mdi {
-                                    font-size: 1.2rem;
-                                }
-
-                                .modal-footer .btn:hover i.mdi {
-                                    transform: scale(1.1);
-                                    transition: transform 0.2s ease;
-                                }
-                            </style>
                             <% if (rol==="solicita" || rol==="solicita2" ) { %>
                                 <button type="button" class="btn btn-primary btn-sm m-2" id="agregarProductoReceta">
                                     <i class="mdi mdi-plus-box-outline me-2"></i>Agregar Producto
@@ -182,12 +151,12 @@
                     <i class="mdi mdi-exit-to-app me-2"></i>Cerrar
                 </button>
 
-                <button type="button" class="btn btn-primary" id="confirmacion">
+                <button type="button" class="btn btn-primary" id="btnConfirmacion">
                     <span class="icon-bg"><i class="mdi mdi-check-circle-outline menu-icon"></i> Confirmar Solicitud
                 </button>
-                <% if (rol==="adminMezclador" ) { %>
+                <% if (rol==="adminMezclador" || rol==="master") { %>
                     <!-- boton para cancelar solicitud -->
-                    <button type="button" class="btn btn-danger" id="cancelacion">
+                    <button type="button" class="btn btn-danger" id="btnCancelar">
                         <span class="icon-bg"><i class="mdi mdi-cancel menu-icon"></i> Cancelar Solicitud
                     </button>
                     <% } %>

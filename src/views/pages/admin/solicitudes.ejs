@@ -5,17 +5,17 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">    
     <%- include("../../templates/head-pwa") %>
-    <%- include("../../templates/admin/cabecera") %>
+    <%- include("../../templates/master/cabecera") %>
 
 </head>
 
 <body>
     <div class="container-scroller">
         <!-- navcabecera -->
-        <%- include("../../templates/admin/navCabecera") %>
+        <%- include("../../templates/master/navCabecera") %>
             <div class="container-fluid page-body-wrapper">
                 <!-- nav lateral -->
-                <%- include("../../templates/admin/navLateral") %>
+                <%- include("../../templates/master/navLateral") %>
                     <!-- panel principal -->
                     <div class="main-panel">
                         <div class="content-wrapper">
@@ -107,7 +107,7 @@
                         </div>
                         <!-- content-wrapper ends -->
                         <!-- partial:partials/_footer.html -->
-                        <%- include("../../templates/admin/footer") %>
+                        <%- include("../../templates/master/footer") %>
                             <!-- partial -->
                     </div>
             </div>
@@ -117,7 +117,7 @@
     <%- include("../../templates/admin/modal") %>
 
         <!-- container-scroller -->
-        <%- include("../../templates/admin/scripts") %>
+        <%- include("../../templates/master/scripts") %>
             <script type="module" src="../../../app/solicitudes/funciones.js"></script>
 </body>
 

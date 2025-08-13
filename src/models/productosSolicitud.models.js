@@ -13,55 +13,55 @@ export class SolicitudRecetaModel {
   // crear asistencia
 
   static async obtenerProductosSolicitud ({ idSolicitud, logContext, logger }) {
-    try {
-      logger.info('Obteniendo productos de solicitud...', { idSolicitud })
-      const productosSolicitud = await SolicitudProductos.findAll({
-        where: {
-          id_solicitud: idSolicitud
-        },
-        include: [
-          {
-            model: Productos, // producto
-            attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario
+    return await DbHelper.executeQuery(async () => {
+      try {
+        const productosSolicitud = await SolicitudProductos.findAll({
+          where: {
+            id_solicitud: idSolicitud
           },
-          {
-            model: Recetas, // Modelo de Recetas
-            attributes: ['nombre'] // Campos que quieres obtener del modelo Recetas
+          include: [
+            {
+              model: Productos, // producto
+              attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario
+            },
+            {
+              model: Recetas, // Modelo de Recetas
+              attributes: ['nombre'] // Campos que quieres obtener del modelo Recetas
+            }
+          ],
+          attributes: [
+            'id_receta',
+            'id_solicitud',
+            'id_producto',
+            'unidad_medida',
+            'cantidad'
+          ]
+        })
+
+        // Transformar los resultados
+        const resultadosFormateados = productosSolicitud.map(productos => {
+          const m = productos.toJSON()
+          return {
+            id_receta: m.id_receta,
+            id_solicitud: m.id_solicitud,
+            id_sap: m.producto.id_sap,
+            nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : (m.receta ? m.receta.nombre : 'Producto y receta no encontrados'),
+            unidad_medida: m.unidad_medida,
+            cantidad: m.cantidad
           }
-        ],
-        attributes: [
-          'id_receta',
-          'id_solicitud',
-          'id_producto',
-          'unidad_medida',
-          'cantidad'
-        ]
-      })
+        })
 
-      // Transformar los resultados
-      const resultadosFormateados = productosSolicitud.map(productos => {
-        const m = productos.toJSON()
-        logger.info('Productos obtenidos exitosamente', { productos: m })
-        return {
-          id_receta: m.id_receta,
-          id_solicitud: m.id_solicitud,
-          id_sap: m.producto.id_sap,
-          nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : (m.receta ? m.receta.nombre : 'Producto y receta no encontrados'),
-          unidad_medida: m.unidad_medida,
-          cantidad: m.cantidad
-        }
-      })
-
-      // Devolver los resultados
-      return resultadosFormateados || []
-    } catch (e) {
-      logger.logError(e, {
-        ...logContext,
-        error: e.message
-      })
-      if (e instanceof CustomError) throw e
-      throw new DatabaseError('Error al obtener las mezclas')
-    }
+        // Devolver los resultados
+        return resultadosFormateados || []
+      } catch (e) {
+        logger.logError(e, {
+          ...logContext,
+          error: e.message
+        })
+        if (e instanceof CustomError) throw e
+        throw new DatabaseError('Error al obtener las mezclas')
+      }
+    })
   }
 
   static async obtenerTablaMezclasId ({ id, logContext, logger }) {
@@ -187,12 +187,8 @@ export class SolicitudRecetaModel {
   static async create ({ data, idUsuario, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
-        logger.logModelOperation('Iniciando creación de producto en solicitud', 'started', logContext)
-
         // Validación inicial de datos
         this.validarDatosProducto(data)
-
-        logger.debug('Verificando existencia de producto', logContext)
 
         // Verificar si el producto ya existe
         const productoExistente = await SolicitudProductos.findOne({

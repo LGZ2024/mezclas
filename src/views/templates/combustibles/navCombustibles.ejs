@@ -1,0 +1,54 @@
+<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand menuInicio" href="/protected/admin">
+      <!-- impoirtamos logo de la empresa -->
+      <img id="logo" src='../../images/LogoTransp.svg' style="width:40px;" class="rounded-pill">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mynavbar">
+      <ul class="navbar-nav me-auto"><!-- inicio nav -->
+        <!-- inicio -->
+        <li class="nav-item">
+          <a class="nav-link menuInicio" href="/protected/admin"> <i class="fa-solid fa-house"></i> Inicio</a>
+        </li>
+        <!-- Combustibles entadas y salidad -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><i class="fa-solid fa-bars"></i> Combustibles Rancho</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/protected/entradaCombustible">Agregar entrada de combustible</a></li>
+            <li><a class="dropdown-item" href="/protected/entradas">Tabla de entradas</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/protected/salidaCombustible">Agregar salida de combustible</a></li>
+            <li><a class="dropdown-item" href="/protected/salidas">Tabla de salidas</a></li>
+          </ul>
+        </li>
+        <!--Carga de combustible -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><i class="fa-solid fa-gas-pump"></i> Carga de combustible</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/protected/cargaCombustible">Agregar carga de combustible</a></li>
+            <li><a class="dropdown-item" href="/protected/cargas">Tabla de cargas de combustible</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/protected/inventario"><i class="fa-solid fa-table"></i> Inventario</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/protected/cerrarSesion"><i class="fa-solid fa-circle-xmark"></i>Cerrar Sesion</a>
+        </li>
+        
+      </ul><!-- fin nav -->
+    </div>
+  </div>
+</nav>
+<!-- spinner -->
+<div class="spinner-overlay" id="spinner" style="display: none;">
+  <div class="spinner-container">
+    <div class="spinner"></div>
+    <p class="spinner-text">Procesando...</p>
+  </div>
+</div>

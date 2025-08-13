@@ -1,0 +1,108 @@
+<div class="modal fade" id="modalTicket" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+    aria-labelledby="modalInformacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h4 class="modal-title" id="modalInformacionLabel">
+                    <i class="bi bi-info-circle me-2"></i>Abrir Ticket
+                </h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form id="formTaller" class="form">
+                        <!-- Select para cerrar Ticket -->
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="id_servicio">Ticket</label>
+                            <select type="text" id="id_servicio" class="formulario__input selectId">
+                            </select>
+                        </div>
+                        <!-- Fecha Solicitud-->
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="fecha_solicitud">Fecha Solicitud</label>
+                            <input type="date" id="fecha_solicitud" class="formulario__input"
+                                placeholder="Seleciones Fecha...." required>
+                        </div>
+                        <!-- Numero economico -->
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="numEconomico">Numero Economico</label>
+                            <select type="text" id="numEconomico" class="formulario__input num_Economico"
+                                placeholder="Domicilio...">
+                            </select>
+                        </div>
+                        <!-- folio -->
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="centro_coste">Centro de Coste</label>
+                            <select name="cc" id="cc" class="form-select">
+                            </select>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="prioridad">Prioridad</label>
+                            <select id="prioridad" class="formulario__input">
+                                <option value="">Seleciona Prioridad...</option>
+                                <option value="Baja">Baja</option>
+                                <option value="Media">Media</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Urguente">Urguente</option>
+                            </select>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="mantenimiento">Mantenimineto</label>
+                            <select id="mantenimiento" class="formulario__input">
+                                <option value="">Tipo de Servicio...</option>
+                                <option value="Preventivo">Preventivo</option>
+                                <option value="Correctivo">Correctivo</option>
+                            </select>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="talleres_asignado">Taller Asignado</label>
+                            <select id="talleres_asignado" class="formulario__input">
+
+                            </select>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="reparacion_soli">Reparacion Solicitada</label>
+                            <input type="text" id="reparacion_soli" class="formulario__input"
+                                placeholder="Seleciones Fecha...." required>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="nom_conductor">Nombre de Responsable</label>
+                            <input type="text" id="nom_conductor" class="formulario__input"
+                                placeholder="Agregar Nombre..." required>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="km_registrado">Kilometraje Registrado</label>
+                            <input type="text" id="km_registrado" class="formulario__input"
+                                placeholder="Agregar Kilometraje..." required>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="termino_reparacion">Termino de Reparacion</label>
+                            <input type="text" id="termino_reparacion" class="formulario__input"
+                                placeholder="Agregar Kilometraje..." required>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="observacion">Observaciones</label>
+                            <input type="text" id="observacion" class="formulario__input"
+                                placeholder="Agregar Observaciones..." required>
+                        </div>
+                        <div class="formulario__campo">
+                            <label class="formulario__label" for="observacion">Ranchos</label>
+                            <textarea name="observacion" id="observacion" cols="30" rows="10" placeholder="Agregar Observaciones..."></textarea>
+
+                        </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="formulario__submit" id="btnRegistrar">
+                    Guardar
+                </button>
+                <button type="button" class="formulario__submit" data-bs-dismiss="modal">
+                    <i class="mdi mdi-exit-to-app me-2"></i>Cerrar
+                </button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>

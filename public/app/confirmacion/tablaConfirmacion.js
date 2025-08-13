@@ -2,7 +2,7 @@
 import { iniciarProductosReceta, verProductosReceta } from '../productosReceta/productos.js'
 
 // Funciones de fetch con mejor manejo de errores
-async function fechTbSolicitadas (status) {
+async function fechTbSolicitadas () {
   try {
     const response = await fetch('/api/mezclasConfirmar')
     if (!response.ok) {
@@ -33,7 +33,7 @@ const iniciarSolicitudes = async () => {
     }
 
     // Inicializar nueva tabla con los datos
-    const table = $('#tbSolicitadas').DataTable({
+    $('#tbSolicitadas').DataTable({
       data, // Pasar datos directamente
       destroy: true,
       paging: false,
@@ -69,7 +69,7 @@ const iniciarSolicitudes = async () => {
                 type="button" 
                 class="btn btn-primary mostrar-solicitud" 
                 data-row='${JSON.stringify(row)}'>
-                Mostrar Solicitud
+                Mostrar Solicitud 2
               </button>`
           }
         },
@@ -98,11 +98,6 @@ const iniciarSolicitudes = async () => {
       ]
     })
 
-    // Verificar inicialización
-    console.log('Tabla inicializada con datos:', {
-      filas: table.rows().count(),
-      datos: data.length
-    })
     configurarFomulario()
   } catch (error) {
     console.error('Error al iniciar solicitudes:', error)
@@ -112,7 +107,7 @@ const iniciarSolicitudes = async () => {
 // Obtener solicitudes
 const obtenerSolicitudes = async () => {
   try {
-    return await fechTbSolicitadas('Pendiente')
+    return await fechTbSolicitadas()
   } catch (error) {
     console.error('Error al obtener solicitudes:', error)
     throw error
@@ -129,10 +124,6 @@ const configurarFomulario = () => {
     establecerValoresSolicitud({ data: rowData })
     // Ocultar/mostrar secciones
     // $('#tablaFuciones').hide()
-    // mostrarModal()
-    $('#modalInformacion').modal('show')
-
-    // $('#formPreparadas').show()
   })
 }
 

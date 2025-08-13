@@ -1,0 +1,70 @@
+<nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand menuInicio">
+      <!-- impoirtamos logo de la empresa -->
+      <img id="logo" src='../../images/LogoTransp.svg' style="width:40px;" class="rounded-pill">
+
+
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mynavbar">
+      <ul class="navbar-nav me-auto"><!-- inicio nav -->
+        <!-- inicio -->
+        <li class="nav-item ">
+          <a class="nav-link menuInicio"><i class="fa-solid fa-house"></i> Inicio</a>
+        </li>
+        <!-- Combustibles entadas y salidad -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><i
+              class="fa-solid fa-bars"></i> Catalogo de unidades</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/protected/registarUnidades">Agregar unidades</a></li>
+            <li><a class="dropdown-item" href="/protected/unidades">Consulta de unidades</a></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item" href="/protected/registrarTalleres">Agregar talleres</a></li>
+            <li><a class="dropdown-item" href="/protected/talleres">Consulta de talleres</a></li>
+          </ul>
+        </li>
+        <!--Carga de combustible -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><i
+              class="fa-solid fa-screwdriver-wrench"></i> Mantenimiento</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/protected/registrarTicket">Abrir ticket</a></li>
+            <li><a class="dropdown-item" href="/protected/cerrarTicket">Cerrar ticket</a></li>
+            <li><a class="dropdown-item" href="/protected/tickets">Tabla de tickets</a></li>
+            <li><a class="dropdown-item" href="/protected/ticketsCerrados">Tabla de tickets cerrados</a></li>
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item" href="/protected/servicios">Tabla de servicios de unidades</a></li>
+            <li><a class="dropdown-item" href="/protected/mantenimientos">Tabla de mantenimientos</a></li>
+            <li><a class="dropdown-item" href="/protected/agregarServicio">Registrar mantenimientos</a></li>
+          </ul>
+        </li>
+
+        <!-- Reportes -->
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"><i
+              class="fa-solid fa-table"></i> Reportes</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="/protected/correctivo">Servicios correctivos</a>
+            </li>
+            <li><a class="dropdown-item" href="/protected/preventivo">Servicios preventivos</a>
+            </li>
+
+          </ul>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="/protected/cerrarSesion"><i
+              class="fa-solid fa-circle-xmark"></i>Cerrar Sesion</a>
+        </li>
+      </ul><!-- fin nav -->
+    </div>
+  </div>
+</nav>
