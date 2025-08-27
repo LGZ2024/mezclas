@@ -43,25 +43,12 @@ export class SalidaCombustibleController {
       userId: user.id,
       userRole: user.rol
     }
-    try {
-      logger.info('Iniciando Controlador  Salida Combustible', logContext)
-      // this.#validarDatosCreacion(req.body)
-      const response = await this.salidaCombustibleModel.SalidaCombustible({ logger, logContext })
-      logger.info('Finalizando Controlador  Salida Combustible', logContext)
-      res.json(response)
-    } catch (error) {
-      // Log detallado del error
-      logger.error('Error al obtener Salida de Combustible', {
-        ...logContext,
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          code: error.code
-        }
-      })
-      throw error
-    }
+
+    logger.info('Iniciando Controlador  Salida Combustible', logContext)
+    // this.#validarDatosCreacion(req.body)
+    const response = await this.salidaCombustibleModel.SalidaCombustible({ logger, logContext })
+    logger.info('Finalizando Controlador  Salida Combustible', logContext)
+    res.json(response)
   })
 
   #validarDatosCreacion (data) {

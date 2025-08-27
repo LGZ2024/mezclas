@@ -9,6 +9,8 @@ import { unidad } from '../schema/catalogo_unidad.js'
 import { SolicitudProductos } from '../schema/solicitud_receta.js'
 import { Productos } from '../schema/productos.js'
 import { Recetas } from '../schema/recetas.js'
+import { CombustibleSalida } from '../schema/combustible_salida.js'
+import { CombustibleEntrada } from '../schema/combustible_entrada.js'
 import { Devoluciones } from '../schema/devoluciones.js'
 import { CombustibleCarga } from '../schema/combustible_carga.js'
 import { unidadCombustible } from '../schema/catalogo_unidad_combustible.js'
@@ -17,11 +19,22 @@ import { unidadCombustible } from '../schema/catalogo_unidad_combustible.js'
 import logger from '../utils/logger.js'
 
 export function setupAssociations () {
-  // asiciaciones para servicios
-  Servicios.belongsTo(unidad, {
-    foreignKey: 'no_economico', // campo en Servicios
-    targetKey: 'id' // campo en unidad
+  // Asociaciones para combustible salida
+  CombustibleSalida.belongsTo(Centrocoste, {
+    foreignKey: 'centro_coste', // campo en CombustibleSalida
+    targetKey: 'id' // campo en Centrocoste
   })
+  // asociasion para combustible entrada
+  CombustibleEntrada.belongsTo(Centrocoste, {
+    foreignKey: 'centro_coste', // campo en CombustibleEntrada
+    targetKey: 'id' // campo en Centrocoste
+  })
+  // Asociaciones para combustible carga
+  CombustibleCarga.belongsTo(unidadCombustible, {
+    foreignKey: 'no_economico', // campo en CombustibleCarga
+    targetKey: 'id' // campo en unidadCombustible
+  })
+  // Asociaciones para c
   Servicios.belongsTo(CatalogoTaller, {
     foreignKey: 'taller_asignado', // campo en Servicios
     targetKey: 'id' // campo en CatalogoTaller

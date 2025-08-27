@@ -133,7 +133,7 @@
                                         <div class="formulario__campo">
                                             <label class="formulario__label">Productos</label>
                                             <button type="button" class="btn btn-primary formulario__submit"
-                                                id="btnReceta" data-bs-toggle="modal">
+                                                id="btnRecetaProceso" data-bs-toggle="modal">
                                                 Mostrar Receta
                                             </button>
                                         </div>
@@ -210,14 +210,21 @@
                                     <canvas id="canvas" style="display: none;"></canvas>
                                     <img src="" alt="" class="photo w-100" style="display: none;"/>
                                 </div>
-                                <div class="camera-controls">
+                                <div class="camera-controls d-flex flex-wrap justify-content-center gap-2">
                                     <button class="formulario__submit btnTomarFoto">
                                         <i class="mdi mdi-camera"></i> Tomar foto
                                     </button>
                                     <button class="formulario__submit btnOtraFoto" style="display: none;">
                                         <i class="mdi mdi-camera-retake"></i> Tomar otra foto
                                     </button>
+                                    <button class="formulario__submit btnFlipCamera" title="Voltear cámara">
+                                        <i class="mdi mdi-camera-flip"></i>
+                                    </button>
+                                    <button class="formulario__submit btnToggleFlash" style="display: none;" title="Activar flash">
+                                        <i class="mdi mdi-flash-off"></i>
+                                    </button>
                                 </div>
+
                                 <p id="estado"></p>
                             </div>
 

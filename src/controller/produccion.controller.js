@@ -19,20 +19,25 @@ export class ProduccionController {
     }
   }
 
-  solicitudReporte = async (req, res) => {
+  solicitudReporte = asyncHandler(async (req, res) => {
     const { user } = req.session
+    const logger = req.logger
 
-    try {
-      const centroCoste = await this.produccionModel.solicitudReporte({ empresa: user.empresa, rol: user.rol, idUsuario: user.id })
-      if (centroCoste.error) {
-        res.status(404).json({ error: `${centroCoste.error}` })
-      }
-      res.json(centroCoste)
-    } catch (error) {
-      console.error('Error al crear la solicitud:', error)
-      res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
+    const logContext = {
+      operation: 'Obtencion de reporte',
+      name: user.nombre,
+      userRol: user.rol,
+      userId: user.id
     }
-  }
+    logger.info('Iniciando controlador de solicitud de reporte de mezclas', logContext)
+    const centroCoste = await this.produccionModel.solicitudReporte({ empresa: user.empresa, rol: user.rol, idUsuario: user.id, logger, logContext })
+    if (centroCoste.error) {
+      res.status(404).json({ error: `${centroCoste.error}` })
+    }
+    logger.info('Finalizando controlador de solicitud de reporte de mezclas', logContext)
+
+    res.json(centroCoste)
+  })
 
   descargarEcxel = async (req, res) => {
     try {
@@ -59,28 +64,44 @@ export class ProduccionController {
   })
 
   descargarReporte = asyncHandler(async (req, res) => {
-    const buffer = await this.produccionModel.descargarReporte({ datos: req.body })
+    const { user } = req.session
+    const logger = req.logger
+    const logContext = {
+      operation: 'descargar reporte',
+      userName: user.nombre,
+      userRol: user.rol,
+      userId: user.id
+    }
+    logger.info('Iniciando controlador de descarga reprote', logContext)
+    const buffer = await this.produccionModel.descargarReporte({ datos: req.body, logContext, logger })
+    logger.info('Finalizando controlador de descarga reprote', logContext)
     // Configurar las cabeceras para la descarga del archivo
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx')
     res.send(buffer)
   })
 
-  descargarReporteV2 = async (req, res) => {
-    try {
-      const buffer = await this.produccionModel.descargarReporteV2({ datos: req.body })
-      if (buffer.error) {
-        res.status(404).json({ error: `${buffer.error}` })
-      }
-      // Configurar las cabeceras para la descarga del archivo
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-      res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx')
-      res.send(buffer)
-    } catch (error) {
-      console.error('Error al crear la solicitud:', error)
-      res.status(500).json({ mensaje: 'Ocurrió un error al crear la solicitud' })
+  descargarReporteV2 = asyncHandler(async (req, res) => {
+    const { user } = req.session
+    const logger = req.logger
+    const logContext = {
+      operation: 'descargar reporte v2',
+      userName: user.nombre,
+      userRol: user.rol,
+      userId: user.id
     }
-  }
+    logger.info('Iniciando Controlador descarga reporte', logContext)
+    const buffer = await this.produccionModel.descargarReporteV2({ datos: req.body })
+    if (buffer.error) {
+      res.status(404).json({ error: `${buffer.error}` })
+    }
+    logger.info('Finalizando Controlador descarga reporte', logContext)
+
+    // Configurar las cabeceras para la descarga del archivo
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx')
+    res.send(buffer)
+  })
 
   descargarReportePendientes = asyncHandler(async (req, res) => {
     const { user } = req.session

@@ -21,6 +21,7 @@ const iniciarActivos = async () => {
   try {
     const data = await obtenerTickets()
     const table = $('#tbActivos').DataTable()
+    console.log('Datos obtenidos:', data)
     table.clear().rows.add(data[0]).draw()
   } catch (error) {
     console.error('Error al iniciar solicitudes:', error)
@@ -214,19 +215,19 @@ const verActivos = async () => {
           let tooltip = ''
           switch (data.trim().toLowerCase()) {
             case 'inactivo':
-              tooltip = `Equipo inactivo desde: ${row.fechaRegistro || 'No disponible'}`
+              tooltip = `Equipo inactivo desde: ${row.fecha_registro || 'No disponible'}`
               break
             case 'reparacion':
-              tooltip = `En reparación desde: ${row.fechaRegistro || 'No disponible'}\nMotivo: ${row.motivo || 'No especificado'}`
+              tooltip = `En reparación desde: ${row.fecha_registro || 'No disponible'}\nMotivo: ${row.motivo || 'No especificado'}`
               break
             case 'mantenimiento':
-              tooltip = `En mantenimiento desde: ${row.fechaRegistro || 'No disponible'}`
+              tooltip = `En mantenimiento desde: ${row.fecha_registro || 'No disponible'}`
               break
             case 'disponible':
               tooltip = 'Equipo disponible para asignación'
               break
             case 'asignado':
-              tooltip = `ID de Empleado: ${row.id_empleado || 'No especificado'}\nAsignado a: ${row.nombre || 'No especificado'}\nDepartamento: ${row.departamento || 'No especificado'}`
+              tooltip = `ID de Empleado: ${row.empleado_id || 'No especificado'}\nAsignado a: ${row.nombre || 'No especificado'}\nDepartamento: ${row.departamento || 'No especificado'}`
               break
           }
 
@@ -271,7 +272,6 @@ const verActivos = async () => {
       },
       {
         targets: 10,
-        data: 'id',
         render: function (data, type, row) {
           // Función helper para verificar si un campo tiene datos válidos
           const tieneDatos = (campo) => campo && campo !== '' && campo !== null
@@ -300,7 +300,6 @@ const verActivos = async () => {
         </button>
       `
           }
-
           // Retornar los botones o mensaje según el caso
           return botones || '<span class="text-muted">Sin documentos</span>'
         }
@@ -417,7 +416,7 @@ const mostrarDetallesInactivo = (data) => {
     html: `
       <div class="text-left">
         <p><strong>Equipo:</strong> ${data.equipo}</p>
-        <p><strong>Fecha inactividad:</strong> ${data.fechaRegistro || 'No disponible'}</p>
+        <p><strong>Fecha inactividad:</strong> ${data.fecha_registro || 'No disponible'}</p>
         <p><strong>Motivo:</strong> ${data.motivo || 'No especificado'}</p>
       </div>
     `,
@@ -432,7 +431,7 @@ const mostrarDetallesReparacion = (data) => {
     html: `
       <div class="text-left">
         <p><strong>Equipo:</strong> ${data.equipo}</p>
-        <p><strong>Fecha entrada:</strong> ${data.fechaRegistro || 'No disponible'}</p>
+        <p><strong>Fecha entrada:</strong> ${data.fecha_registro || 'No disponible'}</p>
         <p><strong>Motivo:</strong> ${data.motivo || 'No especificado'}</p>
         <p><strong>Diagnóstico:</strong> ${'Pendiente'}</p>
       </div>
@@ -448,7 +447,7 @@ const mostrarDetallesMantenimiento = (data) => {
     html: `
       <div class="text-left">
         <p><strong>Equipo:</strong> ${data.equipo}</p>
-        <p><strong>Fecha inicio:</strong> ${data.fechaRegistro || 'No disponible'}</p>
+        <p><strong>Fecha inicio:</strong> ${data.fecha_registro || 'No disponible'}</p>
         <p><strong>Tipo:</strong> ${data.tipo_mantenimiento || 'No especificado'}</p>
       </div>
     `,

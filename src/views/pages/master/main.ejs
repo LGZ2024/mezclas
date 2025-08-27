@@ -5,7 +5,8 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <%- include("../../templates/head-pwa") %>
-        <%- include("../../templates/master/cabecera") %>
+    <%- include("../../templates/master/cabecera") %>
+    <link rel="stylesheet" href="/css/dashboard.css">
 </head>
 
 <body>
@@ -19,44 +20,133 @@
                     <div class="main-panel">
                         <div class="content-wrapper">
                             <div class="page-header">
-                                <h3 class="page-title">Activos Fijos</h3>
-                                <!-- abrir modal -->
-                                <button type="button" class="btn btn-inverse-success" data-toggle="modal"
-                                    data-target="#miModal"><i class="mdi mdi-account-plus mr-1"></i>Agregar
-                                    Equipo</button>
+                                <h3 class="page-title">Dashboard</h3>
                                 <nav aria-label="breadcrumb">
                                     <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="#">Activos</a></li>
+                                        <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Activos</li>
                                     </ol>
                                 </nav>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12 grid-margin stretch-card">
+                            
+                            <!-- Resumen de estadísticas -->
+                            <div class="row mb-4 dashboard-stats">
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
                                     <div class="card">
                                         <div class="card-body">
-                                            <div class="table-responsive w-100">
-                                                <table class="table table-striped table-bordered w-100" id="tbActivos">
-                                                    <thead>
-                                                        <tr>
-                                                            <th scope="col">id</th>
-                                                            <th scope="col">No Economico</th>
-                                                            <th scope="col">Equipo</th>
-                                                            <th scope="col">Empresa pertenece</th>
-                                                            <th scope="col">Centro de coste</th>
-                                                            <th scope="col">Marca</th>
-                                                            <th scope="col">Modelo</th>
-                                                            <th scope="col">No.serie</th>
-                                                            <th scope="col">Tag o imei</th>
-                                                            <th scope="col">Estado</th>
-                                                            <th scope="col">Documentos</th>
-                                                            <th scope="col">Acciones</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-
-                                                    </tbody>
-                                                </table>
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="totalSalidas">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-success">
+                                                        <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                    </div>
+                                                </div>
                                             </div>
+                                            <h6 class="text-muted font-weight-normal">Total Salidas</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="totalCombustible">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-primary">
+                                                        <span class="mdi mdi-gas-station icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Total Combustible (L)</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="promedioSalidas">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-warning">
+                                                        <span class="mdi mdi-chart-line icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Promedio por Salida</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="almacenesActivos">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-info">
+                                                        <span class="mdi mdi-warehouse icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Almacenes Activos</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gráficas -->
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Tipo de Combustible</h4>
+                                            <p class="card-description">Distribución del consumo por tipo de combustible</p>
+                                            <canvas id="combustibleChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Almacén</h4>
+                                            <p class="card-description">Distribución del consumo por almacén</p>
+                                            <canvas id="almacenChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-8 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Centro de Coste</h4>
+                                            <p class="card-description">Top 10 centros de coste con mayor consumo</p>
+                                            <canvas id="centroCosteChart" height="250"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Temporada</h4>
+                                            <p class="card-description">Distribución por temporada</p>
+                                            <canvas id="temporadaChart" height="250"></canvas>
                                         </div>
                                     </div>
                                 </div>
@@ -71,18 +161,12 @@
             </div>
             <!-- page-body-wrapper ends -->
     </div>
-    <!-- Modal -->
-    <%- include("../../templates/activos/modalAgregarActivo") %>
-        <%- include("../../templates/activos/modalEditarActivo") %>
-            <%- include("../../templates/activos/modalFotoActivo") %>
-                <%- include("../../templates/activos/modalFacturaActivo") %>
-                    <%- include("../../templates/activos/modalBajasActivo") %>
-                    <%- include("../../templates/activos/modalPdf") %>
 
-
-                        <!-- container-scroller -->
-                        <%- include("../../templates/master/scripts") %>
-                            <script type="module" src="../../../app/activos/main.js"></script>
+    <%- include("../../templates/activos/modalUsuarios") %> 
+    <!-- container-scroller -->
+    <%- include("../../templates/master/scripts") %>
 </body>
 
 </html>
+<!-- <script type="module" src="../../../app/admin/graficas.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->

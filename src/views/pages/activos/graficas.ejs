@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/master/cabecera") %>
+            <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+
+<body>
+    <input type="hidden" id="rol" value="<%= rol %> ">
+    <div class="container-scroller">
+        <!-- navcabecera -->
+        <%- include("../../templates/master/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <!-- nav lateral -->
+                <%- include("../../templates/master/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="page-header">
+                                <h3 class="page-title">Dashboard</h3>
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Activos</li>
+                                    </ol>
+                                </nav>
+                            </div>
+                             <!-- Sección de filtros para Salidas -->
+                             <% if (tipo === 'salidas') { %>
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Filtros</h4>
+                                            <div class="row align-items-end">
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroFechaInicio">Fecha Inicio</label>
+                                                    <input type="date" class="form-control" id="filtroFechaInicio">
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroFechaFin">Fecha Fin</label>
+                                                    <input type="date" class="form-control" id="filtroFechaFin">
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroRancho">Rancho</label>
+                                                    <select class="form-control" id="filtroAlmacen">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroTemporada">Temporada</label>
+                                                    <select class="form-control" id="filtroTemporada">
+                                                        <option value="">Todas</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroCombustible">Combustible</label>
+                                                    <select class="form-control" id="filtroCombustible">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroCentroCoste">Centro de Coste</label>
+                                                    <select class="form-control" id="filtroCentroCoste">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroEmpresa">Empresa</label>
+                                                    <select class="form-control" id="filtroEmpresa">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0 text-right">
+                                                    <button id="btnResetFiltros" class="btn btn-secondary">Limpiar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                             <!-- Sección de filtros para entradas -->
+                             <% if (tipo === 'entradas') { %>
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Filtros</h4>
+                                            <div class="row align-items-end">
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroFechaInicio">Fecha Inicio</label>
+                                                    <input type="date" class="form-control" id="filtroFechaInicio">
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroFechaFin">Fecha Fin</label>
+                                                    <input type="date" class="form-control" id="filtroFechaFin">
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroRancho">Rancho</label>
+                                                    <select class="form-control" id="filtroAlmacen">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroCombustible">Combustible</label>
+                                                    <select class="form-control" id="filtroCombustible">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroCentroCoste">Centro de Coste</label>
+                                                    <select class="form-control" id="filtroCentroCoste">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroEmpresa">Empresa</label>
+                                                    <select class="form-control" id="filtroEmpresa">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <button id="btnResetFiltros" class="btn btn-secondary">Limpiar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                            <!-- Sección de filtros para cargas -->
+                            <% if (tipo === 'cargas') { %>
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Filtros</h4>
+                                            <div class="row align-items-end">
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroFechaInicio">Fecha Inicio</label>
+                                                    <input type="date" class="form-control" id="filtroFechaInicio">
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroFechaFin">Fecha Fin</label>
+                                                    <input type="date" class="form-control" id="filtroFechaFin">
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroCombustible">Combustible</label>
+                                                    <select class="form-control" id="filtroCombustible">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroCentroCoste">Centro de Coste</label>
+                                                    <select class="form-control" id="filtroCentroCoste">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroEmpresa">Empresa</label>
+                                                    <select class="form-control" id="filtroEmpresa">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <button id="btnResetFiltros" class="btn btn-secondary w-100">Limpiar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+
+                            <!-- Resumen de estadísticas -->
+                            <div class="row mb-4 dashboard-stats">
+
+                                <% if (tipo === 'salidas' || tipo === 'entradas' || tipo === 'cargas') { %>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="totalSalidas">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-success">
+                                                        <span class="mdi mdi-arrow-top-right icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Total Salidas</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div id="combustibleTotales" class="d-flex flex-column justify-content-center">
+                                                        <!-- Los totales por tipo de combustible se insertarán aquí desde JS -->
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-primary">
+                                                        <span class="mdi mdi-gas-station icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Total Combustible (L)</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="promedioSalidas">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-warning">
+                                                        <span class="mdi mdi-chart-line icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Promedio por Salida</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                 <% } %>
+                                <% if (tipo === 'salidas' || tipo === 'entradas') { %>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="almacenesActivos">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-info">
+                                                        <span class="mdi mdi-warehouse icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Almacenes Activos</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <% } %>
+                                <% if (tipo === 'cargas') { %>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="almacenesActivos">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-info">
+                                                        <span class="mdi <%= tipo === 'cargas' ? 'mdi-truck' : 'mdi-warehouse' %> icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">
+                                                <%= tipo === 'cargas' ? 'Unidades Activas' : 'Almacenes Activos' %>
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-9">
+                                                        <div class="d-flex align-items-center align-self-start">
+                                                            <h3 class="mb-0" id="gastoTotales">0</h3>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <div class="icon icon-box-info">
+                                                            <span class="mdi mdi-cash-multiple icon-item"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <h6 class="text-muted font-weight-normal">
+                                                Gasto total
+                                                </h6>
+                                            </div>
+                                    </div>
+                                </div>
+                                <% } %>
+                            </div>
+
+                            <!-- Gráficas -->
+                            <% if (tipo === 'salidas') { %>
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title" data-chart-type="combustible">
+                                                 <%= tipo === 'salidas' ? 'Consumo' : 'entradas' %> por Tipo de Combustible
+                                            </h4>
+                                            <p class="card-description">Distribución del consumo por tipo de combustible
+                                            </p>
+                                            <canvas id="combustibleChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Almacén</h4>
+                                            <p class="card-description">Distribución del consumo por almacén</p>
+                                            <canvas id="almacenChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-8 grid-margin stretch-card">
+                                    
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Centro de Coste</h4>
+                                            <p class="card-description">Top 10 centros de coste con mayor consumo</p>
+                                            <canvas id="centroCosteChart" height="250"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-4 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Temporada</h4>
+                                            <p class="card-description">Distribución por temporada</p>
+                                            <canvas id="temporadaChart" height="250"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+        
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Empresa</h4>
+                                            <p class="card-description">Distribución por empresa</p>
+                                             <canvas id="empresaChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+
+                            <% if (tipo === 'entradas') { %>
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title" data-chart-type="combustible">
+                                                 <%= tipo === 'salidas' ? 'Consumo' : 'entradas' %> por Tipo de Combustible
+                                            </h4>
+                                            <p class="card-description">Distribución del consumo por tipo de combustible
+                                            </p>
+                                            <canvas id="combustibleChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Almacén</h4>
+                                            <p class="card-description">Distribución del consumo por almacén</p>
+                                            <canvas id="almacenChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                    
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Centro de Coste</h4>
+                                            <p class="card-description">Top 10 centros de coste con mayor consumo</p>
+                                            <canvas id="centroCosteChart" height="250"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Empresa</h4>
+                                            <p class="card-description">Distribución por empresa</p>
+                                             <canvas id="empresaChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+
+                            <% if (tipo === 'cargas') { %>
+                            <div class="row">
+
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title" data-chart-type="combustible">
+                                                 <%= tipo === 'salidas' ? 'Consumo' : 'entradas' %> por Tipo de Combustible
+                                            </h4>
+                                            <p class="card-description">Distribución del consumo por tipo de combustible
+                                            </p>
+                                            <canvas id="combustibleChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+  
+                                <div class="col-md-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Empresa</h4>
+                                            <p class="card-description">Distribución por empresa</p>
+                                             <canvas id="empresaChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12 grid-margin stretch-card">
+                                    
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Consumo por Centro de Coste</h4>
+                                            <p class="card-description">Top 10 centros de coste con mayor consumo</p>
+                                            <canvas id="centroCosteChart" height="250"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                   
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Cargas por Unidad</h4>
+                                            <p class="card-description">Top 10 unidades con mayor consumo</p>
+                                            <canvas id="unidadChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Rendimiento por Unidad</h4>
+                                            <p class="card-description">Top 10 unidades por rendimiento (km/L)</p>
+                                            <canvas id="rendimientoChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                        </div>
+                        <!-- content-wrapper ends -->
+                        <!-- partial:partials/_footer.html -->
+                        <%- include("../../templates/master/footer") %>
+                            <!-- partial -->
+                    </div>
+                    <!-- main-panel ends -->
+            </div>
+            <!-- page-body-wrapper ends -->
+    </div>
+    <!-- Modal -->
+    <!-- container-scroller -->
+    <%- include("../../templates/master/scripts") %>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script >
+           window.dashboardData = <%- JSON.stringify(data) %>;
+           window.dashboardTipo ="<%= tipo %>";
+        </script>
+        <script type="module" src="/app/admin/graficas.js"></script>
+</body>
+
+</html>

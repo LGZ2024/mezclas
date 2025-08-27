@@ -8,9 +8,4 @@ document.addEventListener('DOMContentLoaded', () => {
   iniciarRegistros()
   verRegistro()
   mostrarNotificaciones()
-  // actuliza cada 5 minutos
-  // setInterval(() => {
-  //   window.location.reload()
-  // }
-  // , 300000)
 })

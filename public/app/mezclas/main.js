@@ -8,6 +8,7 @@ import { SolicitudFormulario } from '../solicitud/cerrarMezcla.js'
 import { iniciarPendiente, verPendiente } from './tablaSolicitudPendiente.js'
 import { iniciarProductosReceta, verProductosReceta } from '../productosReceta/productos.js'
 import { iniciarProceso, verProceso } from './tablaSolicitudProceso.js'
+import { iniciarCompletadas, verCompletadas } from './tablaSolicitudCompletada.js'
 document.addEventListener('DOMContentLoaded', () => {
   // Cachear referencias DOM
   const elementos = {
@@ -15,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tablaPendiente: document.getElementById('tbPendientes'),
     tablaProceso: document.getElementById('tbProceso'),
     tablaReceta: document.getElementById('tbReceta'),
+    tablaCompletadas: document.getElementById('tbCompletadas'),
 
     // FORMULARIOS
     formEmpresa: document.getElementById('formEmpresa'),
@@ -28,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnRegresar: document.getElementById('regresarInicio'),
     btnRegistrar: document.getElementById('btnRegistrar'),
     btnReceta: document.getElementById('btnReceta'),
+    btnRecetaProceso: document.getElementById('btnRecetaProceso'),
     btnRegresartabla: document.getElementById('regresatabla'),
     btnReporte: document.getElementById('btnReporte'),
     btnDescargar: document.getElementById('btnDescargar'),
@@ -35,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnEnviarEstado: document.getElementById('btnEnviarEstado'),
     btnGuardarMescla: document.getElementById('btnGuardarMescla'),
     btnCerrarMescla: document.getElementById('btnCerrarMescla'),
+
     // OTROS
     productosContainer: document.getElementById('productosContainer'),
     regresarCerrar: document.getElementById('regresarCerrar')
@@ -131,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   // crear campo nuevo
-  const crearCampoProducto = () => {
+  const crearCampoProducto = async () => {
     const nuevoItem = document.createElement('div')
     nuevoItem.classList.add('producto-item')
 
@@ -536,6 +540,17 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
+    async handlebtnMostarRecetaProceso (e) {
+      e.preventDefault()
+      const idSolicitud = document.getElementById('idSolicitud').value
+      $('#staticBackdrop').modal('show')
+      iniciarProductosReceta(idSolicitud)
+      await verProductosReceta({
+        eliminarUltimaColumna: true,
+        columnaAEliminar: -1, // Última columna
+        depuracion: true
+      })
+    },
     async handleBtnEnviaEstadoProductos (e) {
       e.preventDefault()
       showSpinner()
@@ -686,7 +701,10 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('formCerrar').style.display = 'block'
       document.getElementById('formPreparadas').style.display = 'none'
       document.getElementById('idMesclas').value = document.getElementById('folioi').value
-      document.addEventListener('DOMContentLoaded', () => new SolicitudFormulario())
+      // Se instancia SolicitudFormulario directamente, ya que DOMContentLoaded ya se disparó.
+      // Esta clase es la que debe inicializar la cámara.
+      // eslint-disable-next-line no-new
+      new SolicitudFormulario()
     },
     // agregar campo para variedades
     async handleAgregarVariedad () {
@@ -787,6 +805,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (elementos.btnReceta) {
     elementos.btnReceta.addEventListener('click', handlers.handlebtnMostarReceta)
   }
+  if (elementos.btnRecetaProceso) {
+    elementos.btnRecetaProceso.addEventListener('click', handlers.handlebtnMostarRecetaProceso)
+  }
   if (elementos.btnRegresartabla) {
     elementos.btnRegresartabla.addEventListener('click', handlers.handleRegresarTabla)
   }
@@ -824,6 +845,12 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarUI(async () => {
       iniciarProceso()
       await verProceso()
+    })
+  }
+  if (elementos.tablaCompletadas) {
+    actualizarUI(async () => {
+      iniciarCompletadas()
+      await verCompletadas()
     })
   }
 })

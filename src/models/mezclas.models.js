@@ -135,11 +135,11 @@ export class MezclaModel {
             id: idSolicitud,
             transaction
           })
-
+          const imagenPath = `/uploads/fotos_mezclas/${imagen.filename}`
           const { solicitudActualizada } = await this.#actualizarSolicitud({
             solicitud,
             data: {
-              imagenPath: imagen.filename,
+              imagenPath,
               fecha: new Date()
             },
             idUsuario,

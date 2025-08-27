@@ -1,5 +1,6 @@
 import { DbHelper } from '../utils/dbHelper.js'
 import { CombustibleEntrada } from '../schema/combustible_entrada.js'
+import { Centrocoste } from '../schema/centro.js'
 import { CombustibleInventario } from '../schema/combustible_inventario.js'
 import { NotFoundError, ValidationError, DatabaseError } from '../utils/CustomError.js'
 
@@ -45,10 +46,37 @@ export class EntradaCombustibleModel {
       try {
         logger.info('Iniciando Modelo Obtener Entradas Combustibles', logContext)
         const entradas = await CombustibleEntrada.findAll({
-          attributes: ['id', 'factura', 'fecha', 'combustible', 'almacen', 'centro_coste', 'cantidad', 'proveedor', 'traslada', 'recibe', 'comentario', 'pedido']
+          include: [
+            {
+              model: Centrocoste,
+              attributes: ['id', 'cc', 'empresa']
+            }
+          ],
+          attributes: ['id', 'factura', 'fecha', 'combustible', 'almacen', 'cantidad', 'proveedor', 'traslada', 'recibe', 'comentario', 'pedido']
         })
+        const resultadosFormateados = entradas.map(servicios => {
+          const m = servicios.toJSON()
+          return {
+            id: m.id,
+            factura: m.factura,
+            fecha: m.fecha,
+            combustible: m.combustible,
+            almacen: m.almacen,
+            cantidad: m.cantidad,
+            proveedor: m.proveedor,
+            traslada: m.traslada,
+            recibe: m.recibe,
+            comentario: m.comentario || 'N/A',
+            pedido: m.pedido,
+            centro_coste: m.centrocoste?.cc || 'N/A', // Acceder usando el alias
+            empresa: m.centrocoste?.empresa || 'N/A'
+          }
+        })
+        const uniqueData = Array.from(
+          new Map(resultadosFormateados.map(item => [item.id, item])).values()
+        )
         logger.info('Finalizando Modelo Obtener Entradas Combustibles', logContext)
-        return entradas
+        return uniqueData
       } catch (error) {
         console.log(error)
         logger.error('Error al registrar entrada de combustible:', {

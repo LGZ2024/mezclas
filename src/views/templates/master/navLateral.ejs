@@ -4,6 +4,12 @@
     <li class="nav-item nav-category">Panel de Administracion</li>
     <li class="nav-item">
       <a class="nav-link" href="/protected/admin">
+        <span class="icon-bg"><i class="mdi mdi-file-document menu-icon"></i></span>
+        <span class="menu-title">Reporte Mezclas</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/activosFijos">
         <span class="icon-bg"><i class="mdi mdi-table-large menu-icon"></i></span>
         <span class="menu-title">Activos Fijos</span>
       </a>
@@ -13,6 +19,22 @@
         <span class="icon-bg"><i class="mdi mdi-laptop menu-icon"></i></span>
         <span class="menu-title">Asignaciones Activas</span>
       </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false"
+        aria-controls="auth">
+        <span class="icon-bg"><i class="mdi mdi-chart-arc menu-icon"></i></span>
+        <span class="menu-title">Graficas</span>
+        <i class="menu-arrow"></i>
+      </a>
+      <div class="collapse" id="auth">
+        <ul class="nav flex-column sub-menu">
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/salidas">Salidas de Combustible</a></li>
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/entradas">Entrada de Combustible</a></li>
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/cargas">Cargas de Combustible</a></li>
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/solicitudes">Solicitudes de Mezcla</a></li>
+        </ul>
+      </div>
     </li>
     <li class="nav-item">
       <a class="nav-link" href="/protected/bajas">
@@ -94,7 +116,7 @@
                     </a>
                   </li>
                   <% } %>
-                                      <li class="nav-item">
+                   <li class="nav-item">
                       <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false"
                         aria-controls="auth">
                         <span class="icon-bg"><i class="mdi mdi-book menu-icon"></i></span>

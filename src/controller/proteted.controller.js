@@ -1,7 +1,11 @@
 import { SolicitudRecetaModel } from '../models/productosSolicitud.models.js'
 import { MezclaModel } from '../models/mezclas.models.js'
 import { UsuarioModel } from '../models/usuario.models.js'
+import { SalidaCombustibleModel } from '../models/combustible_salida.models.js'
+import { EntradaCombustibleModel } from '../models/combustible_entrada.models.js'
+import { CargaCombustibleModel } from '../models/combustible_carga.models.js'
 import { NotificacionModel } from '../models/notificaciones.models.js'
+import { ProduccionModel } from '../models/produccion.models.js'
 import logger from '../utils/logger.js'
 
 export class ProtetedController {
@@ -11,7 +15,7 @@ export class ProtetedController {
     logger.debug('Usuario en la ruta protegida:', user)
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // validamos al usuario
-    if (user.rol === 'administrativo' || user.rol === 'adminMezclador') {
+    if (user.rol === 'administrativo' || user.rol === 'adminMezclador' || user.rol === 'master') {
       res.status(200).render('pages/admin/solicitudes', { user, rol: user.rol, titulo: 'Bienvenido' })
     } else if (user.rol === 'mezclador' || user.rol === 'solicita' || user.rol === 'supervisor' || user.rol === 'solicita2') {
       res.status(200).render('pages/mezclas/main', { rol: user.rol, nombre: user.nombre })
@@ -19,9 +23,15 @@ export class ProtetedController {
       res.status(200).render('pages/combustibles/main', { rol: user.rol, nombre: user.nombre })
     } else if (user.rol === 'Activos Fijos') {
       res.status(200).render('pages/activos/main', { user, rol: user.rol, titulo: 'Bienvenido' })
-    } else if (user.rol === 'master') {
-      res.status(200).render('pages/master/main', { user, rol: user.rol, titulo: 'Bienvenido' })
     }
+  }
+
+  activosFijos = async (req, res) => {
+    const { user } = req.session
+    logger.debug('Usuario en la ruta protegida:', user)
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // validamos al usuario
+    res.status(200).render('pages/activos/main', { user, rol: user.rol, titulo: 'Bienvenido' })
   }
 
   // ruta vivienda
@@ -478,6 +488,14 @@ export class ProtetedController {
     res.render('pages/activos/asignarEquipos', { user, rol: user.rol, titulo: 'Bienvenido', ubicaciones })
   }
 
+  asignacioness = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array
+    res.render('pages/activos/graficas', { user, rol: user.rol, titulo: 'Bienvenido' })
+  }
+
   bajas = async (req, res) => {
     const { user } = req.session
     // verificamos si existe un usuario
@@ -508,6 +526,33 @@ export class ProtetedController {
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // Separar los ranchos en un array
     res.render('pages/activos/empleados', { user, rol: user.rol, titulo: 'Bienvenido' })
+  }
+
+  graficas = async (req, res) => {
+    const { user } = req.session
+    const logger = req.logger
+    const { tipo } = req.params
+    const logContext = {
+      userName: user.name,
+      userId: user.id,
+      userRol: user.rol
+    }
+    let rawData
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    if (tipo === 'salidas') {
+      rawData = await SalidaCombustibleModel.SalidaCombustible({ logger, logContext })
+    } else if (tipo === 'entradas') {
+      rawData = await EntradaCombustibleModel.obtenerEntradasCombustibles({ logger, logContext })
+    } else if (tipo === 'cargas') {
+      rawData = await CargaCombustibleModel.obtenerCargasCombustibles({ logger, logContext })
+    } else if (tipo === 'solicitudes') {
+      rawData = await ProduccionModel.ObtenerSolicitudes({ logger, logContext })
+    } else {
+      return res.status(400).render('errorPage', { codeError: '400', errorMsg: 'Tipo de gráfica no válido' })
+    }
+    const data = Array.isArray(rawData) ? rawData : []
+    res.render('pages/activos/graficas', { user, rol: user.rol, titulo: 'Bienvenido', data, tipo })
   }
 
   // cerras sesion

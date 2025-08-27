@@ -8,6 +8,7 @@ export const createProtetedRouter = () => {
   const asistenciaController = new ProtetedController()
   // rutas protegidas
   router.get('/admin', asistenciaController.protected)
+  router.get('/activosFijos', asistenciaController.activosFijos)
   router.get('/talleres', asistenciaController.talleres)
   router.get('/registrarTalleres', asistenciaController.registrarTalleres)
   router.get('/tickets', asistenciaController.tickets)
@@ -41,6 +42,7 @@ export const createProtetedRouter = () => {
   router.get('/cargas/', asistenciaController.cargasCombustible)
   router.get('/inventario/', asistenciaController.inventario)
   router.get('/asignaciones/', asistenciaController.asignaciones)
+  router.get('/graficaSalida/:tipo', asistenciaController.graficas)
   router.get('/bajas/', asistenciaController.bajas)
   router.get('/historialA/', asistenciaController.historialA)
   router.get('/historialE/', asistenciaController.historialE)

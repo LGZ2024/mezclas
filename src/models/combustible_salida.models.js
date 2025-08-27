@@ -1,5 +1,6 @@
 import { DbHelper } from '../utils/dbHelper.js'
 import { CombustibleSalida } from '../schema/combustible_salida.js'
+import { Centrocoste } from '../schema/centro.js'
 import { CombustibleInventario } from '../schema/combustible_inventario.js'
 import { NotFoundError, ValidationError, DatabaseError } from '../utils/CustomError.js'
 
@@ -10,7 +11,6 @@ export class SalidaCombustibleModel {
         if (!datos) {
           throw new ValidationError('Datos para la operación son requeridos')
         }
-        console.log(datos)
         const inventario = await CombustibleInventario.findOne({
           where: { almacen: datos.almacen, combustible: datos.combustible }
         })
@@ -50,11 +50,43 @@ export class SalidaCombustibleModel {
       try {
         logger.info('Iniciando Modelo Obtener Salidas Combustibles', logContext)
         const salidas = await CombustibleSalida.findAll({
-          attributes: ['id', 'fecha', 'combustible', 'almacen', 'centro_coste', 'cantidad', 'responsable', 'no_economico', 'comentario', 'temporada', 'actividad']
+          include: [
+            {
+              model: Centrocoste,
+              attributes: ['id', 'cc', 'empresa']
+            }
+          ],
+          attributes: ['id', 'fecha', 'combustible', 'centro_coste', 'almacen', 'cantidad', 'responsable', 'no_economico', 'comentario', 'temporada', 'actividad']
         })
+        const resultadosFormateados = salidas.map(servicios => {
+          const m = servicios.toJSON()
+          return {
+            id: m.id,
+            fecha: m.fecha,
+            combustible: m.combustible,
+            almacen: m.almacen,
+            id_centrosa: m.centro_coste || 'N/A',
+            centro_id: m.centrocoste?.id || 'N/A', // Acceder usando el alias
+            centro_coste: m.centrocoste?.cc || 'N/A', // Acceder usando el alias
+            empresa: m.centrocoste?.empresa || 'N/A',
+            cantidad: m.cantidad,
+            responsable: m.responsable,
+            no_economico: m.no_economico,
+            comentario: m.comentario,
+            temporada: m.temporada,
+            actividad: m.actividad
+          }
+        })
+        const uniqueData = Array.from(
+          new Map(resultadosFormateados.map(item => [item.id, item])).values()
+        )
         logger.info('Finalizando Modelo Obtener Salidas Combustibles', logContext)
-        return salidas
+        return uniqueData
       } catch (error) {
+        logger.error('Error al obtener salidas de combustible', {
+          ...logContext,
+          error: error.message
+        })
         if (error instanceof NotFoundError) throw error
         throw new DatabaseError('Error al buscar Salidas de combustible')
       }

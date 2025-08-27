@@ -51,6 +51,9 @@ const verProceso = async () => {
     paging: true,
     order: [[0, 'desc']],
     responsive: true,
+    autoWidth: false,
+    scrollCollapse: true,
+    fixedHeader: false,
     buttons: [
       {
         extend: 'copyHtml5',
@@ -68,8 +71,7 @@ const verProceso = async () => {
         titleAttr: 'CSV'
       }
     ],
-    dom: '<"d-flex justify-content-between m-4"fBl>t<"d-flex justify-content-between "ip>',
-    pageLength: 10,
+    dom: '<"d-flex flex-column flex-md-row justify-content-between align-items-center mb-3"fBl>t<"d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3"ip>',
     lengthMenu: [10, 25, 50, 100],
     searching: true,
     language: {
@@ -135,6 +137,7 @@ const verProceso = async () => {
       }
     ]
   })
+
   configurarFomulario()
 }
 

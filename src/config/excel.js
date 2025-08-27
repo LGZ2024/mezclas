@@ -944,6 +944,7 @@ const procesarVariedades = async (idSolicitud) => {
 // Agregar encabezados a la hoja
 const agregarEncabezadoSolicitud = async (hojaGeneral, dato, datosSolicitud, variedadesInfo) => {
   // Agregar encabezados
+  console.log(datosSolicitud[0])
   hojaGeneral.addRow(['Datos Generales']).eachCell((cell) => { cell.style = EXCEL_STYLES.header })
 
   // Cabecera de la tabla
@@ -979,7 +980,7 @@ const agregarEncabezadoSolicitud = async (hojaGeneral, dato, datosSolicitud, var
   hojaGeneral.addRow(['Empresa', dato.empresa]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Temporada', dato.temporada]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Cantidad de Mezcla', datosSolicitud[0].cantidad === '' ? 'No aplica' : datosSolicitud[0].cantidad]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
-  hojaGeneral.addRow(['Presentacion de la Mezcla', datosSolicitud[0].cantidad === '' ? 'No aplica' : datosSolicitud[0].cantidad]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
+  hojaGeneral.addRow(['Presentacion de la Mezcla', datosSolicitud[0].presentacion === '' ? 'No aplica' : datosSolicitud[0].presentacion]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Metodo de aplicacion', datosSolicitud[0].metodoAplicacion]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
   hojaGeneral.addRow(['Descripcion', dato.descripcion]).eachCell((cell) => { cell.style = EXCEL_STYLES.cell })
 
@@ -1033,6 +1034,7 @@ export const reporteSolicitudv3 = async (parametros) => {
       try {
         const { productos, variedadesInfo, datosSolicitud } = await procesarDatosSolicitud(dato)
 
+        console.log(datosSolicitud)
         // Agregar encabezados
         agregarEncabezadoSolicitud(hojaGeneral, dato, datosSolicitud, variedadesInfo)
 

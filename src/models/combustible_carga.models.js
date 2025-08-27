@@ -2,6 +2,7 @@ import { DbHelper } from '../utils/dbHelper.js'
 import { CombustibleCarga } from '../schema/combustible_carga.js'
 import { unidadCombustible } from '../schema/catalogo_unidad_combustible.js'
 import { NotFoundError, ValidationError, DatabaseError } from '../utils/CustomError.js'
+import { Op } from 'sequelize'
 
 export class CargaCombustibleModel {
   static async agregarCargaCombustible ({ datos, logger, logContext }) {
@@ -33,7 +34,10 @@ export class CargaCombustibleModel {
             model: unidadCombustible,
             attributes: ['id', 'no_economico']
           }],
-          attributes: ['id', 'fecha', 'centro_coste', 'cantidad', 'precio', 'combustible', 'responsable', 'km', 'km_recorridos', 'comentario']
+          attributes: ['id', 'fecha', 'centro_coste', 'cantidad', 'precio', 'combustible', 'responsable', 'km', 'km_recorridos', 'comentario'],
+          where: {
+            centro_coste: { [Op.ne]: 'NA' } // Excluir registros con centro_coste 'NA'
+          }
         })
 
         // transormar resultados
@@ -44,6 +48,7 @@ export class CargaCombustibleModel {
             fecha: m.fecha,
             no_economico: m.catalogo_unidad_combustible ? m.catalogo_unidad_combustible.no_economico : null,
             centro_coste: m.centro_coste,
+            empresa: this.extraerEmpresa(m.centro_coste),
             cantidad: m.cantidad,
             precio: m.precio,
             combustible: m.combustible,
@@ -111,6 +116,18 @@ export class CargaCombustibleModel {
       await usuario.update(datos, { transaction })
       return usuario
     })
+  }
+
+  // funcion auxiliar para extraer empresa del centro de coste
+  static extraerEmpresa (centroCoste) {
+    if (!centroCoste || typeof centroCoste !== 'string') return null
+    // Busca el texto antes del primer paréntesis
+    const match = centroCoste.match(/^(.+?)\s*\(/)
+    if (match && match[1]) {
+      return match[1].trim()
+    }
+    // Si no hay paréntesis, retorna el string completo
+    return centroCoste.trim()
   }
 }
 
