@@ -416,10 +416,9 @@ export class ProduccionModel {
         const resultadoMezclas = await this.desgloseSolicitudes([mezclas], 'MEZCLAS')
         const resultadoFertilizantes = await this.desgloseSolicitudes([fertilizantes], 'FERTILIZANTES')
 
-        console.log('Mezclas procesadas:', resultadoMezclas)
-        console.log('Fertilizantes procesados:', resultadoFertilizantes)
-        console.log('NSC procesados:', resultadoNsc)
-
+        console.log('resultadoNsc', resultadoNsc)
+        console.log('resultadoMezclas', resultadoMezclas)
+        console.log('resultadoFertilizantes', resultadoFertilizantes)
         // Validar que al menos una categoría tenga datos
         if ((!resultadoFertilizantes || !resultadoFertilizantes.length) && (!resultadoMezclas || !resultadoMezclas.length) && (!resultadoNsc || !resultadoNsc.length)) {
           throw new NotFoundError('No se encontraron solicitudes para procesar')
