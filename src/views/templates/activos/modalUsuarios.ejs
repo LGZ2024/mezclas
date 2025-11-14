@@ -2,7 +2,7 @@
         <div class="modal-dialog" role="document">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="miModalLabel" style="color: black;">Agregar usuario</h5>
+              <h5 class="modal-title" id="miModalLabel" style="color: black;">Agregar Empleado</h5>
               <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                 <span aria-hidden="true">&times;</span>
               </button>
@@ -24,10 +24,17 @@
                 <div class="form-group">
                   <label for="apellido_materno" class="form-label">Apellido Materno:</label>
                   <input type="text" class="form-control" name="apellido_materno" id="apellido_materno" placeholder="Apellido materno">
-                </div>
+                </div> 
                 <div class="form-group">
                   <label for="departamento" class="form-label">Departamento:</label>
-                  <input type="text" class="form-control" name="departamento" id="departamento" placeholder="Departamento">
+                  <select name="departamento" id="departamento" class="form-control">
+                    <option value="">Seleciona Departamento</option>
+                    <% departamentos.forEach(function(departamentos) { %>
+                      <option value="<%= departamentos %>">
+                        <%= departamentos %>
+                      </option>
+                    <% }); %>
+                  </select>
                 </div>
               </form>
             </div>

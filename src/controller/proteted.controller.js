@@ -422,7 +422,7 @@ export class ProtetedController {
     // Separar los ranchos en un array
     const ranchos = user.ranchos.split(',')
 
-    res.render('pages/combustibles/agregarInventario', { ranchos, rol: user.rol })
+    res.render('pages/combustibles/agregarInventario', { user, ranchos, rol: user.rol })
   }
 
   agregarSalidaInventario = async (req, res) => {
@@ -432,7 +432,7 @@ export class ProtetedController {
     // Separar los ranchos en un array
     const ranchos = user.ranchos.split(',')
 
-    res.render('pages/combustibles/agregarSalida', { ranchos, rol: user.rol })
+    res.render('pages/combustibles/agregarSalida', { user, ranchos, rol: user.rol })
   }
 
   agregarCargaCombustible = async (req, res) => {
@@ -442,7 +442,7 @@ export class ProtetedController {
     // Separar los ranchos en un array
     const ranchos = user.ranchos.split(',')
 
-    res.render('pages/combustibles/agregarCombustible', { ranchos, rol: user.rol })
+    res.render('pages/combustibles/agregarCombustible', { user, ranchos, rol: user.rol })
   }
 
   entradasCombustible = async (req, res) => {
@@ -450,7 +450,7 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
 
-    res.render('pages/combustibles/entradaInventario', { rol: user.rol })
+    res.render('pages/combustibles/entradaInventario', { user, rol: user.rol })
   }
 
   salidasCombustible = async (req, res) => {
@@ -458,7 +458,7 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
 
-    res.render('pages/combustibles/salidaInventario', { rol: user.rol })
+    res.render('pages/combustibles/salidaInventario', { user, rol: user.rol })
   }
 
   cargasCombustible = async (req, res) => {
@@ -467,7 +467,7 @@ export class ProtetedController {
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // Separar los ranchos en un array
 
-    res.render('pages/combustibles/cargasCombustible', { rol: user.rol })
+    res.render('pages/combustibles/cargasCombustible', { user, rol: user.rol })
   }
 
   inventario = async (req, res) => {
@@ -476,7 +476,7 @@ export class ProtetedController {
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // Separar los ranchos en un array
 
-    res.render('pages/combustibles/inventario', { rol: user.rol })
+    res.render('pages/combustibles/inventario', { user, rol: user.rol })
   }
 
   asignaciones = async (req, res) => {
@@ -485,7 +485,8 @@ export class ProtetedController {
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // Separar los ranchos en un array
     const ubicaciones = ['Atemajac', 'Ahualulco', 'Casas de Altos', 'Ojo de Agua', 'Potrero', 'Romero', 'Seccion 7 Fresas', 'La Loma', 'Zapote', 'Oficina 1', 'Oficina 2']
-    res.render('pages/activos/asignarEquipos', { user, rol: user.rol, titulo: 'Bienvenido', ubicaciones })
+    const departamentos = ['Administracion', 'Cuentas Por Pagar', 'Cuentas Por Cobrar', 'Recursos Humanos', 'Sistemas', 'Activos Fijos', 'Produccion', 'Finanzas', 'Banca Movil', 'IMMS', 'Nominas', 'Prenomina', 'Timbrado', 'Contabilidad', 'Juridico', 'Tesoreria', 'Nomina Administrativa', 'Gerencia', 'Almacen']
+    res.render('pages/activos/asignarEquipos', { user, rol: user.rol, titulo: 'Bienvenido', ubicaciones, departamentos })
   }
 
   asignacioness = async (req, res) => {
@@ -525,7 +526,17 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // Separar los ranchos en un array
-    res.render('pages/activos/empleados', { user, rol: user.rol, titulo: 'Bienvenido' })
+    const departamentos = ['Administracion', 'Cuentas Por Pagar', 'Cuentas Por Cobrar', 'Recursos Humanos', 'Sistemas', 'Activos Fijos', 'Produccion', 'Finanzas', 'Banca Movil', 'IMMS', 'Nominas', 'Prenomina', 'Timbrado', 'Contabilidad', 'Juridico', 'Tesoreria', 'Nomina Administrativa', 'Gerencia', 'Almacen']
+
+    res.render('pages/activos/empleados', { user, rol: user.rol, titulo: 'Bienvenido', departamentos })
+  }
+
+  combustibles = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    // Separar los ranchos en un array /combustibles/navCombustibles
+    res.status(200).render('pages/combustibles/main', { rol: user.rol, nombre: user.nombre, user })
   }
 
   graficas = async (req, res) => {

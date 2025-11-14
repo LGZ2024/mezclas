@@ -261,6 +261,25 @@
                                                         <option value="">Todos</option>
                                                     </select>
                                                 </div>
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroEficiencia">Eficiencia</label>
+                                                    <select class="form-control" id="filtroEficiencia">
+                                                        <option value="">Todos</option>
+                                                        <option value="alta">Alta (>95%)</option>
+                                                        <option value="media">Media (80-95%)</option>
+                                                        <option value="baja">Baja (<80%)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-2 form-group mb-0">
+                                                    <label for="filtroTiempoEntrega">Tiempo de Entrega</label>
+                                                    <select class="form-control" id="filtroTiempoEntrega">
+                                                        <option value="">Todos</option>
+                                                        <option value="1">1 día o menos</option>
+                                                        <option value="3">3 días o menos</option>
+                                                        <option value="7">1 semana o menos</option>
+                                                    </select>
+                                                </div>
                                                 <div class="col-md-2 form-group mb-0 text-right">
                                                     <button id="btnResetFiltros" class="btn btn-secondary">Limpiar</button>
                                                 </div>
@@ -398,7 +417,8 @@
                                 </div>
                                 <% } %>
                                 <% if (tipo === 'solicitudes') { %>
-                                    <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                <div class="row">
+                                    <div class="col-xl-4 col-sm-6 grid-margin stretch-card">
                                         <div class="card">
                                             <div class="card-body">
                                                 <div class="row">
@@ -421,7 +441,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="col-xl-4 col-sm-6 grid-margin stretch-card">
                                         <div class="card">
                                             <div class="card-body">
                                                 <div class="row">
@@ -441,7 +461,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="col-xl-4 col-sm-6 grid-margin stretch-card">
                                             <div class="card">
                                                 <div class="card-body">
                                                     <div class="row">
@@ -460,40 +480,47 @@
                                                 </div>
                                             </div>
                                     </div>
-                                    
-                                    <!-- En la sección de estadísticas para solicitudes -->
-                                    <div class="row mb-4 dashboard-stats">
-                                        <!-- Total Solicitudes y Por Tipo -->
-                                        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
-                                            <div class="card">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted font-weight-normal mb-3">Solicitudes</h6>
-                                                    <div id="totalSalidas"></div>
-                                                    <div id="totalPorTipo"></div>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <!-- Cantidad por Presentación -->
-                                        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
-                                            <div class="card">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted font-weight-normal mb-3">Por Presentación</h6>
-                                                    <div id="presentacionTotales"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status -->
-                                        <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
-                                            <div class="card">
-                                                <div class="card-body">
-                                                    <h6 class="text-muted font-weight-normal mb-3">Por Status</h6>
-                                                    <div id="statusTotales"></div>
+                                    <div class="col-xl-6 col-sm-6 grid-margin stretch-card">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-9">
+                                                        <h6 class="text-muted font-weight-normal mb-3">Tiempos de Entrega</h6>
+                                                        <div id="tiempoEntregaTotales">
+                                                            <!-- Se insertará dinámicamente -->
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <div class="icon icon-box-info">
+                                                            <span class="mdi mdi-clock-outline icon-item"></span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <div class="col-xl-6 col-sm-6 grid-margin stretch-card">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-9">
+                                                        <h6 class="text-muted font-weight-normal mb-3">Eficiencia de Cumplimiento</h6>
+                                                        <div id="eficienciaTotales">
+                                                            <!-- Se insertará dinámicamente -->
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-3">
+                                                        <div class="icon icon-box-success">
+                                                            <span class="mdi mdi-percent icon-item"></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>        
                                 <% } %>
                             </div>
 
@@ -671,79 +698,64 @@
                             <% if (tipo === 'solicitudes') { %>
                             <!-- En graficas.ejs, dentro de la sección de solicitudes -->
                             <div class="row">
-                                <!-- Tiempos de Entrega -->
-                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                <div class="col-lg-6 grid-margin stretch-card">
                                     <div class="card">
                                         <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-9">
-                                                    <h6 class="text-muted font-weight-normal mb-3">Tiempos de Entrega</h6>
-                                                    <div id="tiempoEntregaTotales">
-                                                        <!-- Se insertará dinámicamente -->
-                                                    </div>
-                                                </div>
-                                                <div class="col-3">
-                                                    <div class="icon icon-box-info">
-                                                        <span class="mdi mdi-clock-outline icon-item"></span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <h4 class="card-title">Eficiencia por Tipo</h4>
+                                            <canvas id="eficienciaChart"></canvas>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- Eficiencia de Cumplimiento -->
-                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                <div class="col-lg-6 grid-margin stretch-card">
                                     <div class="card">
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-9">
-                                                    <h6 class="text-muted font-weight-normal mb-3">Eficiencia de Cumplimiento</h6>
-                                                    <div id="eficienciaTotales">
-                                                        <!-- Se insertará dinámicamente -->
-                                                    </div>
-                                                </div>
-                                                <div class="col-3">
-                                                    <div class="icon icon-box-success">
-                                                        <span class="mdi mdi-percent icon-item"></span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Gráficas adicionales -->
-                            <div class="row">
-                                <!-- Gráfica de Método de Aplicación -->
-                                <div class="col-lg-6 grid-margin stretch-card">
-                                    <div class="card chart-card">
-                                        <div class="card-body">
-                                            <h4 class="card-title">Por Método de Aplicación</h4>
-                                            <canvas id="metodoChart" height="300"></canvas>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Gráfica de Productos -->
-                                <div class="col-lg-6 grid-margin stretch-card">
-                                    <div class="card chart-card">
                                         <div class="card-body">
                                             <h4 class="card-title">Top Productos</h4>
-                                            <canvas id="productoChart" height="300"></canvas>
+                                            <canvas id="productoChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Segunda fila de gráficas -->
+                            <div class="row">
+                                <div class="col-lg-12 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Análisis Temporal</h4>
+                                            <canvas id="timelineChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Gráficas adicionales -->
+                            <div class="row">
+                                <!-- Gráfica de Tiempos de Entrega -->
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Tiempos de Entrega</h4>
+                                            <canvas id="tiempoEntregaChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Gráfica de Variedades -->
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Variedades</h4>
+                                            <canvas id="variedadChart" height="300"></canvas>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Gráfica de Timeline -->
+                            <!-- Gráfica de Método de Aplicación -->
                             <div class="row">
                                 <div class="col-lg-12 grid-margin stretch-card">
                                     <div class="card chart-card">
                                         <div class="card-body">
-                                            <h4 class="card-title">Análisis Temporal</h4>
-                                            <canvas id="timelineChart" height="200"></canvas>
+                                            <h4 class="card-title">Distribución por Método de Aplicación</h4>
+                                            <canvas id="metodoChart" height="200"></canvas>
                                         </div>
                                     </div>
                                 </div>
@@ -771,9 +783,23 @@
                                 </div>
         
                             </div>
+
+                            <!-- En graficas.ejs -->
+                            <div class="row">
+                                <!-- Gráficas existentes -->
+                                
+                                <!-- Nueva gráfica de tendencias -->
+                                <div class="col-lg-12 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Tendencia de Solicitudes</h4>
+                                            <canvas id="empresaChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <% } %>
                             <!-- INICIA: Nueva sección para la tabla de detalles -->
-                       
                         </div>
                         <!-- content-wrapper ends -->
                         <!-- partial:partials/_footer.html -->

@@ -128,7 +128,7 @@ const CONFIGURACION = {
     filtros: [
       'fechaInicio', 'fechaFin', 'rancho', 'centroCoste', 'empresa',
       'metodoAplicacion', 'presentacion', 'temporada', 'producto',
-      'tipo', 'usuario'
+      'tipo', 'usuario', 'status'
     ],
     campos: {
       fecha: 'fechaSolicitud',
@@ -156,12 +156,13 @@ const CONFIGURACION = {
     }
   }
 }
-
 // Colores predefinidos para las gráficas
 const chartColors = {
   primary: ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#00BCD4', '#795548', '#607D8B'],
   secondary: ['#81C784', '#64B5F6', '#FFB74D', '#BA68C8', '#E57373', '#4DD0E1', '#A1887F', '#90A4AE']
 }
+// Campos comunes para el valor a sumar
+const camposDeValor = ['cantidad_normalizada', 'cantidad', 'existencia', 'volumen']
 
 // Función debounce para optimizar filtros
 const debounce = (func, wait) => {
@@ -178,12 +179,12 @@ const debounce = (func, wait) => {
 
 // Sistema de cache para datos procesados
 const cache = new Map()
-const getCachedData = (key, processor, data) => {
-  if (!cache.has(key)) {
-    cache.set(key, processor(data))
-  }
-  return cache.get(key)
-}
+// const getCachedData = (key, processor, data) => {
+//   if (!cache.has(key)) {
+//     cache.set(key, processor(data))
+//   }
+//   return cache.get(key)
+// }
 
 // Función para limpiar cache cuando cambien los datos
 const limpiarCache = () => {
@@ -198,50 +199,97 @@ const getColor = (index) => {
 
 // Función auxiliar para obtener la clase de color según el status
 const getStatusColor = (status) => {
-  const colores = {
-    Proceso: 'text-warning',
-    Completada: 'text-success',
-    Pendiente: 'text-info',
-    Cancelada: 'text-danger',
-    'Sin especificar': 'text-muted'
-  }
-  return colores[status] || 'text-muted'
+  // Esta función parece específica para 'solicitudes', se puede eliminar si no se usa en otros lados.
+  return ''
 }
 // Función para obtener la configuración según el tipo
 const getConfig = (tipo) => CONFIGURACION[tipo] || CONFIGURACION.salidas
 
 // Función para limpiar strings (eliminar espacios y tabulaciones)
 const limpiarString = (texto) => {
-  if (!texto) return 'Sin especificar'
-  return texto.toString().trim().replace(/\t/g, '').replace(/\s+/g, ' ')
+  if (texto == null) return 'Sin especificar'
+  return String(texto)
+    .trim()
+    .replace(/[\t\n\r]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/[^\w\s-áéíóúñüÁÉÍÓÚÑÜ]/g, '') // Mantener caracteres españoles
+    .toLowerCase()
 }
 
 // Función para validar datos antes de procesarlos
-const validarDatos = (datos) => {
+const prepararYValidarDatos = (datos, tipo) => {
   if (!Array.isArray(datos)) {
     console.error('Los datos no son un array válido')
     return []
   }
 
-  const datosValidos = datos.filter(item => {
-    // Validar que tenga al menos los campos mínimos requeridos
-    return item && (item.fecha || item.combustible || item.cantidad)
+  const config = getConfig(tipo)
+
+  // Helper para parsear fechas de forma robusta
+  const parsearFecha = (fechaStr) => {
+    if (!fechaStr || fechaStr === '0000-00-00' || fechaStr === '') return null
+
+    // Intenta formato DD/MM/YYYY
+    const partes = String(fechaStr).match(/^(\d{2})\/(\d{2})\/(\d{4})/)
+    if (partes) {
+      // Formato DD/MM/YYYY -> YYYY-MM-DD para que `new Date` sea consistente
+      return new Date(`${partes[3]}-${partes[2]}-${partes[1]}T00:00:00Z`)
+    }
+
+    // Para formatos YYYY-MM-DD y otros compatibles con new Date
+    const fecha = new Date(fechaStr)
+    // Si la fecha es válida, la retornamos. Si no, null.
+    return !isNaN(fecha.getTime()) ? fecha : null
+  }
+
+  // Helper para encontrar un campo de cantidad válido
+  const obtenerCantidad = (item) => {
+    // Buscar en el orden de preferencia de campos de cantidad
+    for (const campo of camposDeValor) {
+      if (item[campo] !== undefined && item[campo] !== null && item[campo] !== '') {
+        const valor = parseFloat(item[campo])
+        if (!isNaN(valor) && valor > 0) {
+          return valor
+        }
+      }
+    }
+    return null
+  }
+
+  const datosNormalizados = datos.map(item => {
+    const itemNormalizado = { ...item }
+    // 1. Normaliza la fecha a un objeto Date o null
+    const fechaParsada = parsearFecha(item[config.campos.fecha])
+    itemNormalizado.fechaNormalizada = fechaParsada || new Date() // Usar fecha actual como fallback si no hay fecha válida
+    // 2. Obtener cantidad válida de cualquier campo disponible
+    itemNormalizado.cantidadValida = obtenerCantidad(item)
+    // 3. Normalizar campos de ubicación y centro de coste para filtros
+    itemNormalizado.ubicacionNormalizada = limpiarString(item.ranchoDestino || item.almacen || item.ubicacion || 'Sin especificar')
+    itemNormalizado.centroCosteNormalizado = limpiarString(item.centroCoste || item.centro_coste || item.centro_costos || 'Sin especificar')
+    return itemNormalizado
+  }).filter(item => {
+    // Filtra registros sin cantidad válida (la fecha ahora siempre existe con fallback)
+    const tieneCantidad = item.cantidadValida !== null && item.cantidadValida !== undefined
+    return tieneCantidad
   })
 
-  console.log(`Datos validados: ${datosValidos.length}/${datos.length} registros válidos`)
-  return datosValidos
+  console.log(`Datos preparados y validados: ${datosNormalizados.length}/${datos.length} registros válidos`)
+  if (datosNormalizados.length === 0 && datos.length > 0) {
+    console.warn('⚠️ Aviso: Todos los registros fueron filtrados. Revisando primeros registros:')
+    console.log('Primeros 3 registros originales:', datos.slice(0, 3))
+    console.log('Campos esperados:', config.campos)
+  }
+  return datosNormalizados
 }
 
 // Función para formatear números
 const formatearNumero = (numero) => {
-  if (isNaN(numero)) return '0'
-  return new Intl.NumberFormat('es-MX').format(numero)
-}
-
-// 🚀 APLICAR CACHE A PROCESAMIENTO DE DATOS - Modificar funciones existentes
-const procesarDatosConCache = (datos, tipo, procesador) => {
-  const cacheKey = `${tipo}_${JSON.stringify(datos).slice(0, 100)}` // Hash simple
-  return getCachedData(cacheKey, procesador, datos)
+  const num = parseFloat(numero)
+  if (isNaN(num)) return '0'
+  return new Intl.NumberFormat('es-MX', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  }).format(num)
 }
 
 // Función para actualizar títulos del dashboard según el tipo de datos
@@ -296,57 +344,124 @@ const poblarFiltros = (datos, config) => {
       return
     }
 
-    // Sets para valores únicos
+    // Sets para valores únicos - usar datos normalizados directamente
     const conjuntos = {
       centroCoste: new Set(),
-      empresa: new Set()
+      empresa: new Set(),
+      almacen: new Set(),
+      rancho: new Set()
     }
 
-    // Si es salidas, agregar temporada
-    if (tipoDatos === 'salidas' || tipoDatos === 'entradas') {
-      conjuntos.almacen = new Set()
-    }
+    // Agregar temporada para salidas y solicitudes
     if (tipoDatos === 'salidas' || tipoDatos === 'solicitudes') {
       conjuntos.temporada = new Set()
     }
+
+    // Agregar combustible para salidas, entradas y cargas
     if (tipoDatos === 'salidas' || tipoDatos === 'entradas' || tipoDatos === 'cargas') {
       conjuntos.combustible = new Set()
     }
+
+    // Agregar filtros específicos para solicitudes
     if (tipoDatos === 'solicitudes') {
       conjuntos.tipo = new Set()
       conjuntos.presentacion = new Set()
       conjuntos.metodoAplicacion = new Set()
-      conjuntos.ranchos = new Set()
       conjuntos.producto = new Set()
       conjuntos.usuario = new Set()
+      conjuntos.status = new Set()
     }
 
+    // Poblar los conjuntos con valores de los datos
     datos.forEach(item => {
-      // Procesar cada campo según la configuración
-      Object.entries(config.campos).forEach(([campo, nombresCampo]) => {
-        if (!conjuntos[campo]) return
+      // Centro de coste (normalizado)
+      if (item.centroCosteNormalizado && item.centroCosteNormalizado !== 'Sin especificar') {
+        conjuntos.centroCoste.add(item.centroCosteNormalizado)
+      }
 
-        let valor
-        if (Array.isArray(nombresCampo)) {
-          valor = nombresCampo.map(n => item[n]).find(v => v !== undefined)
-        } else {
-          valor = item[nombresCampo]
-        }
+      // Empresa
+      const empresa = limpiarString(item.empresa || '')
+      if (empresa && empresa !== 'sin especificar') {
+        conjuntos.empresa.add(empresa)
+      }
 
-        if (valor) {
-          conjuntos[campo].add(limpiarString(valor))
+      // Almacén (para salidas y entradas)
+      if (tipoDatos === 'salidas' || tipoDatos === 'entradas') {
+        if (item.ubicacionNormalizada && item.ubicacionNormalizada !== 'Sin especificar') {
+          conjuntos.almacen.add(item.ubicacionNormalizada)
         }
-      })
+      }
+
+      // Rancho (para solicitudes)
+      if (tipoDatos === 'solicitudes') {
+        const rancho = limpiarString(item.ranchoDestino || '')
+        if (rancho && rancho !== 'sin especificar') {
+          conjuntos.rancho.add(rancho)
+        }
+      }
+
+      // Temporada
+      if (tipoDatos === 'salidas' || tipoDatos === 'solicitudes') {
+        const temporada = limpiarString(item.temporada || '')
+        if (temporada && temporada !== 'sin especificar') {
+          conjuntos.temporada.add(temporada)
+        }
+      }
+
+      // Combustible
+      if (tipoDatos === 'salidas' || tipoDatos === 'entradas' || tipoDatos === 'cargas') {
+        const combustible = limpiarString(item.combustible || '')
+        if (combustible && combustible !== 'sin especificar') {
+          conjuntos.combustible.add(combustible)
+        }
+      }
+
+      // Filtros específicos para solicitudes
+      if (tipoDatos === 'solicitudes') {
+        const tipo = limpiarString(item.tipo_mezcla || '')
+        if (tipo && tipo !== 'sin especificar') conjuntos.tipo.add(tipo)
+
+        const presentacion = limpiarString(item.presentacion || '')
+        if (presentacion && presentacion !== 'sin especificar') conjuntos.presentacion.add(presentacion)
+
+        const metodo = limpiarString(item.metodoAplicacion || '')
+        if (metodo && metodo !== 'sin especificar') conjuntos.metodoAplicacion.add(metodo)
+
+        const producto = limpiarString(item.nombre_producto || '')
+        if (producto && producto !== 'sin especificar') conjuntos.producto.add(producto)
+
+        const usuario = limpiarString(item.nombre || '')
+        if (usuario && usuario !== 'sin especificar') conjuntos.usuario.add(usuario)
+
+        const status = limpiarString(item.status || '')
+        if (status && status !== 'sin especificar') conjuntos.status.add(status)
+      }
     })
 
-    // Poblar los selectores
+    // Poblar los selectores - mapear correctamente los nombres de los filtros
+    const mapeoFiltros = {
+      centroCoste: 'filtroCentroCoste',
+      empresa: 'filtroEmpresa',
+      almacen: 'filtroAlmacen',
+      rancho: 'filtroRancho',
+      temporada: 'filtroTemporada',
+      combustible: 'filtroCombustible',
+      tipo: 'filtroTipo',
+      presentacion: 'filtroPresentacion',
+      metodoAplicacion: 'filtroMetodoAplicacion',
+      producto: 'filtroProducto',
+      usuario: 'filtroUsuario',
+      status: 'filtroStatus'
+    }
+
     Object.entries(conjuntos).forEach(([campo, valores]) => {
-      const selectId = `filtro${campo.charAt(0).toUpperCase() + campo.slice(1)}`
-      console.log(`Poblando ${selectId} con valores:`, [...valores])
-      const select = document.getElementById(selectId)
-      if (select) {
-        poblarSelect(selectId, valores)
-        console.log(`${campo} poblado:`, [...valores])
+      const selectId = mapeoFiltros[campo]
+      if (selectId) {
+        const select = document.getElementById(selectId)
+        if (select) {
+          poblarSelect(selectId, valores)
+          console.log(`✅ ${selectId} poblado con ${valores.size} valores`)
+        }
       }
     })
   } catch (error) {
@@ -367,44 +482,49 @@ const poblarSelect = (selectId, valores) => {
   })
 }
 
-// Función para eliminar duplicados basados en un campo único (ej. id)
-const eliminarDuplicados = (datos) => {
-  const uniqueData = Array.from(
-    new Map(datos.map(item => [item.id, item])).values()
-  )
-  return uniqueData
+// Función para contar solicitudes únicas sin perder los datos de los productos para cálculos.
+const obtenerSolicitudesUnicas = (datos) => {
+  // Usamos un Map para quedarnos con la primera aparición de cada 'id' de solicitud.
+  // Esto es solo para contar, no para procesar los productos.
+  return Array.from(new Map(datos.map(item => [item.id, item])).values())
 }
+
 // Función para aplicar los filtros seleccionados al conjunto de datos
 const aplicarFiltros = () => {
   const tipoDatos = window.dashboardTipo
 
-  // Mostrar loading
-  showSpinner()
-
   try {
     // 1. Obtenemos los valores actuales de cada filtro
-    const fechaInicio = document.getElementById('filtroFechaInicio').value
-    const fechaFin = document.getElementById('filtroFechaFin').value
-    const rancho = ['entradas', 'salidas', 'solicitudes'].includes(tipoDatos) ? document.getElementById('filtroRancho').value : ''
-    const temporada = tipoDatos === 'salidas' ? document.getElementById('filtroTemporada').value : ''
-    const combustible = document.getElementById('filtroCombustible').value
-    const empresa = document.getElementById('filtroEmpresa').value
-    const centroCoste = document.getElementById('filtroCentroCoste').value
-    // IMPORTANTE: Ajusta 'fecha_salida' al nombre real del campo de fecha en tus datos.
-    const campoFecha = 'fecha'
+    const fechaInicio = document.getElementById('filtroFechaInicio')?.value || ''
+    const fechaFin = document.getElementById('filtroFechaFin')?.value || ''
+    const rancho = ['entradas', 'salidas', 'solicitudes'].includes(tipoDatos) ? (document.getElementById('filtroRancho')?.value || '') : ''
+    const temporada = (tipoDatos === 'salidas' || tipoDatos === 'solicitudes') ? (document.getElementById('filtroTemporada')?.value || '') : ''
+    const combustible = document.getElementById('filtroCombustible')?.value || ''
+    const empresa = document.getElementById('filtroEmpresa')?.value || ''
+    const centroCoste = document.getElementById('filtroCentroCoste')?.value || ''
+    const eficiencia = document.getElementById('filtroEficiencia')?.value || ''
+    const tiempoEntrega = document.getElementById('filtroTiempoEntrega')?.value || ''
+
+    // Filtros específicos para solicitudes
+    const tipo = tipoDatos === 'solicitudes' ? (document.getElementById('filtroTipo')?.value || '') : ''
+    const presentacion = tipoDatos === 'solicitudes' ? (document.getElementById('filtroPresentacion')?.value || '') : ''
+    const metodoAplicacion = tipoDatos === 'solicitudes' ? (document.getElementById('filtroMetodoAplicacion')?.value || '') : ''
+    const producto = tipoDatos === 'solicitudes' ? (document.getElementById('filtroProducto')?.value || '') : ''
+    const usuario = tipoDatos === 'solicitudes' ? (document.getElementById('filtroUsuario')?.value || '') : ''
+    const status = tipoDatos === 'solicitudes' ? (document.getElementById('filtroStatus')?.value || '') : ''
 
     // 2. Usamos .filter() sobre los datos originales
     const datosFiltrados = datosOriginales.filter(item => {
-      // Filtro por Fecha
-      const fechaItem = item[campoFecha] ? new Date(item[campoFecha] + 'T00:00:00') : null
-      if (fechaInicio && (!fechaItem || fechaItem < new Date(fechaInicio + 'T00:00:00'))) return false
-      if (fechaFin && (!fechaItem || fechaItem > new Date(fechaFin + 'T00:00:00'))) return false
+      // Filtro por Fecha (usando el campo normalizado)
+      if (fechaInicio && (!item.fechaNormalizada || item.fechaNormalizada < new Date(fechaInicio + 'T00:00:00Z'))) return false
+      if (fechaFin && (!item.fechaNormalizada || item.fechaNormalizada > new Date(fechaFin + 'T00:00:00Z'))) return false
 
       // Filtro por Rancho (si hay un valor seleccionado)
-      if (['salidas', 'entradas', 'solicitudes'].includes(tipoDatos) && rancho && limpiarString(item.almacen || '') !== rancho) return false
+      // Usamos el campo normalizado 'ubicacionNormalizada'
+      if (rancho && item.ubicacionNormalizada !== rancho) return false
 
-      // Filtro por Temporada solo para salidas
-      if (tipoDatos === 'salidas' && temporada && limpiarString(item.temporada || '') !== temporada) return false
+      // Filtro por Temporada para salidas y solicitudes
+      if ((tipoDatos === 'salidas' || tipoDatos === 'solicitudes') && temporada && limpiarString(item.temporada || '') !== temporada) return false
 
       // Filtro por Combustible
       const tipoCombustible = limpiarString(item.combustible || '')
@@ -414,9 +534,42 @@ const aplicarFiltros = () => {
       if (empresa && limpiarString(item.empresa || '') !== empresa) return false
 
       // Filtro por Centro de Coste
-      if (centroCoste && limpiarString(item.centro_coste || '') !== centroCoste) return false
+      // Usamos el campo normalizado 'centroCosteNormalizado'
+      if (centroCoste && item.centroCosteNormalizado !== centroCoste) return false
 
-      // Si el item pasó todos los filtros, lo incluimos
+      // Filtros específicos para solicitudes
+      if (tipoDatos === 'solicitudes') {
+        if (tipo && limpiarString(item.tipo_mezcla || '') !== tipo) return false
+        if (presentacion && limpiarString(item.presentacion || '') !== presentacion) return false
+        if (metodoAplicacion && limpiarString(item.metodoAplicacion || '') !== metodoAplicacion) return false
+        if (producto && limpiarString(item.nombre_producto || '') !== producto) return false
+        if (usuario && limpiarString(item.nombre || '') !== usuario) return false
+        if (status && limpiarString(item.status || '') !== status) return false
+      }
+
+      // Filtro de eficiencia
+      if (eficiencia) {
+        const eficienciaCalculada = (item.cantidad / item.cantidad_solicitada) * 100
+        switch (eficiencia) {
+          case 'alta':
+            if (eficienciaCalculada <= 95) return false
+            break
+          case 'media':
+            if (eficienciaCalculada < 80 || eficienciaCalculada > 95) return false
+            break
+          case 'baja':
+            if (eficienciaCalculada >= 80) return false
+            break
+        }
+      }
+      // Filtro de tiempo de entrega
+      if (tiempoEntrega && item.fechaEntrega && item.fechaSolicitud) {
+        const dias = Math.floor(
+          (new Date(item.fechaEntrega) - new Date(item.fechaSolicitud)) /
+          (1000 * 60 * 60 * 24)
+        )
+        if (dias > parseInt(tiempoEntrega)) return false
+      }
       return true
     })
     // VERIFICAR ALERTAS
@@ -462,12 +615,46 @@ const verificarAlertas = (datos) => {
 
 // funcion para destruir graficas
 const destruirGraficas = () => {
-  [combustibleChart, almacenChart, centroCosteChart, temporadaChart,
-    empresaChart, unidadChart, rendimientoChart].forEach(chart => {
-    if (chart) {
-      chart.destroy()
-    }
-  })
+  try {
+    // Destruir gráficas locales
+    [combustibleChart, almacenChart, centroCosteChart, temporadaChart,
+      empresaChart, unidadChart, rendimientoChart].forEach(chart => {
+      try {
+        if (chart && typeof chart.destroy === 'function') {
+          chart.destroy()
+        }
+      } catch (err) {
+        console.debug('Error destroying local chart:', err.message)
+      }
+    })
+
+    // Destruir gráficas de solicitudes almacenadas en window
+    const graficasSolicitudes = [
+      'eficienciaChart', 'tiempoEntregaChart', 'metodoChart',
+      'variedadChart', 'statusChart', 'timelineChart'
+    ]
+    graficasSolicitudes.forEach(nombreGrafica => {
+      try {
+        const chart = window[nombreGrafica]
+        // Validar que sea un objeto con método destroy
+        if (chart && typeof chart === 'object' && typeof chart.destroy === 'function') {
+          chart.destroy()
+        }
+      } catch (err) {
+        console.debug(`Error destroying ${nombreGrafica}:`, err.message)
+      }
+      // Limpiar referencia
+      try {
+        if (window[nombreGrafica]) {
+          delete window[nombreGrafica]
+        }
+      } catch (err) {
+        // Ignorar si no se puede borrar
+      }
+    })
+  } catch (err) {
+    console.debug('Error in destruirGraficas:', err.message)
+  }
 }
 // Función que actualiza todas las visualizaciones con los datos proporcionados
 const actualizarVistas = (datos) => {
@@ -480,8 +667,7 @@ const actualizarVistas = (datos) => {
   // Actualizar estadísticas
   actualizarEstadisticas(datos, config)
 
-  // Actualizar tabla de detalles
-  // actualizarTablaDetalles(datos, config)
+  //
 
   // Crear gráficas según el tipo
   switch (tipoDatos) {
@@ -506,9 +692,18 @@ const actualizarVistas = (datos) => {
       crearGraficaEmpresa(datos)
       break
     case 'solicitudes':
-      crearGraficaMetodo(datos)
+      // Gráficas existentes
       crearGraficaProductos(datos)
-      crearGraficaTimeline(datos)
+      crearGraficaEmpresa(datos)
+      crearGraficaCentroCoste(datos)
+      crearGraficaTemporada(datos)
+      // Nuevas gráficas para solicitudes
+      crearGraficaMetodoAplicacion(datos)
+      crearGraficaTiempoEntrega(datos)
+      crearGraficaVariedad(datos)
+      crearGraficaEficiencia(datos)
+      crearGraficaTimelineMejorado(datos)
+      break
   }
 }
 
@@ -545,9 +740,6 @@ const procesarDatosAgrupados = (datos, { keyFields, valueFields, topN = null }) 
   }
 }
 
-// Campos comunes para el valor a sumar
-const camposDeValor = ['cantidad', 'existencia', 'volumen']
-
 const procesarDatosCombustible = (datos) => {
   return procesarDatosAgrupados(datos, { keyFields: ['combustible', 'tipo_combustible'], valueFields: camposDeValor })
 }
@@ -557,7 +749,9 @@ const procesarDatosAlmacen = (datos) => {
 }
 
 const procesarDatosCentroCoste = (datos) => {
-  return procesarDatosAgrupados(datos, { keyFields: ['centro_coste', 'centro_costos'], valueFields: camposDeValor, topN: 10 })
+  const tipoDatos = window.dashboardTipo
+  const keyFields = tipoDatos === 'solicitudes' ? ['centroCoste'] : ['centro_coste', 'centro_costos']
+  return procesarDatosAgrupados(datos, { keyFields, valueFields: camposDeValor, topN: 10 })
 }
 
 const procesarDatosUnidad = (datos) => {
@@ -606,7 +800,9 @@ const procesarDatosRendimiento = (datos) => {
   }
 }
 const procesarDatosTemporada = (datos) => {
-  return procesarDatosAgrupados(datos, { keyFields: ['temporada', 'estacion', 'periodo'], valueFields: camposDeValor })
+  const tipoDatos = window.dashboardTipo
+  const keyFields = tipoDatos === 'solicitudes' ? ['temporada'] : ['temporada', 'estacion', 'periodo']
+  return procesarDatosAgrupados(datos, { keyFields, valueFields: camposDeValor })
 }
 const procesarDatosEmpresa = (datos) => {
   return procesarDatosAgrupados(datos, {
@@ -615,7 +811,6 @@ const procesarDatosEmpresa = (datos) => {
     topN: 8
   })
 }
-
 // Función para actualizar estadísticas
 const actualizarEstadisticas = (datos) => {
   const tipoDatos = window.dashboardTipo
@@ -625,11 +820,12 @@ const actualizarEstadisticas = (datos) => {
   let totalCombustibleGeneral = 0
   let totalPrecio, promedioRegistros
   let totalRegistros
-  let dataSinDuplicados = []
+  let datosParaCalculo
   // Calcular totales y promedios
   if (tipoDatos === 'solicitudes') {
-    dataSinDuplicados = eliminarDuplicados(datos)
-    totalRegistros = dataSinDuplicados.length
+    // Para contar el número de tarjetas de solicitud, contamos los IDs únicos.
+    totalRegistros = obtenerSolicitudesUnicas(datos).length
+    datosParaCalculo = datos // Usamos todos los datos (productos) para los cálculos
   } else {
     totalRegistros = datos.length
   }
@@ -689,7 +885,7 @@ const actualizarEstadisticas = (datos) => {
 
   if (tipoDatos === 'solicitudes') {
     // calcular cantidad por presentacion
-    const cantidadPorPresentacion = dataSinDuplicados.reduce((acc, item) => {
+    const cantidadPorPresentacion = datosParaCalculo.reduce((acc, item) => {
       const presentacion = limpiarString(item.presentacion)
       const cantidad = parseFloat(item.cantidad_normalizada) || 0
       if (presentacion) {
@@ -721,7 +917,7 @@ const actualizarEstadisticas = (datos) => {
     })
 
     // Calcular totales por tipo
-    const totalesPorTipo = dataSinDuplicados.reduce((acc, item) => {
+    const totalesPorTipo = datosParaCalculo.reduce((acc, item) => {
       const tipo = item.tipo_mezcla || 'Sin especificar'
       acc[tipo] = (acc[tipo] || 0) + 1
       return acc
@@ -745,70 +941,9 @@ const actualizarEstadisticas = (datos) => {
                 </div>
             `).join('')
     }
-  }
-
-  // En la función actualizarEstadisticas
-  if (tipoDatos === 'solicitudes') {
-    // Calcular totales por tipo
-    const totalesPorTipo = dataSinDuplicados.reduce((acc, item) => {
-      const tipo = item.tipo_mezcla || 'Sin especificar'
-      acc[tipo] = (acc[tipo] || 0) + 1
-      return acc
-    }, {})
-
-    // Actualizar el total general
-    const totalElement = document.getElementById('totalSalidas')
-    if (totalElement) {
-      totalElement.innerHTML = `
-            <h4 class="mb-0">${formatearNumero(dataSinDuplicados.length)}</h4>
-            <p class="text-muted mb-0">Total General</p>
-        `
-    }
-
-    // Actualizar los totales por tipo
-    const tipoElement = document.getElementById('totalPorTipo')
-    if (tipoElement) {
-      tipoElement.innerHTML = Object.entries(totalesPorTipo)
-        .sort((a, b) => b[1] - a[1])
-        .map(([tipo, cantidad]) => `
-                <div class="mb-2">
-                    <h4 class="mb-0">${formatearNumero(cantidad)}</h4>
-                    <p class="text-muted font-weight-normal small">${tipo}</p>
-                </div>
-            `).join('')
-    }
-
-    // Calcular cantidad por presentación (código existente)
-    const cantidadPorPresentacion = dataSinDuplicados.reduce((acc, item) => {
-      const presentacion = limpiarString(item.presentacion)
-      const cantidad = parseFloat(item.cantidad_normalizada) || 0
-      if (presentacion) {
-        acc[presentacion] = (acc[presentacion] || 0) + cantidad
-      }
-      return acc
-    }, {})
-
-    // Actualizar presentaciones
-    const presentacionElement = document.getElementById('presentacionTotales')
-    if (presentacionElement) {
-      const presentacionesFiltradas = Object.entries(cantidadPorPresentacion)
-        .filter(([pres, cant]) =>
-          pres !== 'Sin especificar' &&
-                    pres !== 'No aplica' &&
-                    cant > 0)
-        .sort((a, b) => b[1] - a[1])
-
-      presentacionElement.innerHTML = presentacionesFiltradas
-        .map(([presentacion, cantidad]) => `
-                    <div class="mb-2">
-                        <h4 class="mb-0">${formatearNumero(cantidad.toFixed(2))}</h4>
-                        <p class="text-muted font-weight-normal small">${presentacion}</p>
-                    </div>
-                `).join('')
-    }
 
     // Calcular totales por status
-    const statusPorTipo = dataSinDuplicados.reduce((acc, item) => {
+    const statusPorTipo = datosParaCalculo.reduce((acc, item) => {
       const status = item.status || 'Sin especificar'
       acc[status] = (acc[status] || 0) + 1
       return acc
@@ -831,40 +966,52 @@ const actualizarEstadisticas = (datos) => {
                     </div>
                 `).join('')
     }
-    const stats = calcularEstadisticasTiempo(datos)
-    const eficiencia = calcularEficiencia(datos)
 
     // Actualizar estadísticas de tiempo
-    document.getElementById('tiempoEntregaTotales').innerHTML = `
+    const stats = calcularEstadisticasTiempo(datos)
+    const tiempoElement = document.getElementById('tiempoEntregaTotales')
+    if (tiempoElement) {
+      tiempoElement.innerHTML = `
+        <div class="mb-2">
             <h4 class="mb-0">${stats.promedioDias} días</h4>
-            <p class="text-muted mb-0">Promedio General</p>
-            ${stats.porTipo.map(t => `
-                <div class="mt-2">
-                    <small class="text-muted">${t.tipo}: ${t.promedio} días</small>
-                </div>
-            `).join('')}
-        `
-
-    // Actualizar eficiencia
-    const porcentajeEficiencia = (eficiencia.totalEntregado / eficiencia.totalSolicitado * 100).toFixed(1)
-    document.getElementById('eficienciaTotales').innerHTML = `
-            <h4 class="mb-0">${porcentajeEficiencia}%</h4>
-            <p class="text-muted mb-0">Eficiencia Global</p>
+            <p class="text-muted font-weight-normal">Promedio General</p>
+        </div>
+        ${stats.porTipo.map(t => `
             <div class="mt-2">
-                <small class="text-muted">
-                    ${formatearNumero(eficiencia.totalEntregado)} / 
-                    ${formatearNumero(eficiencia.totalSolicitado)}
-                </small>
+                <small class="text-muted">${t.tipo}: ${t.promedio} días</small>
             </div>
-        `
+        `).join('')}
+    `
+
+      // Actualizar eficiencia
+      const eficiencia = calcularEficiencia(datos)
+      const eficienciaElement = document.getElementById('eficienciaTotales')
+      if (eficienciaElement) {
+        const porcentajeEficiencia = (eficiencia.totalEntregado / eficiencia.totalSolicitado * 100).toFixed(1)
+        eficienciaElement.innerHTML = `
+        <div class="mb-2">
+            <h4 class="mb-0">${porcentajeEficiencia}%</h4>
+            <p class="text-muted font-weight-normal">Eficiencia Global</p>
+        </div>
+        <div class="mt-2">
+            <small class="text-muted">
+                Entregado: ${formatearNumero(eficiencia.totalEntregado)}
+                <br>
+                Solicitado: ${formatearNumero(eficiencia.totalSolicitado)}
+            </small>
+        </div>
+    `
+      }
+    }
+    const cal = calcularEstadisticasTemporales(datos)
+    console.log(cal)
   }
 }
-
 // Función para calcular estadísticas de tiempo
 const calcularEstadisticasTiempo = (datos) => {
-  const dataSinDuplicados = eliminarDuplicados(datos)
+  const solicitudesUnicas = obtenerSolicitudesUnicas(datos)
 
-  const tiempos = dataSinDuplicados.reduce((acc, item) => {
+  const tiempos = solicitudesUnicas.reduce((acc, item) => {
     if (item.fechaEntrega && item.fechaSolicitud) {
       const entrega = new Date(item.fechaEntrega)
       const solicitud = new Date(item.fechaSolicitud)
@@ -873,7 +1020,7 @@ const calcularEstadisticasTiempo = (datos) => {
       acc.totalDias += dias
       acc.count++
       acc.porTipo[item.tipo_mezcla] = acc.porTipo[item.tipo_mezcla] ||
-                { total: 0, count: 0 }
+        { total: 0, count: 0 }
       acc.porTipo[item.tipo_mezcla].total += dias
       acc.porTipo[item.tipo_mezcla].count++
     }
@@ -893,9 +1040,9 @@ const calcularEstadisticasTiempo = (datos) => {
 
 // Función para calcular eficiencia
 const calcularEficiencia = (datos) => {
-  const dataSinDuplicados = eliminarDuplicados(datos)
-
-  return dataSinDuplicados.reduce((acc, item) => {
+  // Para la eficiencia, sí necesitamos todos los productos, no las solicitudes únicas.
+  // La lógica anterior que usaba `eliminarDuplicados` era incorrecta.
+  return datos.reduce((acc, item) => {
     const solicitado = parseFloat(item.cantidad_solicitada) || 0
     const entregado = parseFloat(item.cantidad) || 0
 
@@ -908,40 +1055,34 @@ const calcularEficiencia = (datos) => {
   }, { totalSolicitado: 0, totalEntregado: 0, count: 0 })
 }
 
-// Función para crear gráfica de método de aplicación
-const crearGraficaMetodo = (datos) => {
-  const ctx = document.getElementById('metodoChart')
-  if (!ctx) return
+const obtenerSemana = (fecha) => {
+  if (!fecha) return null
+  const date = new Date(fecha)
+  date.setHours(0, 0, 0, 0)
+  // Thursday in current week decides the year.
+  date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7)
+  // January 4 is always in week 1.
+  const week1 = new Date(date.getFullYear(), 0, 4)
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7)
+}
 
-  const porMetodo = datos.reduce((acc, item) => {
-    const metodo = item.metodoAplicacion || 'Sin especificar'
-    acc[metodo] = (acc[metodo] || 0) + parseFloat(item.cantidad || 0)
-    return acc
-  }, {})
-
-  console.log(porMetodo)
-  // Crear gráfica
-  // Destruir gráfico existente si existe
-  if (unidadChart) {
-    unidadChart.destroy()
+const calcularEstadisticasTemporales = (datos) => {
+  const stats = {
+    promedioTiempoEntrega: 0,
+    medianaEntrega: 0,
+    tendenciasSemana: {},
+    puntosMaximos: [],
+    estacionalidad: {}
   }
 
-  unidadChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: Object.keys(porMetodo),
-      datasets: [{
-        data: Object.values(porMetodo),
-        backgroundColor: getColor(Object.keys(porMetodo).length)
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false }
-      }
-    }
+  datos.forEach(item => {
+    // Cálculos de estadísticas temporales
+    const semana = obtenerSemana(item.fechaSolicitud)
+    stats.tendenciasSemana[semana] = (stats.tendenciasSemana[semana] || 0) + 1
   })
+
+  return stats
 }
 
 // Función para crear gráfica de productos
@@ -997,87 +1138,6 @@ const crearGraficaProductos = (datos) => {
             callback: function (value) {
               return formatearNumero(value)
             }
-          }
-        }
-      }
-    }
-  })
-}
-// Función para crear timeline
-const crearGraficaTimeline = (datos) => {
-  const ctx = document.getElementById('timelineChart')
-  if (!ctx) return
-
-  // Destruir gráfico existente si existe
-  if (unidadChart) {
-    unidadChart.destroy()
-  }
-
-  const sinDuplicados = eliminarDuplicados(datos)
-
-  // Procesar datos para agrupar por fecha
-  const porFecha = sinDuplicados.reduce((acc, item) => {
-    const fecha = item.fechaSolicitud.split('T')[0]
-    if (!acc[fecha]) {
-      acc[fecha] = 0
-    }
-    acc[fecha] += parseFloat(item.cantidad || 0)
-    return acc
-  }, {})
-
-  // Convertir a array de objetos para mejor manejo de fechas
-  const datosOrdenados = Object.entries(porFecha)
-    .map(([fecha, cantidad]) => ({
-      x: new Date(fecha),
-      y: cantidad
-    }))
-    .sort((a, b) => a.x - b.x)
-
-  unidadChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      datasets: [{
-        label: 'Cantidad Solicitada',
-        data: datosOrdenados,
-        borderColor: '#4CAF50',
-        tension: 0.1,
-        fill: false
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: (context) => `Cantidad: ${formatearNumero(context.parsed.y)}`
-          }
-        }
-      },
-      scales: {
-        x: {
-          type: 'time',
-          time: {
-            unit: 'day',
-            displayFormats: {
-              day: 'dd/MM/yyyy'
-            }
-          },
-          ticks: {
-            callback: function (value) {
-              const date = new Date(value)
-              return date.toLocaleDateString('es-MX', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-              })
-            }
-          }
-        },
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: value => formatearNumero(value)
           }
         }
       }
@@ -1442,6 +1502,471 @@ const crearGraficaEmpresa = (datos) => {
   })
 }
 
+// A) GRÁFICA DE EFICIENCIA DE CUMPLIMIENTO
+const crearGraficaEficiencia = (datos) => {
+  const ctx = document.getElementById('eficienciaChart')
+  if (!ctx) {
+    console.log('Canvas eficienciaChart no encontrado')
+    return
+  }
+
+  try {
+    // Calcular eficiencia por tipo de mezcla
+    const eficienciaPorTipo = datos.reduce((acc, item) => {
+      const tipo = item.tipo_mezcla || 'Sin especificar'
+      const solicitado = parseFloat(item.cantidad_solicitada) || 0
+      const entregado = parseFloat(item.cantidad) || 0
+
+      if (!acc[tipo]) {
+        acc[tipo] = { totalSolicitado: 0, totalEntregado: 0 }
+      }
+
+      acc[tipo].totalSolicitado += solicitado
+      acc[tipo].totalEntregado += entregado
+
+      return acc
+    }, {})
+
+    // Calcular porcentajes de eficiencia
+    const datosGrafica = Object.entries(eficienciaPorTipo)
+      .filter(([, data]) => data.totalSolicitado > 0) // Filtrar divisiones por cero
+      .map(([tipo, data]) => ({
+        tipo,
+        eficiencia: Math.min(100, (data.totalEntregado / data.totalSolicitado * 100).toFixed(1))
+      }))
+
+    if (datosGrafica.length === 0) {
+      console.debug('No hay datos válidos para eficiencia')
+      return
+    }
+
+    if (window.eficienciaChart) {
+      try {
+        if (typeof window.eficienciaChart.destroy === 'function') {
+          window.eficienciaChart.destroy()
+        } else {
+          console.debug('window.eficienciaChart exists but has no destroy(), cleaning reference', window.eficienciaChart)
+        }
+      } catch (err) {
+        console.debug('Error destroying window.eficienciaChart:', err.message)
+      }
+      try { delete window.eficienciaChart } catch (e) {}
+    }
+
+    window.eficienciaChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: datosGrafica.map(d => d.tipo),
+        datasets: [{
+          label: 'Eficiencia de Cumplimiento (%)',
+          data: datosGrafica.map(d => d.eficiencia),
+          backgroundColor: datosGrafica.map((_, i) => getColor(i)),
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: (context) => `${context.label}: ${context.raw}% de eficiencia`
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            ticks: {
+              callback: value => value + '%'
+            }
+          }
+        }
+      }
+    })
+  } catch (err) {
+    console.error('Error creando gráfica de eficiencia:', err.message)
+  }
+}
+
+// B) GRÁFICA DE TIEMPO DE ENTREGA
+const crearGraficaTiempoEntrega = (datos) => {
+  const ctx = document.getElementById('tiempoEntregaChart')
+  if (!ctx) {
+    console.log('Canvas tiempoEntregaChart no encontrado')
+    return
+  }
+
+  try {
+    // Obtener solicitudes únicas (por ID) para calcular tiempos
+    const solicitudesUnicas = obtenerSolicitudesUnicas(datos)
+
+    const tiemposEntrega = solicitudesUnicas
+      .filter(item => item.fechaEntrega && item.fechaSolicitud)
+      .map(item => {
+        const solicitud = new Date(item.fechaSolicitud)
+        const entrega = new Date(item.fechaEntrega)
+        const dias = Math.floor((entrega - solicitud) / (1000 * 60 * 60 * 24))
+
+        return {
+          tipo: item.tipo_mezcla,
+          dias: isNaN(dias) ? 0 : dias,
+          status: item.status
+        }
+      })
+
+    if (tiemposEntrega.length === 0) {
+      console.log('No hay datos de tiempo de entrega')
+      return
+    }
+
+    // Agrupar por rangos de días
+    const rangos = {
+      '0-1 días': 0,
+      '2-3 días': 0,
+      '4-7 días': 0,
+      '8-15 días': 0,
+      '16+ días': 0
+    }
+
+    tiemposEntrega.forEach(item => {
+      if (item.dias <= 1) rangos['0-1 días']++
+      else if (item.dias <= 3) rangos['2-3 días']++
+      else if (item.dias <= 7) rangos['4-7 días']++
+      else if (item.dias <= 15) rangos['8-15 días']++
+      else rangos['16+ días']++
+    })
+
+    if (window.tiempoEntregaChart) {
+      try {
+        if (typeof window.tiempoEntregaChart.destroy === 'function') {
+          window.tiempoEntregaChart.destroy()
+        } else {
+          console.debug('window.tiempoEntregaChart exists but has no destroy(), cleaning reference', window.tiempoEntregaChart)
+        }
+      } catch (err) {
+        console.debug('Error destroying window.tiempoEntregaChart:', err.message)
+      }
+      try { delete window.tiempoEntregaChart } catch (e) {}
+    }
+
+    window.tiempoEntregaChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(rangos),
+        datasets: [{
+          data: Object.values(rangos),
+          backgroundColor: [
+            '#4CAF50', // Verde para rápido
+            '#8BC34A', // Verde claro
+            '#FFC107', // Amarillo para moderado
+            '#FF9800', // Naranja
+            '#F44336' // Rojo para lento
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                const percentage = ((context.raw / total) * 100).toFixed(1)
+                return `${context.label}: ${context.raw} solicitudes (${percentage}%)`
+              }
+            }
+          }
+        }
+      }
+    })
+  } catch (err) {
+    console.error('Error creando gráfica de tiempo de entrega:', err.message)
+  }
+}
+
+// C) GRÁFICA DE MÉTODOS DE APLICACIÓN
+const crearGraficaMetodoAplicacion = (datos) => {
+  const ctx = document.getElementById('metodoChart')
+  if (!ctx) {
+    console.debug('Canvas metodoChart no encontrado')
+    return
+  }
+
+  try {
+    const metodos = datos.reduce((acc, item) => {
+      const metodo = item.metodoAplicacion || 'Sin especificar'
+      const cantidad = parseFloat(item.cantidad_normalizada) || 0
+
+      if (cantidad > 0) {
+        if (acc[metodo]) {
+          acc[metodo] += cantidad
+        } else {
+          acc[metodo] = cantidad
+        }
+      }
+      return acc
+    }, {})
+
+    const datosOrdenados = Object.entries(metodos)
+      .sort((a, b) => b[1] - a[1])
+
+    if (datosOrdenados.length === 0) {
+      console.debug('No hay datos válidos para método de aplicación')
+      return
+    }
+
+    if (window.metodoChart) {
+      try {
+        if (typeof window.metodoChart.destroy === 'function') {
+          window.metodoChart.destroy()
+        } else {
+          console.debug('window.metodoChart exists but has no destroy(), cleaning reference', window.metodoChart)
+        }
+      } catch (err) {
+        console.debug('Error destroying window.metodoChart:', err.message)
+      }
+      try { delete window.metodoChart } catch (e) {}
+    }
+
+    window.metodoChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: datosOrdenados.map(([metodo]) => metodo),
+        datasets: [{
+          label: 'Cantidad Total',
+          data: datosOrdenados.map(([, cantidad]) => cantidad),
+          backgroundColor: datosOrdenados.map((_, i) => getColor(i)),
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => `${context.label}: ${formatearNumero(context.raw)}`
+            }
+          }
+        }
+      }
+    })
+  } catch (err) {
+    console.error('Error creando gráfica de método de aplicación:', err.message)
+  }
+}
+
+// D) GRÁFICA DE ANÁLISIS POR VARIEDAD
+const crearGraficaVariedad = (datos) => {
+  const ctx = document.getElementById('variedadChart')
+  if (!ctx) {
+    console.log('Canvas variedadChart no encontrado')
+    return
+  }
+
+  try {
+    const variedades = datos.reduce((acc, item) => {
+      const variedad = item.variedad || 'Sin especificar'
+      const cantidad = parseFloat(item.cantidad_normalizada) || 0
+
+      if (cantidad > 0) {
+        if (acc[variedad]) {
+          acc[variedad] += cantidad
+        } else {
+          acc[variedad] = cantidad
+        }
+      }
+      return acc
+    }, {})
+
+    const top8 = Object.entries(variedades)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+
+    if (top8.length === 0) {
+      console.debug('No hay datos válidos para variedades')
+      return
+    }
+
+    if (window.variedadChart) {
+      try {
+        if (typeof window.variedadChart.destroy === 'function') {
+          window.variedadChart.destroy()
+        } else {
+          console.debug('window.variedadChart exists but has no destroy(), cleaning reference', window.variedadChart)
+        }
+      } catch (err) {
+        console.debug('Error destroying window.variedadChart:', err.message)
+      }
+      try { delete window.variedadChart } catch (e) {}
+    }
+
+    window.variedadChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: top8.map(([variedad]) => variedad),
+        datasets: [{
+          data: top8.map(([, cantidad]) => cantidad),
+          backgroundColor: top8.map((_, i) => getColor(i))
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { padding: 15 }
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const total = context.dataset.data.reduce((a, b) => a + b, 0)
+                const percentage = ((context.raw / total) * 100).toFixed(1)
+                return `${context.label}: ${formatearNumero(context.raw)} (${percentage}%)`
+              }
+            }
+          }
+        }
+      }
+    })
+  } catch (err) {
+    console.error('Error creando gráfica de variedad:', err.message)
+  }
+}
+
+// F) GRÁFICA DE ANÁLISIS TEMPORAL (TIMELINE MEJORADO)
+const crearGraficaTimelineMejorado = (datos) => {
+  const ctx = document.getElementById('timelineChart')
+  if (!ctx) {
+    console.debug('Canvas timelineChart no encontrado')
+    return
+  }
+
+  try {
+    // Agrupar por fecha de solicitud
+    const solicitudesPorFecha = datos.reduce((acc, item) => {
+      const fecha = item.fechaSolicitud
+      if (!fecha) return acc
+
+      const fechaKey = new Date(fecha).toISOString().split('T')[0]
+
+      if (!acc[fechaKey]) {
+        acc[fechaKey] = {
+          solicitudes: 0,
+          productos: 0,
+          cantidadTotal: 0
+        }
+      }
+
+      // Contar productos únicos por fecha
+      acc[fechaKey].productos += 1
+      acc[fechaKey].cantidadTotal += parseFloat(item.cantidad_normalizada) || 0
+
+      return acc
+    }, {})
+
+    // Contar solicitudes únicas por fecha
+    const solicitudesUnicas = obtenerSolicitudesUnicas(datos)
+    solicitudesUnicas.forEach(item => {
+      if (!item.fechaSolicitud) return
+      const fechaKey = new Date(item.fechaSolicitud).toISOString().split('T')[0]
+      if (solicitudesPorFecha[fechaKey]) {
+        solicitudesPorFecha[fechaKey].solicitudes += 1
+      }
+    })
+
+    const fechasOrdenadas = Object.keys(solicitudesPorFecha)
+      .sort()
+      .slice(-30) // Últimos 30 días
+
+    if (fechasOrdenadas.length === 0) {
+      console.debug('No hay datos válidos para análisis temporal')
+      return
+    }
+
+    if (window.timelineChart) {
+      try {
+        if (typeof window.timelineChart.destroy === 'function') {
+          window.timelineChart.destroy()
+        } else {
+          console.debug('window.timelineChart exists but has no destroy(), cleaning reference', window.timelineChart)
+        }
+      } catch (err) {
+        console.debug('Error destroying window.timelineChart:', err.message)
+      }
+      try { delete window.timelineChart } catch (e) {}
+    }
+
+    window.timelineChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: fechasOrdenadas.map(fecha => {
+          return new Date(fecha).toLocaleDateString('es-MX', {
+            month: 'short', day: 'numeric'
+          })
+        }),
+        datasets: [{
+          label: 'Solicitudes por día',
+          data: fechasOrdenadas.map(fecha => solicitudesPorFecha[fecha].solicitudes),
+          borderColor: '#2196F3',
+          backgroundColor: 'rgba(33, 150, 243, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y'
+        }, {
+          label: 'Productos solicitados',
+          data: fechasOrdenadas.map(fecha => solicitudesPorFecha[fecha].productos),
+          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(76, 175, 80, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y1'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Número de Solicitudes'
+            }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'Número de Productos'
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          }
+        }
+      }
+    })
+  } catch (err) {
+    console.error('Error creando gráfica de análisis temporal:', err.message)
+  }
+}
+
 // Función para actualizar el dashboard
 const configurarEventListenersFiltros = () => {
   const tipoDatos = window.dashboardTipo
@@ -1453,25 +1978,38 @@ const configurarEventListenersFiltros = () => {
   ]
   // Agregar temporada y rancho solo si es salidas
   if (tipoDatos === 'salidas') {
-    idsFiltros.push('filtroRancho')
+    idsFiltros.push('filtroAlmacen')
     idsFiltros.push('filtroTemporada')
     idsFiltros.push('filtroCombustible')
   }
   // Agregar rancho solo si es entradas 'filtroCombustible',
   if (tipoDatos === 'entradas') {
-    idsFiltros.push('filtroRancho')
+    idsFiltros.push('filtroAlmacen')
     idsFiltros.push('filtroCombustible')
   }
 
-  // Agregar rancho solo si es solicitudes
+  // Agregar filtros específicos para solicitudes
   if (tipoDatos === 'solicitudes') {
     idsFiltros.push('filtroRancho')
+    idsFiltros.push('filtroTipo')
+    idsFiltros.push('filtroPresentacion')
+    idsFiltros.push('filtroMetodoAplicacion')
+    idsFiltros.push('filtroProducto')
+    idsFiltros.push('filtroUsuario')
+    idsFiltros.push('filtroStatus')
   }
 
   // 🚀 Aplicar debounce a los event listeners
   const actualizarConDebounce = debounce(() => {
-    const datosFiltrados = aplicarFiltros()
-    actualizarVistas(datosFiltrados)
+    showSpinner()
+    try {
+      const datosFiltrados = aplicarFiltros()
+      actualizarVistas(datosFiltrados)
+    } catch (error) {
+      console.error('Error en actualización de vistas:', error)
+    } finally {
+      hideSpinner()
+    }
   }, 300) // 300ms de delay
 
   idsFiltros.forEach(id => {
@@ -1485,13 +2023,21 @@ const configurarEventListenersFiltros = () => {
   const btnReset = document.getElementById('btnResetFiltros')
   if (btnReset) {
     btnReset.addEventListener('click', () => {
-      idsFiltros.forEach(id => {
-        const elemento = document.getElementById(id)
-        if (elemento) elemento.value = ''
-      })
-      limpiarCache() // Limpiar cache al resetear
-      actualizarVistas(datosOriginales)
-      mostrarMensaje('Filtros restablecidos', 'success')
+      showSpinner()
+      try {
+        idsFiltros.forEach(id => {
+          const elemento = document.getElementById(id)
+          if (elemento) elemento.value = ''
+        })
+        limpiarCache() // Limpiar cache al resetear
+        actualizarVistas(datosOriginales)
+        mostrarMensaje('Filtros restablecidos', 'success')
+      } catch (error) {
+        console.error('Error al resetear filtros:', error)
+        mostrarMensaje('Error al resetear filtros', 'danger')
+      } finally {
+        hideSpinner()
+      }
     })
   }
 }
@@ -1558,12 +2104,12 @@ const inicializarDashboard = async () => {
     // Mostrar loading
     showSpinner()
 
+    const tipoDatos = window.dashboardTipo
+
     // Validar y guardar datos
     const datosRaw = window.dashboardData || []
-    datosOriginales = validarDatos(datosRaw)
-
-    console.log('Datos validados:', datosOriginales)
-    const tipoDatos = window.dashboardTipo
+    // Prepara, valida y normaliza los datos en un solo paso
+    datosOriginales = prepararYValidarDatos(datosRaw, tipoDatos)
     const config = getConfig(tipoDatos)
 
     // Actualizar títulos según configuración
@@ -1607,8 +2153,15 @@ const configurarExportacion = () => {
   const btnExportarCSV = document.getElementById('btnExportarCSV')
   if (btnExportarCSV) {
     btnExportarCSV.addEventListener('click', () => {
-      const datosFiltrados = aplicarFiltros()
-      exportarDatos(datosFiltrados, 'csv', `${window.dashboardTipo}_dashboard`)
+      showSpinner()
+      try {
+        const datosFiltrados = aplicarFiltros()
+        exportarDatos(datosFiltrados, 'csv', `${window.dashboardTipo}_dashboard`)
+      } catch (error) {
+        console.error('Error al exportar CSV:', error)
+      } finally {
+        hideSpinner()
+      }
     })
   }
 
@@ -1616,14 +2169,17 @@ const configurarExportacion = () => {
   const btnExportarJSON = document.getElementById('btnExportarJSON')
   if (btnExportarJSON) {
     btnExportarJSON.addEventListener('click', () => {
-      const datosFiltrados = aplicarFiltros()
-      exportarDatos(datosFiltrados, 'json', `${window.dashboardTipo}_dashboard`)
+      showSpinner()
+      try {
+        const datosFiltrados = aplicarFiltros()
+        exportarDatos(datosFiltrados, 'json', `${window.dashboardTipo}_dashboard`)
+      } catch (error) {
+        console.error('Error al exportar JSON:', error)
+      } finally {
+        hideSpinner()
+      }
     })
   }
-}
-
-export const actualizarDashboard = async () => {
-  await inicializarDashboard()
 }
 
 // Exportar función para uso externo

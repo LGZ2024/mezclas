@@ -20,7 +20,26 @@ import { iniciarCentroCoste, verCentroCoste } from './tablaCentroCoste.js'
 import { iniciarSolicitudesCanceladasADM, verSolicitudesCanceladasADM } from './tablaSolicitudesCanceladaADM.js'
 import { iniciarConfimaciones } from './tablaConfirmacion.js'
 
+// Función para capitalizar la primera letra de cada palabra
+const capitalizarPalabras = (str) => {
+  return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Función para aplicar capitalización a un formulario
+  const aplicarCapitalizacion = (form) => {
+    if (!form) return
+    const inputsTexto = form.querySelectorAll('input[type="text"]')
+    inputsTexto.forEach(input => {
+      input.addEventListener('input', (e) => {
+        const valor = e.target.value
+        if (valor !== valor.toUpperCase()) { // No capitalizar si está en mayúsculas
+          e.target.value = capitalizarPalabras(valor)
+        }
+      })
+    })
+  }
+
   // Cachear referencias DOM
   const elementos = {
     // TABLAS
@@ -41,6 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
     formFoto: document.getElementById('formFoto'),
     formFactura: document.getElementById('formfacturas'),
     formEditarActivo: document.getElementById('formEditarActivo'),
+    formEditarUsuarios: document.getElementById('formEditarUsuarios'),
+    formActualizarUsuarios: document.getElementById('formActualizarUsuarios'),
     formBajaActivo: document.getElementById('formBajaActivo'),
     formAsignarActivo: document.getElementById('formAsignarActivo'),
     formEditarAsignacion: document.getElementById('formEditarAsignacion'),
@@ -73,6 +94,26 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     })
   }
+
+  // Helper para obtener el botón submit con fallbacks seguros.
+  // Usa e.submitter si está disponible (botón que disparó el submit),
+  // luego busca dentro del form, después por ID fallback y finalmente el botón global.
+  const obtenerSubmitBtn = (e, fallbackId = null) => {
+    try {
+      if (e && e.submitter) return e.submitter
+    } catch (err) {
+      // some browsers may throw, sigue con fallbacks
+    }
+    if (e && e.target) {
+      const btnDentro = e.target.querySelector('button[type="submit"]')
+      if (btnDentro) return btnDentro
+    }
+    if (fallbackId) {
+      const byId = document.getElementById(fallbackId)
+      if (byId) return byId
+    }
+    return elementos.btnRegistrar || null
+  }
   // Validar contraseña
   const validarContraseña = async (contrasena, contrasenaRep) => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/
@@ -95,13 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const validarFormulario = async (camposRequeridos) => {
     const camposInvalidos = camposRequeridos.filter(campo => {
       const elemento = document.getElementById(campo)
+      // Si el elemento no existe, considerarlo inválido para forzar el mensaje
+      if (!elemento) return true
       return !elemento.value.trim()
     })
 
     if (camposInvalidos.length > 0) {
       await actualizarUI(() => {
         mostrarMensaje(`Por favor complete los siguientes campos: ${camposInvalidos.join(', ')}`, 'error')
-        elementos.btnRegistrar.disabled = false
+        // Reactivar botón global de registro si existe
+        if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         hideSpinner()
       })
       return false
@@ -258,8 +302,11 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      // Obtener el botón submit del propio formulario (fallback al global)
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const formData = new FormData(e.target)
@@ -270,16 +317,18 @@ document.addEventListener('DOMContentLoaded', () => {
         'equipo', 'marca', 'modelo', 'ns', 'tag',
         'no_economico'
       ]
-      await validarFormulario(camposRequeridos)
+      const camposValidos = await validarFormulario(camposRequeridos)
 
       try {
-        const respuesta = await fetchApi('/api/equipos', 'POST', datos)
-        await respuestaFetch({ respuesta, formularios: elementos.formActivos, modal: 'miModal', button: elementos.btnRegistrar })
-        if (elementos.tablaActivos) {
-          actualizarUI(async () => {
-            iniciarActivos()
-            await verActivos()
-          })
+        if (!camposValidos === false) {
+          const respuesta = await fetchApi('/api/equipos', 'POST', datos)
+          await respuestaFetch({ respuesta, formularios: elementos.formActivos, modal: 'miModal', button: submitBtn || elementos.btnRegistrar })
+          if (elementos.tablaActivos) {
+            actualizarUI(async () => {
+              iniciarActivos()
+              await verActivos()
+            })
+          }
         }
       } catch (error) {
         hideSpinner()
@@ -289,7 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -297,8 +347,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const formData = new FormData(e.target)
@@ -318,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = `/api/cancelarSolicitud/${id}`
         const metodo = 'PATCH'
         const respuesta = await fetchApi(url, metodo, data)
-        await respuestaFetch({ respuesta, formularios: elementos.formCancelacion, modal: 'modalCancelacion', button: elementos.btnRegistrar })
+        await respuestaFetch({ respuesta, formularios: elementos.formCancelacion, modal: 'modalCancelacion', button: submitBtn || elementos.btnRegistrar })
         if (elementos.tablaConfirmacion) {
           actualizarUI(async () => {
             await iniciarConfimaciones()
@@ -332,7 +384,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -375,8 +428,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const formData = new FormData(e.target)
@@ -386,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const camposRequeridos = [
         'nombre', 'id_sap', 'descripcion', 'unidad_medida'
       ]
-      await validarFormulario(camposRequeridos)
+      const camposValidos = await validarFormulario(camposRequeridos)
 
       // Verificar si es edición o creación
       let url, method
@@ -399,13 +454,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        const respuesta = await fetchApi(url, method, datos)
-        await respuestaFetch({ respuesta, formularios: elementos.formProducto, modal: 'exampleModal', button: elementos.btnRegistrar })
-        if (elementos.tablaProductos) {
-          actualizarUI(async () => {
-            iniciarProductos()
-            await verProductos()
-          })
+        if (!camposValidos === false) {
+          const respuesta = await fetchApi(url, method, datos)
+          await respuestaFetch({ respuesta, formularios: elementos.formProducto, modal: 'exampleModal', button: submitBtn || elementos.btnRegistrar })
+          if (elementos.tablaProductos) {
+            actualizarUI(async () => {
+              iniciarProductos()
+              await verProductos()
+            })
+          }
         }
       } catch (error) {
         hideSpinner()
@@ -415,7 +472,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -423,8 +481,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      // Deshabilitar el botón submit del formulario concreto (evita colisiones por ids duplicados)
+      const submitBtnUsuario = e.target.querySelector('button[type="submit"]')
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtnUsuario) submitBtnUsuario.disabled = true
       })
 
       const formData = new FormData(e.target)
@@ -434,10 +494,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const camposRequeridos = [
         'empleado_id', 'nombre', 'apellido_paterno', 'apellido_materno', 'departamento'
       ]
-      await validarFormulario(camposRequeridos)
+      console.log(datos)
+
+      const camposValidos = await validarFormulario(camposRequeridos)
       try {
-        const respuesta = await fetchApi('/api/empleados', 'POST', datos)
-        await respuestaFetch({ respuesta, formularios: elementos.formUsuarios, modal: 'miModal', button: elementos.btnRegistrar })
+        if (!camposValidos === false) {
+          const respuesta = await fetchApi('/api/empleados', 'POST', datos)
+          await respuestaFetch({ respuesta, formularios: elementos.formUsuarios, modal: 'miModal', button: submitBtnUsuario || elementos.btnRegistrar })
+        }
       } catch (error) {
         hideSpinner()
         await actualizarUI(() => {
@@ -446,13 +510,15 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtnUsuario) submitBtnUsuario.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
     async handleSubmitAgregarCentroCoste (e) {
       e.preventDefault()
       showSpinner()
+      const submitBtn = obtenerSubmitBtn(e)
 
       try {
         const formData = new FormData(e.target)
@@ -498,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
           respuesta,
           formularios: elementos.formCentroCoste,
           modal: 'staticBackdrop',
-          button: elementos.btnRegistrar
+          button: submitBtn || elementos.btnRegistrar
         })
 
         // Actualizar tabla si existe
@@ -513,34 +579,87 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarMensaje('Error al guardar el centro de coste', 'error')
       } finally {
         hideSpinner()
-        elementos.btnRegistrar.disabled = false
+        if (submitBtn) submitBtn.disabled = false
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
       }
     },
     async handleSubmitAgregarFoto (e) {
       e.preventDefault()
       showSpinner()
 
+      // Obtener el botón submit del propio formulario (fallback al global)
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const formData = new FormData(e.target)
-      const id = formData.get('id')
-      const archivo = formData.get('foto')
+      const id = document.getElementById('id').value
 
-      // Validación de campos requeridos
-      if (!id || !archivo || archivo.size === 0) {
+      const archivoInput = e.target.querySelector('input[type="file"][name="foto"]') || document.getElementById('foto')
+      let archivo = null
+      if (archivoInput && archivoInput.files && archivoInput.files.length > 0) {
+        archivo = archivoInput.files[0]
+        // Asegurar que FormData contiene el archivo (puede faltar si el input fue manipulado)
+        if (!formData.get('foto')) formData.append('foto', archivo)
+      } else {
+        archivo = formData.get('foto')
+      }
+
+      console.log('archivo direct:', archivo)
+
+      // Validación de campos requeridos y archivo
+      if (!id || !archivo) {
         await actualizarUI(() => {
-          mostrarMensaje('Debe llenar todos los campos obligatorios', 'error')
-          elementos.btnRegistrar.disabled = false
+          mostrarMensaje('Debe seleccionar un archivo y proporcionar el ID del equipo', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
           hideSpinner()
         })
         return
       }
 
+      // Validar tamaño y tipo de archivo
+      const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif']
+      const tamañoMaximo = 5 * 1024 * 1024 // 5MB
+
+      if (archivo.size === 0) {
+        await actualizarUI(() => {
+          mostrarMensaje('El archivo seleccionado está vacío', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+
+      if (archivo.size > tamañoMaximo) {
+        await actualizarUI(() => {
+          mostrarMensaje('El archivo es demasiado grande. El tamaño máximo permitido es 5MB', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+
+      if (!tiposPermitidos.includes(archivo.type)) {
+        await actualizarUI(() => {
+          mostrarMensaje('Formato de archivo no válido. Solo se permiten imágenes JPG, PNG y GIF', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+      // Asegurar que el ID esté en el FormData
+      formData.append('id', id)
+
+      console.log('formData final:', formData)
       try {
         const respuesta = await fetchApiDoc(`/api/equipo/${id}`, 'PUT', formData)
-        await respuestaFetch({ respuesta, formularios: elementos.formFoto, modal: 'miModalEquipo', button: elementos.btnRegistrar })
+        await respuestaFetch({ respuesta, formularios: elementos.formFoto, modal: 'miModalEquipo', button: submitBtn || elementos.btnRegistrar })
         if (elementos.tablaActivos) {
           actualizarUI(async () => {
             iniciarActivos()
@@ -555,7 +674,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -563,19 +683,46 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const formData = new FormData(e.target)
-      const id = formData.get('id')
+      const id = document.getElementById('id').value
       const archivo = formData.get('baja')
 
       // Validación de campos requeridos
       if (!id || !archivo || archivo.size === 0) {
         await actualizarUI(() => {
           mostrarMensaje('Debe llenar todos los campos obligatorios', 'error')
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+
+      // Validar tamaño y tipo de archivo (permitir solo documentos pdf)
+      const tiposPermitidos = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+      const tamañoMaximo = 5 * 1024 * 1024 // 5MB
+
+      if (archivo.size > tamañoMaximo) {
+        await actualizarUI(() => {
+          mostrarMensaje('El archivo es demasiado grande. El tamaño máximo permitido es 5MB', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+
+      if (!tiposPermitidos.includes(archivo.type)) {
+        await actualizarUI(() => {
+          mostrarMensaje('Formato de archivo no válido. Solo se permiten documentos Word (.docx)', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
           hideSpinner()
         })
         return
@@ -583,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const respuesta = await fetchApiDoc(`/api/equipo/baja/${id}`, 'PUT', formData)
-        await respuestaFetch({ respuesta, formularios: elementos.formBajaActivoDoc, button: elementos.btnRegistrar })
+        await respuestaFetch({ respuesta, formularios: elementos.formBajaActivoDoc, modal: 'miModalEquipo', button: submitBtn || elementos.btnRegistrar })
         if (elementos.tablaActivosBaja) {
           actualizarUI(async () => {
             iniciarActivosBaja()
@@ -598,7 +745,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -606,29 +754,79 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const formData = new FormData(e.target)
-      const id = formData.get('idF')
-      const archivo = formData.get('factura')
-      const empresa = formData.get('empresa_pertenece')
-      const centroCoste = formData.get('centro_coste')
+      const id = document.getElementById('id').value
+
+      // Intentar obtener el archivo desde el input directamente (fallback)
+      const archivoInput = e.target.querySelector('input[type="file"][name="factura"]') || document.getElementById('factura')
+      let archivo = null
+      if (archivoInput && archivoInput.files && archivoInput.files.length > 0) {
+        archivo = archivoInput.files[0]
+        if (!formData.get('factura')) formData.append('factura', archivo)
+      } else {
+        archivo = formData.get('factura')
+      }
+
+      console.log('factura archivo directo:', archivo)
 
       // Validación de campos requeridos
-      if (!id || !archivo || archivo.size === 0 || !empresa || !centroCoste) {
+      if (!id || !archivo) {
         await actualizarUI(() => {
-          mostrarMensaje('Debe llenar todos los campos obligatorios', 'error')
-          elementos.btnRegistrar.disabled = false
+          mostrarMensaje('Debe seleccionar un archivo y proporcionar el ID del equipo', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
           hideSpinner()
         })
         return
       }
 
+      // Validar tamaño y tipo de archivo (permitir PDF e imágenes)
+      const tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf']
+      const tamañoMaximo = 10 * 1024 * 1024 // 10MB para facturas
+
+      if (archivo.size === 0) {
+        await actualizarUI(() => {
+          mostrarMensaje('El archivo seleccionado está vacío', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+
+      if (archivo.size > tamañoMaximo) {
+        await actualizarUI(() => {
+          mostrarMensaje('El archivo es demasiado grande. El tamaño máximo permitido es 10MB', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+
+      if (!tiposPermitidos.includes(archivo.type)) {
+        await actualizarUI(() => {
+          mostrarMensaje('Formato de archivo no válido. Solo se permiten PDF o imágenes (JPG, PNG, GIF)', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+
+      // Asegurar que el ID esté en el FormData
+      formData.append('id', id)
+
+      console.log('formData factura final:', formData)
       try {
         const respuesta = await fetchApiDoc(`/api/equipo/factura/${id}`, 'PUT', formData)
-        await respuestaFetch({ respuesta, formularios: elementos.formFactura, modal: 'miModalFactura', button: elementos.btnRegistrar })
+        await respuestaFetch({ respuesta, formularios: elementos.formFactura, modal: 'miModalFactura', button: submitBtn || elementos.btnRegistrar })
         if (elementos.tablaActivos) {
           actualizarUI(async () => {
             iniciarActivos()
@@ -643,16 +841,18 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
     async handleSubmitEditarActivo (e) {
       e.preventDefault()
       showSpinner()
-
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
       const formData = new FormData(e.target)
       // Validación de campos requeridos para disponible
@@ -675,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
             estado: formData.get('estadoE')
           }
           const respuesta = await fetchApi(`/api/equipo/estado/${formData.get('idEquipo')}`, 'PUT', data)
-          await respuestaFetch({ respuesta, formularios: elementos.formEditarActivo, modal: 'editarEquipo', button: elementos.btnRegistrar })
+          await respuestaFetch({ respuesta, formularios: elementos.formEditarActivo, modal: 'editarEquipo', button: submitBtn || elementos.btnRegistrar })
           if (elementos.tablaActivos) {
             actualizarUI(async () => {
               iniciarActivos()
@@ -700,7 +900,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tag: formData.get('tagE')
           }
           const respuesta = await fetchApi(`/api/equipos/editar/${formData.get('idEquipo')}`, 'PUT', data)
-          await respuestaFetch({ respuesta, formularios: elementos.formEditarActivo, modal: 'editarEquipo', button: elementos.btnRegistrar })
+          await respuestaFetch({ respuesta, formularios: elementos.formEditarActivo, modal: 'editarEquipo', button: submitBtn || elementos.btnRegistrar })
           if (elementos.tablaActivos) {
             actualizarUI(async () => {
               iniciarActivos()
@@ -716,7 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
             motivo: formData.get('motivoB') ? formData.get('motivoB') : 'Mantenimiento'
           }
           const respuesta = await fetchApi(`/api/equipo/estado/${formData.get('idEquipo')}`, 'PUT', data)
-          await respuestaFetch({ respuesta, formularios: elementos.formEditarActivo, modal: 'editarEquipo', button: elementos.btnRegistrar })
+          await respuestaFetch({ respuesta, formularios: elementos.formEditarActivo, modal: 'editarEquipo', button: submitBtn || elementos.btnRegistrar })
           if (elementos.tablaActivos) {
             actualizarUI(async () => {
               iniciarActivos()
@@ -732,7 +932,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -740,8 +941,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const equipo = document.getElementById('equipoE').value
@@ -762,7 +965,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!idEquipo || !estado || !motivo || !fechaBaja || !lugarBaja || !funcionBaja || !equipo || !marca || !modelo || !noSeria || !tag) {
         await actualizarUI(() => {
           mostrarMensaje('Debe llenar todos los campos son obligatorios', 'error')
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
           hideSpinner()
         })
         return
@@ -773,7 +977,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       try {
         const respuesta = await fetchApi(`/api/equipo/estado/${idEquipo}`, 'PUT', datos)
-        const res = await respuestaFetch({ respuesta, formularios: elementos.formBajaActivo, modal: 'modalBaja', button: elementos.btnRegistrar })
+        const res = await respuestaFetch({ respuesta, formularios: elementos.formBajaActivo, modal: 'modalBaja', button: submitBtn || elementos.btnRegistrar })
         if (elementos.tablaActivos) {
           actualizarUI(async () => {
             iniciarActivos()
@@ -794,7 +998,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -802,8 +1007,11 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      // Deshabilitar el botón submit del formulario concreto (evita colisiones por ids duplicados)
+      const submitBtnAsignar = e.target.querySelector('button[type="submit"]')
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtnAsignar) submitBtnAsignar.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const fecha = document.getElementById('fecha').value
@@ -820,18 +1028,33 @@ document.addEventListener('DOMContentLoaded', () => {
       // Buscar la opción que coincide con el valor del input
       const selectedOptionUser = Array.from(document.getElementById('usuario').options).find(option => option.value === noUsuarioValue)
 
-      // Obtener el data-id, si la opción fue encontrada
-      const noEquipoId = selectedOption ? selectedOption.dataset.id : null
-      const noUsuarioId = selectedOptionUser ? selectedOptionUser.dataset.id : null
+      // Obtener el data-id, si la opción fue encontrada (usar let para fallback)
+      let noEquipoId = selectedOption ? selectedOption.dataset.id : null
+      let noUsuarioId = selectedOptionUser ? selectedOptionUser.dataset.id : null
+
+      // Fallbacks: si no se encontró dataset.id, intentar buscar por coincidencia en textContent
+      if (!noEquipoId) {
+        const opcionesEquipo = Array.from(document.getElementById('equipo').options || [])
+        const encontrado = opcionesEquipo.find(opt => opt.value === noEquipoValue || (opt.textContent && opt.textContent.includes(noEquipoValue)))
+        noEquipoId = encontrado ? encontrado.dataset.id : null
+      }
+      if (!noUsuarioId) {
+        const opcionesUsuario = Array.from(document.getElementById('usuario').options || [])
+        const encontradoU = opcionesUsuario.find(opt => opt.value === noUsuarioValue || (opt.textContent && opt.textContent.includes(noUsuarioValue)))
+        noUsuarioId = encontradoU ? encontradoU.dataset.id : null
+      }
 
       const ubicacion = document.getElementById('ubicacion').value
+      // Log para depurar por qué no se registra la asignación o no se refresca la tabla
+      console.log('Asignar - valores => fecha:', fecha, 'noEquipoValue:', noEquipoValue, 'noEquipoId:', noEquipoId, 'noUsuarioValue:', noUsuarioValue, 'noUsuarioId:', noUsuarioId, 'ubicacion:', ubicacion)
       const archivoRespon = document.getElementById('archivoRespon')
 
       // Validación de campos requeridos
       if (ubicacion === '' || noUsuarioValue === '0' || noEquipoValue === '0' || !archivoRespon.files[0] || !fecha) {
         await actualizarUI(() => {
           mostrarMensaje('Debe llenar todos los campos obligatorios', 'error')
-          elementos.btnRegistrar.disabled = false
+          if (submitBtnAsignar) submitBtnAsignar.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
           hideSpinner()
         })
         return
@@ -845,12 +1068,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const respuesta = await fetchApiDoc('/api/asignaciones/', 'POST', formData)
-        await respuestaFetch({ respuesta, formularios: elementos.formAsignarActivo, modal: 'asignarEquipo', button: elementos.btnRegistrar })
-        if (elementos.tablaActivos) {
-          actualizarUI(async () => {
-            iniciarActivos()
-            await verActivos()
-          })
+        // Capturar resultado de respuestaFetch para decidir acciones posteriores
+        const res = await respuestaFetch({ respuesta, formularios: elementos.formAsignarActivo, modal: 'asignarEquipo', button: submitBtnAsignar || elementos.btnRegistrar })
+
+        // Si la operación fue exitosa, refrescar tablas relacionadas
+        if (res === true) {
+          if (elementos.tablaAsignaciones) {
+            actualizarUI(async () => {
+              iniciarAsignaciones()
+              await verAsignaciones()
+            })
+          }
         }
       } catch (error) {
         hideSpinner()
@@ -860,7 +1088,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtnAsignar) submitBtnAsignar.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -868,8 +1097,10 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault()
       showSpinner()
 
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
 
       const formData = new FormData(e.target)
@@ -894,48 +1125,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const respuesta = await fetchApi(`/api/asignaciones/${datos.asignacion_id}`, 'PUT', datos)
-        await respuestaFetch({ respuesta, formularios: elementos.formEditarAsignacion, modal: 'editarAsignacion', button: elementos.btnRegistrar })
-      } catch (error) {
-        hideSpinner()
-        await actualizarUI(() => {
-          mostrarMensaje({ msg: error.message, type: 'error' })
-        })
-      } finally {
-        hideSpinner()
-        await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
-        })
-      }
-    },
-    async handleSubmitEditarResponsiva (e) {
-      e.preventDefault()
-      showSpinner()
-
-      await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
-      })
-      const asignacion = document.getElementById('asignacion_id').value
-      const formData = new FormData(e.target)
-      const archivo = formData.get('responsiva')
-      const fecha = formData.get('fecha_asignacion')
-
-      // Validación de campos requeridos
-      if (!asignacion || !fecha || !archivo || archivo.size === 0) {
-        await actualizarUI(() => {
-          mostrarMensaje('Debe llenar todos los campos obligatorios', 'error')
-          elementos.btnRegistrar.disabled = false
-          hideSpinner()
-        })
-        return
-      }
-
-      try {
-        const respuesta = await fetchApiDoc(`/api/asignaciones/responsiva/${asignacion}`, 'PUT', formData)
-        await respuestaFetch({ respuesta, formularios: elementos.formEditarResponsiva, button: elementos.btnRegistrar })
-        if (elementos.tablaActivos) {
+        await respuestaFetch({ respuesta, formularios: elementos.formEditarAsignacion, modal: 'editarAsignacion', button: submitBtn || elementos.btnRegistrar })
+        if (elementos.tablaAsignaciones) {
           actualizarUI(async () => {
-            iniciarActivos()
-            await verActivos()
+            iniciarAsignaciones()
+            await verAsignaciones()
           })
         }
       } catch (error) {
@@ -946,15 +1140,144 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        })
+      }
+    },
+    async handleSubmitEditarUsuario (e) {
+      e.preventDefault()
+      showSpinner()
+
+      const submitBtn = obtenerSubmitBtn(e)
+      await actualizarUI(() => {
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
+      })
+
+      const formData = new FormData(e.target)
+      const datos = Object.fromEntries(formData.entries())
+
+      // Validación de campos requeridos
+      const camposRequeridos = [
+        'empleado_idE', 'nombreE', 'apellido_paternoE', 'apellido_maternoE', 'departamentoE']
+      await validarFormulario(camposRequeridos)
+
+      try {
+        const respuesta = await fetchApi(`/api/empleados/${datos.empleado_idE}`, 'PATCH', datos)
+        await respuestaFetch({ respuesta, formularios: elementos.formEditarUsuarios, modal: 'miModalEditar', button: submitBtn || elementos.btnRegistrar })
+        if (elementos.tablaUsuarios) {
+          actualizarUI(async () => {
+            iniciarUsuarios()
+            await verUsuarios()
+          })
+        }
+      } catch (error) {
+        hideSpinner()
+        await actualizarUI(() => {
+          mostrarMensaje({ msg: error.message, type: 'error' })
+        })
+      } finally {
+        hideSpinner()
+        await actualizarUI(() => {
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        })
+      }
+    },
+    async handleSubmitActualizarUsuario (e) {
+      e.preventDefault()
+      showSpinner()
+
+      const submitBtn = obtenerSubmitBtn(e)
+      await actualizarUI(() => {
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
+      })
+
+      const formData = new FormData(e.target)
+      const datos = Object.fromEntries(formData.entries())
+
+      // Validación de campos requeridos
+      const camposRequeridos = [
+        'empleado_idA', 'estado']
+      await validarFormulario(camposRequeridos)
+
+      try {
+        const respuesta = await fetchApi(`/api/empleados/${datos.empleado_idA}`, 'PATCH', datos)
+        await respuestaFetch({ respuesta, formularios: elementos.formActualizarUsuarios, modal: 'miModalActualizar', button: submitBtn || elementos.btnRegistrar })
+        if (elementos.tablaEmpleados) {
+          actualizarUI(async () => {
+            iniciarEmpleados()
+            await verEmpleados()
+          })
+        }
+      } catch (error) {
+        hideSpinner()
+        await actualizarUI(() => {
+          mostrarMensaje({ msg: error.message, type: 'error' })
+        })
+      } finally {
+        hideSpinner()
+        await actualizarUI(() => {
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        })
+      }
+    },
+    async handleSubmitEditarResponsiva (e) {
+      e.preventDefault()
+      showSpinner()
+      const submitBtn = obtenerSubmitBtn(e)
+      await actualizarUI(() => {
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
+      })
+      const asignacion = document.getElementById('asignacion_id').value
+      const formData = new FormData(e.target)
+      const archivo = formData.get('responsiva')
+      const fecha = formData.get('fecha_asignacion')
+
+      // Validación de campos requeridos
+      if (!asignacion || !fecha || !archivo || archivo.size === 0) {
+        await actualizarUI(() => {
+          mostrarMensaje('Debe llenar todos los campos obligatorios', 'error')
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+        })
+        return
+      }
+
+      try {
+        const respuesta = await fetchApiDoc(`/api/asignaciones/responsiva/${asignacion}`, 'PUT', formData)
+        await respuestaFetch({ respuesta, formularios: elementos.formEditarResponsiva, button: submitBtn || elementos.btnRegistrar })
+        if (elementos.tablaAsignaciones) {
+          actualizarUI(async () => {
+            iniciarAsignaciones()
+            await verAsignaciones()
+          })
+        }
+      } catch (error) {
+        hideSpinner()
+        await actualizarUI(() => {
+          mostrarMensaje({ msg: error.message, type: 'error' })
+        })
+      } finally {
+        hideSpinner()
+        await actualizarUI(() => {
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
     async handleSubmitActualizarContraseña (e) {
       e.preventDefault()
       showSpinner()
+      const submitBtn = obtenerSubmitBtn(e)
       await actualizarUI(() => {
-        elementos.btnRegistrar.disabled = true
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
       })
       const idUsuario = document.getElementById('idUsuario').value
       const formData = new FormData(e.target)
@@ -966,7 +1289,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!contrasena || !contrasenaRep || !idUsuario) {
         await actualizarUI(() => {
           mostrarMensaje('Debe llenar todos los campos obligatorios', 'error')
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
           hideSpinner()
         })
         return
@@ -983,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const respuesta = await fetchApi(`/api/usuario/${idUsuario}`, 'PUT', datos)
-        await respuestaFetch({ respuesta, formularios: elementos.formResetPass, modal: 'ModalResetPass', button: elementos.btnRegistrar })
+        await respuestaFetch({ respuesta, formularios: elementos.formResetPass, modal: 'ModalResetPass', button: submitBtn || elementos.btnRegistrar })
         if (elementos.tablaUsuarios) {
           actualizarUI(async () => {
             iniciarUsuarios()
@@ -998,7 +1322,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         hideSpinner()
         await actualizarUI(() => {
-          elementos.btnRegistrar.disabled = false
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
     },
@@ -1157,8 +1482,10 @@ document.addEventListener('DOMContentLoaded', () => {
           usuariosData.forEach(usuario => {
             nombre = `${usuario.nombre} ${usuario.apellido_paterno}`
             const option = document.createElement('option')
-            option.value = usuario.id
+            // value contiene el texto visible (para que el datalist coincida con lo que escribe el usuario)
+            option.value = nombre
             option.textContent = nombre
+            // dataset mantiene el id real para envíos
             option.dataset.id = usuario.id
             usuarioTab.appendChild(option)
           })
@@ -1166,8 +1493,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Array.isArray(equiposData) && equiposData.length > 0) {
           equiposData.forEach(equip => {
             const option = document.createElement('option')
+            // value usa el número de serie (visible), dataset.id contiene el id del equipo
             option.value = equip.ns
-            option.textContent = equip.equipo
+            option.textContent = `${equip.ns} - ${equip.equipo}`
             option.dataset.id = equip.id
             equipo.appendChild(option)
           })
@@ -1178,50 +1506,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  if (elementos.formActivos) {
-    elementos.formActivos.addEventListener('submit', handlers.handleSubmitAgregarEquipo)
+  // Función para inicializar un formulario con eventos
+  const inicializarFormulario = (form, submitHandler) => {
+    if (form) {
+      form.addEventListener('submit', submitHandler)
+      aplicarCapitalizacion(form)
+    }
   }
-  if (elementos.formUsuarios) {
-    elementos.formUsuarios.addEventListener('submit', handlers.handleSubmitAgregarUsuario)
-  }
-  if (elementos.formFoto) {
-    elementos.formFoto.addEventListener('submit', handlers.handleSubmitAgregarFoto)
-  }
+
+  // Inicializar todos los formularios con capitalización
+  inicializarFormulario(elementos.formActivos, handlers.handleSubmitAgregarEquipo)
+  inicializarFormulario(elementos.formUsuarios, handlers.handleSubmitAgregarUsuario)
+  inicializarFormulario(elementos.formFoto, handlers.handleSubmitAgregarFoto)
+  inicializarFormulario(elementos.formFactura, handlers.handleSubmitAgregarFactura)
+  inicializarFormulario(elementos.formEditarActivo, handlers.handleSubmitEditarActivo)
+  inicializarFormulario(elementos.formBajaActivo, handlers.handleSubmitBajaActivo)
+  inicializarFormulario(elementos.formAsignarActivo, handlers.handleSubmitAsignarActivo)
+  inicializarFormulario(elementos.formEditarAsignacion, handlers.handleSubmitEditarAsignacion)
+  inicializarFormulario(elementos.formEditarResponsiva, handlers.handleSubmitEditarResponsiva)
+  inicializarFormulario(elementos.formBajaActivoDoc, handlers.handleSubmitAgregarBaja)
+  inicializarFormulario(elementos.formProducto, handlers.handleSubmitAgregarProducto)
+  inicializarFormulario(elementos.formCentroCoste, handlers.handleSubmitAgregarCentroCoste)
+  inicializarFormulario(elementos.formCancelacion, handlers.handleSubmitCancelacion)
+  inicializarFormulario(elementos.formEditarUsuarios, handlers.handleSubmitEditarUsuario)
+  inicializarFormulario(elementos.formActualizarUsuarios, handlers.handleSubmitActualizarUsuario)
+
+  // Inicializaciones especiales
   if (elementos.formFactura) {
     handlers.handleInicairDivsCentroCoste()
-    elementos.formFactura.addEventListener('submit', handlers.handleSubmitAgregarFactura)
   }
-  if (elementos.formEditarActivo) {
-    elementos.formEditarActivo.addEventListener('submit', handlers.handleSubmitEditarActivo)
-  }
-  if (elementos.formBajaActivo) {
-    elementos.formBajaActivo.addEventListener('submit', handlers.handleSubmitBajaActivo)
-  }
-  if (elementos.formAsignarActivo) {
-    elementos.formAsignarActivo.addEventListener('submit', handlers.handleSubmitAsignarActivo)
-  }
-  if (elementos.formEditarAsignacion) {
-    elementos.formEditarAsignacion.addEventListener('submit', handlers.handleSubmitEditarAsignacion)
-  }
-  if (elementos.formEditarResponsiva) {
-    elementos.formEditarResponsiva.addEventListener('submit', handlers.handleSubmitEditarResponsiva)
-  }
-  if (elementos.formBajaActivoDoc) {
-    elementos.formBajaActivoDoc.addEventListener('submit', handlers.handleSubmitAgregarBaja)
-  }
+
   if (elementos.formResetPass) {
     elementos.formResetPass.addEventListener('submit', handlers.handleSubmitActualizarContraseña)
     togglePassword('contrasenaRes', 'mostrarPassRes')
     togglePassword('contrasenaRepRes', 'mostrarPassRRes')
-  }
-  if (elementos.formProducto) {
-    elementos.formProducto.addEventListener('submit', handlers.handleSubmitAgregarProducto)
-  }
-  if (elementos.formCentroCoste) {
-    elementos.formCentroCoste.addEventListener('submit', handlers.handleSubmitAgregarCentroCoste)
-  }
-  if (elementos.formCancelacion) {
-    elementos.formCancelacion.addEventListener('submit', handlers.handleSubmitCancelacion)
   }
   // Manejador para el cambio de estado
   if (elementos.optionEstado) {

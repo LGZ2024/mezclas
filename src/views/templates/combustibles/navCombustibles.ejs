@@ -37,9 +37,13 @@
           <a class="nav-link" href="/protected/inventario"><i class="fa-solid fa-table"></i> Inventario</a>
         </li>
 
+        <% if (typeof user !== 'undefined' && user && user.rol === 'encargado_combustible') { %>
         <li class="nav-item">
-          <a class="nav-link" href="/protected/cerrarSesion"><i class="fa-solid fa-circle-xmark"></i>Cerrar Sesion</a>
+          <a class="nav-link" href="/protected/cerrarSesion">
+            <i class="fa-solid fa-circle-xmark"></i> Cerrar Sesion
+          </a>
         </li>
+        <% } %>
         
       </ul><!-- fin nav -->
     </div>

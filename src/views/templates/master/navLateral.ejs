@@ -9,6 +9,12 @@
       </a>
     </li>
     <li class="nav-item">
+      <a class="nav-link" href="/protected/combustibles">
+        <span class="icon-bg"><i class="mdi mdi-gas-station menu-icon"></i></span>
+        <span class="menu-title">Combustibles</span>
+      </a>
+    </li>
+    <li class="nav-item">
       <a class="nav-link" href="/protected/activosFijos">
         <span class="icon-bg"><i class="mdi mdi-table-large menu-icon"></i></span>
         <span class="menu-title">Activos Fijos</span>
@@ -115,15 +121,17 @@
                       <span class="menu-title">Realizar Solicitud</span>
                     </a>
                   </li>
+                  
                   <% } %>
+                  
                    <li class="nav-item">
-                      <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false"
-                        aria-controls="auth">
+                      <a class="nav-link" data-toggle="collapse" href="#solicitudes" aria-expanded="false"
+                        aria-controls="solicitudes">
                         <span class="icon-bg"><i class="mdi mdi-book menu-icon"></i></span>
                         <span class="menu-title">Estado de Solicitudes</span>
                         <i class="menu-arrow"></i>
                       </a>
-                      <div class="collapse" id="auth">
+                      <div class="collapse" id="solicitudes">
                         <ul class="nav flex-column sub-menu">
                           <li class="nav-item"> <a class="nav-link" href="/protected/solicitudes">Solicitudes Pendientes
                             </a></li>

@@ -45,8 +45,8 @@ export class EmpleadosModel {
       if (!id) {
         throw new ValidationError('Datos requeridos no proporcionados')
       }
-      const usuario = await Empleados.findByPk({
-        where: { id },
+      // Si `id` es la PK podemos usar findByPk correctamente pasando el valor y opciones
+      const usuario = await Empleados.findByPk(id, {
         attributes: ['nombre', 'apellido_paterno']
       })
       // Verificar si se encontraron resultados
@@ -83,6 +83,45 @@ export class EmpleadosModel {
         }
 
         throw new DatabaseError('Error al agregar usuario')
+      }
+    })
+  }
+
+  static async editarUsuario ({ logger, logContext, EmpleadoId, data }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        // Validar que los datos sean correctos
+        if (!EmpleadoId || !data) {
+          throw new ValidationError('Datos incompletos para editar usuario')
+        }
+
+        // Buscar el empleado por su campo empleado_id
+        const empleado = await Empleados.findOne({ where: { empleado_id: EmpleadoId }, transaction })
+        if (!empleado) {
+          throw new NotFoundError('No se encontró el empleado con ID ' + EmpleadoId)
+        }
+
+        console.log('Empleado encontrado:', empleado)
+        console.log('Datos a actualizar:', data)
+
+        // Actualizar los campos proporcionados
+        if (data.nombre) empleado.nombre = data.nombreE
+        if (data.apellido_paterno) empleado.apellido_paterno = data.apellido_paternoE
+        if (data.apellido_materno) empleado.apellido_materno = data.apellido_maternoE
+        if (data.departamento) empleado.departamento = data.departamento
+        if (data.estado) empleado.estado = data.estado
+
+        // Guardar los cambios en la base de datos
+        await empleado.save({ transaction })
+
+        return { message: 'Usuario editado correctamente', id: empleado.id }
+      } catch (error) {
+        logger.error('Error al editar usuario', { ...logContext, error })
+        if (error instanceof ValidationError) {
+          throw error
+        }
+
+        throw new DatabaseError('Error al editar usuario')
       }
     })
   }

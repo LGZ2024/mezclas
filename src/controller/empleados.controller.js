@@ -30,4 +30,21 @@ export class EmpleadosController {
     logger.info('Finalizando Controlador', logContext)
     res.json(response)
   })
+
+  editarUsuario = asyncHandler(async (req, res) => {
+    const { user } = req.session
+    const logger = req.logger
+    const logContext = {
+      operation: 'Editar Usuario',
+      user: user.nombre,
+      rol: user.rol,
+      userID: user.id,
+      requestBody: req.body
+    }
+    logger.info('Iniciando Controlador', logContext)
+    const EmpleadoId = req.params.empleado_id
+    const response = await this.empleadosModel.editarUsuario({ logger, logContext, EmpleadoId, data: req.body })
+    logger.info('Finalizando Controlador', logContext)
+    res.json(response)
+  })
 }

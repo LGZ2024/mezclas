@@ -132,6 +132,8 @@ const verEmpleados = async () => {
             $(cell).css('color', 'green')
           } else if (estado === 'asignado') {
             $(cell).css('color', 'blue')
+          } else if (estado === 'inactivo') {
+            $(cell).css('color', 'red')
           }
         }
       },
@@ -144,12 +146,17 @@ const verEmpleados = async () => {
                     data-row='${JSON.stringify(row).replace(/'/g, '&apos;')}'>
                     Editar
                   </button>
+                    <button class="btn btn-inverse-secondary mdi mdi-file-document actualizarEmpleado" 
+                    data-id='${row.empleado_id}'>
+                    Editar Estado
+                  </button>
                     `
         }
       }
     ]
   })
   editarEmpleado()
+  actualizarEmpleado()
 }
 // funciones para los botones de la tabla
 const editarEmpleado = () => {
@@ -163,15 +170,26 @@ const editarEmpleado = () => {
     } catch (err) {
       data = $(this).attr('data-row')
     }
-    const modal = $('#miModal')
+    const modal = $('#miModalEditar')
     modal.modal('show')
-    document.getElementById('empleado_id').value = data.empleado_id
-    document.getElementById('nombre').value = data.nombre
-    document.getElementById('apellido_paterno').value = data.apellido_paterno
-    document.getElementById('apellido_materno').value = data.apellido_materno
-    document.getElementById('departamento').value = data.departamento
+    document.getElementById('empleado_idE').value = data.empleado_id
+    document.getElementById('nombreE').value = data.nombre
+    document.getElementById('apellido_paternoE').value = data.apellido_paterno
+    document.getElementById('apellido_maternoE').value = data.apellido_materno
+    document.getElementById('departamentoE').value = data.departamento
   })
 }
+
+const actualizarEmpleado = () => {
+  $(document).on('click', '.actualizarEmpleado', function (e) {
+    e.preventDefault()
+    const id = $(this).attr('data-id')
+    const modal = $('#miModalActualizar')
+    modal.modal('show')
+    document.getElementById('empleado_idA').value = id
+  })
+}
+
 export {
   iniciarEmpleados,
   verEmpleados

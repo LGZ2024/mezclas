@@ -375,7 +375,7 @@ const agregarFactura = (id) => {
   $(document).on('click', '.agregarFactura', function (e) {
     e.preventDefault()
     const id = $(this).attr('data-id')
-    document.getElementById('idF').value = id
+    document.getElementById('id').value = id
     const modal = $('#miModalFactura')
     modal.modal('show')
   })

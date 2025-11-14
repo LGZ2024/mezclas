@@ -9,7 +9,7 @@
     "npm": ">=10.2.4"
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development node --watch src/app.mjs  src/app.mjs",
+    "dev": "cross-env NODE_ENV=development node --watch src/app.mjs",
     "dev:ninja": "cross-env NODE_ENV=development NODE_OPTIONS='--inspect' console-ninja node --watch src/app.mjs",
     "verify:pwa": "node scripts/verify-pwa.mjs",
     "lint": "eslint src/**/*.{js,mjs}",

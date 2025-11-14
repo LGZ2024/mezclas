@@ -47,6 +47,7 @@ export const createProtetedRouter = () => {
   router.get('/historialA/', asistenciaController.historialA)
   router.get('/historialE/', asistenciaController.historialE)
   router.get('/empleadosU/', asistenciaController.empleados)
+  router.get('/combustibles/', asistenciaController.combustibles)
 
   // cerrar sesion
   router.get('/cerrarSesion', asistenciaController.logout) // logear usuario

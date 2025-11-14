@@ -5,6 +5,7 @@
     <%- include("../../templates/head-pwa") %>
         <%- include("../../templates/mezclas/cabecera") %>
 </head>
+
 <body>
     <!-- importamos barra de navegacion -->
     <div style="display: block;" id="navPrincipal">
@@ -29,16 +30,19 @@
                             <a class="nav-link " href="../operacionesadm/view/inicio_combustible.php" role="button"
                                 id="combustibles"><i class="fa-solid fa-gas-pump"></i> Combustible</a>
                         </li>
+                        <!-- si es diferente de rol encargado_combustible ocultar cerrar sesion -->
+                        <% if (user && user.rol === 'encargado_combustible') { %>
                         <li class="nav-item">
-                            <a class="nav-link" href="../../controller/cerrarSesion.php"><i
+                            <a class="nav-link" href="/protected/cerrarSesion"><i
                                     class="fa-solid fa-circle-xmark"></i> Cerrar Sesion</a>
                         </li>
+                        <% } %>
                     </ul><!-- fin nav -->
                 </div>
             </div>
         </nav>
     </div>
-    <div style="display: none;" id="navCombustible">
+    <div style="display: <%= (typeof user !== 'undefined' && user && (user.rol === 'master' || user.rol === 'administrativo')) ? 'block' : 'none' %>;" id="navCombustible">
         <%- include("../../templates/combustibles/navCombustibles") %>
     </div>
     <div style="display: none;" id="navVehiculos">
@@ -50,19 +54,28 @@
                 const navPrincipal = document.getElementById('navPrincipal');
                 const navCombustible = document.getElementById('navCombustible');
                 const navVehiculos = document.getElementById('navVehiculos');
+                const userRole = '<%= (typeof user !== "undefined" && user && user.rol) ? user.rol : "" %>';
 
                 const vehiculos = document.getElementById('vehiculos');
                 const combustibles = document.getElementById('combustibles');
                 const inicios = document.querySelectorAll('.menuInicio'); // Selecciona todos
 
+                // Si el rol es master o administrativo, mostrar navCombustible por defecto
+                if (userRole === 'master' || userRole === 'administrativo') {
+                    navPrincipal.style.display = 'none';
+                    navCombustible.style.display = 'block';
+                }
+
                 vehiculos.addEventListener('click', () => {
                     navPrincipal.style.display = 'none';
                     navVehiculos.style.display = 'block';
+                    navCombustible.style.display = 'none';
                 });
                 combustibles.addEventListener('click', (e) => {
                     e.preventDefault();
                     navPrincipal.style.display = 'none';
                     navCombustible.style.display = 'block';
+                    navVehiculos.style.display = 'none';
                 });
                 // Agrega el evento a todos los elementos con la clase menuInicio
                 inicios.forEach(ini => {

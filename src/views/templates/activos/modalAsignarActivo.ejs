@@ -3,16 +3,15 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="asignarEquipoLabel" style="color: black;">Asignar Equipo</h5>
+        <h5 class="modal-title" id="asignarEquipoLabel" style="color: black;">Asignacion de Equipo</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
         <form id="formAsignarActivo">
-
           <div class="form-group">
-            <label for="usuarioTab">Usuario:</label>
+            <label for="usuarioTab">Empleado:</label>
             <input type="text" class="form-control" id="usuarioTab" name="usuarioTab" list="usuario" placeholder="Nombre de usuario">
             <datalist id="usuario" name="usuario">
             </datalist>
@@ -30,12 +29,12 @@
             <label for="clienteAsig">Ubicacion:</label>
             <!-- <input type="text" class="form-control" name="ubicacion" id="ubicacion" placeholder="Ubicacion donde encontrara el equipo"> -->
             <select class="form-control" name="ubicacion" id="ubicacion">
-              <option value="">Seleciona una Opcion</option>
+              <option value="">Seleciona una Ubicacion</option>
               <% ubicaciones.forEach(function(ubicaciones) { %>
                 <option value="<%= ubicaciones %>">
                   <%= ubicaciones %>
                 </option>
-                <% }); %>
+              <% }); %>
             </select>
           </div>
           <div class="form-group">
@@ -58,7 +57,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-        <button type="submit" form="formAsignarActivo" class="btn btn-primary" id="btnRegistrar">Asignar</button>
+  <button type="submit" form="formAsignarActivo" class="btn btn-primary" id="btnRegistrarAsignar">Asignar</button>
       </div>
     </div>
   </div>

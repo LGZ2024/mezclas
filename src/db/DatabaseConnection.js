@@ -11,7 +11,6 @@ class DatabaseConnection {
   }
 
   getConfig () {
-    const isProduction = envs.MODE === 'production'
     return {
       dialect: 'mysql',
       host: envs.DB_CONFIG.host,
