@@ -28,7 +28,7 @@ export class EmpleadosModel {
     return await DbHelper.executeQuery(async (sequelize) => {
       try {
         const equipo = await Empleados.findAll({
-          attributes: ['id', 'empleado_id', 'nombre', 'apellido_paterno', 'apellido_materno', 'departamento', 'estado']
+          attributes: ['id', 'empleado_id', 'nombre', 'apellido_paterno', 'apellido_materno', 'departamento', 'puesto', 'estado']
         })
         if (!equipo) throw new NotFoundError('Empleados no encontrados')
         return equipo

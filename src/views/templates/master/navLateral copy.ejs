@@ -1,0 +1,195 @@
+<!-- partial:partials/_sidebar.html -->
+<nav class="sidebar sidebar-offcanvas" id="sidebar">
+  <ul class="nav">
+    <li class="nav-item nav-category">Panel de Administracion</li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/admin">
+        <span class="icon-bg"><i class="mdi mdi-file-document menu-icon"></i></span>
+        <span class="menu-title">Reporte Mezclas</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/combustibles">
+        <span class="icon-bg"><i class="mdi mdi-gas-station menu-icon"></i></span>
+        <span class="menu-title">Combustibles</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/activosFijos">
+        <span class="icon-bg"><i class="mdi mdi-table-large menu-icon"></i></span>
+        <span class="menu-title">Activos Fijos</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/asignaciones">
+        <span class="icon-bg"><i class="mdi mdi-laptop menu-icon"></i></span>
+        <span class="menu-title">Asignaciones Activas</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="collapse" href="#auth" aria-expanded="false"
+        aria-controls="auth">
+        <span class="icon-bg"><i class="mdi mdi-chart-arc menu-icon"></i></span>
+        <span class="menu-title">Graficas</span>
+        <i class="menu-arrow"></i>
+      </a>
+      <div class="collapse" id="auth">
+        <ul class="nav flex-column sub-menu">
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/salidas">Salidas de Combustible</a></li>
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/entradas">Entrada de Combustible</a></li>
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/cargas">Cargas de Combustible</a></li>
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/solicitudes/">Solicitudes de Mezcla</a></li>
+          <li class="nav-item"> <a class="nav-link" href="/protected/graficaSalida/activos">Activos Fijos</a></li>
+        </ul>
+      </div>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/bajas">
+        <span class="icon-bg"><i class="mdi mdi-laptop menu-icon"></i></span>
+        <span class="menu-title">Equipos Baja</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/historialA">
+        <span class="icon-bg"><i class="mdi mdi-table menu-icon"></i></span>
+        <span class="menu-title">Historial Asignaciones</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/historialE">
+        <span class="icon-bg"><i class="mdi mdi-table menu-icon"></i></span>
+        <span class="menu-title">Historial Activos Fijos</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/protected/empleadosU">
+        <span class="icon-bg"><i class="mdi mdi-account-multiple-outline menu-icon"></i></span>
+        <span class="menu-title">Empleados</span>
+      </a>
+    </li>
+    <% if (user.rol==="master" || user.rol==="administrativo" || user.rol==="adminMezclador" ) { %>
+      <li class="nav-item">
+        <a class="nav-link" href="/protected/productos">
+          <span class="icon-bg"><i class="mdi mdi-cube menu-icon"></i></span>
+          <span class="menu-title">Productos</span>
+        </a>
+      </li>
+      <% } %>
+        <% if (user.rol==="master" ) { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/protected/usuarios">
+              <span class="icon-bg"><i class="mdi mdi-account menu-icon"></i></span>
+              <span class="menu-title">Crear usuarios</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="/protected/centroCoste">
+              <span class="icon-bg"><i class="mdi mdi-store menu-icon"></i></span>
+              <span class="menu-title">Centros de Coste</span>
+            </a>
+          </li>
+
+          <% } %>
+            <% if (user.rol==="master" || user.rol==="administrativo" || user.rol==="adminMezclador" ) { %>
+              <li class="nav-item">
+                <a class="nav-link" href="/protected/canceladas">
+                  <span class="icon-bg"><i class="mdi mdi-cancel menu-icon"></i></span>
+                  <span class="menu-title">Solicitudes Canceladas</span>
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="/protected/registrarSolicitud">
+                  <span class="icon-bg"><i class="mdi mdi-calendar-today menu-icon"></i></span>
+                  <span class="menu-title">Registrar Mezcla</span>
+                </a>
+              </li>
+              <% } %>
+                <% const esAdministradorMezclador=user.rol==="adminMezclador" ; const esAdministrador=user.rol==="master"
+                  if ( esAdministradorMezclador || esAdministrador ) { %>
+                  %>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/protected/confirmacion">
+                      <span class="icon-bg"><i class="mdi mdi-check-circle-outline menu-icon"></i></span>
+                      <span class="menu-title">Confirmar Solicitudes</span>
+                    </a>
+                  </li>
+
+                  <li class="nav-item">
+                    <a class="nav-link" href="/protected/solicitud">
+                      <span class="icon-bg"><i class="mdi mdi-file-plus menu-icon"></i></span>
+                      <span class="menu-title">Realizar Solicitud</span>
+                    </a>
+                  </li>
+                  
+                  <% } %>
+                  
+                   <li class="nav-item">
+                      <a class="nav-link" data-toggle="collapse" href="#solicitudes" aria-expanded="false"
+                        aria-controls="solicitudes">
+                        <span class="icon-bg"><i class="mdi mdi-book menu-icon"></i></span>
+                        <span class="menu-title">Estado de Solicitudes</span>
+                        <i class="menu-arrow"></i>
+                      </a>
+                      <div class="collapse" id="solicitudes">
+                        <ul class="nav flex-column sub-menu">
+                          <li class="nav-item"> 
+                            <a class="nav-link" href="/protected/solicitudes">Solicitudes Pendientes</a>
+                          </li>
+                          <li class="nav-item"> <a class="nav-link" href="/protected/proceso">Solicitudes En Proceso</a>
+                          </li>
+                          <li class="nav-item"> <a class="nav-link" href="/protected/completadas">Solicitudes
+                              Completadas
+                            </a></li>
+                        </ul>
+                      </div>
+                    </li>
+                    <li class="nav-item sidebar-user-actions">
+                      <div class="user-details">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                            <div class="d-flex align-items-center">
+                              <div class="sidebar-profile-img">
+                                <img src="../../../images/faces/pic-1.png" alt="image">
+                              </div>
+                              <div class="sidebar-profile-text">
+                              <p class="mb-1"><%= user.nombre %></p>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="badge badge-danger">
+                            <% if (user.rol==="master" || user.rol==="administrativo" || user.rol==="adminMezclador" ||
+                              user.rol==="Activos Fijos" ) { %>
+                              Administrativo
+                              <% } %>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li class="nav-item sidebar-user-actions">
+                      <div class="sidebar-user-menu">
+                        <a href="#" class="nav-link"><i class="mdi mdi-settings menu-icon"></i>
+                          <span class="menu-title">Configuraciones</span>
+                        </a>
+                      </div>
+                    </li>
+                    <li class="nav-item sidebar-user-actions">
+                      <div class="sidebar-user-menu">
+                        <a href="/protected/cerrarSesion" class="nav-link"><i class="mdi mdi-logout menu-icon"></i>
+                          <span class="menu-title">Cerrar Sesion</span></a>
+                      </div>
+                    </li>
+  </ul>
+</nav>
+<!-- partial -->
+<!-- spinner -->
+<div class="spinner-overlay" id="spinner" style="display: none;">
+  <div class="spinner-container">
+    <div class="spinner"></div>
+    <p class="spinner-text">Procesando...</p>
+  </div>
+</div>
+<input type="hidden" name="rol" id="rol" value="<%= user.rol %>">
+<input type="hidden" name="id" id="id">

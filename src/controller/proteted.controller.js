@@ -6,6 +6,7 @@ import { EntradaCombustibleModel } from '../models/combustible_entrada.models.js
 import { CargaCombustibleModel } from '../models/combustible_carga.models.js'
 import { NotificacionModel } from '../models/notificaciones.models.js'
 import { ProduccionModel } from '../models/produccion.models.js'
+import { CatalogoModel } from '../models/catalogo_corporativo.models.js'
 import logger from '../utils/logger.js'
 
 export class ProtetedController {
@@ -28,10 +29,26 @@ export class ProtetedController {
 
   activosFijos = async (req, res) => {
     const { user } = req.session
-    logger.debug('Usuario en la ruta protegida:', user)
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // validamos al usuario
     res.status(200).render('pages/activos/main', { user, rol: user.rol, titulo: 'Bienvenido' })
+  }
+
+  activosDashboard = async (req, res) => {
+    const { user } = req.session
+    const logger = req.logger
+    const logContext = {
+      userName: user.name,
+      userId: user.id,
+      userRol: user.rol
+    }
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+
+    // Obtener datos de activos fijos
+    const rawData = await ProduccionModel.ObtenerActivosFijos({ logger, logContext })
+    const data = Array.isArray(rawData) ? rawData : []
+    res.render('pages/activos/graficas', { user, rol: user.rol, titulo: 'Bienvenido', data, tipo: 'activos' })
   }
 
   // ruta vivienda
@@ -40,7 +57,6 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // usuario
-    logger.debug('Usuario en la ruta protegida:', user)
 
     // Separar los ranchos en un array
     const ranchos = user.ranchos.split(',')
@@ -51,7 +67,6 @@ export class ProtetedController {
     const almacenAhualulco = ['Ahualulco']
     const almacenCasasAltos = ['Casas de Altos', 'Romero', 'Potrero']
     const almacenOjoDeAgua = ['Ojo de Agua', 'La Loma', 'Zapote']
-
     ranchos.forEach(rancho => {
       if (almacenAtemajac.includes(rancho)) {
         almacenes.push('Almacen Atemajac (Bioagricultura)')
@@ -65,11 +80,24 @@ export class ProtetedController {
     })
     // eliminamos los duplicados
     const uniqueAlmacenes = [...new Set(almacenes)]
-    // Log para debuggear
-    logger.debug('Ranchos:', ranchos)
-    logger.debug('Almacenes:', uniqueAlmacenes)
 
-    res.render('pages/mezclas/solicitud', { ranchos, almacen: uniqueAlmacenes || [], nombre: user.nombre, rol: user.rol })
+    // obtencion de presentaciones
+    const dataPresentacion = await CatalogoModel.obtenerPresentaciones()
+    const presentacion = Array.isArray(dataPresentacion) ? dataPresentacion.map(p => p.dataValues || p) : []
+    console.log('Presentaciones obtenidas:', presentacion)
+    // temporada actual
+    const dataTemporada = await CatalogoModel.obtenerTemporadas()
+    const temporada = Array.isArray(dataTemporada) ? dataTemporada.map(t => t.dataValues || t) : []
+    console.log('Temporadas obtenidas:', temporada)
+    // metodo de tipo de aplicacion
+    const dataTipoAplicacion = await CatalogoModel.obtenerTipoAplicaciones()
+    const tipoAplicaciones = Array.isArray(dataTipoAplicacion) ? dataTipoAplicacion.map(t => t.dataValues || t) : []
+    console.log('Tipo de aplicaciones obtenidas:', tipoAplicaciones)
+    // metodo de tipo de aplicacion
+    const dataMetodoAplicacion = await CatalogoModel.obtenerMetodoAplicaciones()
+    const metodo = Array.isArray(dataMetodoAplicacion) ? dataMetodoAplicacion.map(m => m.dataValues || m) : []
+    console.log('Metodo de aplicaciones obtenidas:', metodo)
+    res.render('pages/mezclas/solicitud', { ranchos, almacen: uniqueAlmacenes || [], presentacion, temporada, tipoAplicaciones, metodo, nombre: user.nombre, rol: user.rol })
   }
 
   solicitudes = async (req, res) => {
@@ -140,6 +168,27 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     res.render('pages/combustibles/abrirTicket', { rol: user.rol, nombre: user.nombre })
+  }
+
+  empresas = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/catalogo/empresas', { rol: user.rol, nombre: user.nombre, user })
+  }
+
+  departamentos = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/catalogo/departamentos', { rol: user.rol, nombre: user.nombre, user })
+  }
+
+  ranchos = async (req, res) => {
+    const { user } = req.session
+    // verificamos si existe un usuario
+    if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
+    res.render('pages/catalogo/ranchos', { rol: user.rol, nombre: user.nombre, user })
   }
 
   cerrarTicket = async (req, res) => {
@@ -449,16 +498,22 @@ export class ProtetedController {
     const { user } = req.session
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
-
-    res.render('pages/combustibles/entradaInventario', { user, rol: user.rol })
+    if (user.rol === 'master' || user.rol === 'administrativo' || user.rol === 'encargado_combustible') {
+      res.render('pages/combustibles/tablaEntrada', { user, rol: user.rol, titulo: 'Bienvenido' })
+    } else {
+      res.render('pages/combustibles/entradaInventario', { user, rol: user.rol })
+    }
   }
 
   salidasCombustible = async (req, res) => {
     const { user } = req.session
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
-
-    res.render('pages/combustibles/salidaInventario', { user, rol: user.rol })
+    if (user.rol === 'master' || user.rol === 'administrativo' || user.rol === 'encargado_combustible') {
+      res.render('pages/combustibles/tablaSalida', { user, rol: user.rol, titulo: 'Bienvenido' })
+    } else {
+      res.render('pages/combustibles/salidaInventario', { user, rol: user.rol })
+    }
   }
 
   cargasCombustible = async (req, res) => {
@@ -466,8 +521,11 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // Separar los ranchos en un array
-
-    res.render('pages/combustibles/cargasCombustible', { user, rol: user.rol })
+    if (user.rol === 'master' || user.rol === 'administrativo' || user.rol === 'encargado_combustible') {
+      res.render('pages/combustibles/tablaCarga', { user, rol: user.rol, titulo: 'Bienvenido' })
+    } else {
+      res.render('pages/combustibles/cargasCombustible', { user, rol: user.rol })
+    }
   }
 
   inventario = async (req, res) => {
@@ -475,8 +533,11 @@ export class ProtetedController {
     // verificamos si existe un usuario
     if (!user) return res.status(403).render('errorPage', { codeError: '403', errorMsg: 'Acceso no utorizado' })
     // Separar los ranchos en un array
-
-    res.render('pages/combustibles/inventario', { user, rol: user.rol })
+    if (user.rol === 'master' || user.rol === 'administrativo' || user.rol === 'encargado_combustible') {
+      res.render('pages/combustibles/tablaInventario', { user, rol: user.rol, titulo: 'Bienvenido' })
+    } else {
+      res.render('pages/combustibles/inventario', { user, rol: user.rol })
+    }
   }
 
   asignaciones = async (req, res) => {
@@ -559,6 +620,8 @@ export class ProtetedController {
       rawData = await CargaCombustibleModel.obtenerCargasCombustibles({ logger, logContext })
     } else if (tipo === 'solicitudes') {
       rawData = await ProduccionModel.ObtenerSolicitudes({ logger, logContext })
+    } else if (tipo === 'activos') {
+      rawData = await ProduccionModel.ObtenerActivosFijosGraficas({ logger, logContext })
     } else {
       return res.status(400).render('errorPage', { codeError: '400', errorMsg: 'Tipo de gráfica no válido' })
     }

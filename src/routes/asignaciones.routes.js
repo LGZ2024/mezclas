@@ -12,10 +12,13 @@ export const createAsignacionesRouter = ({ asignacionesModel }) => {
     '/asignaciones',
     uploadResponsiva.single('responsiva'),
     asignacionesController.agregarAsignacion)
+
   router.put('/asignaciones/:id', asignacionesController.editarAsignacion)
+
   router.put(
     '/asignaciones/responsiva/:id',
     uploadResponsiva.single('responsiva'),
     asignacionesController.editarResponsiva)
+
   return router
 }

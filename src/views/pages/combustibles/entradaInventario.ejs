@@ -3,16 +3,15 @@
 
 <head>
     <%- include("../../templates/head-pwa") %>
-        <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
-        <link rel="stylesheet" href="../../css/spinner.css">
         <%- include("../../templates/mezclas/cabecera") %>
 
 </head>
 
 
 <body>
+    <% if(rol !=="master" || rol!=="administrativo" || rol!=="adminMezclador") { %>
     <%- include("../../templates/combustibles/navCombustibles") %>
-
+    <% } %>
         <input type="hidden" value="<%= rol %>" id="rol">
         <section>
             <div class="container">
@@ -66,7 +65,7 @@
         </section>
         <%- include("../../templates/combustibles/modalAbrirTicket") %>
             <%- include("../../templates/mezclas/scripts") %>
-                <script type="module" src="../../app/combustibles/main.js"></script>
+                <script type="module" src="/app/combustibles/main.js"></script>
 
 </body>
 

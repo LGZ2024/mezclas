@@ -46,6 +46,7 @@ import { createSalidaCombustibleRouter } from '../routes/combustible_salida.rout
 import { createCargaCombustibleRouter } from '../routes/combustible_carga.routes.js'
 import { createInventarioRouter } from '../routes/combustible_inventario.routes.js'
 import { createAsignacionesRouter } from '../routes/asignaciones.routes.js'
+import { createCatalogoRouter } from '../routes/catalogo_corporativo.routes.js'
 // ruta para creacion de archivops pdf
 import { createPdfRouter } from '../routes/pdf.routes.js'
 
@@ -70,6 +71,7 @@ import { SalidaCombustibleModel } from '../models/combustible_salida.models.js'
 import { CargaCombustibleModel } from '../models/combustible_carga.models.js'
 import { InventarioModel } from '../models/combustible_inventario.models.js'
 import { AsignacionesModel } from '../models/asignaciones.models.js'
+import { CatalogoModel } from '../models/catalogo_corporativo.models.js'
 
 // Asociaciones
 import { setupAssociations } from '../models/modelAssociations.js'
@@ -190,6 +192,7 @@ export const startServer = async (options) => {
   app.use('/api/', authenticate, createCargaCombustibleRouter({ cargaCombustibleModel: CargaCombustibleModel }))
   app.use('/api/', authenticate, createInventarioRouter({ inventarioModel: InventarioModel }))
   app.use('/api/', authenticate, createAsignacionesRouter({ asignacionesModel: AsignacionesModel }))
+  app.use('/api/', authenticate, createCatalogoRouter({ catalogoModel: CatalogoModel }))
   // ruta para creacion de pdf
   app.use('/pdf/', authenticate, createPdfRouter())
 

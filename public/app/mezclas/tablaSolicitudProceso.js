@@ -10,7 +10,7 @@ async function fechTbSolicitadas () {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    // console.log('Datos obtenidos:', data)
+    console.log('Datos obtenidos:', data)
     return data
   } catch (error) {
     console.error('Error fetching solicitudes:', error)

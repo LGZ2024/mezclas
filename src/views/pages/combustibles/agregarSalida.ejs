@@ -4,12 +4,13 @@
 <head>
     <%- include("../../templates/head-pwa") %>
         <%- include("../../templates/mezclas/cabecera") %>
-            <link rel="stylesheet" href="../css/spinner.css">
 </head>
 
 <body>
+  <% if(rol !="master" && rol!="administrativo" && rol!="adminMezclador") { %>
     <%- include("../../templates/combustibles/navCombustibles") %>
-        <section>
+    <% } %>        
+    <section>
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-8">

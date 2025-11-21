@@ -8,6 +8,29 @@ let datosOriginales = []
 // Variables globales para los gráficos
 let combustibleChart, almacenChart, centroCosteChart, temporadaChart, empresaChart, unidadChart, rendimientoChart
 
+// ✅ Patrón reutilizable para crear gráficas
+const crearGrafica = (canvasId, tipo, datos, opciones = {}) => {
+  const canvas = document.getElementById(canvasId)
+  if (!canvas) {
+    console.warn(`Canvas ${canvasId} no encontrado`)
+    return null
+  }
+
+  // Destruir gráfica anterior si existe
+  if (window[`${canvasId}_instance`]) {
+    window[`${canvasId}_instance`].destroy()
+  }
+
+  // Crear nueva gráfica
+  window[`${canvasId}_instance`] = new Chart(canvas, {
+    type: tipo,
+    data: datos,
+    options: { responsive: true, maintainAspectRatio: true, ...opciones }
+  })
+
+  return window[`${canvasId}_instance`]
+}
+
 // configuracion para entradas o salidas de combustible, cargas o solicitudes
 const CONFIGURACION = {
   salidas: {
@@ -98,7 +121,7 @@ const CONFIGURACION = {
       centroCoste: 'centro_coste',
       empresa: 'empresa',
       unidad: 'no_economico',
-      rendimiento: 'rendimineto', // Mantener el typo hasta que se corrija en BD
+      rendimiento: 'rendimiento', // ✅ CORREGIDO: typo rendimineto → rendimiento
       kmRecorridos: 'km_recorridos',
       precio: 'precio',
       responsable: 'responsable'
@@ -154,6 +177,29 @@ const CONFIGURACION = {
       tiempoEntregaAlto: 7, // días
       eficienciaBaja: 80 // porcentaje
     }
+  },
+
+  activos: {
+    titulos: {
+      pageTitle: 'Dashboard - Activos Fijos',
+      totalRegistros: 'Total Activos',
+      departamentosActivos: 'Departamentos'
+    },
+    graficas: {
+      empresa: 'Activos por Empresa',
+      ubicacion: 'Activos por Ubicación/Rancho',
+      estado: 'Activos por Estado',
+      tipoEquipo: 'Activos por Tipo de Equipo'
+    },
+    filtros: ['fechaInicio', 'fechaFin', 'centroCoste', 'empresa', 'estado', 'tipoEquipo', 'ubicacion'],
+    campos: {
+      equipo: 'equipo',
+      empresa: 'empresa_pertenece',
+      centroCoste: 'centro_coste',
+      estado: 'status',
+      departamento: 'departamento',
+      ubicacion: 'ubicacion'
+    }
   }
 }
 // Colores predefinidos para las gráficas
@@ -207,13 +253,14 @@ const getConfig = (tipo) => CONFIGURACION[tipo] || CONFIGURACION.salidas
 
 // Función para limpiar strings (eliminar espacios y tabulaciones)
 const limpiarString = (texto) => {
-  if (texto == null) return 'Sin especificar'
+  if (texto == null) return 'sin especificar' // ✅ CORREGIDO: Minúscula consistente
   return String(texto)
+    .toLowerCase() // ✅ Aplicar primero para garantizar consistencia
     .trim()
-    .replace(/[\t\n\r]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/[^\w\s-áéíóúñüÁÉÍÓÚÑÜ]/g, '') // Mantener caracteres españoles
-    .toLowerCase()
+    .replace(/[\t\n\r]/g, ' ') // Reemplazar tabs y enters con espacios
+    .replace(/\s+/g, ' ') // Consolidar espacios múltiples a uno
+    .replace(/[^\w\s-áéíóúñüáéíóúñü]/g, '') // Eliminar caracteres especiales (mantener guiones, números, letras)
+    .trim() // Trim final para eliminar espacios al inicio/final después de regex
 }
 
 // Función para validar datos antes de procesarlos
@@ -222,6 +269,7 @@ const prepararYValidarDatos = (datos, tipo) => {
     console.error('Los datos no son un array válido')
     return []
   }
+  console.log('🔍 prepararYValidarDatos: Procesando', datos)
 
   const config = getConfig(tipo)
 
@@ -260,25 +308,39 @@ const prepararYValidarDatos = (datos, tipo) => {
     const itemNormalizado = { ...item }
     // 1. Normaliza la fecha a un objeto Date o null
     const fechaParsada = parsearFecha(item[config.campos.fecha])
-    itemNormalizado.fechaNormalizada = fechaParsada || new Date() // Usar fecha actual como fallback si no hay fecha válida
+
+    // Normalizar campos de texto
+    itemNormalizado.centroCosteNormalizado = limpiarString(item.centroCoste || item.centro_coste || item.centro_costos || 'sin especificar')
+    itemNormalizado.empresaNormalizada = limpiarString(item.empresa || item.empresa_pertenece || 'sin especificar')
+
     // 2. Obtener cantidad válida de cualquier campo disponible
-    itemNormalizado.cantidadValida = obtenerCantidad(item)
-    // 3. Normalizar campos de ubicación y centro de coste para filtros
-    itemNormalizado.ubicacionNormalizada = limpiarString(item.ranchoDestino || item.almacen || item.ubicacion || 'Sin especificar')
-    itemNormalizado.centroCosteNormalizado = limpiarString(item.centroCoste || item.centro_coste || item.centro_costos || 'Sin especificar')
+    if (tipo !== 'activos') itemNormalizado.cantidadValida = obtenerCantidad(item)
+    // 3. Normalizar campos para filtros - TODOS los campos de filtro se normalizan aquí
+    if (tipo !== 'activos') itemNormalizado.fechaNormalizada = fechaParsada || new Date() // Usar fecha actual como fallback si no hay fecha válida
+    if (tipo === 'solicitudes' || tipo === 'activos' || tipo === 'entradas' || tipo === 'salidas')itemNormalizado.ubicacionNormalizada = limpiarString(item.ranchoDestino || item.almacen || item.ubicacion || item.rancho || 'sin especificar')
+    if (tipo === 'salidas' || tipo === 'solicitudes')itemNormalizado.temporadaNormalizada = limpiarString(item.temporada || 'sin especificar')
+    if (tipo === 'cargas' || tipo === 'entradas' || tipo === 'salidas')itemNormalizado.combustibleNormalizado = limpiarString(item.combustible || 'sin especificar')
+    if (tipo === 'solicitudes' || tipo === 'activos')itemNormalizado.statusNormalizado = limpiarString(item.status || 'sin especificar')
+    if (tipo === 'activos') itemNormalizado.equipoNormalizado = limpiarString(item.equipo || 'sin especificar')
+    if (tipo === 'activos') itemNormalizado.departamentoNormalizado = limpiarString(item.departamento || 'sin especificar')
     return itemNormalizado
-  }).filter(item => {
-    // Filtra registros sin cantidad válida (la fecha ahora siempre existe con fallback)
+  })
+  console.log('🔍 prepararYValidarDatos: Datos normalizados', datosNormalizados)
+
+  // Para poblar filtros, incluir TODOS los registros normalizados (incluso sin cantidad)
+  // Para gráficas/análisis, filtrar solo los que tienen cantidad válida
+  const datosFiltradosPorCantidad = datosNormalizados.filter(item => {
     const tieneCantidad = item.cantidadValida !== null && item.cantidadValida !== undefined
     return tieneCantidad
   })
 
-  console.log(`Datos preparados y validados: ${datosNormalizados.length}/${datos.length} registros válidos`)
-  if (datosNormalizados.length === 0 && datos.length > 0) {
+  if (datosFiltradosPorCantidad.length === 0 && datosNormalizados.length > 0) {
     console.warn('⚠️ Aviso: Todos los registros fueron filtrados. Revisando primeros registros:')
-    console.log('Primeros 3 registros originales:', datos.slice(0, 3))
+    console.log('Primeros 3 registros normalizados:', datosNormalizados.slice(0, 3))
     console.log('Campos esperados:', config.campos)
   }
+
+  // Retornar datos normalizados (sin filtrar) para que poblarFiltros() tenga acceso a todos
   return datosNormalizados
 }
 
@@ -338,13 +400,23 @@ const actualizarTitulosDashboard = (config) => {
 const poblarFiltros = (datos, config) => {
   try {
     const tipoDatos = window.dashboardTipo
+    console.log(`🔍 poblarFiltros: Recibido ${datos.length} registros para tipo: ${tipoDatos}`)
 
     if (!config || !config.campos) {
       console.error('Configuración no válida:', config)
       return
     }
 
-    // Sets para valores únicos - usar datos normalizados directamente
+    // Mostrar primeros 3 registros para verificar que tienen ubicacionNormalizada
+    if (datos.length > 0) {
+      console.log('📋 Primeros registros:', datos.slice(0, 3).map(d => ({
+        ubicacionNormalizada: d.ubicacionNormalizada,
+        empresaNormalizada: d.empresaNormalizada,
+        centroCosteNormalizado: d.centroCosteNormalizado
+      })))
+    }
+
+    // Sets para valores únicos
     const conjuntos = {
       centroCoste: new Set(),
       empresa: new Set(),
@@ -371,48 +443,52 @@ const poblarFiltros = (datos, config) => {
       conjuntos.usuario = new Set()
       conjuntos.status = new Set()
     }
+    if (tipoDatos === 'activos') {
+      conjuntos.estado = new Set()
+      conjuntos.tipoActivo = new Set()
+      conjuntos.departamento = new Set()
+      conjuntos.ubicacion = new Set()
+    }
 
     // Poblar los conjuntos con valores de los datos
+    // Nota: Los datos ya vienen con campos normalizados de prepararYValidarDatos()
+    console.log('🔍 poblarFiltros: Iniciando procesamiento de datos para filtros', datos)
     datos.forEach(item => {
-      // Centro de coste (normalizado)
-      if (item.centroCosteNormalizado && item.centroCosteNormalizado !== 'Sin especificar') {
+      // Centro de coste - usar campo ya normalizado
+      if (item.centroCosteNormalizado && item.centroCosteNormalizado !== 'sin especificar') {
         conjuntos.centroCoste.add(item.centroCosteNormalizado)
       }
 
-      // Empresa
-      const empresa = limpiarString(item.empresa || '')
-      if (empresa && empresa !== 'sin especificar') {
-        conjuntos.empresa.add(empresa)
+      // Empresa - usar campo ya normalizado
+      if (item.empresaNormalizada && item.empresaNormalizada !== 'sin especificar') {
+        conjuntos.empresa.add(item.empresaNormalizada)
       }
 
-      // Almacén (para salidas y entradas)
+      // Almacén (para salidas y entradas) - usar campo ya normalizado
       if (tipoDatos === 'salidas' || tipoDatos === 'entradas') {
-        if (item.ubicacionNormalizada && item.ubicacionNormalizada !== 'Sin especificar') {
+        if (item.ubicacionNormalizada && item.ubicacionNormalizada !== 'sin especificar') {
           conjuntos.almacen.add(item.ubicacionNormalizada)
         }
       }
 
-      // Rancho (para solicitudes)
-      if (tipoDatos === 'solicitudes') {
-        const rancho = limpiarString(item.ranchoDestino || '')
-        if (rancho && rancho !== 'sin especificar') {
-          conjuntos.rancho.add(rancho)
+      // Rancho (para salidas, entradas y solicitudes) - usar campo ya normalizado
+      if (tipoDatos === 'salidas' || tipoDatos === 'entradas' || tipoDatos === 'solicitudes') {
+        if (item.ubicacionNormalizada && item.ubicacionNormalizada !== 'sin especificar') {
+          conjuntos.rancho.add(item.ubicacionNormalizada)
         }
       }
 
-      // Temporada
+      // Temporada - usar campo ya normalizado
       if (tipoDatos === 'salidas' || tipoDatos === 'solicitudes') {
-        const temporada = limpiarString(item.temporada || '')
-        if (temporada && temporada !== 'sin especificar') {
-          conjuntos.temporada.add(temporada)
+        if (item.temporadaNormalizada && item.temporadaNormalizada !== 'sin especificar') {
+          conjuntos.temporada.add(item.temporadaNormalizada)
         }
       }
 
-      // Combustible
+      // Combustible - usar campo ya normalizado
       if (tipoDatos === 'salidas' || tipoDatos === 'entradas' || tipoDatos === 'cargas') {
-        const combustible = limpiarString(item.combustible || '')
-        if (combustible && combustible !== 'sin especificar') {
-          conjuntos.combustible.add(combustible)
+        if (item.combustibleNormalizado && item.combustibleNormalizado !== 'sin especificar') {
+          conjuntos.combustible.add(item.combustibleNormalizado)
         }
       }
 
@@ -436,8 +512,17 @@ const poblarFiltros = (datos, config) => {
         const status = limpiarString(item.status || '')
         if (status && status !== 'sin especificar') conjuntos.status.add(status)
       }
+
+      // Filtros específicos para activos
+      if (tipoDatos === 'activos') {
+        if (item.statusNormalizado && item.statusNormalizado !== 'sin especificar') conjuntos.estado.add(item.statusNormalizado)
+        if (item.equipoNormalizado && item.equipoNormalizado !== 'sin especificar') conjuntos.tipoActivo.add(item.equipoNormalizado)
+        if (item.departamentoNormalizado && item.departamentoNormalizado !== 'sin especificar') conjuntos.departamento.add(item.departamentoNormalizado)
+        if (item.ubicacionNormalizada && item.ubicacionNormalizada !== 'sin especificar') conjuntos.ubicacion.add(item.ubicacionNormalizada)
+      }
     })
 
+    console.log('🔍 poblarFiltros: Conjuntos únicos generados', conjuntos)
     // Poblar los selectores - mapear correctamente los nombres de los filtros
     const mapeoFiltros = {
       centroCoste: 'filtroCentroCoste',
@@ -451,7 +536,11 @@ const poblarFiltros = (datos, config) => {
       metodoAplicacion: 'filtroMetodoAplicacion',
       producto: 'filtroProducto',
       usuario: 'filtroUsuario',
-      status: 'filtroStatus'
+      status: 'filtroStatus',
+      estado: 'filtroEstado',
+      tipoActivo: 'filtroTipoActivo',
+      departamento: 'filtroDepartamentos',
+      ubicacion: 'filtroUbicacion'
     }
 
     Object.entries(conjuntos).forEach(([campo, valores]) => {
@@ -472,6 +561,7 @@ const poblarFiltros = (datos, config) => {
 const poblarSelect = (selectId, valores) => {
   const select = document.getElementById(selectId)
   if (!select) return
+  console.log(`Poblando ${selectId} con`, valores)
 
   select.innerHTML = '<option value="">Todos</option>';
   [...valores].sort().forEach(valor => {
@@ -513,8 +603,17 @@ const aplicarFiltros = () => {
     const usuario = tipoDatos === 'solicitudes' ? (document.getElementById('filtroUsuario')?.value || '') : ''
     const status = tipoDatos === 'solicitudes' ? (document.getElementById('filtroStatus')?.value || '') : ''
 
+    // Filtros específicos para activos
+    const estado = tipoDatos === 'activos' ? (document.getElementById('filtroEstado')?.value || '') : ''
+    const tipoActivo = tipoDatos === 'activos' ? (document.getElementById('filtroTipoActivo')?.value || '') : ''
+    const departamento = tipoDatos === 'activos' ? (document.getElementById('filtroDepartamentos')?.value || '') : ''
+    const ubicacion = tipoDatos === 'activos' ? (document.getElementById('filtroUbicacion')?.value || '') : ''
+
     // 2. Usamos .filter() sobre los datos originales
     const datosFiltrados = datosOriginales.filter(item => {
+      // Primero filtrar por cantidad válida (para gráficas y análisis) - NO para activos
+      if (tipoDatos !== 'activos' && (item.cantidadValida === null || item.cantidadValida === undefined)) return false
+
       // Filtro por Fecha (usando el campo normalizado)
       if (fechaInicio && (!item.fechaNormalizada || item.fechaNormalizada < new Date(fechaInicio + 'T00:00:00Z'))) return false
       if (fechaFin && (!item.fechaNormalizada || item.fechaNormalizada > new Date(fechaFin + 'T00:00:00Z'))) return false
@@ -524,14 +623,15 @@ const aplicarFiltros = () => {
       if (rancho && item.ubicacionNormalizada !== rancho) return false
 
       // Filtro por Temporada para salidas y solicitudes
-      if ((tipoDatos === 'salidas' || tipoDatos === 'solicitudes') && temporada && limpiarString(item.temporada || '') !== temporada) return false
+      console.log('🔍 aplicarFiltros: Verificando temporada para item', item.temporadaNormalizada, tipoDatos, temporada)
 
-      // Filtro por Combustible
-      const tipoCombustible = limpiarString(item.combustible || '')
-      if (combustible && tipoCombustible !== combustible) return false
+      if ((tipoDatos === 'salidas' || tipoDatos === 'solicitudes') && temporada && item.temporadaNormalizada !== temporada) return false
 
-      // Filtro por Empresa
-      if (empresa && limpiarString(item.empresa || '') !== empresa) return false
+      // Filtro por Combustible - usar campo normalizado
+      if (combustible && item.combustibleNormalizado !== combustible) return false
+
+      // Filtro por Empresa - usar campo normalizado
+      if (empresa && item.empresaNormalizada !== empresa) return false
 
       // Filtro por Centro de Coste
       // Usamos el campo normalizado 'centroCosteNormalizado'
@@ -545,6 +645,33 @@ const aplicarFiltros = () => {
         if (producto && limpiarString(item.nombre_producto || '') !== producto) return false
         if (usuario && limpiarString(item.nombre || '') !== usuario) return false
         if (status && limpiarString(item.status || '') !== status) return false
+      }
+
+      // Filtros específicos para activos
+      if (tipoDatos === 'activos') {
+        console.log('🔍 Aplicando filtros activos:', { estado, tipoActivo, ubicacion, departamento })
+        console.log('🔍 Valores del item:', {
+          statusNormalizado: item.statusNormalizado,
+          equipoNormalizado: item.equipoNormalizado,
+          ubicacionNormalizada: item.ubicacionNormalizada,
+          departamentoNormalizado: item.departamentoNormalizado
+        })
+        if (estado && item.statusNormalizado !== estado) {
+          console.log('❌ Rechazado por estado:', item.statusNormalizado, '!==', estado)
+          return false
+        }
+        if (tipoActivo && item.equipoNormalizado !== tipoActivo) {
+          console.log('❌ Rechazado por tipoActivo:', item.equipoNormalizado, '!==', tipoActivo)
+          return false
+        }
+        if (ubicacion && item.ubicacionNormalizada !== ubicacion) {
+          console.log('❌ Rechazado por ubicacion:', item.ubicacionNormalizada, '!==', ubicacion)
+          return false
+        }
+        if (departamento && item.departamentoNormalizado !== departamento) {
+          console.log('❌ Rechazado por departamento:', item.departamentoNormalizado, '!==', departamento)
+          return false
+        }
       }
 
       // Filtro de eficiencia
@@ -575,6 +702,31 @@ const aplicarFiltros = () => {
     // VERIFICAR ALERTAS
     verificarAlertas(datosFiltrados)
 
+    // Debug logging
+    console.log('🔍 Filtros aplicados:', {
+      rancho,
+      temporada,
+      combustible,
+      centroCoste,
+      empresa,
+      datosOriginalesCount: datosOriginales.length,
+      datosFiltradosCount: datosFiltrados.length
+    })
+
+    // Logging detallado de los primeros registros disponibles
+    if (datosOriginales.length > 0 && datosFiltrados.length === 0) {
+      console.log('🚨 Filtros muy restrictivos - ejemplo de datos originales:')
+      datosOriginales.slice(0, 2).forEach((item, idx) => {
+        console.log(`Registro ${idx}:`, {
+          ubicacionNormalizada: item.ubicacionNormalizada,
+          temporadaNormalizada: item.temporadaNormalizada,
+          centroCosteNormalizado: item.centroCosteNormalizado,
+          combustibleNormalizado: item.combustibleNormalizado,
+          cantidadValida: item.cantidadValida
+        })
+      })
+    }
+
     // Limpiar cache cuando se aplican filtros
     limpiarCache()
 
@@ -603,7 +755,7 @@ const verificarAlertas = (datos) => {
   // Verificar rendimiento bajo (solo para cargas)
   if (window.dashboardTipo === 'cargas') {
     const rendimientoPromedio = datos.reduce((acc, item) => {
-      return acc + (parseFloat(item.rendimineto || 0))
+      return acc + (parseFloat(item.rendimiento || 0)) // ✅ Corregido: rendimiento
     }, 0) / datos.length
 
     if (rendimientoPromedio < config.alertas.rendimientoBajo) {
@@ -704,6 +856,13 @@ const actualizarVistas = (datos) => {
       crearGraficaEficiencia(datos)
       crearGraficaTimelineMejorado(datos)
       break
+    case 'activos':
+      crearGraficaEmpresaActivos(datos)
+      crearGraficaUbicacion(datos)
+      crearGraficaEstadoActivos(datos)
+      crearGraficaTipoEquipo(datos)
+      crearGraficaDepartamento(datos)
+      break
   }
 }
 
@@ -717,12 +876,43 @@ const procesarDatosAgrupados = (datos, { keyFields, valueFields, topN = null }) 
 
     // Encontrar el primer campo de valor válido o usar 0
     const value = valueFields.map(v => item[v]).find(val => val !== undefined) || 0
+    console.log('🔍 procesarDatosAgrupados: Procesando item', { keyFields, valueFields, label, value })
     const cantidad = parseFloat(value)
 
     if (agrupacion[label]) {
       agrupacion[label] += cantidad
     } else {
       agrupacion[label] = cantidad
+    }
+  })
+
+  let sorted = Object.entries(agrupacion)
+
+  // Ordenar y cortar si se especifica topN
+  if (topN) {
+    sorted = sorted.sort(([, a], [, b]) => b - a).slice(0, topN)
+  }
+
+  return {
+    labels: sorted.map(([label]) => label),
+    data: sorted.map(([, value]) => value),
+    colors: sorted.map((_, index) => getColor(index))
+  }
+}
+
+// Función específica para contar activos (no sumar valores)
+const procesarDatosActivosConteo = (datos, { keyFields, topN = null }) => {
+  const agrupacion = {}
+  datos.forEach(item => {
+    // Encontrar el primer campo de clave válido o usar 'Sin especificar'
+    const key = keyFields.map(k => item[k]).find(val => val) || 'Sin especificar'
+    const label = limpiarString(key.trim())
+
+    // Simplemente contar: cada registro = 1 activo
+    if (agrupacion[label]) {
+      agrupacion[label] += 1
+    } else {
+      agrupacion[label] = 1
     }
   })
 
@@ -766,7 +956,7 @@ const procesarDatosRendimiento = (datos) => {
   const agrupacion = {}
   datos.forEach(item => {
     const unidad = item.no_economico || 'Sin especificar'
-    const rendimiento = parseFloat(item.rendimineto) || 0
+    const rendimiento = parseFloat(item.rendimiento) || 0 // ✅ Corregido: rendimiento
     const kmRecorridos = parseFloat(item.km_recorridos) || 0
 
     if (!agrupacion[unidad]) {
@@ -1006,6 +1196,19 @@ const actualizarEstadisticas = (datos) => {
     const cal = calcularEstadisticasTemporales(datos)
     console.log(cal)
   }
+
+  if (tipoDatos === 'activos') {
+    // Calcular estadísticas para activos
+
+    // Calcular el número de departamentos únicos
+    const departamentosUnicos = new Set(datos.map(item => item.departamentoNormalizado).filter(d => d !== 'sin especificar')).size
+
+    totalRegistros = datos.length
+
+    // Actualizar estadísticas generales
+    document.getElementById('totalSalidas').textContent = formatearNumero(totalRegistros)
+    document.getElementById('totalDepartamentos').textContent = formatearNumero(departamentosUnicos)
+  }
 }
 // Función para calcular estadísticas de tiempo
 const calcularEstadisticasTiempo = (datos) => {
@@ -1101,43 +1304,31 @@ const crearGraficaProductos = (datos) => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
 
-  // Destruir gráfico existente si existe
-  if (unidadChart) {
-    unidadChart.destroy()
-  }
-
-  unidadChart = new Chart(ctx, {
-    type: 'bar', // Cambiado de 'horizontalBar' a 'bar'
-    data: {
-      labels: top10.map(([nombre]) => nombre),
-      datasets: [{
-        data: top10.map(([, cantidad]) => cantidad),
-        backgroundColor: getColor(10)
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y', // Esto hace que la barra sea horizontal
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `${context.label}: ${formatearNumero(context.raw)}`
-            }
+  unidadChart = crearGrafica('productoChart', 'bar', {
+    labels: top10.map(([nombre]) => nombre),
+    datasets: [{
+      data: top10.map(([, cantidad]) => cantidad),
+      backgroundColor: getColor(10)
+    }]
+  }, {
+    maintainAspectRatio: false,
+    indexAxis: 'y', // Esto hace que la barra sea horizontal
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${formatearNumero(context.raw)}`
           }
         }
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return formatearNumero(value)
-            }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          callback: function (value) {
+            return formatearNumero(value)
           }
         }
       }
@@ -1151,46 +1342,34 @@ const crearGraficaUnidad = (datos) => {
 
   const procesado = procesarDatosUnidad(datos)
 
-  // Destruir gráfico existente si existe
-  if (unidadChart) {
-    unidadChart.destroy()
-  }
-
-  unidadChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: procesado.labels,
-      datasets: [{
-        label: 'Cargas (L)',
-        data: procesado.data,
-        backgroundColor: procesado.colors,
-        borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `${context.label}: ${formatearNumero(context.parsed.x)} L`
-            }
+  unidadChart = crearGrafica('unidadChart', 'bar', {
+    labels: procesado.labels,
+    datasets: [{
+      label: 'Cargas (L)',
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
+      borderWidth: 1
+    }]
+  }, {
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${formatearNumero(context.parsed.x)} L`
           }
         }
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return formatearNumero(value) + ' L'
-            }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          callback: function (value) {
+            return formatearNumero(value) + ' L'
           }
         }
       }
@@ -1210,40 +1389,33 @@ const crearGraficaRendimiento = (datos) => {
     rendimientoChart.destroy()
   }
 
-  rendimientoChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: procesado.labels,
-      datasets: [{
-        label: 'Rendimiento (km/L)',
-        data: procesado.data,
-        backgroundColor: procesado.colors,
-        borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `${context.label}: ${context.parsed.y.toFixed(2)} km/L`
-            }
+  rendimientoChart = crearGrafica('rendimientoChart', 'bar', {
+    labels: procesado.labels,
+    datasets: [{
+      label: 'Rendimiento (km/L)',
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
+      borderWidth: 1
+    }]
+  }, {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${context.parsed.y.toFixed(2)} km/L`
           }
         }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return value.toFixed(2) + ' km/L'
-            }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function (value) {
+            return value.toFixed(2) + ' km/L'
           }
         }
       }
@@ -1262,35 +1434,30 @@ const crearGraficaCombustible = (datos) => {
     combustibleChart.destroy()
   }
 
-  combustibleChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: procesado.labels,
-      datasets: [{
-        data: procesado.data,
-        backgroundColor: procesado.colors,
-        borderWidth: 2,
-        borderColor: '#fff'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            padding: 20,
-            usePointStyle: true
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const total = context.dataset.data.reduce((a, b) => a + b, 0)
-              const percentage = ((context.parsed / total) * 100).toFixed(1)
-              return `${context.label}: ${formatearNumero(context.parsed)} L (${percentage}%)`
-            }
+  combustibleChart = crearGrafica('combustibleChart', 'doughnut', {
+    labels: procesado.labels,
+    datasets: [{
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  }, {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          usePointStyle: true
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+            const percentage = ((context.parsed / total) * 100).toFixed(1)
+            return `${context.label}: ${formatearNumero(context.parsed)} L (${percentage}%)`
           }
         }
       }
@@ -1309,40 +1476,33 @@ const crearGraficaAlmacen = (datos) => {
     almacenChart.destroy()
   }
 
-  almacenChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: procesado.labels,
-      datasets: [{
-        label: 'Consumo (L)',
-        data: procesado.data,
-        backgroundColor: procesado.colors,
-        borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `${context.label}: ${formatearNumero(context.parsed.y)} L`
-            }
+  almacenChart = crearGrafica('almacenChart', 'bar', {
+    labels: procesado.labels,
+    datasets: [{
+      label: 'Consumo (L)',
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
+      borderWidth: 1
+    }]
+  }, {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${formatearNumero(context.parsed.y)} L`
           }
         }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return formatearNumero(value) + ' L'
-            }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function (value) {
+            return formatearNumero(value) + ' L'
           }
         }
       }
@@ -1360,41 +1520,34 @@ const crearGraficaCentroCoste = (datos) => {
     centroCosteChart.destroy()
   }
 
-  centroCosteChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: procesado.labels,
-      datasets: [{
-        label: 'Consumo (L)',
-        data: procesado.data,
-        backgroundColor: procesado.colors,
-        borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `${context.label}: ${formatearNumero(context.parsed.x)} L`
-            }
+  centroCosteChart = crearGrafica('centroCosteChart', 'bar', {
+    labels: procesado.labels,
+    datasets: [{
+      label: 'Consumo (L)',
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
+      borderWidth: 1
+    }]
+  }, {
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${formatearNumero(context.parsed.x)} L`
           }
         }
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return formatearNumero(value) + ' L'
-            }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          callback: function (value) {
+            return formatearNumero(value) + ' L'
           }
         }
       }
@@ -1413,35 +1566,30 @@ const crearGraficaTemporada = (datos) => {
     temporadaChart.destroy()
   }
 
-  temporadaChart = new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: procesado.labels,
-      datasets: [{
-        data: procesado.data,
-        backgroundColor: procesado.colors,
-        borderWidth: 2,
-        borderColor: '#fff'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            padding: 15,
-            usePointStyle: true
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const total = context.dataset.data.reduce((a, b) => a + b, 0)
-              const percentage = ((context.parsed / total) * 100).toFixed(1)
-              return `${context.label}: ${formatearNumero(context.parsed)} L (${percentage}%)`
-            }
+  temporadaChart = crearGrafica('temporadaChart', 'pie', {
+    labels: procesado.labels,
+    datasets: [{
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  }, {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 15,
+          usePointStyle: true
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0)
+            const percentage = ((context.parsed / total) * 100).toFixed(1)
+            return `${context.label}: ${formatearNumero(context.parsed)} L (${percentage}%)`
           }
         }
       }
@@ -1460,41 +1608,34 @@ const crearGraficaEmpresa = (datos) => {
     empresaChart.destroy()
   }
 
-  empresaChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: procesado.labels,
-      datasets: [{
-        label: 'Consumo (L)',
-        data: procesado.data,
-        backgroundColor: procesado.colors,
-        borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              return `${context.label}: ${formatearNumero(context.parsed.x)} L`
-            }
+  empresaChart = crearGrafica('empresaChart', 'bar', {
+    labels: procesado.labels,
+    datasets: [{
+      label: 'Consumo (L)',
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: procesado.colors.map(color => color.replace('0.8', '1')),
+      borderWidth: 1
+    }]
+  }, {
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.label}: ${formatearNumero(context.parsed.x)} L`
           }
         }
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return formatearNumero(value) + ' L'
-            }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: {
+          callback: function (value) {
+            return formatearNumero(value) + ' L'
           }
         }
       }
@@ -1553,34 +1694,29 @@ const crearGraficaEficiencia = (datos) => {
       try { delete window.eficienciaChart } catch (e) {}
     }
 
-    window.eficienciaChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: datosGrafica.map(d => d.tipo),
-        datasets: [{
-          label: 'Eficiencia de Cumplimiento (%)',
-          data: datosGrafica.map(d => d.eficiencia),
-          backgroundColor: datosGrafica.map((_, i) => getColor(i)),
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: (context) => `${context.label}: ${context.raw}% de eficiencia`
-            }
+    window.eficienciaChart = crearGrafica('eficienciaChart', 'bar', {
+      labels: datosGrafica.map(d => d.tipo),
+      datasets: [{
+        label: 'Eficiencia de Cumplimiento (%)',
+        data: datosGrafica.map(d => d.eficiencia),
+        backgroundColor: datosGrafica.map((_, i) => getColor(i)),
+        borderWidth: 1
+      }]
+    }, {
+      maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.label}: ${context.raw}% de eficiencia`
           }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 100,
-            ticks: {
-              callback: value => value + '%'
-            }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            callback: value => value + '%'
           }
         }
       }
@@ -1651,35 +1787,30 @@ const crearGraficaTiempoEntrega = (datos) => {
       try { delete window.tiempoEntregaChart } catch (e) {}
     }
 
-    window.tiempoEntregaChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: Object.keys(rangos),
-        datasets: [{
-          data: Object.values(rangos),
-          backgroundColor: [
-            '#4CAF50', // Verde para rápido
-            '#8BC34A', // Verde claro
-            '#FFC107', // Amarillo para moderado
-            '#FF9800', // Naranja
-            '#F44336' // Rojo para lento
-          ]
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                const percentage = ((context.raw / total) * 100).toFixed(1)
-                return `${context.label}: ${context.raw} solicitudes (${percentage}%)`
-              }
+    window.tiempoEntregaChart = crearGrafica('tiempoEntregaChart', 'doughnut', {
+      labels: Object.keys(rangos),
+      datasets: [{
+        data: Object.values(rangos),
+        backgroundColor: [
+          '#4CAF50', // Verde para rápido
+          '#8BC34A', // Verde claro
+          '#FFC107', // Amarillo para moderado
+          '#FF9800', // Naranja
+          '#F44336' // Rojo para lento
+        ]
+      }]
+    }, {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const total = context.dataset.data.reduce((a, b) => a + b, 0)
+              const percentage = ((context.raw / total) * 100).toFixed(1)
+              return `${context.label}: ${context.raw} solicitudes (${percentage}%)`
             }
           }
         }
@@ -1734,27 +1865,22 @@ const crearGraficaMetodoAplicacion = (datos) => {
       try { delete window.metodoChart } catch (e) {}
     }
 
-    window.metodoChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: datosOrdenados.map(([metodo]) => metodo),
-        datasets: [{
-          label: 'Cantidad Total',
-          data: datosOrdenados.map(([, cantidad]) => cantidad),
-          backgroundColor: datosOrdenados.map((_, i) => getColor(i)),
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (context) => `${context.label}: ${formatearNumero(context.raw)}`
-            }
+    window.metodoChart = crearGrafica('metodoChart', 'bar', {
+      labels: datosOrdenados.map(([metodo]) => metodo),
+      datasets: [{
+        label: 'Cantidad Total',
+        data: datosOrdenados.map(([, cantidad]) => cantidad),
+        backgroundColor: datosOrdenados.map((_, i) => getColor(i)),
+        borderWidth: 1
+      }]
+    }, {
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.label}: ${formatearNumero(context.raw)}`
           }
         }
       }
@@ -1809,30 +1935,25 @@ const crearGraficaVariedad = (datos) => {
       try { delete window.variedadChart } catch (e) {}
     }
 
-    window.variedadChart = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: top8.map(([variedad]) => variedad),
-        datasets: [{
-          data: top8.map(([, cantidad]) => cantidad),
-          backgroundColor: top8.map((_, i) => getColor(i))
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'right',
-            labels: { padding: 15 }
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const total = context.dataset.data.reduce((a, b) => a + b, 0)
-                const percentage = ((context.raw / total) * 100).toFixed(1)
-                return `${context.label}: ${formatearNumero(context.raw)} (${percentage}%)`
-              }
+    window.variedadChart = crearGrafica('variedadChart', 'pie', {
+      labels: top8.map(([variedad]) => variedad),
+      datasets: [{
+        data: top8.map(([, cantidad]) => cantidad),
+        backgroundColor: top8.map((_, i) => getColor(i))
+      }]
+    }, {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { padding: 15 }
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const total = context.dataset.data.reduce((a, b) => a + b, 0)
+              const percentage = ((context.raw / total) * 100).toFixed(1)
+              return `${context.label}: ${formatearNumero(context.raw)} (${percentage}%)`
             }
           }
         }
@@ -1906,58 +2027,53 @@ const crearGraficaTimelineMejorado = (datos) => {
       try { delete window.timelineChart } catch (e) {}
     }
 
-    window.timelineChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: fechasOrdenadas.map(fecha => {
-          return new Date(fecha).toLocaleDateString('es-MX', {
-            month: 'short', day: 'numeric'
-          })
-        }),
-        datasets: [{
-          label: 'Solicitudes por día',
-          data: fechasOrdenadas.map(fecha => solicitudesPorFecha[fecha].solicitudes),
-          borderColor: '#2196F3',
-          backgroundColor: 'rgba(33, 150, 243, 0.1)',
-          tension: 0.4,
-          yAxisID: 'y'
-        }, {
-          label: 'Productos solicitados',
-          data: fechasOrdenadas.map(fecha => solicitudesPorFecha[fecha].productos),
-          borderColor: '#4CAF50',
-          backgroundColor: 'rgba(76, 175, 80, 0.1)',
-          tension: 0.4,
-          yAxisID: 'y1'
-        }]
+    window.timelineChart = crearGrafica('timelineChart', 'line', {
+      labels: fechasOrdenadas.map(fecha => {
+        return new Date(fecha).toLocaleDateString('es-MX', {
+          month: 'short', day: 'numeric'
+        })
+      }),
+      datasets: [{
+        label: 'Solicitudes por día',
+        data: fechasOrdenadas.map(fecha => solicitudesPorFecha[fecha].solicitudes),
+        borderColor: '#2196F3',
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        tension: 0.4,
+        yAxisID: 'y'
+      }, {
+        label: 'Productos solicitados',
+        data: fechasOrdenadas.map(fecha => solicitudesPorFecha[fecha].productos),
+        borderColor: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        tension: 0.4,
+        yAxisID: 'y1'
+      }]
+    }, {
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          mode: 'index',
-          intersect: false
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Número de Solicitudes'
+          }
         },
-        scales: {
-          y: {
-            type: 'linear',
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: {
             display: true,
-            position: 'left',
-            title: {
-              display: true,
-              text: 'Número de Solicitudes'
-            }
+            text: 'Número de Productos'
           },
-          y1: {
-            type: 'linear',
-            display: true,
-            position: 'right',
-            title: {
-              display: true,
-              text: 'Número de Productos'
-            },
-            grid: {
-              drawOnChartArea: false
-            }
+          grid: {
+            drawOnChartArea: false
           }
         }
       }
@@ -1967,6 +2083,123 @@ const crearGraficaTimelineMejorado = (datos) => {
   }
 }
 
+// Funciones para tipo 'activos'
+// realiza grafica del estatus de los activos por equipo
+// Funciones para tipo 'activos'
+const crearGraficaEmpresaActivos = (datos) => {
+  const procesado = procesarDatosActivosConteo(datos, {
+    keyFields: ['empresaNormalizada']
+  })
+
+  crearGrafica('combustibleChart', 'pie', {
+    labels: procesado.labels,
+    datasets: [{
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: '#fff',
+      borderWidth: 2
+    }]
+  }, { responsive: true, maintainAspectRatio: true })
+}
+
+const crearGraficaUbicacion = (datos) => {
+  const procesado = procesarDatosActivosConteo(datos, {
+    keyFields: ['ubicacionNormalizada'],
+    topN: 10
+  })
+
+  crearGrafica('almacenChart', 'bar', {
+    labels: procesado.labels,
+    datasets: [{
+      label: 'Cantidad de Activos',
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: '#90CAF9',
+      borderWidth: 1
+    }]
+  }, {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: true,
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: { stepSize: 1 }
+      }
+    }
+  })
+}
+
+const crearGraficaEstadoActivos = (datos) => {
+  const procesado = procesarDatosActivosConteo(datos, {
+    keyFields: ['statusNormalizado']
+  })
+
+  crearGrafica('empresaChart', 'doughnut', {
+    labels: procesado.labels,
+    datasets: [{
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: '#fff',
+      borderWidth: 2
+    }]
+  }, { responsive: true, maintainAspectRatio: true })
+}
+
+const crearGraficaTipoEquipo = (datos) => {
+  const procesado = procesarDatosActivosConteo(datos, {
+    keyFields: ['equipoNormalizado']
+  })
+
+  crearGrafica('centroCosteChart', 'bar', {
+    labels: procesado.labels,
+    datasets: [{
+      label: 'Cantidad de Equipos',
+      data: procesado.data,
+      backgroundColor: 'rgba(76, 175, 80, 0.7)',
+      borderColor: 'rgba(76, 175, 80, 1)',
+      borderWidth: 1
+    }]
+  }, {
+    indexAxis: 'x',
+    responsive: true,
+    maintainAspectRatio: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { stepSize: 1 }
+      }
+    }
+  })
+}
+
+const crearGraficaDepartamento = (datos) => {
+  const procesado = procesarDatosActivosConteo(datos, {
+    keyFields: ['departamentoNormalizado'],
+    topN: 10
+  })
+
+  crearGrafica('departamentoChart', 'bar', {
+    labels: procesado.labels,
+    datasets: [{
+      label: 'Cantidad de Activos',
+      data: procesado.data,
+      backgroundColor: procesado.colors,
+      borderColor: '#90CAF9',
+      borderWidth: 1
+    }]
+  }, {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: true,
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: { stepSize: 1 }
+      }
+    }
+  })
+}
 // Función para actualizar el dashboard
 const configurarEventListenersFiltros = () => {
   const tipoDatos = window.dashboardTipo
@@ -1988,6 +2221,9 @@ const configurarEventListenersFiltros = () => {
     idsFiltros.push('filtroCombustible')
   }
 
+  if (tipoDatos === 'cargas') {
+    idsFiltros.push('filtroCombustible')
+  }
   // Agregar filtros específicos para solicitudes
   if (tipoDatos === 'solicitudes') {
     idsFiltros.push('filtroRancho')
@@ -1997,6 +2233,14 @@ const configurarEventListenersFiltros = () => {
     idsFiltros.push('filtroProducto')
     idsFiltros.push('filtroUsuario')
     idsFiltros.push('filtroStatus')
+    idsFiltros.push('filtroTemporada')
+  }
+
+  if (tipoDatos === 'activos') {
+    idsFiltros.push('filtroEstado')
+    idsFiltros.push('filtroTipoActivo')
+    idsFiltros.push('filtroDepartamentos')
+    idsFiltros.push('filtroUbicacion')
   }
 
   // 🚀 Aplicar debounce a los event listeners
@@ -2104,18 +2348,30 @@ const inicializarDashboard = async () => {
     // Mostrar loading
     showSpinner()
 
+    // ✅ FIX #3: Validar window.dashboardTipo
     const tipoDatos = window.dashboardTipo
+    if (!tipoDatos || !['salidas', 'entradas', 'cargas', 'solicitudes', 'activos'].includes(tipoDatos)) {
+      hideSpinner()
+      throw new Error(`Tipo de dashboard inválido: ${tipoDatos}. Debe ser: salidas, entradas, cargas, solicitudes o activos`)
+    }
 
-    // Validar y guardar datos
-    const datosRaw = window.dashboardData || []
+    // ✅ FIX #3: Validar window.dashboardData
+    const datosRaw = window.dashboardData
+    if (!Array.isArray(datosRaw)) {
+      hideSpinner()
+      throw new Error('window.dashboardData no es un array válido. Verifica que los datos se pasen correctamente desde el servidor.')
+    }
+    if (datosRaw.length === 0) {
+      console.warn('⚠️ Aviso: window.dashboardData está vacío. El dashboard no mostrará datos.')
+    }
+
     // Prepara, valida y normaliza los datos en un solo paso
     datosOriginales = prepararYValidarDatos(datosRaw, tipoDatos)
     const config = getConfig(tipoDatos)
 
+    console.log(`Datos preparados para tipo: ${tipoDatos}`, datosOriginales)
     // Actualizar títulos según configuración
     actualizarTitulosDashboard(config)
-
-    // console.log('Datos obtenidos:', datosOriginales)
 
     if (datosOriginales.length === 0) {
       console.warn('No se encontraron datos para mostrar')

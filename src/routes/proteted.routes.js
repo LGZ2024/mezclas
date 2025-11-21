@@ -8,7 +8,7 @@ export const createProtetedRouter = () => {
   const asistenciaController = new ProtetedController()
   // rutas protegidas
   router.get('/admin', asistenciaController.protected)
-  router.get('/activosFijos', asistenciaController.activosFijos)
+  router.get('/FijosActivos', asistenciaController.activosFijos)
   router.get('/talleres', asistenciaController.talleres)
   router.get('/registrarTalleres', asistenciaController.registrarTalleres)
   router.get('/tickets', asistenciaController.tickets)
@@ -38,16 +38,22 @@ export const createProtetedRouter = () => {
   router.get('/salidaCombustible/', asistenciaController.agregarSalidaInventario)
   router.get('/cargaCombustible/', asistenciaController.agregarCargaCombustible)
   router.get('/entradas/', asistenciaController.entradasCombustible)
+  router.get('/combustiblesEntrada/', asistenciaController.entradasCombustible)
   router.get('/salidas/', asistenciaController.salidasCombustible)
+  router.get('/combustiblesSalida/', asistenciaController.salidasCombustible)
   router.get('/cargas/', asistenciaController.cargasCombustible)
+  router.get('/combustiblesCargas', asistenciaController.cargasCombustible)
   router.get('/inventario/', asistenciaController.inventario)
   router.get('/asignaciones/', asistenciaController.asignaciones)
-  router.get('/graficaSalida/:tipo', asistenciaController.graficas)
+  router.get('/grafica/:tipo', asistenciaController.graficas)
   router.get('/bajas/', asistenciaController.bajas)
   router.get('/historialA/', asistenciaController.historialA)
   router.get('/historialE/', asistenciaController.historialE)
   router.get('/empleadosU/', asistenciaController.empleados)
   router.get('/combustibles/', asistenciaController.combustibles)
+  router.get('/empresas/', asistenciaController.empresas)
+  router.get('/departamentos/', asistenciaController.departamentos)
+  router.get('/ranchos/', asistenciaController.ranchos)
 
   // cerrar sesion
   router.get('/cerrarSesion', asistenciaController.logout) // logear usuario

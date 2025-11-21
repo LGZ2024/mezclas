@@ -4,11 +4,13 @@
 <head>
     <%- include("../../templates/head-pwa") %>
         <%- include("../../templates/mezclas/cabecera") %>
-            <link rel="stylesheet" href="../css/spinner.css">
 </head>
 
 <body>
+    <input type="hidden" value="<%= rol %>" id="rol">
+      <% if(rol !="master" && rol!="administrativo" && rol!="adminMezclador") { %>
     <%- include("../../templates/combustibles/navCombustibles") %>
+    <% } %>
         <section>
             <div class="container">
                 <div class="row justify-content-center">
@@ -117,7 +119,7 @@
         </section>
         <!-- Firebase Configuración y funciones -->
         <%- include("../../templates/mezclas/scripts") %>
-            <script type="module" src="../../app/combustibles/main.js"></script>
+            <script type="module" src="/app/combustibles/main.js"></script>
 
 </body>
 

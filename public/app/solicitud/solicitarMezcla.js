@@ -748,23 +748,6 @@ class SolicitudFormulario {
       select.appendChild(groupProductos)
     }
 
-    // Agregar recetas al select si existen
-    // if (datos.recetas && datos.recetas.length > 0) {
-    //   const groupRecetas = document.createElement('optgroup')
-    //   groupRecetas.label = 'Recetas'
-
-    //   datos.recetas.forEach(receta => {
-    //     const option = document.createElement('option')
-    //     option.value = receta.nombre
-    //     option.textContent = receta.nombre
-    //     option.dataset.unidadBase = receta.unidad_medida
-    //     option.dataset.idReceta = receta.id_receta
-    //     groupRecetas.appendChild(option)
-    //   })
-
-    //   select.appendChild(groupRecetas)
-    // }
-
     // Crear select de unidad de medida
     const selectUnidadMedida = document.createElement('select')
     selectUnidadMedida.name = 'unidad_medida[]'

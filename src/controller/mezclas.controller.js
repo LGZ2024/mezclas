@@ -23,7 +23,6 @@ export class MezclasController {
       name: user.nombre,
       requestBody: {
         ...req.body,
-        // Truncar datos sensibles o muy largos
         productos: req.body.productos?.length
       }
     }
@@ -77,7 +76,7 @@ export class MezclasController {
         solicitudId: result.idSolicitud,
         duration: Date.now() - new Date(logContext.timestamp).getTime()
       })
-
+      console.log(result)
       return res.status(201).json({
         message: result.message,
         idSolicitud: result.idSolicitud
@@ -374,8 +373,7 @@ export class MezclasController {
       userRole: user.rol,
       name: user.nombre,
       status,
-      empresa: user.empresa,
-      rancho: user.ranchos
+      empresa: user.empresa
     }
 
     logger.info('Iniciando obtención de mezclas', logContext)
@@ -674,6 +672,9 @@ export class MezclasController {
       } else if (rancho === 'Ahualulco') {
         const r2 = await UsuarioModel.getUserEmailGerente({ rol: 'adminMezclador', idUsuario: 51 }) // idUsuario: 48 es el id de abigail ortiz
         ress = [...r2]
+      } else {
+        const r2 = await UsuarioModel.getOneId({ id: user.id }) // master
+        ress = [...r2]
       }
       loggerWiston.debug('Determinando destinatarios de notificación finalizada', ress)
       return { ress } || []
@@ -783,7 +784,9 @@ export class MezclasController {
       this.mezclaModel.obtenerTablaMezclasUsuario({
         status,
         idUsuarioSolicita: idUsuario,
-        confirmacion
+        confirmacion,
+        logContext,
+        logger: loggerWiston
       })
     ])
 
@@ -833,7 +836,9 @@ export class MezclasController {
       this.mezclaModel.obtenerTablaMezclasUsuario({
         status,
         idUsuarioSolicita: idUsuario,
-        confirmacion
+        confirmacion,
+        logContext,
+        logger: loggerWiston
       })
     ])
 
@@ -845,16 +850,21 @@ export class MezclasController {
 
   #obtenerMezclasSegunRol = async (user, params, logContext, logger) => {
     const { status, confirmacion, idUsuario } = params
+    console.log(params)
+    console.log(user.rol)
 
     switch (user.rol) {
       case 'mezclador':
         return await this.#obtenerMezclasParaMezclador(user, params, logContext, logger)
 
       case 'solicita':
+        console.log(user.rol)
         return await this.mezclaModel.obtenerTablaMezclasUsuario({
           status,
           idUsuarioSolicita: idUsuario,
-          confirmacion
+          confirmacion,
+          logContext,
+          logger
         })
 
       case 'solicita2':
@@ -910,7 +920,9 @@ export class MezclasController {
       this.mezclaModel.obtenerTablaMezclasUsuario({
         status,
         idUsuarioSolicita: idUsuario,
-        confirmacion
+        confirmacion,
+        logContext,
+        logger: loggerWiston
       })
     ])
 
@@ -991,6 +1003,9 @@ export class MezclasController {
       if (!data.temporada) errores.push('La temporada es requerida')
       if (!data.variedad) errores.push('La variedad es requerida')
       if (data.productos.length === 0) errores.push('Debe seleccionar al menos un producto')
+      if (!data.fechaAplicacion) errores.push('La fecha de aplicación es requerida')
+      if (!data.idTipoAplicacion) errores.push('El tipo de aplicación es requerido')
+      if (!data.idAplicacion) errores.push('La aplicación es requerida')
     } else if (data.tipo === 'Fertilizantes') {
       if (!data.rancho) errores.push('El rancho es requerido')
       if (!data.empresaPertece) errores.push('La empresa es requerida')
@@ -998,6 +1013,9 @@ export class MezclasController {
       if (!data.variedad) errores.push('La variedad es requerida')
       if (!data.temporada) errores.push('La temporada es requerida')
       if (data.productos.length === 0) errores.push('Debe seleccionar al menos un producto')
+      if (!data.fechaAplicacion) errores.push('La fecha de aplicación es requerida')
+      if (!data.idTipoAplicacion) errores.push('El tipo de aplicación es requerido')
+      if (!data.idAplicacion) errores.push('La aplicación es requerida')
     } else if (data.tipo === 'Devoluciones') {
       if (!data.almacen) errores.push('El almacen es requerido')
       if (!data.temporada) errores.push('La temporada es requerida')

@@ -24,13 +24,34 @@ export class SolicitudFormulario {
       listaDispositivos: document.querySelector('#listaDeDispositivos'),
       photo: document.querySelector('.photo')
     }
+
+    // Advertencia si faltan elementos críticos
+    const elementosCriticos = ['btnTomarFoto', 'btnSubirFoto', 'imageFile', 'btnEntregada', 'canvas']
+    elementosCriticos.forEach(elem => {
+      if (!this.elementos[elem]) {
+        console.warn(`⚠️ Elemento crítico no encontrado: ${elem}`)
+      }
+    })
   }
 
   bindEvents () {
-    this.elementos.btnTomarFoto.addEventListener('click', this.mostrarSeccionCamara.bind(this))
-    this.elementos.btnSubirFoto.addEventListener('click', this.mostrarSeccionSubida.bind(this))
-    this.elementos.imageFile.addEventListener('change', this.manejarSeleccionArchivo.bind(this))
-    this.elementos.btnEntregada.addEventListener('click', this.validarYEnviarSolicitud.bind(this))
+    // Verificar que los elementos existan antes de agregar event listeners
+    if (this.elementos.btnTomarFoto) {
+      this.elementos.btnTomarFoto.addEventListener('click', this.mostrarSeccionCamara.bind(this))
+    }
+
+    if (this.elementos.btnSubirFoto) {
+      this.elementos.btnSubirFoto.addEventListener('click', this.mostrarSeccionSubida.bind(this))
+    }
+
+    if (this.elementos.imageFile) {
+      this.elementos.imageFile.addEventListener('change', this.manejarSeleccionArchivo.bind(this))
+    }
+
+    if (this.elementos.btnEntregada) {
+      this.elementos.btnEntregada.addEventListener('click', this.validarYEnviarSolicitud.bind(this))
+    }
+
     // Agregar evento para captura de foto
     const btnTomarFoto = document.querySelector('.btnTomarFoto')
     if (btnTomarFoto) {

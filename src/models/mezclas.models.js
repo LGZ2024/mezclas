@@ -1195,9 +1195,13 @@ export class MezclaModel {
     })
   }
 
-  static async obtenerTablaMezclasUsuario ({ status, idUsuarioSolicita, confirmacion, logContext, logger }) {
+  static async obtenerTablaMezclasUsuario ({ status, idUsuarioSolicita, confirmacion, logContext, logger: loggerParam }) {
+    // Usar logger del parámetro o el logger global
+    const loggerInstance = loggerParam || logger
+
     try {
-      logger.logOperation('GET_MEZCLAS_USUARIO_modelo', 'started', logContext)
+      console.log('Parametros recibidos:', { status, idUsuarioSolicita, confirmacion })
+      loggerInstance.logOperation('GET_MEZCLAS_USUARIO_modelo', 'started', logContext)
 
       // Validación de datos
       if (!status || !idUsuarioSolicita) {
@@ -1231,8 +1235,8 @@ export class MezclaModel {
           'respuestaSolicitud', 'respuestaMezclador'
         ]
       })
-
-      logger.logModelOperation('Solicitud', 'found', {
+      console.log(`Mezclas encontradas para el usuario ${idUsuarioSolicita}:`, mezclas)
+      loggerInstance.logModelOperation('Solicitud', 'found', {
         solicitudId: idUsuarioSolicita,
         count: mezclas.length
       })
@@ -1262,7 +1266,7 @@ export class MezclaModel {
         }
       })
 
-      logger.logOperation('GET_MEZCLAS_USUARIO', 'completed', {
+      loggerInstance.logOperation('GET_MEZCLAS_USUARIO', 'completed', {
         ...logContext,
         count: resultadosFormateados.length,
         duration: Date.now() - new Date(logContext.timestamp).getTime()
@@ -1270,7 +1274,8 @@ export class MezclaModel {
 
       return Array.isArray(resultadosFormateados) ? resultadosFormateados : []
     } catch (error) {
-      logger.logError(error, {
+      console.log(error)
+      loggerInstance.logError(error, {
         ...logContext,
         stack: error.stack
       })
@@ -2005,7 +2010,10 @@ export class MezclaModel {
         temporada: data.temporada,
         variedad,
         descripcion: data.descripcion || null,
-        porcentajes
+        porcentajes,
+        fechaAplicacion: data.fechaAplicacion || null,
+        idTipoAplicacion: data.idTipoAplicacion || null,
+        idAplicacion: data.idAplicacion || null
       }
     }
     return Solicitud.create(solicitudData, { transaction })

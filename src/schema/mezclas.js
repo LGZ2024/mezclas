@@ -131,10 +131,6 @@ const solicitudConfig = {
     validate: {
       notEmpty: {
         msg: 'La temporada es requerida'
-      },
-      len: {
-        args: [4, 20],
-        msg: 'La temporada debe tener entre 4 y 20 caracteres'
       }
     }
   },
@@ -144,10 +140,6 @@ const solicitudConfig = {
     validate: {
       notEmpty: {
         msg: 'La variedad es requerida'
-      },
-      len: {
-        args: [3, 100],
-        msg: 'La variedad debe tener entre 3 y 100 caracteres'
       }
     }
   },
@@ -162,10 +154,6 @@ const solicitudConfig = {
     validate: {
       notEmpty: {
         msg: 'El porcentaje es requerido'
-      },
-      len: {
-        args: [3, 100],
-        msg: 'El porcentaje debe tener entre 3 y 100 caracteres'
       }
     }
   },
@@ -194,6 +182,26 @@ const solicitudConfig = {
     type: DataTypes.INTEGER,
     field: 'idUsuarioValida',
     allowNull: true
+  },
+  fechaAplicacion: {
+    type: DataTypes.DATEONLY,
+    field: 'fechaAplicacion',
+    allowNull: true
+  },
+  idTipoAplicacion: {
+    type: DataTypes.INTEGER,
+    field: 'idTipoAplicacion',
+    allowNull: true
+  },
+  idAplicacion: {
+    type: DataTypes.INTEGER,
+    field: 'idAplicacion',
+    allowNull: true
+  },
+  validacion: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: false
   }
 }
 

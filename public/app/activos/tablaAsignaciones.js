@@ -130,7 +130,8 @@ const verAsignaciones = async () => {
             inactivo: 'red',
             reparacion: 'orange',
             mantenimiento: 'blue',
-            asignado: 'green'
+            asignado: 'green',
+            disponible: 'purple'
           }
 
           if (colores[estado]) {
@@ -195,10 +196,16 @@ const verAsignaciones = async () => {
       }
     ]
   })
-  abrirModaleditarAsignacion()
-  abrirEnlace()
+  inicializarEventosAsignaciones()
 }
-const abrirModaleditarAsignacion = () => {
+
+// Inicializar todos los eventos (registrarse una sola vez)
+const inicializarEventosAsignaciones = () => {
+  // Remover listeners anteriores para evitar duplicados
+  $(document).off('click', '.editarAsignacion')
+  $(document).off('click', '.abrirEnlace')
+
+  // Editar asignación
   $(document).on('click', '.editarAsignacion', function (e) {
     e.preventDefault()
 
@@ -211,9 +218,8 @@ const abrirModaleditarAsignacion = () => {
     const modal = $('#editarAsignacion')
     modal.modal('show')
   })
-}
 
-const abrirEnlace = async () => {
+  // Abrir enlace (factura o foto)
   $(document).on('click', '.abrirEnlace', async function (e) {
     e.preventDefault()
     const url = $(this).attr('data-url')
@@ -221,5 +227,6 @@ const abrirEnlace = async () => {
     await obtenerDocumento(docUrl)
   })
 }
+
 // Exportar funciones
 export { iniciarAsignaciones, verAsignaciones }

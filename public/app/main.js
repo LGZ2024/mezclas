@@ -6,7 +6,6 @@ const CONFIG = {
 }
 // Elementos DOM
 const elements = {
-  notifBtn: document.getElementById('notifBtn'),
   notifDropdown: document.getElementById('notifDropdown'),
   userProfileBtn: document.querySelector('.user-profile__btn'),
   userDropdown: document.getElementById('userDropdown'),
@@ -37,13 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         preventBodyScroll(true)
       } else {
         preventBodyScroll(false)
-      }
-    },
-
-    clearNotifications: () => {
-      if (elements.notifList) {
-        elements.notifList.innerHTML = ''
-        elements.notifCount.textContent = '0'
       }
     }
   }
@@ -90,41 +82,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           handlers.closeAll()
         }
       }
-    },
-
-    handleTouchEnd: (e) => {
-      if (!touchUtils.startTime) return
-
-      const target = e.target.closest('a')
-      const timeDiff = Date.now() - touchUtils.startTime
-
-      // Resetear la transformación
-      elements.notifDropdown.style.transform = ''
-      elements.notifDropdown.classList.remove('swiping')
-
-      // Si fue un tap (no un swipe)
-      if (!touchUtils.moved && timeDiff < 300 && target) {
-        e.preventDefault()
-        e.stopPropagation()
-
-        const notifItem = target.closest('.notification__item')
-        if (notifItem) {
-          const id = notifItem.dataset.id
-
-          actualizarEstadoNotificacion(id).then(() => {
-            window.location.href = target.href
-          }).catch(error => {
-            console.error('Error:', error)
-            showError('Error al actualizar la notificación')
-          })
-        }
-      }
-
-      // Resetear valores
-      touchUtils.startY = 0
-      touchUtils.startX = 0
-      touchUtils.moved = false
-      touchUtils.startTime = 0
     }
   }
   // Utilidades
@@ -136,52 +93,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       return (...args) => {
         clearTimeout(timeout)
         timeout = setTimeout(() => func(...args), wait)
-      }
-    },
-
-    // Corregir la sintaxis aquí - eliminar utils.
-    createNotification: (message, idSolicitud, id, time = new Date()) => {
-      const notifId = `notif-${id}`
-      const formattedTime = new Date(time).toLocaleString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-
-      return `
-        <div class="notification__item" data-id="${id}">
-            <div class="notification__content">
-                <a href="/protected/notificacion/${idSolicitud}" 
-                   id="${notifId}"
-                   rel="noopener noreferrer"
-                   role="button"
-                   class="notification-link">
-                    <div class="notification__inner">
-                        <i class="fas fa-bell"></i>
-                        <div class="notification__details">
-                            <p class="notification__text">${message}</p>
-                            <span class="notification__time">${formattedTime}</span>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-    `
-    },
-    addNotificationListener: (id) => {
-      const notifLink = document.getElementById(`notif-${id}`)
-      if (notifLink) {
-        notifLink.addEventListener('click', async (e) => {
-          e.preventDefault()
-          try {
-            await actualizarEstadoNotificacion(id)
-            window.location.href = notifLink.href
-          } catch (error) {
-            console.error('Error al actualizar notificación:', error)
-          }
-        })
       }
     }
   }
@@ -209,10 +120,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const initializeEventListeners = () => {
     // Cambiar 'handlers' por 'eventHandlers'
     const eventHandlers = {
-      notifBtnClick: (e) => {
-        e.stopPropagation()
-        handlers.toggle(elements.notifDropdown)
-      },
       userProfileBtnClick: (e) => {
         e.stopPropagation()
         handlers.toggle(elements.userDropdown)
@@ -220,7 +127,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Asignar event listeners usando los handlers correctos
-    elements.notifBtn?.addEventListener('click', eventHandlers.notifBtnClick)
     elements.userProfileBtn?.addEventListener('click', eventHandlers.userProfileBtnClick)
     elements.backdrop?.addEventListener('click', (e) => {
       if (e.target === elements.backdrop) {
@@ -233,11 +139,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('click', (e) => {
       if (utils.isMobile()) return
 
-      const isNotificationClick = e.target.closest('.notifications')
       const isUserProfileClick = e.target.closest('.user-profile')
       const isBackdropClick = e.target.closest('.dropdown-backdrop')
 
-      if (!isNotificationClick && !isUserProfileClick && !isBackdropClick) {
+      if (!isUserProfileClick && !isBackdropClick) {
         handlers.closeAll()
       }
     })
@@ -278,10 +183,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.removeEventListener('orientationchange', handlers.closeAll)
 
     // Remover eventos de click
-    elements.notifBtn?.removeEventListener('click', handlers.notifBtnClick)
     elements.userProfileBtn?.removeEventListener('click', handlers.userProfileBtnClick)
     elements.backdrop?.removeEventListener('click', handlers.closeAll)
-    elements.clearNotifBtn?.removeEventListener('click', handlers.clearNotifications)
   }
   // Agregar el cleanup al window para poder llamarlo cuando sea necesario
   window.addEventListener('unload', cleanup)
@@ -297,78 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // obtenemos las notificaciones del usuario
-  // const obtenerNotificaciones = async () => {
-  //   try {
-  //     const response = await fetch('/api/notificaciones')
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`)
-  //     }
-  //     const data = await response.json()
-
-  //     // Mostrar notificaciones no leídas
-  //     // data.filter(notif => !notif.leida).forEach(async (element) => {
-  //     //   await window.addNotification(element.mensaje, element.id_solicitud, element.id)
-  //     // })
-
-  //     return data
-  //   } catch (error) {
-  //     console.error('Error fetching notificaciones:', error)
-  //     throw error
-  //   }
-  // }
-
-  // obtenerNotificaciones().then((data) => {
-  //   // Mostrar notificaciones no leídas
-  //   data.filter(notif => !notif.leida).forEach(async (element) => {
-  //     await window.addNotification(element.mensaje, element.id_solicitud, element.id)
-  //   })
-  // }).catch(error => {
-  //   console.error('Error al cargar notificaciones:', { error })
-  //   showError('Error al cargar las notificaciones')
-  // })
-
-  const showError = (message) => {
-    console.error(message)
-    // Implementar toast o notificación visual
-    const toast = document.createElement('div')
-    toast.className = 'error-toast'
-    toast.textContent = message
-    document.body.appendChild(toast)
-
-    setTimeout(() => {
-      toast.remove()
-    }, 3000)
-  }
   // funcion para notificacion igresar pagina y actulizar estado
-  async function actualizarEstadoNotificacion (idSolicitud) {
-    try {
-      const response = await fetch(`/api/notificaciones/${idSolicitud}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error(`Error al actualizar: ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      // Actualizar UI
-      const notifItem = document.querySelector(`[data-id="${idSolicitud}"]`)
-      if (notifItem) {
-        notifItem.classList.add('notification--read')
-        updateNotificationCount(false)
-      }
-
-      return data
-    } catch (error) {
-      showError('Error al actualizar la notificación')
-      throw error
-    }
-  }
   // eslint-disable-next-line no-unused-vars
   const debouncedScroll = utils.debounce(() => {
     const notifList = elements.notifList
@@ -383,12 +215,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }, 100)
-  const updateNotificationCount = (increment = true) => {
-    const count = parseInt(elements.notifCount.textContent) || 0
-    const newCount = increment ? count + 1 : count - 1
-    elements.notifCount.textContent = Math.max(0, newCount).toString()
-    elements.notifCount.style.display = newCount === 0 ? 'none' : 'block'
-  }
   const preventBodyScroll = (prevent) => {
     if (prevent) {
       const scrollY = window.scrollY
@@ -409,56 +235,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnPreparadas = document.getElementById('preparadas')
   const btnEntregadas = document.getElementById('entregadas')
   const canceladas = document.getElementById('canceladas')
-  const btnVehiculos = document.getElementById('vehiculos')
-  const btncombustibles = document.getElementById('combustibles')
-  const btnTalleres = document.getElementById('talleres')
-  const btnUnidades = document.getElementById('unidades')
-  const btnTickets = document.getElementById('Tickets')
-  const btnRegistrarM = document.getElementById('registrarM')
-  // const btnReportes = document.getElementById('reportes')
-
-  if (btnUnidades) {
-    btnUnidades.addEventListener('click', () => {
-      window.location.href = '/protected/unidades'
-    })
-  } else {
-    console.log('No se encontró el botón')
-  }
-  if (btnRegistrarM) {
-    btnRegistrarM.addEventListener('click', () => {
-      window.location.href = '/protected/mantenimientos'
-    })
-  } else {
-    console.log('No se encontró el botón')
-  }
-  if (btnTalleres) {
-    btnTalleres.addEventListener('click', () => {
-      window.location.href = '/protected/talleres'
-    })
-  } else {
-    console.log('No se encontró el botón')
-  }
-  if (btncombustibles) {
-    btncombustibles.addEventListener('click', () => {
-      const contenedorMenu = document.getElementById('ContenedorMenu')
-      const contenerdorCombustibles = document.getElementById('contenerdorCombustibles')
-      contenedorMenu.style.display = 'none'
-      contenerdorCombustibles.style.display = 'block'
-    })
-  } else {
-    console.log('No se encontró el botón')
-  }
-
-  if (btnVehiculos) {
-    btnVehiculos.addEventListener('click', () => {
-      const contenedorMenu = document.getElementById('ContenedorMenu')
-      const contenerdorVehiculos = document.getElementById('contenerdorVehiculos')
-      contenedorMenu.style.display = 'none'
-      contenerdorVehiculos.style.display = 'block'
-    })
-  } else {
-    console.log('No se encontró el botón')
-  }
 
   if (btnSolicitar) {
     btnSolicitar.addEventListener('click', () => {
@@ -495,14 +271,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnEntregadas) {
     btnEntregadas.addEventListener('click', () => {
       window.location.href = '/protected/completadas'
-    })
-  } else {
-    console.log('No se encontró el botón')
-  }
-
-  if (btnTickets) {
-    btnTickets.addEventListener('click', () => {
-      window.location.href = '/protected/tickets'
     })
   } else {
     console.log('No se encontró el botón')

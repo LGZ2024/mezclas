@@ -19,6 +19,13 @@ import { iniciarProductos, verProductos } from './tablaProductos.js'
 import { iniciarCentroCoste, verCentroCoste } from './tablaCentroCoste.js'
 import { iniciarSolicitudesCanceladasADM, verSolicitudesCanceladasADM } from './tablaSolicitudesCanceladaADM.js'
 import { iniciarConfimaciones } from './tablaConfirmacion.js'
+import { iniciarEntradaInventario, verEntradaInventario } from './tablaEntradaInventario.js'
+import { iniciarSalidaInventario, verSalidaInventario } from './tablaSalidaInventario.js'
+import { iniciarCargaCombustible, verCargasCombustible } from './tablaCargasCombustible.js'
+import { iniciarInventario, verInventario } from './tablaInventario.js'
+import { iniciarEmpresas, verEmpresas } from './tablaEmpresa.js'
+import { iniciarDepartamentos, verDepartamentos } from './tablaDepartamentos.js'
+import { iniciarRanchos, verRanchos } from './tablaRancho.js'
 
 // Función para capitalizar la primera letra de cada palabra
 const capitalizarPalabras = (str) => {
@@ -54,6 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
     tablaCentroCoste: document.getElementById('tbCentroCoste'),
     tablaSolicitudesCanceladasADM: document.getElementById('tbSolicitudesCanceladas'),
     tablaConfirmacion: document.getElementById('tbConfirmacion'),
+    tablaEntradaInventario: document.getElementById('tbEntrada'),
+    tablaSalidaInventario: document.getElementById('tbSalidas'),
+    tablaCargasCombustible: document.getElementById('tbCargas'),
+    tablaInventario: document.getElementById('tbInventario'),
+    tablaEmpresas: document.getElementById('tbEmpresas'),
+    tablaDepartamentos: document.getElementById('tbDepartamentos'),
+    tablaRanchos: document.getElementById('tbRanchos'),
     // FORMULARIOS
     formActivos: document.getElementById('formActivos'),
     formUsuarios: document.getElementById('formUsuarios'),
@@ -63,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formEditarUsuarios: document.getElementById('formEditarUsuarios'),
     formActualizarUsuarios: document.getElementById('formActualizarUsuarios'),
     formBajaActivo: document.getElementById('formBajaActivo'),
-    formAsignarActivo: document.getElementById('formAsignarActivo'),
+    formAsignarActivo: document.getElementById('formAsignartbSalidasActivo'),
     formEditarAsignacion: document.getElementById('formEditarAsignacion'),
     formEditarResponsiva: document.getElementById('formEditarResponsiva'),
     formResetPass: document.getElementById('formResetPass'),
@@ -71,6 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
     formProducto: document.getElementById('formProducto'),
     formCentroCoste: document.getElementById('formCentroCostes'),
     formCancelacion: document.getElementById('formCancelacion'),
+    formEmpresa: document.getElementById('formEmpresa'),
+    formDepartamento: document.getElementById('formDepartamento'),
+    formRancho: document.getElementById('formRancho'),
     // SELECT OPTION
     optionCentroCoste: document.getElementById('centro_coste'),
     optionEstado: document.getElementById('estadoE'),
@@ -477,6 +494,165 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
+    async handleSubmitAgregarEmpresa (e) {
+      e.preventDefault()
+      showSpinner()
+
+      const submitBtn = obtenerSubmitBtn(e)
+      await actualizarUI(() => {
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
+      })
+
+      const formData = new FormData(e.target)
+      const datos = Object.fromEntries(formData.entries())
+
+      // Validación de campos requeridos
+      const camposRequeridos = [
+        'razon_social', 'nombre_comercial', 'rfc'
+      ]
+      const camposValidos = await validarFormulario(camposRequeridos)
+
+      // Verificar si es edición o creación
+      let url, method
+      if (document.getElementById('id').value) {
+        url = `/api/catalogos/empresas/${document.getElementById('id').value}`
+        method = 'PATCH'
+      } else {
+        url = '/api/catalogos/empresas'
+        method = 'POST'
+      }
+
+      try {
+        if (!camposValidos === false) {
+          const respuesta = await fetchApi(url, method, datos)
+          await respuestaFetch({ respuesta, formularios: elementos.formEmpresa, modal: 'modalEmpresa', button: submitBtn || elementos.btnRegistrar })
+          if (elementos.tablaEmpresas) {
+            actualizarUI(async () => {
+              iniciarEmpresas()
+              await verEmpresas()
+            })
+          }
+        }
+      } catch (error) {
+        hideSpinner()
+        await actualizarUI(() => {
+          mostrarMensaje({ msg: error.message, type: 'error' })
+        })
+      } finally {
+        hideSpinner()
+        await actualizarUI(() => {
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        })
+      }
+    },
+    async handleSubmitAgregarDepartamento (e) {
+      e.preventDefault()
+      showSpinner()
+
+      const submitBtn = obtenerSubmitBtn(e)
+      await actualizarUI(() => {
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
+      })
+
+      const formData = new FormData(e.target)
+      const datos = Object.fromEntries(formData.entries())
+
+      // Validación de campos requeridos
+      const camposRequeridos = [
+        'departamento'
+      ]
+      const camposValidos = await validarFormulario(camposRequeridos)
+
+      // Verificar si es edición o creación
+      let url, method
+      if (document.getElementById('id').value) {
+        url = `/api/catalogos/departamentos/${document.getElementById('id').value}`
+        method = 'PATCH'
+      } else {
+        url = '/api/catalogos/departamentos'
+        method = 'POST'
+      }
+
+      try {
+        if (!camposValidos === false) {
+          const respuesta = await fetchApi(url, method, datos)
+          await respuestaFetch({ respuesta, formularios: elementos.formDepartamento, modal: 'modalDepartamento', button: submitBtn || elementos.btnRegistrar })
+          if (elementos.tablaDepartamentos) {
+            actualizarUI(async () => {
+              iniciarDepartamentos()
+              await verDepartamentos()
+            })
+          }
+        }
+      } catch (error) {
+        hideSpinner()
+        await actualizarUI(() => {
+          mostrarMensaje({ msg: error.message, type: 'error' })
+        })
+      } finally {
+        hideSpinner()
+        await actualizarUI(() => {
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        })
+      }
+    },
+    async handleSubmitAgregarRancho (e) {
+      e.preventDefault()
+      showSpinner()
+
+      const submitBtn = obtenerSubmitBtn(e)
+      await actualizarUI(() => {
+        if (submitBtn) submitBtn.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
+      })
+
+      const formData = new FormData(e.target)
+      const datos = Object.fromEntries(formData.entries())
+
+      // Validación de campos requeridos
+      const camposRequeridos = [
+        'rancho'
+      ]
+      const camposValidos = await validarFormulario(camposRequeridos)
+
+      // Verificar si es edición o creación
+      let url, method
+      if (document.getElementById('id').value) {
+        url = `/api/catalogos/ranchos/${document.getElementById('id').value}`
+        method = 'PATCH'
+      } else {
+        url = '/api/catalogos/ranchos'
+        method = 'POST'
+      }
+
+      try {
+        if (!camposValidos === false) {
+          const respuesta = await fetchApi(url, method, datos)
+          await respuestaFetch({ respuesta, formularios: elementos.formRancho, modal: 'modalRancho', button: submitBtn || elementos.btnRegistrar })
+          if (elementos.tablaRanchos) {
+            actualizarUI(async () => {
+              iniciarRanchos()
+              await verRanchos()
+            })
+          }
+        }
+      } catch (error) {
+        hideSpinner()
+        await actualizarUI(() => {
+          mostrarMensaje({ msg: error.message, type: 'error' })
+        })
+      } finally {
+        hideSpinner()
+        await actualizarUI(() => {
+          if (submitBtn) submitBtn.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        })
+      }
+    },
     async handleSubmitAgregarUsuario (e) {
       e.preventDefault()
       showSpinner()
@@ -494,7 +670,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const camposRequeridos = [
         'empleado_id', 'nombre', 'apellido_paterno', 'apellido_materno', 'departamento'
       ]
-      console.log(datos)
 
       const camposValidos = await validarFormulario(camposRequeridos)
       try {
@@ -1530,7 +1705,9 @@ document.addEventListener('DOMContentLoaded', () => {
   inicializarFormulario(elementos.formCancelacion, handlers.handleSubmitCancelacion)
   inicializarFormulario(elementos.formEditarUsuarios, handlers.handleSubmitEditarUsuario)
   inicializarFormulario(elementos.formActualizarUsuarios, handlers.handleSubmitActualizarUsuario)
-
+  inicializarFormulario(elementos.formDepartamento, handlers.handleSubmitAgregarDepartamento)
+  inicializarFormulario(elementos.formEmpresa, handlers.handleSubmitAgregarEmpresa)
+  inicializarFormulario(elementos.formRancho, handlers.handleSubmitAgregarRancho)
   // Inicializaciones especiales
   if (elementos.formFactura) {
     handlers.handleInicairDivsCentroCoste()
@@ -1632,6 +1809,48 @@ document.addEventListener('DOMContentLoaded', () => {
   if (elementos.tablaConfirmacion) {
     actualizarUI(async () => {
       await iniciarConfimaciones()
+    })
+  }
+  if (elementos.tablaEntradaInventario) {
+    actualizarUI(async () => {
+      iniciarEntradaInventario()
+      await verEntradaInventario()
+    })
+  }
+  if (elementos.tablaSalidaInventario) {
+    actualizarUI(async () => {
+      iniciarSalidaInventario()
+      await verSalidaInventario()
+    })
+  }
+  if (elementos.tablaCargasCombustible) {
+    actualizarUI(async () => {
+      iniciarCargaCombustible()
+      await verCargasCombustible()
+    })
+  }
+  if (elementos.tablaInventario) {
+    actualizarUI(async () => {
+      iniciarInventario()
+      await verInventario()
+    })
+  }
+  if (elementos.tablaEmpresas) {
+    actualizarUI(async () => {
+      iniciarEmpresas()
+      await verEmpresas()
+    })
+  }
+  if (elementos.tablaDepartamentos) {
+    actualizarUI(async () => {
+      iniciarDepartamentos()
+      await verDepartamentos()
+    })
+  }
+  if (elementos.tablaRanchos) {
+    actualizarUI(async () => {
+      iniciarRanchos()
+      await verRanchos()
     })
   }
 })

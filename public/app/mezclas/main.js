@@ -1,6 +1,5 @@
 /* eslint-disable no-undef */
-// import { fetchApi, showMessage, mostrarMensaje } from '../funciones.js'
-import { mostrarMensaje, fetchApi, showMessage } from '../mensajes.js'
+import { mostrarMensaje, fetchApi } from '../mensajes.js'
 import { hideSpinner, showSpinner } from '../spinner.js'
 import { inicializarFormulario } from './listaProductos.js'
 import { SolicitudFormulario } from '../solicitud/cerrarMezcla.js'
@@ -62,7 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (camposInvalidos.length > 0) {
       await actualizarUI(() => {
-        mostrarMensaje(`Por favor complete los siguientes campos: ${camposInvalidos.join(', ')}`, 'error')
+        mostrarMensaje({
+          msg: `Por favor complete los siguientes campos: ${camposInvalidos.join(', ')}`,
+          type: 'error'
+        })
         elementos.btnRegistrar.disabled = false
         hideSpinner()
       })
@@ -74,22 +76,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // resolver respuestas fech y mostrar mensajes
   const respuestaFetch = async ({ respuesta, formularios, modal, button }) => {
     const resultado = await actualizarUI(async () => {
-      const res = await showMessage(respuesta)
-      console.log(res)
-      if (res === true) {
+      const data = await respuesta.json()
+      const success = respuesta.ok
+
+      if (success) {
+        mostrarMensaje({
+          msg: data.message || 'Operación exitosa',
+          type: 'success'
+        })
         hideSpinner()
         if (formularios) formularios.reset()
         // eslint-disable-next-line no-undef
-        const modalReset = $(`#${modal}`)
-        modalReset.modal('hide')
+        if (modal) {
+          const modalReset = $(`#${modal}`)
+          modalReset.modal('hide')
+        }
         button.disabled = false
+        return true
       } else {
+        mostrarMensaje({
+          msg: data.message || 'Error en la operación',
+          type: 'error'
+        })
         hideSpinner()
         button.disabled = false
+        return false
       }
-      return res // Importante: retornar el resultado
     })
-    return resultado // Importante: retornar el resultado final
+    return resultado
   }
   const descargarReporte = async ({ url, metod, data }) => {
     try {
@@ -172,7 +186,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (productosActuales.length > 1) {
         nuevoItem.remove()
       } else {
-        mostrarMensaje('Debe agregar al menos una variedad', 'info')
+        mostrarMensaje({
+          msg: 'Debe agregar al menos una variedad',
+          type: 'info'
+        })
       }
     })
 
@@ -345,7 +362,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // const motivoB = document.getElementById('motivoB').value
       if (!idEquipo || !estado || !motivo || !fechaBaja || !lugarBaja || !funcionBaja || !equipo || !marca || !modelo || !noSeria || !tag) {
         await actualizarUI(() => {
-          mostrarMensaje('Debe llenar todos los campos son obligatorios', 'error')
+          mostrarMensaje({
+            msg: 'Debe llenar todos los campos son obligatorios',
+            type: 'error'
+          })
           elementos.btnRegistrar.disabled = false
           hideSpinner()
         })

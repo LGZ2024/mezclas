@@ -2,23 +2,13 @@
 <html lang="es">
 
 <head>
-    <%- include("../../templates/head-pwa") %>
-        <%- include("../../templates/mezclas/cabecera") %>
-            <link rel="stylesheet" href="../css/solicitudProductos.css">
-            <link rel="stylesheet" href="../css/spinner.css">
-            <script src="../vendors/sweetalert/sweetalert.js"> </script>
+    <!-- <%- include("../../templates/head-pwa") %> -->
+    <%- include("../../templates/mezclas/cabecera") %>
+        <link rel="stylesheet" href="/css/solicitudProductos.css">
 </head>
 
 <body>
     <%- include("../../templates/mezclas/headerNav") %>
-        <!-- spinner -->
-        <div class="spinner-overlay" id="spinner" style="display: none;">
-            <div class="spinner-container">
-                <div class="spinner"></div>
-                <p class="spinner-text">Procesando...</p>
-            </div>
-        </div>
-
         <section>
             <div class="container">
                 <div class="row justify-content-center">
@@ -29,7 +19,8 @@
                                     <div class="card">
                                         <div class="titulo">
                                             <div class="col">
-                                                <div style="display: flex; flex-direction: column; align-items: start; width: 20%;">
+                                                <div
+                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
                                                     <button type="button" class="formulario__submit" id="regresar">
                                                         <span class="mdi mdi-arrow-left-bold"></span>
                                                     </button>
@@ -45,7 +36,7 @@
 
                                         <div class="formulario__campo" id="campoRancho" style="display: block;">
                                             <label class="formulario__label" for="rancho">Rancho destino</label>
-                                            <select id="rancho" class="formulario__input" required>
+                                            <select id="rancho" name="rancho" class="formulario__input">
                                                 <option value="">Seleccione un rancho</option>
                                                 <% ranchos.forEach(function(rancho) { %>
                                                     <option value="<%= rancho %>">
@@ -57,7 +48,7 @@
 
                                         <div class="formulario__campo" id="campoCentro" style="display: block;">
                                             <label class="formulario__label" for="centroCoste">Centro de coste</label>
-                                            <select id="centroCoste" class="formulario__input" required>
+                                            <select id="centroCoste" name="centroCoste" class="formulario__input">
                                                 <option value="">Seleccione un centro de coste</option>
                                                 <!-- Se poblará dinámicamente con JavaScript -->
                                             </select>
@@ -65,7 +56,7 @@
 
                                         <div class="formulario__campo" id="campoVariedad" style="display: block;">
                                             <label class="formulario__label" for="variedad">Variedades</label>
-                                            <select id="variedad" class="formulario__input" required>
+                                            <select id="variedad" name="variedad" class="formulario__input">
                                                 <option value="">Seleccione una variedad</option>
                                                 <!-- Se poblará dinámicamente con JavaScript -->
                                             </select>
@@ -73,77 +64,120 @@
 
                                         <div class="formulario__campo" id="campoFolio" style="display: block;">
                                             <label class="formulario__label" for="folio">Folio de receta</label>
-                                            <input type="text" id="folio" class="formulario__input"
-                                                placeholder="Ingrese el folio de receta" required>
+                                            <input type="text" id="folio" name="folio" class="formulario__input"
+                                                placeholder="Ingrese el folio de receta">
                                         </div>
 
 
                                         <div class="formulario__campo" id='campoAlmacen' style="display: block;">
                                             <label class="formulario__label" for="almacen">Almacen</label>
-                                            <select id="almacen" class="formulario__input" required>
+                                            <select id="almacen" name="almacen" class="formulario__input">
                                                 <option value="">Seleccione un almacén</option>
                                                 <% if (typeof almacen !=='undefined' && almacen.length> 0) { %>
                                                     <% almacen.forEach(function(almacen) { %>
                                                         <option value="<%= almacen %>">
                                                             <%= almacen %>
                                                         </option>
-                                                        <% }); %>
-                                                            <% } else { %>
-                                                                <option value="">No hay almacenes disponibles</option>
-                                                                <% } %>
+                                                    <% }); %>
+                                                    <% } else { %>
+                                                        <option value="">No hay almacenes disponibles</option>
+                                                <% } %>
                                             </select>
                                         </div>
 
                                         <div class="formulario__campo">
                                             <label class="formulario__label" for="temporada">Temporada</label>
-                                            <select id="temporada" class="formulario__input" required>
+                                            <select id="temporada" class="formulario__input">
                                                 <option value="">Seleccione una temporada</option>
-                                                <option value="Julio23-Junio24">Julio23-Junio24</option>
-                                                <option value="Julio24-Junio25">Julio24-Junio25</option>
-                                                <option value="Julio25-Junio26">Julio25-Junio26</option>
+                                                 <% if (temporada.length> 0) { %>
+                                                    <% temporada.forEach(function(temp) { %>
+                                                        <option value="<%= temp.temporada %>">
+                                                            <%= temp.temporada %>
+                                                        </option>
+                                                    <% }); %>
+                                                <% } else { %>
+                                                        <option value="">No hay temporadas disponibles</option>
+                                                    <% } %>
                                             </select>
                                         </div>
 
                                         <div class="formulario__campo" id="campoUnidad" style="display: block;">
                                             <label class="formulario__label" for="presentacion">Presentación de
                                                 mezcla</label>
-                                            <select id="presentacion" class="formulario__input" required>
+                                            <select id="presentacion" name="presentacion" class="formulario__input">
                                                 <option value="">Seleccione una presentación</option>
-                                                <option value="Willi">Willi</option>
-                                                <option value="Barril">Barril</option>
-                                                <option value="Garrafa">Garrafa</option>
-                                                <option value="Otro">Otro</option>
+                                                <% if (typeof presentacion !=='undefined' && presentacion.length> 0) { %>
+                                                    <% presentacion.forEach(function(pres) { %>
+                                                        <option value="<%= pres.presentacion %>">
+                                                            <%= pres.presentacion %>
+                                                        </option>
+                                                    <% }); %>
+                                                <% } else { %>
+                                                        <option value="">No hay presentaciones disponibles</option>
+                                                <% } %>
                                             </select>
                                         </div>
 
                                         <div class="formulario__campo" id="campoCantidad" style="display: block;">
                                             <label class="formulario__label" for="cantidad">Cantidad de mezcla</label>
-                                            <input type="text" id="cantidad" class="formulario__input"
-                                                placeholder="Ingrese la cantidad de mezcla" required>
+                                            <input type="text" id="cantidad" name="cantidad" class="formulario__input"
+                                                placeholder="Ingrese la cantidad de mezcla">
                                         </div>
 
 
                                         <div class="formulario__campo" id="campoMetodo" style="display: block;">
-                                            <label class="formulario__label" for="metodoAplicacion">Método de
-                                                Aplicación</label>
-                                            <select id="metodoAplicacion" class="formulario__input" required>
-                                                <option value="">Seleccione un método</option>
-                                                <option value="Foliar">Foliar</option>
-                                                <option value="Drench">Drench</option>
-                                                <option value="Trampeo">Trampeo</option>
-                                                <option value="Herbicida">Herbicida</option>
-                                                <option value="Termonebulizacion">Termonebulización</option>
-                                                <option value="Filtro">Filtro</option>
-                                                <option value="Riego">Riego</option>
-                                                <option value="Preparacion de Tierras">Preparación de Tierras</option>
-                                                <option value="Enmienda">Enmienda</option>
+                                            <label class="formulario__label" for="metodoAplicacion">Método de Aplicación</label>
+                                            <select id="metodoAplicacion" name="metodoAplicacion" class="formulario__input">
+                                                <option value="">Seleccione un método de aplicación</option>
+                                                <% if (typeof metodo !=='undefined' && metodo.length> 0) { %>
+                                                    <% metodo.forEach(function(met) { %>
+                                                        <option value="<%= met.metodo %>">
+                                                            <%= met.metodo %>
+                                                        </option>
+                                                    <% }); %>
+                                                    <% } else { %>
+                                                        <option value="">No hay metodos de aplicación disponibles</option>
+                                                <% } %>
                                             </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoTipoAplicacion" style="display: block;">
+                                            <label class="formulario__label" for="TipoAplicacion">Tipo de
+                                                Aplicación</label>
+                                            <select id="TipoAplicacion" name="TipoAplicacion" class="formulario__input">
+                                                <option value="">Seleccione tipó de aplicación</option>
+                                                <% if (typeof tipoAplicaciones !=='undefined' && tipoAplicaciones.length> 0) { %>
+                                                    <% tipoAplicaciones.forEach(function(tipo) { %>
+                                                        <option data-id="<%= tipo.id %>" value="<%= tipo.id %>">
+                                                            <%= tipo.nombre %>
+                                                        </option>
+                                                    <% }); %>
+                                                    <% } else { %>
+                                                        <option value="">No hay almacenes disponibles</option>
+                                                <% } %>
+                                            </select>
+                                        </div>
+
+
+                                        <div class="formulario__campo" id="campoAplicacion" style="display: block;">
+                                            <label class="formulario__label" for="aplicacion">Aplicación</label>
+                                            <select id="aplicacion" name="aplicacion" class="formulario__input">
+                                                <option value="">Seleccione una aplicación</option>
+
+                                            </select>
+                                        </div>
+
+                                        <div class="formulario__campo" id="campoFechaAplicacion"
+                                            style="display: block;">
+                                            <label class="formulario__label" for="fechaAplicacionn">Fecha de Aplicación</label>
+                                            <input type="date" id="fechaAplicacion" name="fechaAplicacion"
+                                                class="formulario__input" placeholder="Ingrese la fecha de aplicación">
                                         </div>
 
                                         <div class="formulario__campo" id="campoDescripcion" style="display: block;">
                                             <label class="formulario__label" for="descripcion">Descripción</label>
-                                            <textarea id="descripcion" class="formulario__input"
-                                                placeholder="Ingrese una descripción" rows="3" required></textarea>
+                                            <textarea id="descripcion" name="descripcion" class="formulario__input"
+                                                placeholder="Ingrese una descripción" rows="3"></textarea>
                                         </div>
                                         <label class="formulario__label">Productos</label>
                                         <div id="productosContainer">
@@ -157,18 +191,17 @@
                                                 + Agregar Producto
                                             </button>
                                         </div>
-
-                                        <div class="formulario__campo">
-                                            <button type="submit" class="formulario__submit" id="btnSolicitar">
-                                                Solicitar Mezcla
-                                            </button>
-                                        </div>
-                                    </div>
                                 </form>
+                                <div class="formulario__campo">
+                                    <button type="submit" form="recetaForm" class="formulario__submit" id="btnRegistrar">
+                                        Solicitar Mezcla
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </section>
 
@@ -176,8 +209,7 @@
         <%- include("../../templates/mezclas/modalCambioPorcentaje") %>
             <!-- Firebase Configuración y funciones -->
             <%- include("../../templates/mezclas/scripts") %>
-                <script type="module" src="../app/main.js"></script>
-                <script type="module" src="../../app/solicitud/solicitarMezcla.js"></script>
+                <script type="module" src="/app/mezclas2/main.js"></script>
 </body>
 
 </html>

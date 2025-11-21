@@ -47,52 +47,68 @@
                              <% if (tipo === 'salidas') { %>
                             <div class="row mb-4">
                                 <div class="col-12">
-                                    <div class="card">
+                                    <div class="card shadow-sm">
                                         <div class="card-body">
-                                            <h4 class="card-title">Filtros</h4>
-                                            <div class="row align-items-end">
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroFechaInicio">Fecha Inicio</label>
-                                                    <input type="date" class="form-control" id="filtroFechaInicio">
+                                            <h4 class="card-title mb-4">
+                                                <i class="mdi mdi-filter-multiple"></i> Filtros
+                                            </h4>
+                                            <div class="row g-3">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaInicio" >Fecha Inicio</label>
+                                                        <input type="date" class="form-control" id="filtroFechaInicio">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroFechaFin">Fecha Fin</label>
-                                                    <input type="date" class="form-control" id="filtroFechaFin">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaFin">Fecha Fin</label>
+                                                        <input type="date" class="form-control" id="filtroFechaFin">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroRancho">Rancho</label>
-                                                    <select class="form-control" id="filtroAlmacen">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroRancho">Rancho</label>
+                                                        <select class="form-control" id="filtroAlmacen">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroTemporada">Temporada</label>
-                                                    <select class="form-control" id="filtroTemporada">
-                                                        <option value="">Todas</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroTemporada">Temporada</label>
+                                                        <select class="form-control" id="filtroTemporada">
+                                                            <option value="">Todas</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroCombustible">Combustible</label>
-                                                    <select class="form-control" id="filtroCombustible">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroCombustible">Combustible</label>
+                                                        <select class="form-control" id="filtroCombustible">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroCentroCoste">Centro de Coste</label>
-                                                    <select class="form-control" id="filtroCentroCoste">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroCentroCoste">Centro de Coste</label>
+                                                        <select class="form-control" id="filtroCentroCoste">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroEmpresa">Empresa</label>
-                                                    <select class="form-control" id="filtroEmpresa">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroEmpresa">Empresa</label>
+                                                        <select class="form-control" id="filtroEmpresa">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0 text-right">
-                                                    <button id="btnResetFiltros" class="btn btn-secondary">Limpiar</button>
+                                                <div class="col-12">
+                                                    <button id="btnResetFiltros" class="btn btn-outline-secondary">
+                                                        <i class="mdi mdi-refresh"></i> Limpiar Filtros
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -104,44 +120,60 @@
                              <% if (tipo === 'entradas') { %>
                             <div class="row mb-4">
                                 <div class="col-12">
-                                    <div class="card">
+                                    <div class="card shadow-sm">
                                         <div class="card-body">
-                                            <h4 class="card-title">Filtros</h4>
-                                            <div class="row align-items-end">
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroFechaInicio">Fecha Inicio</label>
-                                                    <input type="date" class="form-control" id="filtroFechaInicio">
+                                            <h4 class="card-title mb-4">
+                                                <i class="mdi mdi-filter-multiple"></i> Filtros
+                                            </h4>
+                                            <div class="row g-3">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaInicio" >Fecha Inicio</label>
+                                                        <input type="date" class="form-control" id="filtroFechaInicio">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroFechaFin">Fecha Fin</label>
-                                                    <input type="date" class="form-control" id="filtroFechaFin">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaFin" >Fecha Fin</label>
+                                                        <input type="date" class="form-control" id="filtroFechaFin">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroRancho">Rancho</label>
-                                                    <select class="form-control" id="filtroAlmacen">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroRancho" >Rancho</label>
+                                                        <select class="form-control" id="filtroAlmacen">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroCombustible">Combustible</label>
-                                                    <select class="form-control" id="filtroCombustible">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroCombustible" >Combustible</label>
+                                                        <select class="form-control" id="filtroCombustible">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroCentroCoste">Centro de Coste</label>
-                                                    <select class="form-control" id="filtroCentroCoste">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroCentroCoste" >Centro de Coste</label>
+                                                        <select class="form-control" id="filtroCentroCoste">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroEmpresa">Empresa</label>
-                                                    <select class="form-control" id="filtroEmpresa">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroEmpresa" >Empresa</label>
+                                                        <select class="form-control" id="filtroEmpresa">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <button id="btnResetFiltros" class="btn btn-secondary">Limpiar</button>
+                                                <div class="col-12">
+                                                    <button id="btnResetFiltros" class="btn btn-outline-secondary">
+                                                        <i class="mdi mdi-refresh"></i> Limpiar Filtros
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -153,38 +185,52 @@
                             <% if (tipo === 'cargas') { %>
                             <div class="row mb-4">
                                 <div class="col-12">
-                                    <div class="card">
+                                    <div class="card shadow-sm">
                                         <div class="card-body">
-                                            <h4 class="card-title">Filtros</h4>
-                                            <div class="row align-items-end">
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroFechaInicio">Fecha Inicio</label>
-                                                    <input type="date" class="form-control" id="filtroFechaInicio">
+                                            <h4 class="card-title mb-4">
+                                                <i class="mdi mdi-filter-multiple"></i> Filtros
+                                            </h4>
+                                            <div class="row g-3">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaInicio" >Fecha Inicio</label>
+                                                        <input type="date" class="form-control" id="filtroFechaInicio">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroFechaFin">Fecha Fin</label>
-                                                    <input type="date" class="form-control" id="filtroFechaFin">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaFin" >Fecha Fin</label>
+                                                        <input type="date" class="form-control" id="filtroFechaFin">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroCombustible">Combustible</label>
-                                                    <select class="form-control" id="filtroCombustible">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroCombustible" >Combustible</label>
+                                                        <select class="form-control" id="filtroCombustible">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroCentroCoste">Centro de Coste</label>
-                                                    <select class="form-control" id="filtroCentroCoste">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroCentroCoste" >Centro de Coste</label>
+                                                        <select class="form-control" id="filtroCentroCoste">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroEmpresa">Empresa</label>
-                                                    <select class="form-control" id="filtroEmpresa">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroEmpresa" >Empresa</label>
+                                                        <select class="form-control" id="filtroEmpresa">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <button id="btnResetFiltros" class="btn btn-secondary w-100">Limpiar</button>
+                                                <div class="col-12">
+                                                    <button id="btnResetFiltros" class="btn btn-outline-secondary">
+                                                        <i class="mdi mdi-refresh"></i> Limpiar Filtros
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -195,93 +241,191 @@
                             <% if (tipo === 'solicitudes') { %>
                             <div class="row mb-4">
                                 <div class="col-12">
-                                    <div class="card">
+                                    <div class="card shadow-sm">
                                         <div class="card-body">
-                                            <h4 class="card-title">Filtros</h4>
-                                            <div class="row align-items-end">
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroFechaInicio">Fecha Inicio</label>
-                                                    <input type="date" class="form-control" id="filtroFechaInicio">
+                                            <h4 class="card-title mb-4">
+                                                <i class="mdi mdi-filter-multiple"></i> Filtros
+                                            </h4>
+                                            <div class="row g-3">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaInicio" >Fecha Inicio</label>
+                                                        <input type="date" class="form-control" id="filtroFechaInicio">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroFechaFin">Fecha Fin</label>
-                                                    <input type="date" class="form-control" id="filtroFechaFin">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaFin" >Fecha Fin</label>
+                                                        <input type="date" class="form-control" id="filtroFechaFin">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroRanchos">Rancho</label>
-                                                    <select class="form-control" id="filtroRanchos">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroRanchos" >Rancho</label>
+                                                        <select class="form-control" id="filtroRancho">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroUsuario">Solicitante</label>
-                                                    <select class="form-control" id="filtroUsuario">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroUsuario" >Solicitante</label>
+                                                        <select class="form-control" id="filtroUsuario">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroMetodoAplicacion">Metodo de Aplicacion</label>
-                                                    <select class="form-control" id="filtroMetodoAplicacion">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroMetodoAplicacion" >Método Aplicación</label>
+                                                        <select class="form-control" id="filtroMetodoAplicacion">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroPresentacion">Presentacion</label>
-                                                    <select class="form-control" id="filtroPresentacion">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroPresentacion" >Presentación</label>
+                                                        <select class="form-control" id="filtroPresentacion">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroTemporada">Temporada</label>
-                                                    <select class="form-control" id="filtroTemporada">
-                                                        <option value="">Todas</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroTemporada" >Temporada</label>
+                                                        <select class="form-control" id="filtroTemporada">
+                                                            <option value="">Todas</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroTipo">Tipo Solicitud</label>
-                                                    <select class="form-control" id="filtroTipo">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroTipo" >Tipo Solicitud</label>
+                                                        <select class="form-control" id="filtroTipo">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroCentroCoste">Centro de Coste</label>
-                                                    <select class="form-control" id="filtroCentroCoste">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroCentroCoste" >Centro de Coste</label>
+                                                        <select class="form-control" id="filtroCentroCoste">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroEmpresa">Empresa</label>
-                                                    <select class="form-control" id="filtroEmpresa">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroEmpresa" >Empresa</label>
+                                                        <select class="form-control" id="filtroEmpresa">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroProducto">Productos</label>
-                                                    <select class="form-control" id="filtroProducto">
-                                                        <option value="">Todos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroProducto" >Productos</label>
+                                                        <select class="form-control" id="filtroProducto">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroEficiencia">Eficiencia</label>
-                                                    <select class="form-control" id="filtroEficiencia">
-                                                        <option value="">Todos</option>
-                                                        <option value="alta">Alta (>95%)</option>
-                                                        <option value="media">Media (80-95%)</option>
-                                                        <option value="baja">Baja (<80%)</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroEficiencia" >Eficiencia</label>
+                                                        <select class="form-control" id="filtroEficiencia">
+                                                            <option value="">Todos</option>
+                                                            <option value="alta">Alta (>95%)</option>
+                                                            <option value="media">Media (80-95%)</option>
+                                                            <option value="baja">Baja (<80%)</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-
-                                                <div class="col-md-2 form-group mb-0">
-                                                    <label for="filtroTiempoEntrega">Tiempo de Entrega</label>
-                                                    <select class="form-control" id="filtroTiempoEntrega">
-                                                        <option value="">Todos</option>
-                                                        <option value="1">1 día o menos</option>
-                                                        <option value="3">3 días o menos</option>
-                                                        <option value="7">1 semana o menos</option>
-                                                    </select>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroTiempoEntrega" >Tiempo de Entrega</label>
+                                                        <select class="form-control" id="filtroTiempoEntrega">
+                                                            <option value="">Todos</option>
+                                                            <option value="1">1 día o menos</option>
+                                                            <option value="3">3 días o menos</option>
+                                                            <option value="7">1 semana o menos</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-2 form-group mb-0 text-right">
-                                                    <button id="btnResetFiltros" class="btn btn-secondary">Limpiar</button>
+                                                <div class="col-12">
+                                                    <button id="btnResetFiltros" class="btn btn-outline-secondary">
+                                                        <i class="mdi mdi-refresh"></i> Limpiar Filtros
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                            <!-- Sección de filtros para activos -->
+                            <% if (tipo === 'activos') { %>
+                                  <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card shadow-sm">
+                                        <div class="card-body">
+                                            <h4 class="card-title mb-4">
+                                                <i class="mdi mdi-filter-multiple"></i> Filtros
+                                            </h4>
+                                            <div class="row g-3">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroCentroCoste">Centro de Coste</label>
+                                                        <select class="form-control" id="filtroCentroCoste">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroEmpresa">Empresa</label>
+                                                        <select class="form-control" id="filtroEmpresa">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroEstado">Estatus</label>
+                                                        <select class="form-control" id="filtroEstado">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroTipoActivo">Activo</label>
+                                                        <select class="form-control" id="filtroTipoActivo">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroDepartamentos">Departamentos</label>
+                                                        <select class="form-control" id="filtroDepartamentos">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroUbicacion">Ubicacion</label>
+                                                        <select class="form-control" id="filtroUbicacion">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <button id="btnResetFiltros" class="btn btn-outline-secondary">
+                                                        <i class="mdi mdi-refresh"></i> Limpiar Filtros
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -521,6 +665,46 @@
                                         </div>
                                     </div>
                                 </div>        
+                                <% } %>
+                                <% if (tipo === 'activos') { %>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="totalSalidas">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-success">
+                                                        <span class="mdi mdi-archive icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Total Activos</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="totalDepartamentos">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-info">
+                                                        <span class="mdi mdi-office-building icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Departamentos</h6>
+                                        </div>
+                                    </div>
+                                </div>
                                 <% } %>
                             </div>
 
@@ -794,6 +978,59 @@
                                         <div class="card-body">
                                             <h4 class="card-title">Tendencia de Solicitudes</h4>
                                             <canvas id="empresaChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% } %>
+                            <% if (tipo === 'activos') { %>
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Activos por Empresa</h4>
+                                            <p class="card-description">Distribución de activos entre empresas</p>
+                                            <canvas id="combustibleChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Activos por Ubicación/Rancho</h4>
+                                            <p class="card-description">Localización física de activos (top 10)</p>
+                                            <canvas id="almacenChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Activos por Estado</h4>
+                                            <p class="card-description">Condición operacional de activos</p>
+                                            <canvas id="empresaChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Activos por Tipo de Equipo</h4>
+                                            <p class="card-description">Clasificación por tipo de equipo</p>
+                                            <canvas id="centroCosteChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Activos Por Departamento</h4>
+                                            <p class="card-description">Localización física de activos por departamento</p>
+                                            <canvas id="departamentoChart" height="300"></canvas>
                                         </div>
                                     </div>
                                 </div>

@@ -291,7 +291,7 @@ export class ProduccionModel {
     return await DbHelper.executeQuery(async () => {
       try {
         const data = await sequelize.query(
-          'SELECT * FROM activos_fijos'
+          "SELECT * FROM activos_fijos where status <> 'baja'"
         )
         const uniqueData = Array.from(new Map(data.map(item => [item.id, item])).values())
         // Si llegamos aquí, la ejecución fue exitosa
@@ -307,11 +307,31 @@ export class ProduccionModel {
     })
   }
 
+  static async ObtenerActivosFijosGraficas () {
+    return await DbHelper.executeQuery(async () => {
+      try {
+        const data = await sequelize.query(
+          'SELECT id,equipo,empresa_pertenece,status,ubicacion,departamento,centro_coste FROM activos_fijos'
+        )
+        const uniqueData = Array.from(new Map(data.map(item => [item.id, item])).values())
+        // Si llegamos aquí, la ejecución fue exitosa
+        return uniqueData[0] || uniqueData || []
+      } catch (error) {
+        // Manejo de errores
+        console.error('Error al procesar activos fijos', error)
+        return {
+          status: 'error',
+          message: error.message || 'Error desconocido'
+        }
+      }
+    })
+  }
+
   static async ObtenerAsignacionActivos () {
     return await DbHelper.executeQuery(async () => {
       try {
         const data = await sequelize.query(
-          'SELECT * FROM aignacionesactivo',
+          "SELECT * FROM `aignacionesactivo` WHERE status='asignado'",
           { type: sequelize.QueryTypes.SELECT }
         )
         if (!data) {

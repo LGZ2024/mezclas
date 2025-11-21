@@ -2,51 +2,11 @@
     <div class="header__container">
         <!-- Logo -->
         <div class="header__logo">
-            <img src="../images/LogoTransp.webp" alt="Logo Empresa" class="logo__img" loading="lazy">
+            <img src="/images/LogoTransp.webp" alt="Logo Empresa" class="logo__img" loading="lazy">
         </div>
-
-        <!-- Navegación Principal -->
-        <!-- <nav class="header__nav" role="navigation">
-            <ul class="nav__list">
-                <li class="nav__item">
-                    <a href="#" class="nav__link">
-                        <i class="fa-solid fa-gas-pump"></i>
-                        <span>Combustibles</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <nav class="header__nav" role="navigation">
-            <ul class="nav__list">
-                <li class="nav__item">
-                    <a href="#" class="nav__link">
-                        <i class="fa-solid fa-gas-pump"></i>
-                        <span>Vehiculos</span>
-                    </a>
-                </li>
-            </ul>
-        </nav> -->
-
         <!-- Área de Usuario y Notificaciones -->
         <% if ( rol==="mezclador" || rol==="solicita" || rol==="solicita2" || rol==="encargado_combustible" ) { %>
             <div class="header__user">
-                <!-- Notificaciones -->
-                <div class="notifications" role="complementary">
-                    <button class="notifications__btn" id="notifBtn" aria-label="Notificaciones">
-                        <i class="fas fa-bell"></i>
-                        <span class="notifications__badge" id="notifCount">0</span>
-                    </button>
-                    <div class="notifications__dropdown" id="notifDropdown">
-                        <div class="notifications__header">
-                            <h3>Notificaciones</h3>
-                            <!-- <button class="notifications__clear" aria-label="Limpiar notificaciones">
-                            Limpiar todo
-                        </button> -->
-                        </div>
-                        <div class="notifications__list" id="notifList"></div>
-                    </div>
-                </div>
-
                 <!-- Perfil Usuario -->
                 <div class="user-profile">
                     <button class="user-profile__btn" aria-label="Menú de usuario">

@@ -2,13 +2,14 @@
 <html lang="es">
 
 <head>
-    <%- include("../../templates/head-pwa") %>
-        <%- include("../../templates/mezclas/cabecera") %>
-            <link rel="stylesheet" href="../css/spinner.css">
+    <!-- <%- include("../../templates/head-pwa") %> -->
+    <%- include("../../templates/mezclas/cabecera") %>
 </head>
 
 <body>
+    <% if(rol !="master" && rol!="administrativo" && rol!="adminMezclador") { %>
     <%- include("../../templates/combustibles/navCombustibles") %>
+    <% } %>
         <section>
             <div class="container">
                 <div class="row justify-content-center">

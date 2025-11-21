@@ -106,6 +106,42 @@ export async function MensajeEliminacion (url, method, data) {
     return false
   }
 }
+export async function MensajeCambiarEstado (url, method, data) {
+  try {
+    // Mostrar diálogo de confirmación
+    const result = await Swal.fire({
+      title: 'Esta seguro de cambiar el estado?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Cambiar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6'
+    })
+
+    // Si el usuario confirma
+    if (result.isConfirmed) {
+      // Realizar la petición de eliminación
+      const res = await fetchApi(url, method, data)
+
+      if (!res) {
+        throw new Error('Error en la petición')
+      }
+
+      // Mostrar mensaje de respuesta
+      await showMessage(res)
+      return true
+    } else {
+      // Si el usuario cancela
+      await mostrarMensaje('Operación cancelada', 'info')
+      return false
+    }
+  } catch (error) {
+    console.error('Error en cambio de estado:', error)
+    await mostrarMensaje('Error al cambiar el estado', 'error')
+    return false
+  }
+}
 // Funciones para convertir fechas y horas
 export async function convertHourTo24Format (hour) {
   const parts = hour.split(' ')
@@ -165,20 +201,19 @@ export async function obtenerDocumento (url) {
         // Determinar el tipo de archivo por su extensión
         const extension = url.split('.').pop().toLowerCase()
         const isImage = ['jpg', 'jpeg', 'png', 'gif'].includes(extension)
+        const container = document.getElementById('pdfEmbed')
 
         if (isImage) {
-          // Configurar el modal para imágenes
-          $('#pdfEmbed').replaceWith(`
-                        <div class="image-container" style="display: flex; justify-content: center; align-items: center; height: 500px; padding: 20px;">
-                            <img id="imagePreview" src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-                        </div>
-                    `)
+          // Para imágenes, reemplazar el contenido con una imagen
+          container.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 500px; padding: 20px;">
+              <img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);" alt="Imagen">
+            </div>
+          `
           $('#pdfModalLabel').text('Visualizar Imagen')
         } else {
-          // Configurar el modal para PDFs
-          $('#pdfEmbed').replaceWith(`
-                        <embed id="pdfEmbed" src="${url}" type="application/pdf" width="100%" height="500px" />
-                    `)
+          // Para PDFs, usar el embed
+          container.innerHTML = `<embed src="${url}" type="application/pdf" width="100%" height="500px" />`
           $('#pdfModalLabel').text('Visualizar PDF')
         }
 

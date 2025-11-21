@@ -74,6 +74,10 @@ const empleadosConfig = {
       }
     }
   },
+  puesto: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   estado: {
     type: DataTypes.STRING,
     allowNull: true,
