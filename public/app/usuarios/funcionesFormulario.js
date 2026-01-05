@@ -3,7 +3,7 @@ import { mostrarMensaje } from '../funciones.js'
 import { iniciarRegistros, verRegistro } from './tablaUsuarios.js'
 /* eslint-disable no-undef */
 class FormularioUsuario {
-  constructor () {
+  constructor() {
     this.datosRancho = [
       { nombre: 'Ahualulco' },
       { nombre: 'Atemajac' },
@@ -36,7 +36,30 @@ class FormularioUsuario {
     ]
   }
 
-  async manejarEnvioReceta (e) {
+  async cargarRoles() {
+    try {
+      const response = await fetch('/api/catalogos/roles')
+      if (!response.ok) throw new Error('Error al cargar roles')
+      const roles = await response.json()
+
+      const selectRoles = document.getElementById('roles')
+      if (selectRoles) {
+        selectRoles.innerHTML = '<option value="">Selecciona una Opción</option>'
+
+        roles.forEach(rol => {
+          const option = document.createElement('option')
+          option.value = rol.nombre
+          option.textContent = rol.nombre.charAt(0).toUpperCase() + rol.nombre.slice(1)
+          selectRoles.appendChild(option)
+        })
+      }
+    } catch (error) {
+      console.error('Error cargando roles:', error)
+      mostrarMensaje('Error al cargar lista de roles', 'error')
+    }
+  }
+
+  async manejarEnvioReceta(e) {
     e.preventDefault()
     const contrasena = document.getElementById('contrasena').value
     const contrasenaRep = document.getElementById('contrasenaRep').value
@@ -61,7 +84,7 @@ class FormularioUsuario {
     }
   }
 
-  validarFormulario () {
+  validarFormulario() {
     const camposRequeridos = ['nombre', 'usuario', 'correo', 'contrasena', 'contrasenaRep', 'roles', 'empresa']
     const camposInvalidos = camposRequeridos.filter(campo => {
       const elemento = document.getElementById(campo)
@@ -76,7 +99,7 @@ class FormularioUsuario {
     return true
   }
 
-  validarProductos () {
+  validarProductos() {
     const ranchos = document.querySelectorAll('select[name="rancho[]"]')
     const ranchosUnicos = new Set()
     const errores = []
@@ -100,7 +123,7 @@ class FormularioUsuario {
     return true
   }
 
-  validarVariedades () {
+  validarVariedades() {
     const variedades = document.querySelectorAll('select[name="variedad[]"]')
     const variedadesUnicas = new Set()
     const errores = []
@@ -123,7 +146,7 @@ class FormularioUsuario {
     return true
   }
 
-  async recopilarDatosReceta () {
+  async recopilarDatosReceta() {
     const ranchos = await this.recopilarProductos()
     if (!ranchos) {
       return {
@@ -146,7 +169,7 @@ class FormularioUsuario {
     }
   }
 
-  async recopilarProductos () {
+  async recopilarProductos() {
     const ranchosSeleccionados = document.querySelectorAll('select[name="rancho[]"]')
     console.log(ranchosSeleccionados)
     return Array.from(ranchosSeleccionados)
@@ -155,7 +178,7 @@ class FormularioUsuario {
       .join(',') // Unir en una cadena separada por comas
   }
 
-  async recopilarVariedades () {
+  async recopilarVariedades() {
     const variedadesSeleccionadas = document.querySelectorAll('select[name="variedad[]"]')
     return Array.from(variedadesSeleccionadas)
       .map(variedad => variedad.value)
@@ -163,7 +186,7 @@ class FormularioUsuario {
       .join(',')
   }
 
-  procesarRespuestaReceta (respuesta) {
+  procesarRespuestaReceta(respuesta) {
     if (!respuesta.error) {
       mostrarMensaje(respuesta.message || 'Receta guardada exitosamente', 'success')
       document.getElementById('formEditar').reset()
@@ -176,14 +199,14 @@ class FormularioUsuario {
     }
   }
 
-  reiniciarCamposProductos () {
+  reiniciarCamposProductos() {
     const ranchosContainer = document.getElementById('ranchosContainer')
     while (ranchosContainer.firstChild) {
       ranchosContainer.removeChild(ranchosContainer.firstChild)
     }
   }
 
-  async enviarReceta (datosReceta) {
+  async enviarReceta(datosReceta) {
     const respuesta = await fetch('/api/usuario/', {
       method: 'POST',
       headers: {
@@ -200,12 +223,12 @@ class FormularioUsuario {
     return await respuesta.json()
   }
 
-  manejarErrorReceta (error) {
+  manejarErrorReceta(error) {
     console.error('Error al guardar receta:', error)
     alert(error.message || 'Ocurrió un error al guardar la receta')
   }
 
-  mostrarContraseñaR () {
+  mostrarContraseñaR() {
     $(document).on('click', '#mostrarPassR', (e) => {
       e.preventDefault()
       const contrasenaRepInput = document.getElementById('contrasenaRep')
@@ -213,7 +236,7 @@ class FormularioUsuario {
     })
   }
 
-  mostrarContraseña () {
+  mostrarContraseña() {
     $(document).on('click', '#mostrarPass', (e) => {
       e.preventDefault()
       const contrasenaInput = document.getElementById('contrasena')
@@ -221,19 +244,19 @@ class FormularioUsuario {
     })
   }
 
-  agregarNuevoRancho () {
+  agregarNuevoRancho() {
     document.getElementById('agregarRancho').addEventListener('click', () => {
       this.crearCampoRancho(this.datosRancho)
     })
   }
 
-  agregarNuevoVariedad () {
+  agregarNuevoVariedad() {
     document.getElementById('agregarVariedad').addEventListener('click', () => {
       this.crearCampoVariedad(this.datosVariedad)
     })
   }
 
-  crearCampoRancho (datos) {
+  crearCampoRancho(datos) {
     const ranchosContainer = document.getElementById('ranchosContainer')
     const nuevoRancho = document.createElement('div')
     nuevoRancho.classList.add('form-group')
@@ -280,7 +303,7 @@ class FormularioUsuario {
     return nuevoRancho
   }
 
-  crearCampoVariedad (datos) {
+  crearCampoVariedad(datos) {
     const variedadContainer = document.getElementById('variedadesContainer')
     const nuevoVariedad = document.createElement('div')
     nuevoVariedad.classList.add('form-group')
@@ -327,14 +350,14 @@ class FormularioUsuario {
     return nuevoVariedad
   }
 
-  manejarCambioCentroCoste () {
+  manejarCambioCentroCoste() {
     document.getElementById('rol').addEventListener('change', (evento) => {
       const rol = evento.target.value
       document.getElementById('agregarRancho').style.display = rol === 'master' ? 'none' : 'block'
     })
   }
 
-  mostrarError (mensaje) {
+  mostrarError(mensaje) {
     console.error(`ERROR: ${mensaje}`)
   }
 }

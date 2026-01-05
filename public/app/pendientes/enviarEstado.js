@@ -83,8 +83,6 @@ export const enviarEstadoProductos = async () => {
     return // Salir de la función
   }
 
-  console.log(estados)
-
   // Continuar con la lógica de envío...
   try {
     const response = await fetch('/api/actualizarEstadoProductos', {

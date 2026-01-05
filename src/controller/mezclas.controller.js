@@ -7,7 +7,7 @@ import loggerWiston from '../utils/logger.js'
 import { format } from 'date-fns'
 
 export class MezclasController {
-  constructor ({ mezclaModel }) {
+  constructor({ mezclaModel }) {
     this.mezclaModel = mezclaModel
   }
 
@@ -42,48 +42,86 @@ export class MezclasController {
         logger
       })
 
-      // Log de procesamiento
-      logger.debug('Procesando notificaciones', {
-        ...logContext,
-        solicitudId: result.idSolicitud
-      })
-
       // Proceso de notificaciones por correo
-      const notificationTargets = await this.#determinarDestinatariosNotificacion({
-        rancho: req.body.rancho,
-        empresa: req.body.empresaPertece,
-        user,
-        result
-      })
+      // const notificationTargets = await this.#determinarDestinatariosNotificacion({
+      //   rancho: req.body.rancho,
+      //   empresa: req.body.empresaPertece,
+      //   user,
+      //   result
+      // })
 
-      logger.info('Notificaciones enviadas', {
-        ...logContext,
-        ...notificationTargets
-      })
+      // logger.info('Notificaciones enviadas', {
+      //   ...logContext,
+      //   ...notificationTargets
+      // })
 
-      await this.#enviarCorreoNotificacion({
-        ...notificationTargets,
-        solicitud: result,
-        user,
-        requestData: req.body,
-        logger,
-        logContext
-      })
+      // await this.#enviarCorreoNotificacion({
+      //   ...notificationTargets,
+      //   solicitud: result,
+      //   user,
+      //   requestData: req.body,
+      //   logger,
+      //   logContext
+      // })
 
-      // Log de finalización
-      logger.info('Mezcla creada exitosamente', {
-        ...logContext,
-        solicitudId: result.idSolicitud,
-        duration: Date.now() - new Date(logContext.timestamp).getTime()
-      })
-      console.log(result)
-      return res.status(201).json({
+      // // Log de finalización
+      // logger.info('Mezcla creada exitosamente', {
+      //   ...logContext,
+      //   solicitudId: result.idSolicitud,
+      //   duration: Date.now() - new Date(logContext.timestamp).getTime()
+      // })
+
+      return res.json({
         message: result.message,
         idSolicitud: result.idSolicitud
       })
     } catch (error) {
       // Log detallado del error
       logger.error('Error al crear mezcla', {
+        ...logContext,
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          code: error.code
+        }
+      })
+      throw error
+    }
+  })
+
+  // eliminar solicitud
+  delete = asyncHandler(async (req, res) => {
+    const { user } = req.session
+    const id = req.params.id
+    const logger = req.logger // Logger con correlación
+
+    const logContext = {
+      operation: 'ELIMINAR_SOLICITUD_MEZCLA',
+      name: user.nombre,
+      userId: user.id,
+      userRole: user.rol,
+      solicitudId: id
+    }
+    try {
+      logger.info('Eliminando solicitud', logContext)
+
+      const result = await this.mezclaModel.delete({
+        id,
+        logContext,
+        logger
+      })
+
+      console.log(result)
+      logger.info('Solicitud eliminada exitosamente', logContext)
+
+      return res.json({
+        message: result.message,
+        idSolicitud: result.idSolicitud
+      })
+    } catch (error) {
+      console.log(error)
+      logger.error('Error al eliminar solicitud', {
         ...logContext,
         error: {
           name: error.name,
@@ -366,7 +404,8 @@ export class MezclasController {
     const { user } = req.session
     const { status } = req.params
     const logger = req.logger
-
+    console.log(status)
+    let params = {}
     const logContext = {
       operation: 'GET_MEZCLAS_EMPRESA',
       userId: user.id,
@@ -384,13 +423,22 @@ export class MezclasController {
       throw new ValidationError('El estado es requerido')
     }
 
-    // Parámetros base
-    const params = {
-      status,
-      confirmacion: 'Confirmada',
-      idUsuario: user.id
+    if (status === 'Validacion') {
+      params = {
+        status,
+        validacion: false,
+        idUsuario: user.id
+      }
+    } else {
+      // Parámetros base
+      params = {
+        status,
+        confirmacion: 'Confirmada',
+        idUsuario: user.id
+      }
     }
 
+    console.log(params)
     // Obtener resultados según rol
     const result = await this.#obtenerMezclasSegunRol(user, params, logContext, logger)
 
@@ -406,6 +454,7 @@ export class MezclasController {
     const id = req.params.id
     const logger = req.logger // Logger with correlation
 
+    console.log('id', id)
     const logContext = {
       operation: 'Obtener mesclas por id',
       username: user.nombre,
@@ -459,14 +508,17 @@ export class MezclasController {
 
     let result = []
     const confirmacion = 'Pendiente'
+    const validacion = true
 
     if (user.rol === 'adminMezclador' && user.empresa === 'General') {
+      console.log('GET_TABLAS_CONFIRMAR fetching_michoacan')
       logger.info('GET_TABLAS_CONFIRMAR', 'fetching_michoacan')
 
       const [res2, res1] = await Promise.all([
         this.mezclaModel.obtenerTablaMezclasValidadosMichoacan({
           status: 'Pendiente',
           confirmacion,
+          validacion,
           idUsuario: user.id,
           logContext,
           logger
@@ -475,6 +527,7 @@ export class MezclasController {
           status: 'Pendiente',
           ranchoDestino: 'Ahualulco',
           confirmacion,
+          validacion,
           idUsuario: user.id,
           logContext,
           logger
@@ -484,6 +537,7 @@ export class MezclasController {
       if (Array.isArray(res2)) result = result.concat(res2)
       if (Array.isArray(res1)) result = result.concat(res1)
     } else if (user.rol === 'adminMezclador' && user.empresa === 'Bioagricultura') {
+      console.log('GET_TABLAS_CONFIRMAR fetching_bioagricultura')
       logger.info('GET_TABLAS_CONFIRMAR fetching_bioagricultura', logContext)
 
       const [res2, res1] = await Promise.all([
@@ -491,6 +545,7 @@ export class MezclasController {
           status: 'Pendiente',
           ranchoDestino: 'Atemajac',
           confirmacion,
+          validacion,
           idUsuario: user.id,
           logContext,
           logger
@@ -499,6 +554,7 @@ export class MezclasController {
           status: 'Pendiente',
           idUsuarioSolicita: user.id,
           confirmacion,
+          validacion,
           logContext,
           logger
         })
@@ -507,7 +563,9 @@ export class MezclasController {
       if (Array.isArray(res2)) result = result.concat(res2)
       if (Array.isArray(res1)) result = result.concat(res1)
     } else if (user.rol === 'master') {
-      result = await this.mezclaModel.obtenerTablaMezclasAll({ status: 'Pendiente', confirmacion, rol: user.rol, logContext, logger })
+      console.log('GET_TABLAS_CONFIRMAR fetching_master')
+
+      result = await this.mezclaModel.obtenerTablaMezclasAll({ status: 'Pendiente', confirmacion, validacion, rol: user.rol, logContext, logger })
     }
     const uniqueResults = this.#eliminarDuplicados(result)
 
@@ -582,6 +640,7 @@ export class MezclasController {
   })
 
   validacion = asyncHandler(async (req, res) => {
+    console.log('entro a la validacion')
     const { user } = req.session
     const data = req.body
     const logger = req.logger // Logger with correlation
@@ -602,6 +661,57 @@ export class MezclasController {
       user,
       logContext,
       logger
+    })
+
+    logger.info('VALIDATE_MEZCLA Finish')
+    return res.json(result)
+  })
+
+  validaciones = asyncHandler(async (req, res) => {
+    const { user } = req.session
+    const data = req.body
+    const logger = req.logger // Logger with correlation
+    const { idSolicitud } = req.params
+
+    const logContext = {
+      operation: 'Validar solicitudes',
+      username: user.nombre,
+      userId: user.id,
+      userRole: user.rol,
+      solicitudId: idSolicitud,
+      requestBody: data
+    }
+
+    logger.info('VALIDATE_MEZCLA started', logContext)
+
+    const result = await this.mezclaModel.validaciones({
+      idSolicitud,
+      data,
+      user,
+      logContext,
+      logger
+    })
+
+    // Proceso de notificaciones por correo
+    const notificationTargets = await this.#determinarDestinatariosNotificacion({
+      rancho: result.solicitud.ranchoDestino,
+      empresa: result.solicitud.empresa,
+      user,
+      result
+    })
+
+    logger.info('Notificaciones enviadas', {
+      ...logContext,
+      ...notificationTargets
+    })
+
+    await this.#enviarCorreoNotificacion({
+      ...notificationTargets,
+      solicitud: idSolicitud,
+      user,
+      requestData: result.solicitud.dataValues,
+      logger,
+      logContext
     })
 
     logger.info('VALIDATE_MEZCLA Finish')
@@ -629,7 +739,8 @@ export class MezclasController {
       data,
       idUsuario: user.id,
       logContext,
-      logger
+      logger,
+      rol: user.rol
     })
 
     logger.info('CANCEL_MEZCLA COMPLETADO', { ...logContext })
@@ -640,7 +751,6 @@ export class MezclasController {
   // funciones auxiliares y utilitarios
   #determinarDestinatariosNotificacion = async ({ rancho, empresa, user, result }) => {
     let ress = []
-    // ranchos validar
     try {
       loggerWiston.debug('Determinando destinatarios de notificación iniciada')
       if (rancho === 'Atemajac') {
@@ -658,19 +768,13 @@ export class MezclasController {
         ress = [...r3]
       } else if (rancho === 'Romero' || rancho === 'Potrero' || rancho === 'Casas de Altos' || rancho === 'Santiaguillo' || rancho === 'Rincon' || rancho === 'Paraiso' || rancho === 'Guzman' || rancho === 'Chivas' || rancho === 'Jimenez') {
         let r3 = []
-        if (user.rol === 'adminMezclador' && user.id === 33) {
-          // Si el usuario es adminMezclador y es Francisco Alvarez
-          // obtenemos los emails de todos los mezcladores de la empresa
-          r3 = await UsuarioModel.getUserEmailEmpresa({ rol: 'mezclador', empresa }) // idUsuario: 33 es el id de Francisco Alvarez
-        } else {
-          r3 = await UsuarioModel.getUserEmailGerente({ rol: 'adminMezclador', idUsuario: 51 }) // idUsuario: 48 es el id de abigail ortiz
-        }
+        r3 = await UsuarioModel.getUserEmailEmpresa({ rol: 'mezclador', empresa })
         ress = [...r3]
       } else if (rancho === 'La Loma' || rancho === 'Zapote' || rancho === 'Ojo de Agua') {
-        const r1 = await UsuarioModel.getUserEmailGerente({ rol: 'adminMezclador', idUsuario: 51 }) // idUsuario: 48 es el id de abigail ortiz
+        const r1 = await UsuarioModel.getUserEmailEmpresa({ rol: 'mezclador', empresa })
         ress = [...r1]
       } else if (rancho === 'Ahualulco') {
-        const r2 = await UsuarioModel.getUserEmailGerente({ rol: 'adminMezclador', idUsuario: 51 }) // idUsuario: 48 es el id de abigail ortiz
+        const r2 = await UsuarioModel.getUserEmailEmpresa({ rol: 'mezclador', empresa })
         ress = [...r2]
       } else {
         const r2 = await UsuarioModel.getOneId({ id: user.id }) // master
@@ -693,6 +797,7 @@ export class MezclasController {
   #enviarCorreoNotificacion = async ({ ress, solicitud, user, requestData, logger, logContext }) => {
     logger.info('Enviando correo de notificación iniciado', logContext)
     // Usar forEach para mapear los resultados
+    console.log(requestData, solicitud)
     if (user.rol === 'adminMezclador') {
       ress.forEach(async usuario => {
         loggerWiston.info(`nombre:${usuario.nombre}, correo:${usuario.email}`)
@@ -700,13 +805,13 @@ export class MezclasController {
           type: 'solicitud',
           email: usuario.email,
           nombre: usuario.nombre,
-          solicitudId: solicitud.idSolicitud,
-          fechaSolicitud: format(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss'),
+          solicitudId: solicitud?.idSolicitud || solicitud.solicitud.id || solicitud,
+          fechaSolicitud: format(requestData?.fechaSolicitud || requestData.solicitud?.fechaSolicitud || requestData.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss'),
           data: requestData,
           usuario: {
             nombre: user.nombre,
             empresa: user.empresa,
-            ranchos: requestData.rancho
+            ranchos: requestData.rancho || requestData?.ranchoDestino
           }
         })
         // validamos los solicitudados
@@ -714,28 +819,29 @@ export class MezclasController {
           logger.error('Error al enviar correo:', respues.error)
           return false
         } else {
-          logger.info('Correo enviado:', respues.messageId)
+          logger.info('Correo enviado')
         }
         return true
       })
-    } else {
+    } else if ((requestData?.ranchoDestino || requestData.solicitud?.ranchoDestino) === 'Atemajac' || (requestData?.ranchoDestino || requestData?.ranchoDestino) === 'Seccion 7 Fresas') {
+      // enviamos correo a los destinatarios para confirmacion para estos dos eanchos
       ress.forEach(async usuario => {
         logger.info(`nombre:${usuario.nombre}, correo:${usuario.email}`)
         const respues = await enviarCorreo({
           type: 'confirmacionInicial',
           email: usuario.email,
           nombre: user.nombre,
-          solicitudId: solicitud.idSolicitud,
+          solicitudId: solicitud.idSolicitud || solicitud.id || requestData.id,
           usuario: {
             empresa: usuario.empresa,
-            ranchos: solicitud.data.ranchoDestino
+            ranchos: requestData?.ranchoDestino || requestData.solicitud?.ranchoDestino
           },
           data: {
-            folio: solicitud.data.folio,
-            cantidad: solicitud.data.cantidad,
-            presentacion: solicitud.data.presentacion,
-            metodoAplicacion: solicitud.data.metodoAplicacion,
-            descripcion: solicitud.data.descripcion
+            folio: requestData?.folio || requestData?.solicitud?.folio,
+            cantidad: requestData?.cantidad || requestData?.solicitud?.cantidad,
+            presentacion: requestData?.presentacion || requestData?.solicitud?.presentacion,
+            metodoAplicacion: requestData?.metodoAplicacion || requestData?.solicitud?.metodoAplicacion,
+            descripcion: requestData?.descripcion || requestData?.solicitud?.descripcion
           }
         })
         // validamos los solicitudados
@@ -743,7 +849,33 @@ export class MezclasController {
           logger.error('Error al enviar correo:', respues.error)
           return false
         } else {
-          logger.info('Correo enviado:', respues.messageId)
+          logger.info('Correo enviado')
+        }
+        return true
+      })
+    } else {
+      console.log('enviando correo a los destinatarios', solicitud)
+      ress.forEach(async usuario => {
+        loggerWiston.info(`nombre:${usuario.nombre}, correo:${usuario.email}`)
+        const respues = await enviarCorreo({
+          type: 'solicitud',
+          email: usuario.email,
+          nombre: usuario.nombre,
+          solicitudId: solicitud,
+          fechaSolicitud: format(requestData?.fechaSolicitud || requestData?.solicitud?.fechaSolicitud || solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss'),
+          data: requestData,
+          usuario: {
+            nombre: user.nombre,
+            empresa: user.empresa,
+            ranchos: requestData.rancho || requestData?.ranchoDestino || requestData?.solicitud?.ranchoDestino
+          }
+        })
+        // validamos los solicitudados
+        if (respues.error) {
+          logger.error('Error al enviar correo:', respues.error)
+          return false
+        } else {
+          logger.info('Correo enviado')
         }
         return true
       })
@@ -851,22 +983,31 @@ export class MezclasController {
   #obtenerMezclasSegunRol = async (user, params, logContext, logger) => {
     const { status, confirmacion, idUsuario } = params
     console.log(params)
-    console.log(user.rol)
+    console.log(user)
 
     switch (user.rol) {
       case 'mezclador':
+        console.log('obteniendo mezclas para mezclador')
         return await this.#obtenerMezclasParaMezclador(user, params, logContext, logger)
 
       case 'solicita':
-        console.log(user.rol)
-        return await this.mezclaModel.obtenerTablaMezclasUsuario({
-          status,
-          idUsuarioSolicita: idUsuario,
-          confirmacion,
-          logContext,
-          logger
-        })
-
+        if (status === 'Validacion') {
+          return await this.mezclaModel.obtenerTablaMezclasUsuario({
+            status,
+            idUsuarioSolicita: idUsuario,
+            validacion: false,
+            logContext,
+            logger
+          })
+        } else {
+          return await this.mezclaModel.obtenerTablaMezclasUsuario({
+            status,
+            idUsuarioSolicita: idUsuario,
+            confirmacion,
+            logContext,
+            logger
+          })
+        }
       case 'solicita2':
         return await this.mezclaModel.obtenerTablaMezclasEmpresa({
           status,
@@ -934,7 +1075,7 @@ export class MezclasController {
 
   #obtenerMezclasParaMezclador = async (user, params, logContext, logger) => {
     const { status, confirmacion, idUsuario } = params
-
+    console.log(user)
     if (user.ranchos === 'General') {
       return await this.mezclaModel.obtenerTablaMezclasEmpresa({
         status,
@@ -948,12 +1089,13 @@ export class MezclasController {
 
     if (user.ranchos === 'Atemajac') {
       logger.debug('Obteniendo mezclas para Atemajac', logContext)
-
+      console.log('obteniendo mezclas para Atemajac')
       const [mezclasRancho, mezclasEmpresa] = await Promise.all([
         this.mezclaModel.obtenerTablaMezclasRancho({
           status,
           ranchoDestino: user.ranchos,
           confirmacion,
+          validacion: true,
           idUsuario,
           logContext,
           logger
@@ -989,11 +1131,11 @@ export class MezclasController {
     return resultados.length > 0 ? this.#eliminarDuplicados(resultados) : []
   }
 
-  #validarDatosCreacion (data) {
+  #validarDatosCreacion(data) {
     const errores = []
 
     if (data.tipo === 'Mezcla') {
-      if (!data.cantidad) errores.push('La cantidad es requerida')
+      if (!data.cantidad || data.cantidad <= 0) errores.push('La cantidad es requerida y debe ser mayor a 0')
       if (!data.centroCoste) errores.push('El centro de coste es requerido')
       if (!data.empresaPertece) errores.push('La empresa es requerida')
       if (!data.folio) { if (!data.empresaPertece) errores.push('La empresa es requerida') }
@@ -1027,7 +1169,7 @@ export class MezclasController {
     }
   }
 
-  #validarDatosRegistro (data) {
+  #validarDatosRegistro(data) {
     const errores = []
 
     if (!data.rancho) errores.push('El rancho es requerido')
@@ -1046,7 +1188,7 @@ export class MezclasController {
     }
   }
 
-  #validarDatosActualizacionEstado (data) {
+  #validarDatosActualizacionEstado(data) {
     const errores = []
     const estadosPermitidos = ['Pendiente', 'Proceso', 'Completado', 'Cancelado']
 

@@ -1,10 +1,10 @@
 /* eslint-disable no-undef */
 
 // Funciones de fetch con mejor manejo de errores
-async function fechTbSolicitadas () {
+async function fechTbSolicitadas() {
   try {
     const status = 'Pendiente'
-    const url = `/api/mezclasSolicitadas/${status}`
+    const url = `/api/mezclas/solicitadas/${status}`
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)

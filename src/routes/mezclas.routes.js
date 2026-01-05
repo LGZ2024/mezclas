@@ -7,20 +7,24 @@ export const createMezclasRouter = ({ mezclaModel }) => {
   const mezclasController = new MezclasController({ mezclaModel })
 
   // Crear solicitud
-  router.post('/solicitudes', mezclasController.create)
-  router.post('/registrarSolicitud/', mezclasController.registrarSolicitud) // registrar mezcla
+  router.post('/mezclas/registro', mezclasController.create)
+  router.post('/mezclas/registrar', mezclasController.registrarSolicitud) // registrar mezcla por administrador
+  router.post('/mezclas/validacion', mezclasController.validacion) // confirmacion de solicitudes por parte de produccion
+  // obtener solicitud
+  router.get('/mezclas/canceladas', mezclasController.obtenerTablasCancelada)
+  router.get('/mezclas/confirmar', mezclasController.obtenerTablasConfirmar)
+  router.get('/mezclas/:id', mezclasController.obtenerTablaMezclasId) // obtener mezclas con id
+  router.get('/mezclas/solicitadas/:status', mezclasController.obtenerTablaMezclasEmpresa) // obtener mezclas
+  // actualizar
   router.put(
-    '/CerrarSolicitud/:idSolicitud',
+    '/mezclas/cerrar/:idSolicitud',
     uploadFotoMezclas.single('imagen'),
     mezclasController.cerrarSolicitid) // cerrar mezcla
-  router.get('/mezclasSolicitadas/:status', mezclasController.obtenerTablaMezclasEmpresa) // obtener mezclas
-  router.get('/mezclasId/:id', mezclasController.obtenerTablaMezclasId) // obtener mezclas con id
-  router.patch('/solicitudProceso/:idSolicitud', mezclasController.estadoProceso) // actualizar estado proceso
-  // router.patch('/notificacion/:idSolicitud', mezclasController.notificacion) // actualizar mensaje de notificacion
-  router.post('/validacion', mezclasController.validacion) // actualizar mensaje de notificacion
-  router.patch('/cancelarSolicitud/:idSolicitud', mezclasController.cancelar) // actualizar mensaje de notificacion
-  router.get('/mezclasConfirmar/', mezclasController.obtenerTablasConfirmar) // obtener solicitud
-  router.patch('/mezclasConfirmar/:idSolicitud', mezclasController.mezclaConfirmar) // obtener solicitud
-  router.get('/mezclasCancelada/', mezclasController.obtenerTablasCancelada) // obtener solicitud
+  router.patch('/mezclas/solicitudProceso/:idSolicitud', mezclasController.estadoProceso) // actualizar estado proceso
+  router.patch('/mezclas/validacion/:idSolicitud', mezclasController.validaciones) // validacion por parte de los solicittantes
+  router.patch('/mezclas/cancelar/:idSolicitud', mezclasController.cancelar) // actualizar mensaje de notificacion
+  router.patch('/mezclas/confirmar/:idSolicitud', mezclasController.mezclaConfirmar) // confirmacion de solicitud por parte de produccion
+  // eliminar
+  router.delete('/mezclas/registro/:id', mezclasController.delete)
   return router
 }

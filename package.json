@@ -144,7 +144,10 @@
     "webpack-node-externals": "3.0.0"
   },
   "eslintConfig": {
-    "extends": "standard"
+    "extends": "standard",
+    "rules": {
+      "space-before-function-paren": "off"
+    }
   },
   "lint-staged": {
     "*.{js,mjs}": [

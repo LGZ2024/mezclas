@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-async function fetchApi (url, method, data) {
+async function fetchApi(url, method, data) {
   try {
     const response = await fetch(url, {
       method,
@@ -13,9 +13,9 @@ async function fetchApi (url, method, data) {
     console.error('Error:', error.message)
   }
 }
-async function fechTbrecetas (idSolicitud) {
+async function fechTbrecetas(idSolicitud) {
   try {
-    const response = await fetch(`/api/productoSolicitud/${idSolicitud}`)
+    const response = await fetch(`/api/productos/solicitud/${idSolicitud}`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -318,8 +318,7 @@ const eliminar = async () => {
 
       if (result.isConfirmed) {
         // Obtener ID de solicitud
-        const idSolicitudElement = document.getElementById('idSolicitud') ||
-          document.getElementById('idSolicit')
+        const idSolicitudElement = document.getElementById('idSolicitud') || document.getElementById('idSolicit') || document.getElementById('id')
 
         if (!idSolicitudElement) {
           throw new Error('No se encontró el ID de la solicitud')
@@ -338,7 +337,7 @@ const eliminar = async () => {
         })
 
         // Eliminar producto
-        const response = await fetchApi(`/api/eliminarProducto/${id}`, 'delete')
+        const response = await fetchApi(`/api/productos/eliminar/${id}`, 'delete')
         if (!response.ok) throw new Error('Error al eliminar el producto')
 
         // Obtener datos actualizados

@@ -3,25 +3,17 @@
 
 <head>
     <!-- <%- include("../../templates/head-pwa") %> -->
-        <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
-        <link rel="stylesheet" href="../../css/spinner.css">
-        <%- include("../../templates/mezclas/cabecera") %>
+    <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
+    <link rel="stylesheet" href="../../css/spinner.css">
+    <%- include("../../templates/mezclas/cabecera") %>
 </head>
 
 
 <body>
     <%- include("../../templates/mezclas/headerNav") %>
-        <!-- Spinner de carga -->
-        <div class="spinner-overlay" id="spinner" style="display: none;">
-            <div class="spinner-container">
-                <div class="spinner"></div>
-                <p class="spinner-text">Procesando...</p>
-            </div>
-        </div>
-
         <input type="hidden" value="<%= rol %>" id="rol">
 
-        <section id="tablaFuciones" class="tablas" style="display: block;">
+        <section>
             <div class="container">
                 <div class="row justify-content-center">
                     <div class="col-md-12">
@@ -32,19 +24,19 @@
                                         <div
                                             style="display: flex; flex-direction: column; align-items: start; width: 20%;">
 
-                                            <button class="formulario__submit" id="regresarInicio"><span
+                                            <button class="formulario__submit" id="regresar"><span
                                                     class="mdi mdi-arrow-left-bold"></span></button>
                                         </div>
                                     </div>
                                     <div class="text-center">
-                                        <h3>Solicitudes</h3>
+                                        <h3>Solicitudes Canceladas</h3>
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="table-responsive">
                                     <table
                                         class="table table-striped table-bordered table-hover align-middle mobile-table w-100 table-sm"
-                                        id="tablaCanceladas" style="white-space: nowrap;">
+                                        id="tbCanceladas" style="white-space: nowrap;">
                                         <thead class="table-primary">
                                             <tr class="bg-primary">
                                                 <th>id</th>
@@ -56,6 +48,7 @@
                                                 <th>Rancho destino</th>
                                                 <th>Centro coste</th>
                                                 <th>Temporada</th>
+                                                <th>Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -76,7 +69,7 @@
 
                 <!-- Firebase Configuración y funciones -->
                 <%- include("../../templates/mezclas/scripts") %>
-                    <script type="module" src="../../app/canceladas/main2.js"></script>
+                    <script type="module" src="../../app/mezclas2/main.js"></script>
 
 </body>
 

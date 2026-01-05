@@ -4,15 +4,15 @@ import { Usuario } from '../schema/usuarios.js'
 import { Productos } from '../schema/productos.js' // Asegúrate de importar el modelo de Usuario
 import { Recetas } from '../schema/recetas.js' // Asegúrate de importar el modelo de Usuario
 import { Notificaciones } from '../schema/notificaciones.js' // Asegúrate de importar el modelo de Usuario
-import sequelize from '../db/db.js'
 // utlis
 import logger from '../utils/logger.js'
 import { NotFoundError, ValidationError, DatabaseError, CustomError } from '../utils/CustomError.js'
 import { DbHelper } from '../utils/dbHelper.js'
+import { enviarCorreo } from '../config/smtp.js'
 export class SolicitudRecetaModel {
   // crear asistencia
 
-  static async obtenerProductosSolicitud ({ idSolicitud, logContext, logger }) {
+  static async obtenerProductosSolicitud({ idSolicitud, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       try {
         const productosSolicitud = await SolicitudProductos.findAll({
@@ -64,10 +64,10 @@ export class SolicitudRecetaModel {
     })
   }
 
-  static async obtenerTablaMezclasId ({ id, logContext, logger }) {
+  static async obtenerTablaMezclasId({ id, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       try {
-      // Consulta para obtener las mezclas filtradas por empresa y status
+        // Consulta para obtener las mezclas filtradas por empresa y status
         const mezclas = await SolicitudProductos.findAll({
           where: {
             id
@@ -138,7 +138,7 @@ export class SolicitudRecetaModel {
     })
   }
 
-  static async obtenerProductoNoDisponibles ({ idSolicitud }) {
+  static async obtenerProductoNoDisponibles({ idSolicitud }) {
     try {
       const productoSolicitud = await SolicitudProductos.findAll({
         where: {
@@ -184,7 +184,7 @@ export class SolicitudRecetaModel {
     }
   }
 
-  static async create ({ data, idUsuario, logContext, logger }) {
+  static async create({ data, idUsuario, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         // Validación inicial de datos
@@ -250,7 +250,7 @@ export class SolicitudRecetaModel {
     })
   }
 
-  static async EliminarPorducto ({ id, logContext, logger }) {
+  static async EliminarPorducto({ id, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         logger.logOperation('ELIMINAR_PRODUCTO_MODELO', 'started', logContext)
@@ -292,13 +292,13 @@ export class SolicitudRecetaModel {
    * @returns {Promise<Object>} Resultado de la actualización
    */
 
-  static async actualizarEstado ({ data, idUsuarioMezcla, logContext, logger }) {
+  static async actualizarEstado({ user, idSolicitud, data, idUsuarioMezcla, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         logger.logOperation('ACTUALIZAR_ESTADO_PRODUCTOS MODELO', 'started', {
           ...logContext,
           data: {
-            idSolicitud: data.idSolicitud,
+            idSolicitud,
             estados: data.estados
           }
         })
@@ -307,10 +307,15 @@ export class SolicitudRecetaModel {
 
         // Procesar estados
         const resultado = await this.#procesarActualizacionEstados({
+          user,
+          idSolicitud,
+          idUsuarioMezcla,
           data,
           transaction,
           logContext
         })
+
+        console.log('resultado', resultado)
 
         logger.logOperation('ACTUALIZAR_ESTADO_PRODUCTOS MODELO', 'completed', {
           ...logContext,
@@ -336,7 +341,7 @@ export class SolicitudRecetaModel {
   }
 
   // Método auxiliar para validación
-  static validarDatosProducto (data) {
+  static validarDatosProducto(data) {
     const errores = []
 
     if (!data.idSolicitud) errores.push('El ID de solicitud es requerido')
@@ -349,7 +354,7 @@ export class SolicitudRecetaModel {
     }
   }
 
-  static async procesarEstadosProductos (data, noExistencia, transaction) {
+  static async procesarEstadosProductos({ data, noExistencia, transaction }) {
     let ultimaReceta = null
 
     try {
@@ -372,12 +377,13 @@ export class SolicitudRecetaModel {
       await Promise.all(estadosPromesas)
       return ultimaReceta
     } catch (error) {
+      console.log(error)
       if (error instanceof CustomError) throw error
       throw new DatabaseError('Error al procesar estados productos')
     }
   }
 
-  static async actualizarSolicitudYNotificacion ({ id, idUsuarioMezcla, mensaje, transaction }) {
+  static async actualizarSolicitudYNotificacion({ id, idUsuarioMezcla, mensaje, status, transaction }) {
     logger.info('Actualizando solicitud y notificación', { id, idUsuarioMezcla, mensaje })
     try {
       const solicitud = await Solicitud.findByPk(id, {
@@ -388,6 +394,8 @@ export class SolicitudRecetaModel {
 
       solicitud.idUsuarioMezcla = idUsuarioMezcla
       if (mensaje) solicitud.respuestaMezclador = mensaje
+      if (status) solicitud.status = status
+
       await solicitud.save({ transaction })
     } catch (error) {
       if (error instanceof CustomError) throw error
@@ -395,7 +403,7 @@ export class SolicitudRecetaModel {
     }
   }
 
-  static async crearNotificacion ({ id, mensaje, idUsuario, transaction }) {
+  static async crearNotificacion({ id, mensaje, idUsuario, transaction }) {
     try {
       if (!id || !mensaje || !idUsuario) {
         throw new ValidationError('Datos requeridos no proporcionados')
@@ -413,7 +421,7 @@ export class SolicitudRecetaModel {
     }
   }
 
-  static async obtenerProductosNoDisponibles (noExistencia) {
+  static async obtenerProductosNoDisponibles(noExistencia) {
     const idsRecetas = noExistencia.map(item => item.id_receta)
     try {
       const productos = await SolicitudProductos.findAll({
@@ -444,7 +452,7 @@ export class SolicitudRecetaModel {
     }
   }
 
-  static async obtenerDatosUsuarioSolicitante (idSolicitud) {
+  static async obtenerDatosUsuarioSolicitante(idSolicitud) {
     try {
       const usuarios = await Solicitud.findAll({
         where: { id: idSolicitud },
@@ -465,33 +473,29 @@ export class SolicitudRecetaModel {
         idUsuarioSolicita: item.idUsuarioSolicita
       }))
     } catch (error) {
+      console.log(error)
       if (error instanceof CustomError) throw error
       throw new DatabaseError('Error al obtener datos usuario solicitante')
     }
   }
 
   // Métodos privados auxiliares
-  static async #validarDatosActualizacion (data, idUsuarioMezcla) {
+  static async #validarDatosActualizacion(data, idUsuarioMezcla) {
     if (!data?.estados?.length || !idUsuarioMezcla) {
       throw new ValidationError('Datos requeridos no proporcionados')
     }
   }
 
-  static async #iniciarTransaccion (logContext) {
-    const transaction = await sequelize.transaction()
-    logger.logDBTransaction('ACTUALIZAR_ESTADO_PRODUCTOS', 'started', {
-      correlationId: logContext.correlationId
-    })
-    return transaction
-  }
-
-  static async #procesarActualizacionEstados ({ data, transaction, logContext }) {
+  static async #procesarActualizacionEstados({ user, idSolicitud, idUsuarioMezcla, data, transaction, logContext }) {
     const noExistencia = []
 
     logger.info('Procesando actualización de estados', { estados: data.estados })
     // Si hay productos no existentes
     if (data.estados.some(estado => !estado.existe)) {
+      console.log('productos no existentes', data)
       return this.#procesarProductosNoExistentes({
+        user,
+        idSolicitud,
         data,
         noExistencia,
         transaction,
@@ -500,19 +504,18 @@ export class SolicitudRecetaModel {
     }
 
     logger.info('Todos los productos existen')
-
     // Si todos los productos existen
     logger.info('Procesando todos los productos existen')
 
-    await this.procesarEstadosProductos(data, noExistencia, transaction)
-    logger.info('Procesado todos los productos existen', { data, noExistencia })
+    await this.#procesarProductosExistentes({ user, idSolicitud, idUsuarioMezcla, status: 'Proceso', data, noExistencia, transaction })
+    // logger.info('Procesado todos los productos existen', { data, noExistencia })
 
     return { message: 'Mezcla Guardada correctamente' }
   }
 
-  static async #procesarProductosNoExistentes ({ data, noExistencia, transaction, logContext }) {
+  static async #procesarProductosNoExistentes({ user, idSolicitud, data, noExistencia, transaction, logContext }) {
     logger.info('Procesando productos no existentes', { data, noExistencia })
-    const receta = await this.procesarEstadosProductos(data, noExistencia, transaction)
+    const receta = await this.procesarEstadosProductos({ idSolicitud, data, noExistencia, transaction })
     logger.info('Receta obtenida', { receta })
 
     if (!receta?.dataValues?.id) {
@@ -525,20 +528,59 @@ export class SolicitudRecetaModel {
       mensaje: data.mensaje,
       transaction
     })
-
-    const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud)
+    const datosUsuario = await this.obtenerDatosUsuarioSolicitante(idSolicitud)
 
     if (noExistencia.length > 0) {
       const productosNoDisponibles = await this.obtenerProductosNoDisponibles(noExistencia)
-      return {
-        data: datosUsuario,
-        productos: productosNoDisponibles,
-        message: 'Mezcla Guardada correctamente'
-      }
+
+      await enviarCorreo({
+        type: 'notificacion',
+        email: datosUsuario[0].email,
+        nombre: datosUsuario[0].nombre,
+        solicitudId: idSolicitud,
+        data: productosNoDisponibles,
+        usuario: user
+      })
+    }
+    return {
+      message: 'Notificación enviada correctamente'
+    }
+  }
+
+  static async #procesarProductosExistentes({ user, idSolicitud, idUsuarioMezcla, status, data, noExistencia, transaction, logContext }) {
+    logger.info('Procesando productos existentes', { data, noExistencia })
+    const receta = await this.procesarEstadosProductos({ data, noExistencia, transaction })
+    logger.info('Receta obtenida', { receta })
+
+    console.log('receta', receta)
+
+    if (!receta?.dataValues?.id) {
+      throw new NotFoundError('No se pudo obtener el ID de la solicitud')
     }
 
+    await this.actualizarSolicitudYNotificacion({
+      id: receta.dataValues.id_solicitud,
+      idUsuarioMezcla,
+      status,
+      transaction
+    })
+    const datosUsuario = await this.obtenerDatosUsuarioSolicitante(idSolicitud)
+    console.log('datosUsuario', datosUsuario)
+
+    await enviarCorreo({
+      type: 'status',
+      email: datosUsuario[0].email,
+      nombre: datosUsuario[0].nombre,
+      solicitudId: idSolicitud,
+      status,
+      usuario: user,
+      data: {
+        observaciones: data.observaciones,
+        fecha: new Date().toISOString()
+      }
+    })
+
     return {
-      data: datosUsuario,
       message: 'Mezcla Guardada correctamente'
     }
   }

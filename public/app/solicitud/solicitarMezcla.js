@@ -3,7 +3,7 @@ import { centrosCoste, Variedades, cambioSolicitud } from '../CentrosCoste.js'
 import { mostrarMensaje } from '../mensajes.js'
 import { showSpinner, hideSpinner } from '../spinner.js'
 class SolicitudFormulario {
-  constructor () {
+  constructor() {
     this.productosData = [] // Variable para almacenar productos
     this.tipo = '' // Variable para almacenar productos
     this.initElements()
@@ -11,7 +11,7 @@ class SolicitudFormulario {
     this.iniciarTipoSolicitud()
   }
 
-  initElements () {
+  initElements() {
     this.elementos = {
       regresar: document.getElementById('regresar'),
       rancho: document.querySelector('#rancho'),
@@ -25,7 +25,7 @@ class SolicitudFormulario {
     }
   }
 
-  bindEvents () {
+  bindEvents() {
     this.elementos.regresar.addEventListener('click', this.navegarInicio)
     this.elementos.rancho.addEventListener('change', this.manejarCambioRancho)
     this.elementos.centroCoste.addEventListener('change', this.manejarCambioCentroCoste)
@@ -40,7 +40,7 @@ class SolicitudFormulario {
     this.elementos.agregarProductoBtn.addEventListener('click', this.agregarNuevoProducto)
   }
 
-  iniciarSelect2 () {
+  iniciarSelect2() {
     try {
       if (typeof jQuery === 'undefined') {
         console.error('jQuery no está cargado')
@@ -68,7 +68,7 @@ class SolicitudFormulario {
   }
 
   // Agregar el método destruirSelect2
-  destruirSelect2 (elemento) {
+  destruirSelect2(elemento) {
     try {
       $(elemento).select2('destroy')
     } catch (error) {
@@ -77,7 +77,7 @@ class SolicitudFormulario {
   }
 
   // iniciar tipo de solicitud fertilizante o mezcla
-  async iniciarTipoSolicitud () {
+  async iniciarTipoSolicitud() {
     const inputOptions = new Promise((resolve) => {
       setTimeout(() => {
         resolve({
@@ -193,7 +193,7 @@ class SolicitudFormulario {
   }
 
   // Método para obtener productos
-  async fetchProductos () {
+  async fetchProductos() {
     try {
       const response = await fetch('/api/productos/')
       if (!response.ok) {
@@ -209,7 +209,7 @@ class SolicitudFormulario {
   }
 
   // Métodos de validación
-  validarFormulario () {
+  validarFormulario() {
     let camposRequeridos = []
     if (this.tipo === 'Mezcla') {
       camposRequeridos = [
@@ -240,7 +240,7 @@ class SolicitudFormulario {
     return true
   }
 
-  validarProductos () {
+  validarProductos() {
     const productos = document.querySelectorAll('.select-producto')
     const unidadesMedida = document.querySelectorAll('select[name="unidad_medida[]"]')
     const cantidades = document.querySelectorAll('input[name="cantidad[]"]')
@@ -249,11 +249,17 @@ class SolicitudFormulario {
 
     const errores = []
 
+    // Limpiar errores previos
+    document.querySelectorAll('.input-error').forEach(element => {
+      element.classList.remove('input-error')
+    })
+    $('.select2-container.input-error').removeClass('input-error')
+
     if (!productos || !unidadesMedida || !cantidades) {
       this.mostrarError('Agregar almenos un producto')
     }
     productos.forEach((productoSelect, index) => {
-    // Obtener el valor del select
+      // Obtener el valor del select
       const selectedOption = productoSelect.options[productoSelect.selectedIndex]
       const producto = selectedOption ? selectedOption.value : ''
       const unidad = unidadesMedida[index].value
@@ -287,12 +293,6 @@ class SolicitudFormulario {
       }
     })
 
-    // Limpiar errores previos
-    document.querySelectorAll('.input-error').forEach(element => {
-      element.classList.remove('input-error')
-    })
-    $('.select2-container.input-error').removeClass('input-error')
-
     if (errores.length > 0) {
       const erroresUnicos = [...new Set(errores)]
       this.mostrarError(erroresUnicos.join('. '))
@@ -302,7 +302,7 @@ class SolicitudFormulario {
     return true
   }
 
-  validacionCantidad (unidad) {
+  validacionCantidad(unidad) {
     const cantidadInput = document.querySelector('input[name="cantidad[]"]')
 
     // Limpiar validaciones previas
@@ -310,12 +310,12 @@ class SolicitudFormulario {
 
     // Establecer validaciones según la unidad seleccionada
     if (unidad === 'litro' || unidad === 'kilogramo') {
-      cantidadInput.setAttribute('pattern', '^(\\d+|\\d+\\.5)$') // Solo permite enteros o medios
-      cantidadInput.setAttribute('title', 'Por favor, ingresa un número válido (entero o medio).') // Mensaje de ayuda
+      cantidadInput.setAttribute('pattern', '^\\d+(\\.\\d{1,2})?$') // Permite enteros o hasta 2 decimales
+      cantidadInput.setAttribute('title', 'Por favor, ingresa un número válido (entero o con hasta 2 decimales).') // Mensaje de ayuda
 
       // Validar el valor actual del input
-      if (!cantidadInput.value.match(/^(\\d+|\\d+\\.5)$/)) {
-        cantidadInput.setCustomValidity('Por favor, ingresa un número válido (entero o medio).')
+      if (!cantidadInput.value.match(/^\d+(\.\d{1,2})?$/)) {
+        cantidadInput.setCustomValidity('Por favor, ingresa un número válido (entero o con hasta 2 decimales).')
       }
     } else {
       cantidadInput.removeAttribute('pattern') // Permitir cualquier número
@@ -323,7 +323,7 @@ class SolicitudFormulario {
     }
   }
 
-  validadPorcentajes () {
+  validadPorcentajes() {
     const porcentajes = document.querySelectorAll('input[name="porcentaje[]"]')
     const errores = []
     let sumaTotal = 0
@@ -373,7 +373,7 @@ class SolicitudFormulario {
     e.preventDefault()
     showSpinner()
     try {
-    // Validación general del formulario
+      // Validación general del formulario
       if (!this.validarFormulario()) {
         return
       }
@@ -475,7 +475,7 @@ class SolicitudFormulario {
     return { url, receta }
   }
 
-  recopilarProductos () {
+  recopilarProductos() {
     const productos = []
     const productosItems = document.querySelectorAll('.producto-item')
 
@@ -503,7 +503,7 @@ class SolicitudFormulario {
     return productos
   }
 
-  recopilarDatosPorcentaje () {
+  recopilarDatosPorcentaje() {
     try {
       const centroCoste = document.getElementById('centroCoste').value
       const porcentajes = []
@@ -589,7 +589,7 @@ class SolicitudFormulario {
   }
 
   // Métodos de respuesta
-  procesarRespuestaReceta (respuesta) {
+  procesarRespuestaReceta(respuesta) {
     // Resetear formulario
     this.elementos.recetaForm.reset()
 
@@ -601,8 +601,8 @@ class SolicitudFormulario {
   }
 
   // Agregar método para procesar respuesta de porcentajes
-  procesarRespuestaPorcentajes (respuesta) {
-  // Cerrar el modal si existe
+  procesarRespuestaPorcentajes(respuesta) {
+    // Cerrar el modal si existe
     const modal = document.querySelector('#ModalEditar')
     if (modal) {
       $(modal).modal('hide')
@@ -613,7 +613,7 @@ class SolicitudFormulario {
   }
 
   // Métodos de UI
-  reiniciarCamposProductos () {
+  reiniciarCamposProductos() {
     const productosContainer = this.elementos.productosContainer
     const productosActuales = productosContainer.querySelectorAll('.producto-item')
 
@@ -634,7 +634,7 @@ class SolicitudFormulario {
     primerProducto.querySelector('input[name="cantidad[]"]').value = ''
   }
 
-  mostrarExito (mensaje, redirectUrl) {
+  mostrarExito(mensaje, redirectUrl) {
     mostrarMensaje({
       msg: mensaje,
       type: 'success',
@@ -642,7 +642,7 @@ class SolicitudFormulario {
     })
   }
 
-  mostrarError (mensaje) {
+  mostrarError(mensaje) {
     console.log(mensaje)
     mostrarMensaje({
       msg: mensaje,
@@ -651,7 +651,7 @@ class SolicitudFormulario {
     })
   }
 
-  manejarErrorReceta (error) {
+  manejarErrorReceta(error) {
     console.error('Error al guardar receta:', error)
     this.mostrarError(error.message || 'Ocurrió un error al guardar la receta')
   }
@@ -683,7 +683,7 @@ class SolicitudFormulario {
     this.validacionCantidad(unidadMedida)
   }
 
-  ejecutarSeguros (callback) {
+  ejecutarSeguros(callback) {
     try {
       callback()
     } catch (error) {
@@ -711,7 +711,7 @@ class SolicitudFormulario {
     }
   }
 
-  crearCampoProducto (datos) {
+  crearCampoProducto(datos) {
     const nuevoItem = document.createElement('div')
     nuevoItem.classList.add('producto-item')
 
@@ -861,7 +861,7 @@ class SolicitudFormulario {
     }
   }
 
-  generarUnidades (unidadBase) {
+  generarUnidades(unidadBase) {
     if (!unidadBase) return []
     // Mapa de unidades equivalentes para litro y kilogramo
     const unidadesMap = {

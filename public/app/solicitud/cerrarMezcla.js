@@ -3,14 +3,14 @@ import { CameraHandler } from '../camara.js'
 import { mostrarMensaje } from '../mensajes.js'
 import { showSpinner, hideSpinner } from '../spinner.js'
 export class SolicitudFormulario {
-  constructor () {
+  constructor() {
     this.initElements()
     this.bindEvents()
     this.cameraHandler = null
     this.imagenBlob = null
   }
 
-  initElements () {
+  initElements() {
     this.elementos = {
       btnTomarFoto: document.getElementById('tomarFoto'),
       btnSubirFoto: document.getElementById('subirFoto'),
@@ -34,7 +34,7 @@ export class SolicitudFormulario {
     })
   }
 
-  bindEvents () {
+  bindEvents() {
     // Verificar que los elementos existan antes de agregar event listeners
     if (this.elementos.btnTomarFoto) {
       this.elementos.btnTomarFoto.addEventListener('click', this.mostrarSeccionCamara.bind(this))
@@ -72,24 +72,24 @@ export class SolicitudFormulario {
     }
   }
 
-  mostrarSeccionCamara () {
+  mostrarSeccionCamara() {
     this.elementos.inputImage.style.display = 'block'
     this.elementos.fileImage.style.display = 'none'
     // Inicializar el manejador de cámara si aún no existe
     if (!this.cameraHandler) {
       this.cameraHandler = new CameraHandler(this.elementos)
+    } else {
+      // Si ya existe, reiniciamos la cámara explícitamente
+      this.cameraHandler.iniciarCamara()
     }
-
-    // Iniciar cámara
-    this.cameraHandler.iniciarCamara()
   }
 
-  mostrarSeccionSubida () {
+  mostrarSeccionSubida() {
     this.elementos.inputImage.style.display = 'none'
     this.elementos.fileImage.style.display = 'block'
   }
 
-  manejarSeleccionArchivo (evento) {
+  manejarSeleccionArchivo(evento) {
     const archivo = evento.target.files[0]
     if (!archivo) return
 
@@ -100,7 +100,7 @@ export class SolicitudFormulario {
     lector.readAsDataURL(archivo)
   }
 
-  validarArchivo (archivo) {
+  validarArchivo(archivo) {
     const TAMAÑO_MAXIMO = 5 * 1024 * 1024 // 5MB
     const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp']
 
@@ -117,7 +117,7 @@ export class SolicitudFormulario {
     return true
   }
 
-  async procesarImagen (fuenteImagen) {
+  async procesarImagen(fuenteImagen) {
     const imagen = new Image()
 
     // Crear una promesa para manejar la carga de la imagen
@@ -141,7 +141,7 @@ export class SolicitudFormulario {
     this.elementos.canvas.style.display = 'block'
   }
 
-  calcularDimensiones (imagen, anchoMaximo = 640, altoMaximo = 480) {
+  calcularDimensiones(imagen, anchoMaximo = 640, altoMaximo = 480) {
     let { width: ancho, height: alto } = imagen
 
     if (ancho > alto) {
@@ -159,7 +159,7 @@ export class SolicitudFormulario {
     return { ancho, alto }
   }
 
-  validarYEnviarSolicitud () {
+  validarYEnviarSolicitud() {
     // Agregar log para depuración
     console.log('Estado del blob:', this.imagenBlob)
     console.log('Estado de archivos:', this.elementos.imageFile.files)
@@ -175,7 +175,7 @@ export class SolicitudFormulario {
     this.enviarSolicitud(fotoTomada, archivoSubido)
   }
 
-  async enviarSolicitud (fotoTomada, archivoSubido) {
+  async enviarSolicitud(fotoTomada, archivoSubido) {
     try {
       const formData = new FormData()
       const id = document.getElementById('idSolicitud').value
@@ -197,7 +197,7 @@ export class SolicitudFormulario {
     }
   }
 
-  async realizarEnvio (formData) {
+  async realizarEnvio(formData) {
     const id = document.getElementById('idSolicitud').value
     try {
       showSpinner()
@@ -219,7 +219,7 @@ export class SolicitudFormulario {
     }
   }
 
-  mostrarExito (mensaje) {
+  mostrarExito(mensaje) {
     mostrarMensaje({
       msg: mensaje,
       type: 'success',
@@ -228,18 +228,15 @@ export class SolicitudFormulario {
     })
   }
 
-  mostrarError (mensaje) {
+  mostrarError(mensaje) {
     mostrarMensaje({
       msg: mensaje,
       type: 'error'
     })
   }
 
-  manejarError (error) {
+  manejarError(error) {
     console.error('Error:', error)
     this.mostrarError('Ocurrió un error inesperado')
   }
 }
-
-// Inicializar la clase cuando el DOM esté completamente cargado
-document.addEventListener('DOMContentLoaded', () => new SolicitudFormulario())

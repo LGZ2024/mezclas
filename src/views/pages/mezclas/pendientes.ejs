@@ -2,20 +2,15 @@
 <html lang="es">
 
 <head>
-    <!-- <%- include("../../templates/head-pwa") %> -->
-        <link rel="stylesheet" href="../../css/mensajeNotificaciones.css">
-        <link rel="stylesheet" href="../../css/spinner.css">
+    <%- include("../../templates/head-pwa") %>
         <%- include("../../templates/mezclas/cabecera") %>
-
 </head>
 
 
 <body>
     <%- include("../../templates/mezclas/headerNav") %>
-
-
-
         <input type="hidden" value="<%= rol %>" id="rol">
+        <input type="hidden" id="id">
         <section id="tablaFuciones" style="display: block;">
             <div class="container">
                 <div class="row ">
@@ -26,13 +21,14 @@
                                     <div class="col">
                                         <div
                                             style="display: flex; flex-direction: column; align-items: start; width: 20%;">
-                                            <button class="formulario__submit" id="regresarInicio"><span
+                                            <button class="formulario__submit" id="regresar"><span
                                                     class="mdi mdi-arrow-left-bold"></span></button>
                                         </div>
                                     </div>
                                     <% if (rol==="mezclador" || rol==="administrativo" || rol==="master" ) { %>
                                         <div class="col-md-12 d-flex justify-content-end">
-                                            <button class="btn btn-primary" id="btnReporte">Descargar Solicitudes</button>
+                                            <button class="btn btn-primary" id="btnReporte">Descargar
+                                                Solicitudes</button>
                                         </div>
                                         <% } %>
                                             <div class="text-center">
@@ -65,150 +61,22 @@
             </div>
         </section>
 
-        <section id="formPreparadas" class="" style="display: none">
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-                        <div class="card text-center">
-                            <div class="card-body">
-                                <div class="form">
-                                    <div class="card">
-                                        <div class="titulo">
-                                            <div class="col-md-1">
-                                                <div
-                                                    style="display: flex; flex-direction: column; align-items: start; width: 20%;">
-                                                    <button class="formulario__submit" id="regresatabla"><span
-                                                            class="mdi mdi-arrow-left-bold"></span></button>
-                                                </div>
-                                            </div>
-                                            <div class="text-center">
-                                                <h3>Solicitudes</h3>
-                                            </div>
-                                        </div>
-                                        <hr>
-                                        <input type="text" id="idSolicitud" disabled hidden>
-                                        <% if (rol==="mezclador" || rol==="administrativo" || rol==="adminMezclador" ||
-                                            rol==="master" ) { %>
-                                            <div class="formulario__campo"
-                                                style="display: flex; flex-direction: column; align-items: center;">
-                                                <label class="formulario__label" for="folioi">Descargar
-                                                    Solicitud</label>
-                                                <button type="button" class="btn btn-primary formulario__submit"
-                                                    id="btnDescargar">
-                                                    Descargar
-                                                </button>
-                                            </div>
-                                            <% } %>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="folioi">Folio de
-                                                        Receta</label>
-                                                    <input type="text" class="formulario__input" id="folioi" disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="solicitai">Solicita</label>
-                                                    <input type="text" class="formulario__input" id="solicitai"
-                                                        disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="fechai">Fecha de
-                                                        Solicitud</label>
-                                                    <input type="text" class="formulario__input" id="fechai" disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="ranchoi">Rancho
-                                                        Destino</label>
-                                                    <input type="text" class="formulario__input" id="ranchoi" disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="centroCostei">Centro de
-                                                        coste</label>
-                                                    <input type="text" class="formulario__input" id="centroCostei"
-                                                        disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="variedadi">Variedad</label>
-                                                    <input type="text" class="formulario__input" id="variedadi"
-                                                        disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="empresai">Empresa</label>
-                                                    <input type="text" class="formulario__input" id="empresai" disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="temporadai">Temporada</label>
-                                                    <input type="text" class="formulario__input" id="temporadai"
-                                                        disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="cantidadi">Cantidad de
-                                                        producto</label>
-                                                    <input type="text" class="formulario__input" id="cantidadi"
-                                                        disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label"
-                                                        for="presentacioni">Presentacion</label>
-                                                    <input type="text" class="formulario__input" id="presentacioni"
-                                                        disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label" for="metodoi">Metodo de
-                                                        aplicacion</label>
-                                                    <input type="text" class="formulario__input" id="metodoi" disabled>
-                                                </div>
-                                                <div class="formulario__campo">
-                                                    <label class="formulario__label"
-                                                        for="descripcioni">Descripcion</label>
-                                                    <textarea name="" id="descripcioni" cols="10" rows="4"
-                                                        disabled></textarea>
-                                                </div>
-                                                <div class="formulario__campo"
-                                                    style="display: flex; flex-direction: column; align-items: center;">
-                                                    <label class="formulario__label">Productos</label>
-                                                    <button type="button" class="btn btn-primary formulario__submit"
-                                                        id="btnReceta">
-                                                        Mostrar Receta
-                                                    </button>
-                                                </div>
-                                                <% if (rol==="mezclador" || rol==="administrativo" || rol==="master" ) {
-                                                    %>
-                                                    <form id="formSolicutudes">
-                                                        <div class="formulario__campo">
-                                                            <label class="formulario__label" for="notaMezcla">Nota de
-                                                                mezclador</label>
-                                                            <textarea id="notaMezcla"
-                                                                class="formulario__input"></textarea>
-                                                        </div>
-                                                        <div class="formulario__campo">
-                                                            <button type="submit" class="formulario__submit"
-                                                                id="btnGuardarMescla" style="display: none;">Guardar
-                                                                mezcla</button>
-                                                        </div>
-                                                    </form>
-                                                    <% } %>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Modal mostar receta -->
-        <%- include("../../templates/mezclas/mostrarReceta") %>
+        <!-- modal de solicitud -->
+        <%- include("../../templates/mezclas/modalRecetaConfirmacion") %>
 
             <!-- Modal nuevo producto -->
             <%- include("../../templates/mezclas/modalNuevoProducto") %>
 
+                <!-- formularios para seleciona empresa -->
+                <%- include("../../templates/mezclas/modalSelecionEmpresa") %>
 
-                <%- include("../../templates/mezclas/notificacion") %>
+                    <!-- modal Nota almacen -->
+                    <%- include("../../templates/mezclas/modalNotaAlmacen") %>
 
-                    <!-- formularios para seleciona empresa -->
-                    <%- include("../../templates/mezclas/modalSelecionEmpresa") %>
                         <!-- Firebase Configuración y funciones -->
                         <%- include("../../templates/mezclas/scripts") %>
-                            <script type="module" src="../../app/mezclas/main.js"></script>
+
+                            <script type="module" src="/app/mezclas2/main.js"></script>
 
 </body>
 

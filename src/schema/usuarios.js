@@ -57,7 +57,7 @@ const usuarioConfig = {
     }
   },
   rol: {
-    type: DataTypes.ENUM('admin', 'supervisor', 'mezclador', 'solicita', 'administrativo', 'adminMezclador', 'Activos Fijos'),
+    type: DataTypes.STRING,
     allowNull: false,
     validate: {
       notEmpty: {

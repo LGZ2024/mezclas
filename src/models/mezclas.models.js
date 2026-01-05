@@ -30,7 +30,7 @@ import { Op } from 'sequelize'
 
 export class MezclaModel {
   // Métodos auxiliares de validación
-  static #validarDatos (datos = {}, camposRequeridos = []) {
+  static #validarDatos(datos = {}, camposRequeridos = []) {
     const errores = []
     const recibidos = {}
 
@@ -49,7 +49,7 @@ export class MezclaModel {
     }
   }
 
-  static async #ejecutarTransaccion (operacion, callback, logContext, transaction) {
+  static async #ejecutarTransaccion(operacion, callback, logContext, transaction) {
     try {
       const resultado = await callback(transaction)
 
@@ -64,7 +64,7 @@ export class MezclaModel {
   }
 
   // funciones privadas
-  static async create ({ data, idUsuario, rol, logContext, logger }) {
+  static async create({ data, idUsuario, rol, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         logger.logModelOperation('CREATE_MEZCLA_modelo', 'started', logContext)
@@ -124,7 +124,7 @@ export class MezclaModel {
     })
   }
 
-  static async cerrarSolicitud ({ imagen, idSolicitud, idUsuario, logContext, logger }) {
+  static async cerrarSolicitud({ imagen, idSolicitud, idUsuario, logContext, logger }) {
     console.log(imagen, idSolicitud)
     return await DbHelper.withTransaction(async (transaction) => {
       try {
@@ -182,16 +182,11 @@ export class MezclaModel {
     })
   }
 
-  static async validacion ({ data, idUsuario, user, logContext, logger }) {
+  static async validacion({ data, idUsuario, user, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         // Validar datos de entrada
         this.#validarDatos({ data, idUsuario }, ['data', 'idUsuario'])
-
-        logger.info('Iniciando validación de solicitudes', {
-          ...logContext,
-          solicitudesCount: data.length
-        })
 
         // Procesar todas las solicitudes en paralelo
         const resultados = await Promise.all(data.map(async (estado) => {
@@ -240,7 +235,70 @@ export class MezclaModel {
     })
   }
 
-  static async cancelar ({ idSolicitud, data, idUsuario, logContext, logger }) {
+  static async validaciones({ idSolicitud, data, user, logContext, logger }) {
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        this.#validarDatos({ idSolicitud, data }, ['idSolicitud', 'data'])
+
+        logger.info('Iniciando validación de solicitudes', {
+          ...logContext,
+          solicitudesCount: data.length
+        })
+
+        const solicitud = await Solicitud.findByPk(idSolicitud)
+        if (!solicitud) {
+          throw new NotFoundError(`Solicitud ${idSolicitud} no encontrada`)
+        }
+
+        if (data.ranchoDestino === 'Atemajac' || data.ranchoDestino === 'Seccion 7 Fresas') {
+          if (user.rol === 'adminMezclador') {
+            await solicitud.update({
+              validacion: data.validacion,
+              confirmacion: data.validacion === true ? 'Confirmada' : solicitud.confirmacion
+            }, { transaction })
+          } else {
+            await solicitud.update({
+              validacion: data.validacion
+            }, { transaction })
+          }
+        } else {
+          await solicitud.update({
+            validacion: data.validacion,
+            confirmacion: data.validacion === true ? 'Confirmada' : solicitud.confirmacion
+          }, { transaction })
+        }
+
+        logger.info('Validación de solicitudes completada', {
+          ...logContext,
+          solicitudId: idSolicitud,
+          validacion: solicitud.validacion
+        })
+
+        return {
+          message: 'Solicitud validada correctamente',
+          validacion: solicitud.validacion,
+          solicitud
+        }
+      } catch (error) {
+        logger.error('Error en validación de solicitudes', {
+          ...logContext,
+          error: error.message,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new DatabaseError('Error al validar solicitudes', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
+  }
+
+  // eliminar solicitud
+  static async cancelar({ idSolicitud, data, idUsuario, logContext, logger, rol }) {
+    console.log(data)
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         if (!idSolicitud || !data || !idUsuario) {
@@ -257,39 +315,41 @@ export class MezclaModel {
           }
 
           // Actualizar solicitud
-          solicitud.confirmacion = data.validacion === false ? 'Cancelada' : solicitud.confirmacion
-          solicitud.idUsuarioValida = idUsuario
-          solicitud.motivoCancelacion = data.motivo
+          solicitud.confirmacion = data.confirmacion === 'Cancelada' ? 'Cancelada' : solicitud.confirmacion
+          solicitud.idUsuarioValida = idUsuario || solicitud.idUsuarioValida
+          solicitud.motivoCancelacion = data.motivo || solicitud.motivoCancelacion
 
           await solicitud.save({ transaction })
 
-          // Notificación por correo
-          const solicitante = await UsuarioModel.getOneId({
-            id: solicitud.idUsuarioSolicita
-          })
-
-          if (solicitante?.email) {
-            const respuesta = await enviarCorreo({
-              type: 'cancelacion',
-              email: solicitante.email,
-              nombre: solicitante.nombre,
-              solicitudId: solicitud.id,
-              usuario: {
-                empresa: solicitud.empresa,
-                ranchos: solicitud.ranchoDestino
-              },
-              data: {
-                motivo: data.motivo
-              }
+          // si es distinto de solicita envio correo ya que la notificacion se envia al solicitante
+          if (rol !== 'solicita') {
+            // Notificación por correo
+            const solicitante = await UsuarioModel.getOneId({
+              id: solicitud.idUsuarioSolicita
             })
 
-            logger.logModelOperation('Notificacion enviada ', {
-              solicitudId: solicitud.id,
-              destinatario: solicitante.email,
-              status: respuesta.error ? 'error' : 'success'
-            })
+            if (solicitante?.email) {
+              const respuesta = await enviarCorreo({
+                type: 'cancelacion',
+                email: solicitante.email,
+                nombre: solicitante.nombre,
+                solicitudId: solicitud.id,
+                usuario: {
+                  empresa: solicitud.empresa,
+                  ranchos: solicitud.ranchoDestino
+                },
+                data: {
+                  motivo: data.motivo
+                }
+              })
+
+              logger.logModelOperation('Notificacion enviada ', {
+                solicitudId: solicitud.id,
+                destinatario: solicitante.email,
+                status: respuesta.error ? 'error' : 'success'
+              })
+            }
           }
-
           logger.logOperation('CANCELAR_MEZCLA completed', {
             ...logContext,
             duration: Date.now() - new Date(logContext.timestamp).getTime()
@@ -322,7 +382,7 @@ export class MezclaModel {
     })
   }
 
-  static async mezclaConfirmar ({ idSolicitud, data, usuario, logContext, logger }) {
+  static async mezclaConfirmar({ idSolicitud, data, usuario, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         logger.logOperation('CONFIRMAR_MEZCLA_modelo', 'started', logContext)
@@ -334,20 +394,10 @@ export class MezclaModel {
           })
         }
         try {
-          logger.logDBTransaction('CONFIRMAR_MEZCLA_modelo', 'started', {
-            solicitudId: idSolicitud,
-            correlationId: logContext.correlationId
-          })
-
           const solicitud = await Solicitud.findByPk(idSolicitud)
           if (!solicitud) {
             throw new NotFoundError(`Solicitud ${idSolicitud} no encontrada`)
           }
-
-          logger.logModelOperation('Solicitud', 'found', {
-            solicitudId: solicitud.id,
-            estadoActual: solicitud.status
-          })
 
           // Actualizar campos
           const cambios = {
@@ -436,7 +486,7 @@ export class MezclaModel {
     })
   }
 
-  static async estadoProceso ({ id, data, usuario, logContext, logger }) {
+  static async estadoProceso({ id, data, usuario, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         // Validación de datos
@@ -493,7 +543,7 @@ export class MezclaModel {
     })
   }
 
-  static async mensajeSolicita ({ id, mensajes, idUsuario, logContext, logger }) {
+  static async mensajeSolicita({ id, mensajes, idUsuario, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         logger.logOperation('MENSAJE_SOLICITUD', 'started', logContext)
@@ -581,7 +631,7 @@ export class MezclaModel {
 
   // metodos de consultas especificos
   //
-  static async getAll ({ logContext, logger }) {
+  static async getAll({ logContext, logger }) {
     try {
       logger.info('GET_ALL_MEZCLAS', logContext)
 
@@ -649,7 +699,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerMezclasMichoacan () {
+  static async obtenerMezclasMichoacan() {
     const logContext = {
       operation: 'GET_MEZCLAS_MICHOACAN',
       timestamp: new Date().toISOString()
@@ -737,7 +787,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerTablaMezclasEmpresa ({ status, empresa, confirmacion, idUsuario, logContext, logger }) {
+  static async obtenerTablaMezclasEmpresa({ status, empresa, confirmacion, idUsuario, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       return this.#ejecutarConsulta('GET_MEZCLAS_EMPRESA', async () => {
         this.#validarDatos({ status, empresa }, ['status', 'empresa'])
@@ -802,7 +852,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerTablaMezclasValidados ({ status, empresa, confirmacion, idUsuario }) {
+  static async obtenerTablaMezclasValidados({ status, empresa, confirmacion, idUsuario }) {
     if (!status || !empresa) {
       throw new ValidationError('Datos requeridos no proporcionados', {
         required: ['status', 'empresa'],
@@ -929,7 +979,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerTablaMezclasValidadosMichoacan ({ status, confirmacion, idUsuario, logContext, logger }) {
+  static async obtenerTablaMezclasValidadosMichoacan({ status, confirmacion, idUsuario, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       try {
         logger.logOperation('GET_MEZCLAS_VALIDADAS_MICHOACAN', 'started', logContext)
@@ -1028,7 +1078,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerTablaMezclasRancho ({ status, ranchoDestino, confirmacion, idUsuario, logContext, logger }) {
+  static async obtenerTablaMezclasRancho({ status, ranchoDestino, confirmacion, validacion, idUsuario, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       try {
         logger.logOperation('GET_MEZCLAS_RANCHO_modelo', 'started', logContext)
@@ -1041,11 +1091,14 @@ export class MezclaModel {
           })
         }
 
+        console.log('validacion', validacion)
+
         const mezclas = await Solicitud.findAll({
           where: {
             ranchoDestino,
             status,
-            confirmacion
+            confirmacion,
+            validacion
           },
           include: [
             {
@@ -1119,7 +1172,7 @@ export class MezclaModel {
     })
   }
 
-  static async obtenerTablaMezclasAll ({ status, confirmacion, rol, logContext, logger }) {
+  static async obtenerTablaMezclasAll({ status, confirmacion, rol, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       try {
         if (rol !== 'master') throw ValidationError('Rol no autorizado')
@@ -1195,12 +1248,11 @@ export class MezclaModel {
     })
   }
 
-  static async obtenerTablaMezclasUsuario ({ status, idUsuarioSolicita, confirmacion, logContext, logger: loggerParam }) {
-    // Usar logger del parámetro o el logger global
+  static async obtenerTablaMezclasUsuario({ status, idUsuarioSolicita, confirmacion, validacion, logContext, logger: loggerParam }) {
+    let mezclas = []
     const loggerInstance = loggerParam || logger
 
     try {
-      console.log('Parametros recibidos:', { status, idUsuarioSolicita, confirmacion })
       loggerInstance.logOperation('GET_MEZCLAS_USUARIO_modelo', 'started', logContext)
 
       // Validación de datos
@@ -1210,32 +1262,61 @@ export class MezclaModel {
           received: { status, idUsuarioSolicita }
         })
       }
-
-      const mezclas = await Solicitud.findAll({
-        where: {
-          idUsuarioSolicita,
-          status,
-          confirmacion
-        },
-        include: [
-          {
-            model: Usuario,
-            attributes: ['nombre']
+      if (status === 'Validacion') {
+        mezclas = await Solicitud.findAll({
+          where: {
+            idUsuarioSolicita,
+            validacion,
+            confirmacion: {
+              [Op.ne]: 'Cancelada'
+            }
           },
-          {
-            model: Centrocoste,
-            attributes: ['centroCoste']
-          }
-        ],
-        attributes: [
-          'id', 'ranchoDestino', 'variedad', 'notaMezcla',
-          'folio', 'temporada', 'cantidad', 'presentacion',
-          'metodoAplicacion', 'descripcion', 'status',
-          'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega',
-          'respuestaSolicitud', 'respuestaMezclador'
-        ]
-      })
-      console.log(`Mezclas encontradas para el usuario ${idUsuarioSolicita}:`, mezclas)
+          include: [
+            {
+              model: Usuario,
+              attributes: ['nombre']
+            },
+            {
+              model: Centrocoste,
+              attributes: ['centroCoste']
+            }
+          ],
+          attributes: [
+            'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+            'folio', 'temporada', 'cantidad', 'presentacion',
+            'metodoAplicacion', 'descripcion', 'status',
+            'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega',
+            'respuestaSolicitud', 'respuestaMezclador'
+          ]
+        })
+      } else {
+        mezclas = await Solicitud.findAll({
+          where: {
+            idUsuarioSolicita,
+            status,
+            confirmacion,
+            validacion: true
+          },
+          include: [
+            {
+              model: Usuario,
+              attributes: ['nombre']
+            },
+            {
+              model: Centrocoste,
+              attributes: ['centroCoste']
+            }
+          ],
+          attributes: [
+            'id', 'ranchoDestino', 'variedad', 'notaMezcla',
+            'folio', 'temporada', 'cantidad', 'presentacion',
+            'metodoAplicacion', 'descripcion', 'status',
+            'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega',
+            'respuestaSolicitud', 'respuestaMezclador'
+          ]
+        })
+      }
+
       loggerInstance.logModelOperation('Solicitud', 'found', {
         solicitudId: idUsuarioSolicita,
         count: mezclas.length
@@ -1289,7 +1370,7 @@ export class MezclaModel {
     }
   }
 
-  static async obtenerTablaMezclasCancelada ({ idUsuario, confirmacion, rol, logContext, logger }) {
+  static async obtenerTablaMezclasCancelada({ idUsuario, confirmacion, rol, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       let mezclas
       try {
@@ -1377,7 +1458,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerTablaMezclasId ({ id, usuario, logContext, logger }) {
+  static async obtenerTablaMezclasId({ id, usuario, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       try {
         // Validación de datos
@@ -1465,7 +1546,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerTablaMezclasJalisco ({ status, confirmacion }) {
+  static async obtenerTablaMezclasJalisco({ status, confirmacion }) {
     const logContext = {
       operation: 'GET_MEZCLAS_JALISCO',
       status,
@@ -1580,7 +1661,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerPorcentajes ({ id }) {
+  static async obtenerPorcentajes({ id }) {
     const logContext = {
       operation: 'GET_PORCENTAJES',
       solicitudId: id,
@@ -1623,7 +1704,7 @@ export class MezclaModel {
   }
 
   //
-  static async obtenerDatosSolicitud ({ id }) {
+  static async obtenerDatosSolicitud({ id }) {
     const logContext = {
       operation: 'GET_DATOS_SOLICITUD',
       solicitudId: id,
@@ -1665,7 +1746,7 @@ export class MezclaModel {
   }
 
   //
-  static async getOneSolicita ({ id, idSolicita }) {
+  static async getOneSolicita({ id, idSolicita }) {
     const logContext = {
       operation: 'GET_ONE_SOLICITA',
       solicitudId: id,
@@ -1728,7 +1809,7 @@ export class MezclaModel {
   }
 
   //
-  static async getOneMezclador ({ id, idSolicita }) {
+  static async getOneMezclador({ id, idSolicita }) {
     const logContext = {
       operation: 'GET_ONE_MEZCLADOR',
       solicitudId: id,
@@ -1833,7 +1914,7 @@ export class MezclaModel {
   }
 
   //
-  static async getAllGeneral ({ status, confirmacion, idUsuario, logger, logContext }) {
+  static async getAllGeneral({ status, confirmacion, idUsuario, logger, logContext }) {
     try {
       if (!status || !confirmacion) {
         throw new ValidationError('Datos requeridos no proporcionados', {
@@ -1902,7 +1983,7 @@ export class MezclaModel {
   }
 
   // Métodos auxiliares y utilitarios
-  static #validarDatosEntrada ({ data, idUsuario }) {
+  static #validarDatosEntrada({ data, idUsuario }) {
     const errores = []
     // Validar que los datos requeridos estén presentes
     if (!data) {
@@ -1921,7 +2002,7 @@ export class MezclaModel {
     }
   }
 
-  static async #procesarVariedades ({ data, transaction }) {
+  static async #procesarVariedades({ data, transaction }) {
     if (data.variedad !== 'todo') {
       return {
         variedad: data.variedad,
@@ -1943,7 +2024,7 @@ export class MezclaModel {
     }
   }
 
-  static #filtrarVariedades (datos) {
+  static #filtrarVariedades(datos) {
     const variedadesArray = datos.variedad.split(',').slice(0, -1)
     const porcentajesArray = datos.porcentajes.split(',').slice(0, -1)
 
@@ -2020,7 +2101,7 @@ export class MezclaModel {
   }
 
   // Métodos auxiliares para cerrarSolicitud
-  static #validarDatosCierre ({ data, idUsuario }) {
+  static #validarDatosCierre({ data, idUsuario }) {
     const errores = []
 
     if (!idUsuario) {
@@ -2047,7 +2128,7 @@ export class MezclaModel {
     }
   }
 
-  static async #buscarSolicitud ({ id, transaction }) {
+  static async #buscarSolicitud({ id, transaction }) {
     const solicitud = await Solicitud.findByPk(id, { transaction })
     if (!solicitud) {
       if (!solicitud) {
@@ -2059,7 +2140,7 @@ export class MezclaModel {
     return solicitud
   }
 
-  static async #actualizarSolicitud ({ solicitud, data, idUsuario, transaction, logContext }) {
+  static async #actualizarSolicitud({ solicitud, data, idUsuario, transaction, logContext }) {
     try {
       const cambios = {
         status: 'Completada',
@@ -2093,7 +2174,7 @@ export class MezclaModel {
     }
   }
 
-  static async #procesarImagen ({ imagen }) {
+  static async #procesarImagen({ imagen }) {
     console.log(imagen)
     try {
       const response = await guardarImagen({ imagen })
@@ -2110,7 +2191,7 @@ export class MezclaModel {
     }
   }
 
-  static async #notificarCierreSolicitud ({ solicitud, idUsuario }) {
+  static async #notificarCierreSolicitud({ solicitud, idUsuario }) {
     try {
       const solicitante = await UsuarioModel.getOneId({
         id: solicitud.idUsuarioSolicita
@@ -2138,7 +2219,7 @@ export class MezclaModel {
     }
   }
 
-  static async #procesarSolicitud ({ estado, idUsuario, user, transaction, logger, logContext }) {
+  static async #procesarSolicitud({ estado, idUsuario, user, transaction, logger, logContext }) {
     try {
       // Buscar la solicitud
       const solicitud = await Solicitud.findByPk(estado.id_solicitud, { transaction })
@@ -2199,8 +2280,9 @@ export class MezclaModel {
     }
   }
 
-  static async #enviarNotificaciones ({ mezcladores, solicitante, solicitud, user, logger, logContext }) {
+  static async #enviarNotificaciones({ mezcladores, solicitante, solicitud, user, logger, logContext }) {
     try {
+      console.log(solicitud)
       // Enviar correo a todos los mezcladores
       for (const mezclador of mezcladores) {
         await enviarCorreo({
@@ -2244,7 +2326,7 @@ export class MezclaModel {
     }
   }
 
-  static async #ejecutarConsulta (operacion, callback, logContext) {
+  static async #ejecutarConsulta(operacion, callback, logContext) {
     try {
       logger.logOperation(operacion, 'started', logContext)
 
@@ -2270,5 +2352,43 @@ export class MezclaModel {
         context: logContext
       })
     }
+  }
+
+  // eliminar solicitud
+  static async delete({ id, logContext, logger }) {
+    console.log(id)
+    return await DbHelper.withTransaction(async (transaction) => {
+      try {
+        const solicitud = await Solicitud.findByPk(id, { transaction })
+        if (!solicitud) {
+          throw new ValidationError('Solicitud no encontrada', {
+            required: ['idSolicitud'],
+            received: { id }
+          })
+        }
+
+        await solicitud.destroy({ transaction })
+
+        logger.logOperation('DELETE_SOLICITUD', 'completed', {
+          ...logContext,
+          solicitudId: id,
+          duration: Date.now() - new Date(logContext.timestamp).getTime()
+        })
+
+        return { message: 'Solicitud eliminada exitosamente', id }
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          stack: error.stack
+        })
+
+        if (error instanceof CustomError) throw error
+
+        throw new MezclaOperationError('DELETE', 'Error al eliminar solicitud', {
+          originalError: error.message,
+          context: logContext
+        })
+      }
+    })
   }
 }

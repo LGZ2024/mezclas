@@ -6,10 +6,10 @@ export const createProductosSoliRouter = ({ productossModel }) => {
   const productossController = new ProductosController({ productossModel })
 
   // Crear solicitud
-  router.get('/productoSolicitud/:idSolicitud', productossController.obtenerProductosSolicitud)
-  router.get('/mezclasId/:id', productossController.obtenerTablaMezclasId)
-  router.post('/productoSoli', productossController.create) // agregar un producto a una  solicitud
-  router.post('/actualizarEstadoProductos', productossController.actulizarEstado) // guardar el esatdo de los producto de una solicitud
-  router.delete('/eliminarProducto/:id', productossController.EliminarPorducto)
+  router.get('/productos/solicitud/:idSolicitud', productossController.obtenerProductosSolicitud)
+  router.get('/productos/:id', productossController.obtenerTablaMezclasId)
+  router.post('/productos/agregar', productossController.create) // agregar un producto a una  solicitud
+  router.patch('/productos/actualizar/estado/:id', productossController.actulizarEstado) // guardar el esatdo de los producto de una solicitud
+  router.delete('/productos/eliminar/:id', productossController.EliminarPorducto)
   return router
 }

@@ -1,5 +1,5 @@
 export class CameraHandler {
-  constructor (elementos) {
+  constructor(elementos) {
     this.elementos = elementos
     this.stream = null
     this.currentDeviceId = null
@@ -8,7 +8,7 @@ export class CameraHandler {
     this.init()
   }
 
-  async init () {
+  async init() {
     this.configurarBotonesCaptura()
     this.configurarSelectorCamara()
     await this.checkPermisos()
@@ -19,7 +19,7 @@ export class CameraHandler {
     await this.cargarDispositivos()
   }
 
-  configurarBotonesCaptura () {
+  configurarBotonesCaptura() {
     // Usar delegación de eventos para mejor rendimiento
     document.addEventListener('click', (e) => {
       if (e.target.matches('.btnTomarFoto')) {
@@ -34,19 +34,19 @@ export class CameraHandler {
     })
   }
 
-  configurarSelectorCamara () {
+  configurarSelectorCamara() {
     const select = this.elementos.listaDeDispositivos
     if (select) {
       select.addEventListener('change', this.handleDeviceChange.bind(this))
     }
   }
 
-  handleDeviceChange (event) {
+  handleDeviceChange(event) {
     const deviceId = event.target.value
     this.iniciarCamara({ deviceId })
   }
 
-  async checkPermisos () {
+  async checkPermisos() {
     try {
       await navigator.permissions.query({ name: 'camera' })
     } catch (error) {
@@ -54,9 +54,10 @@ export class CameraHandler {
     }
   }
 
-  actualizarBotonesUI () {
+  actualizarBotonesUI() {
     const btnTomarFoto = document.querySelector('.btnTomarFoto')
     const btnOtraFoto = document.querySelector('.btnOtraFoto')
+    const btnFlipCamera = document.querySelector('.btnFlipCamera')
 
     if (btnTomarFoto) {
       btnTomarFoto.style.display = 'none'
@@ -64,9 +65,12 @@ export class CameraHandler {
     if (btnOtraFoto) {
       btnOtraFoto.style.display = 'block'
     }
+    if (btnFlipCamera) {
+      btnFlipCamera.style.display = 'none'
+    }
   }
 
-  async capturarFoto () {
+  async capturarFoto() {
     const { video, canvas, photo } = this.elementos
 
     try {
@@ -104,7 +108,7 @@ export class CameraHandler {
     }
   }
 
-  addWatermark (canvas, context) {
+  addWatermark(canvas, context) {
     const fechaHora = new Date().toLocaleString('es-ES', {
       year: 'numeric',
       month: '2-digit',
@@ -140,7 +144,7 @@ export class CameraHandler {
   /**
    * Voltea entre la cámara frontal y trasera.
    */
-  async flipCamera () {
+  async flipCamera() {
     if (!this.stream) return
     const currentSettings = this.stream.getVideoTracks()[0].getSettings()
     const newFacingMode = currentSettings.facingMode === 'user' ? 'environment' : 'user'
@@ -152,7 +156,7 @@ export class CameraHandler {
   /**
    * Activa o desactiva el flash (torch).
    */
-  async toggleFlash () {
+  async toggleFlash() {
     if (!this.stream) return
     const track = this.stream.getVideoTracks()[0]
     const capabilities = track.getCapabilities()
@@ -170,7 +174,7 @@ export class CameraHandler {
     }
   }
 
-  async optimizarImagen (canvas) {
+  async optimizarImagen(canvas) {
     return new Promise((resolve) => {
       canvas.toBlob((blob) => {
         if (!blob) {
@@ -187,7 +191,7 @@ export class CameraHandler {
     })
   }
 
-  async cargarDispositivos () {
+  async cargarDispositivos() {
     const select = this.elementos.listaDispositivos
     if (!select) {
       console.error('Elemento select no encontrado en el DOM')
@@ -225,7 +229,7 @@ export class CameraHandler {
     }
   }
 
-  async iniciarCamara (options = {}) {
+  async iniciarCamara(options = {}) {
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('API de cámara no soportada')
@@ -240,7 +244,7 @@ export class CameraHandler {
     }
   }
 
-  getVideoConstraints (options = {}) {
+  getVideoConstraints(options = {}) {
     const { deviceId, facingMode } = options
     const constraints = {
       width: { ideal: 1920 }, // Aumentamos la resolución ideal a Full HD
@@ -251,7 +255,7 @@ export class CameraHandler {
       // Si se especifica un ID, se prioriza esa cámara.
       constraints.deviceId = { exact: deviceId || this.currentDeviceId }
     } else if (facingMode) {
-      constraints.facingMode = { exact: facingMode }
+      constraints.facingMode = facingMode
     } else {
       // Si no hay ID, se usa facingMode para elegir entre trasera/frontal.
       constraints.facingMode = this.isMobile ? 'environment' : 'user'
@@ -259,7 +263,7 @@ export class CameraHandler {
     return { video: constraints }
   }
 
-  async iniciarStream (constraints) {
+  async iniciarStream(constraints) {
     this.detenerStream()
     const stream = await navigator.mediaDevices.getUserMedia(constraints)
     this.stream = stream
@@ -274,7 +278,7 @@ export class CameraHandler {
   /**
    * Verifica las capacidades como zoom y flash y muestra/oculta los controles.
    */
-  verificarCapacidadesAvanzadas (stream) {
+  verificarCapacidadesAvanzadas(stream) {
     const track = stream.getVideoTracks()[0]
     if (!track) return
 
@@ -287,7 +291,7 @@ export class CameraHandler {
     }
   }
 
-  toggleElementos (estados) {
+  toggleElementos(estados) {
     Object.entries(estados).forEach(([elemento, mostrar]) => {
       if (this.elementos[elemento]) {
         this.elementos[elemento].style.display = mostrar ? 'block' : 'none'
@@ -295,7 +299,7 @@ export class CameraHandler {
     })
   }
 
-  reiniciarCaptura () {
+  reiniciarCaptura() {
     // Oculta la foto y muestra el video
     this.toggleElementos({
       video: true,
@@ -305,8 +309,11 @@ export class CameraHandler {
     // Restablece los botones a su estado inicial
     const btnTomarFoto = document.querySelector('.btnTomarFoto')
     const btnOtraFoto = document.querySelector('.btnOtraFoto')
+    const btnFlipCamera = document.querySelector('.btnFlipCamera')
+
     if (btnTomarFoto) btnTomarFoto.style.display = 'inline-block'
     if (btnOtraFoto) btnOtraFoto.style.display = 'none'
+    if (btnFlipCamera) btnFlipCamera.style.display = 'inline-block'
 
     if (this.elementos.fileInput) {
       this.elementos.fileInput.value = ''
@@ -318,14 +325,14 @@ export class CameraHandler {
     }
   }
 
-  detenerStream () {
+  detenerStream() {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop())
       this.stream = null
     }
   }
 
-  manejarError (error) {
+  manejarError(error) {
     console.error('Error de cámara:', error)
     const mensaje = this.getMensajeError(error)
 
@@ -335,7 +342,7 @@ export class CameraHandler {
     }
   }
 
-  getMensajeError (error) {
+  getMensajeError(error) {
     const errores = {
       NotAllowedError: 'Permiso de cámara denegado',
       NotFoundError: 'No se encontró cámara',

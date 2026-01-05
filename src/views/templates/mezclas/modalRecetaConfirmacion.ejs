@@ -17,13 +17,14 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-label fw-bold" for="idSolicit">ID Solicitud</label>
-                                <input type="text" class="form-control form-control-sm" id="idSolicit" readonly>
+                                <input type="text" class="form-control form-control-sm" id="idSolicit" name="idSolicit"
+                                    readonly>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="form-label fw-bold" for="fechaSolicitud">Fecha Solicitud</label>
-                                <input type="text" class="form-control form-control-sm" id="fechaSolicitud" readonly>
+                                <input type="date" class="form-control form-control-sm" id="fechaSolicitud" readonly>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -64,7 +65,7 @@
                                 <input type="text" class="form-control form-control-sm" id="variedad" readonly>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="divFolioReceta" style="display:block;">
                             <div class="form-group">
                                 <label class="form-label fw-bold" for="FolioReceta">Folio Receta</label>
                                 <input type="text" class="form-control form-control-sm" id="FolioReceta" readonly>
@@ -80,13 +81,13 @@
                                 <input type="text" class="form-control form-control-sm" id="temporada" readonly>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="divCantidad" style="display:block;">
                             <div class="form-group">
                                 <label class="form-label fw-bold" for="cantidad">Cantidad</label>
                                 <input type="text" class="form-control form-control-sm" id="cantidad" readonly>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="divPresentacion" style="display:block;">
                             <div class="form-group">
                                 <label class="form-label fw-bold" for="presentacion">Presentación</label>
                                 <input type="text" class="form-control form-control-sm" id="presentacion" readonly>
@@ -118,7 +119,7 @@
                             <h5 class="border-bottom pb-2 mb-3">
                                 <i class="bi bi-box-seam me-2"></i>Productos de la Mezcla
                             </h5>
-                            <% if (rol==="solicita" || rol==="solicita2" ) { %>
+                            <% if (rol==="solicita" || rol==="solicita2" || rol==="mezclador" ) { %>
                                 <button type="button" class="btn btn-primary btn-sm m-2" id="agregarProductoReceta">
                                     <i class="mdi mdi-plus-box-outline me-2"></i>Agregar Producto
                                 </button>
@@ -151,15 +152,33 @@
                     <i class="mdi mdi-exit-to-app me-2"></i>Cerrar
                 </button>
 
-                <button type="button" class="btn btn-primary" id="btnConfirmacion">
-                    <span class="icon-bg"><i class="mdi mdi-check-circle-outline menu-icon"></i> Confirmar Solicitud
-                </button>
-                <% if (rol==="adminMezclador" || rol==="master") { %>
+
+                <% if (rol==="adminMezclador" || rol==="master" || rol==="solicita" ) { %>
                     <!-- boton para cancelar solicitud -->
+                    <button type="button" class="btn btn-primary" id="btnConfirmacion">
+                        <span class="icon-bg"><i class="mdi mdi-check-circle-outline menu-icon"></i> Confirmar Solicitud
+                    </button>
                     <button type="button" class="btn btn-danger" id="btnCancelar">
                         <span class="icon-bg"><i class="mdi mdi-cancel menu-icon"></i> Cancelar Solicitud
                     </button>
+                    <button type="button" class="btn btn-warning" id="btnEditar">
+                        <span class="icon-bg"><i class="mdi mdi-pencil menu-icon"></i> Editar Solicitud
+                    </button>
                     <% } %>
+                        <% if (rol==="mezclador" || rol==="administrativo" || rol==="adminMezclador" || rol==="master" )
+                            { %>
+                            <button type="button" class="btn btn-primary" id="btnEnviarEstado">
+                                <span class="icon-bg"><i class="mdi mdi-check-circle-outline menu-icon"></i> Enviar
+                                    Estado
+                            </button>
+                            <button type="button" class="btn btn-warning" id="btnDescargar">
+                                <span class="icon-bg"><i class="mdi mdi-download menu-icon"></i> Descargar Receta
+                            </button>
+
+                            <button type="button" class="btn btn-warning" id="btnCerrar">
+                                <span class="icon-bg"><i class="mdi mdi-close menu-icon"></i> Cerrar Solicitud
+                            </button>
+                            <% } %>
             </div>
         </div>
     </div>

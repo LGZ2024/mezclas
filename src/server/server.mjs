@@ -24,7 +24,7 @@ import { authenticate } from '../middlewares/authMiddleware.js'
 import { correlationMiddleware } from '../middlewares/correlationMiddleware.js'
 // import { validateBase64Image } from '../middlewares/validateFormatoImg.js'
 // Rutas
-import { createProtetedRouter } from '../routes/proteted.routes.js' // protegidas
+import { createProtetedRouter } from '../routes/protected.routes.js' // protegidas
 import { createUsuarioRouter } from '../routes/usuario.routes.js'
 import { createCentroCosteRouter } from '../routes/centro.routes.js'
 import { createMezclasRouter } from '../routes/mezclas.routes.js'
@@ -154,7 +154,6 @@ export const startServer = async (options) => {
   app.use(corsMiddleware())
   app.disable('x-powered-by')
 
-  // app.use(fileUpload())
   app.use(bodyParser.json({ limit: '50mb' }))
   app.use(bodyParser.urlencoded({
     limit: '50mb',

@@ -118,6 +118,7 @@ export const enviarCorreo = async (params) => {
   // Validar datos requeridos según el tipo
   validateEmailData(type, params)
 
+  console.log(data)
   // Configurar mensaje según tipo
   if (!email || !type) {
     throw new ValidationError('Email y tipo de mensaje son requeridos')
@@ -524,14 +525,14 @@ export const enviarCorreo = async (params) => {
           <h4 style="margin-top: 0;">Productos a Devolver:</h4>
           <div style="margin: 10px 0;">
             ${Array.isArray(data.productos)
-              ? data.productos.map(producto => `
+          ? data.productos.map(producto => `
                 <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
                   <strong>Producto:</strong> ${producto.nombre}<br>
                   <strong>Cantidad:</strong> ${producto.cantidad} ${producto.unidad_medida}
                 </div>
               `).join('')
-              : '<p>No hay productos especificados</p>'
-            }
+          : '<p>No hay productos especificados</p>'
+        }
           </div>
         </div>
 

@@ -1,8 +1,6 @@
-import { enviarCorreo } from '../config/smtp.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { ValidationError } from '../utils/CustomError.js'
 export class ProductosController {
-  constructor ({ productossModel }) {
+  constructor({ productossModel }) {
     this.productossModel = productossModel
   }
 
@@ -84,6 +82,7 @@ export class ProductosController {
   // metodo para actualizar el estado de los productos
   actulizarEstado = asyncHandler(async (req, res) => {
     const { user } = req.session
+    const { id } = req.params
     const logger = req.logger
     const logContext = {
       operation: 'ACTUALIZAR_ESTADO_PRODUCTOS',
@@ -94,28 +93,45 @@ export class ProductosController {
     }
     logger.info('ACTUALIZAR_ESTADO_PRODUCTOS started', logContext)
     const result = await this.productossModel.actualizarEstado({
+      user,
+      idSolicitud: id,
       data: req.body,
-      idUsuarioMezcla: user.id,
+      idUsuarioMezcla: user.id, // id del usuario que actualiza
       logContext,
       logger
     })
 
+    console.log('result', result)
+
     // validamos que data y productos vengan dentro de result
-    if (result.productos || result.data) {
-      await enviarCorreo({
-        type: 'notificacion',
-        email: result.data[0].email,
-        nombre: result.data[0].nombre,
-        solicitudId: req.body.id_solicitud,
-        data: result.productos,
-        usuario: user
-      })
-    } else if (result.message.length > 0) {
-      logger.info('resultados de actualizacion de productos', result.message)
-    } else {
-      logger.warn('No se encontaron resultados', logContext)
-      throw new ValidationError('Error al actualizar el estado de los productos')
-    }
+    // if (result.productos || result.data) {
+    //   await enviarCorreo({
+    //     type: 'notificacion',
+    //     email: result.data[0].email,
+    //     nombre: result.data[0].nombre,
+    //     solicitudId: id,
+    //     data: result.productos,
+    //     usuario: user
+    //   })
+    // } else if (result.message.length > 0) {
+    //   logger.info('resultados de actualizacion de productos', result.message)
+    // } else {
+    //   logger.warn('No se encontaron resultados', logContext)
+    //   throw new ValidationError('Error al actualizar el estado de los productos')
+    // }
+
+    // await enviarCorreo({
+    //   type: 'status',
+    //   email: solicitante.email,
+    //   nombre: solicitante.nombre,
+    //   solicitudId: idSolicitud,
+    //   status: req.body.status,
+    //   usuario: user,
+    //   data: {
+    //     observaciones: req.body.observaciones,
+    //     fecha: new Date().toISOString()
+    //   }
+    // })
 
     return res.json({ message: result.message })
   })

@@ -231,6 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const btnSolicitar = document.getElementById('solicitar')
+  const btnSolicitudes = document.getElementById('solicitudes')
   const btnSolicitud = document.getElementById('solicitud')
   const btnPreparadas = document.getElementById('preparadas')
   const btnEntregadas = document.getElementById('entregadas')
@@ -238,7 +239,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (btnSolicitar) {
     btnSolicitar.addEventListener('click', () => {
-      window.location.href = '/protected/solicitud'
+      window.location.href = '/protected/solicitud/registrar'
+    })
+  } else {
+    console.log('No se encontró el botón')
+  }
+
+  if (btnSolicitudes) {
+    btnSolicitudes.addEventListener('click', () => {
+      window.location.href = '/protected/solicitud/validacion'
     })
   } else {
     console.log('No se encontró el botón')
@@ -246,7 +255,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (canceladas) {
     canceladas.addEventListener('click', () => {
-      window.location.href = '/protected/canceladas'
+      window.location.href = '/protected/solicitud/canceladas'
     })
   } else {
     console.log('No se encontró el botón')
@@ -254,7 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (btnSolicitud) {
     btnSolicitud.addEventListener('click', () => {
-      window.location.href = '/protected/solicitudes'
+      window.location.href = '/protected/solicitud/pendientes'
     })
   } else {
     console.log('No se encontró el botón')
@@ -262,7 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (btnPreparadas) {
     btnPreparadas.addEventListener('click', () => {
-      window.location.href = '/protected/proceso'
+      window.location.href = '/protected/solicitud/proceso'
     })
   } else {
     console.log('No se encontró el botón')
@@ -270,7 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (btnEntregadas) {
     btnEntregadas.addEventListener('click', () => {
-      window.location.href = '/protected/completadas'
+      window.location.href = '/protected/solicitud/completadas'
     })
   } else {
     console.log('No se encontró el botón')

@@ -1,12 +1,15 @@
 import { enviarCorreo } from '../config/smtp.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { ValidationError } from '../utils/CustomError.js'
+import { RoleService } from '../services/role.service.js'
+
 export class UsuarioController {
-  constructor ({ usuarioModel }) {
+  constructor({ usuarioModel }) {
     this.usuarioModel = usuarioModel
   }
 
-  // borra usuario
+  // ... (delete, getAll, getUsuarios methods remain unchanged)
+
   delete = asyncHandler(async (req, res) => {
     const { id } = req.params
     const logger = req.logger
@@ -39,6 +42,12 @@ export class UsuarioController {
 
   create = asyncHandler(async (req, res) => {
     const result = await this.usuarioModel.create({ data: req.body })
+
+    // Sincronizar rol en tabla relacional
+    if (result.user && req.body.rol) {
+      await RoleService.syncUserRole(result.user.id, req.body.rol)
+    }
+
     await enviarCorreo({ email: req.body.email, subject: 'Bienvenido Nuevo Usuario', password: req.body.password })// si se creo con exito el usuario enviamos correo con la contraseña
     return res.json({ message: result.message })
   })
@@ -46,6 +55,12 @@ export class UsuarioController {
   update = asyncHandler(async (req, res) => {
     const { id } = req.params
     const result = await this.usuarioModel.update({ id, data: req.body })
+
+    // Sincronizar rol en tabla relacional si se actualizó el rol
+    if (req.body.rol) {
+      await RoleService.syncUserRole(id, req.body.rol)
+    }
+
     return res.json({ message: result.message })
   })
 
@@ -65,7 +80,7 @@ export class UsuarioController {
           httpOnly: true, // la cookie solo se puede acceder en el servidor
           secure: false,
           sameSite: 'strict' // la cookie solo se puede acceder en el mismo dominio
-        // maxAge: 60 * 60 * 24 * 30 // la cookie expira
+          // maxAge: 60 * 60 * 24 * 30 // la cookie expira
         })
         .send({ message: result.message, rol: result.rol })
     } catch (error) {

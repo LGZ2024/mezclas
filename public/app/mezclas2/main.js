@@ -1,6 +1,15 @@
 /* eslint-disable no-undef */
 import { mostrarMensaje } from '../mensajes.js'
 import { showSpinner, hideSpinner } from '../spinner.js'
+import { iniciarValidacion } from './tablaValidacion.js'
+import { inicializarFormularioProductos } from './listaProductos.js'
+import { SolicitudFormulario } from '../solicitud/cerrarMezcla.js'
+// tablas
+import { iniciarProductosReceta, verProductosReceta } from '../productosReceta/productos.js'
+import { iniciarPendiente, verPendiente } from './tablaSolicitudPendiente.js'
+import { iniciarProceso, verProceso } from './tablaSolicitudProceso.js'
+import { iniciarCompletadas, verCompletadas } from './tablaSolicitudCompletada.js'
+import { iniciarCanceladas, verCanceladas } from './tablaSolicitudesCanceladas.js'
 
 // Función para capitalizar la primera letra de cada palabra
 const capitalizarPalabras = (str) => {
@@ -9,6 +18,7 @@ const capitalizarPalabras = (str) => {
 
 document.addEventListener('DOMContentLoaded', () => {
   let tipo = ''
+  let submitButton = null
   // Función para aplicar capitalización a un formulario
   const aplicarCapitalizacion = (form) => {
     if (!form) return
@@ -24,17 +34,39 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // cachear referencia DOM
   const elementos = {
+    // Botones
     BtnRegresar: document.getElementById('regresar'),
     BtnNewProducto: document.getElementById('agregarProducto'),
+    BtnEditar: document.getElementById('btnEditar'),
+    BtnCancelar: document.getElementById('btnCancelar'),
+    BtnAgregarProducto: document.getElementById('agregarProductoReceta'),
     btnRegistrar: document.getElementById('btnRegistrar'),
+    btnValidar: document.getElementById('btnConfirmacion'),
+    btnDescargar: document.getElementById('btnDescargar'),
+    btnEnviarEstado: document.getElementById('btnEnviarEstado'),
+    btnCerrar: document.getElementById('btnCerrar'),
+
+    // Selects
     tipoAplicacion: document.querySelector('#TipoAplicacion'),
     rancho: document.querySelector('#rancho'),
     centroCoste: document.querySelector('#centroCoste'),
     variedad: document.querySelector('#variedad'),
     unidadMedida: document.querySelector('select[name="unidad_medida[]"]'), // Asegúrate de que este selector sea correcto
-    productosContainer: document.getElementById('productosContainer'),
+    // Formularios
     FormSolicitud: document.getElementById('recetaForm'),
-    FormPorcentaje: document.getElementById('formPorcentaje')
+    FormPorcentaje: document.getElementById('formPorcentaje'),
+    FormProducto: document.getElementById('formProducto'),
+    FormNotaAlmacen: document.getElementById('formNotaAlmacen'),
+    // Tabla
+    tablaValidacion: document.getElementById('tbValidacion'),
+    tablaPendiente: document.getElementById('tbPendientes'),
+    tablaProceso: document.getElementById('tbProceso'),
+    tablaReceta: document.getElementById('tbReceta'),
+    tablaCompletadas: document.getElementById('tbCompletadas'),
+    tablaCanceladas: document.getElementById('tbCanceladas'),
+    // Otros elementos
+    productosContainer: document.getElementById('productosContainer'),
+    cantidadInput: document.getElementById('cantidadP')
   }
 
   // Función para actualizar UI de forma optimizada
@@ -113,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       // some browsers may throw, sigue con fallbacks
     }
-    if (e && e.target) {
+    if (e && e.target && typeof e.target.querySelector === 'function') {
       const btnDentro = e.target.querySelector('button[type="submit"]')
       if (btnDentro) return btnDentro
     }
@@ -146,81 +178,86 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const validarProductos = () => {
-    const productos = document.querySelectorAll('.select-producto')
-    const unidadesMedida = document.querySelectorAll('select[name="unidad_medida[]"]')
-    const cantidades = document.querySelectorAll('input[name="cantidad[]"]')
+    try {
+      const productos = document.querySelectorAll('.select-producto') || []
+      const unidadesMedida = document.querySelectorAll('select[name="unidad_medida[]"]') || []
+      const cantidades = document.querySelectorAll('input[name="cantidad[]"]') || []
 
-    const productosUnicos = new Set()
+      const productosUnicos = new Set()
 
-    const errores = []
+      const errores = []
 
-    if (!productos || !unidadesMedida || !cantidades) {
-      this.mostrarError('Agregar almenos un producto')
-    }
-    productos.forEach((productoSelect, index) => {
-      // Obtener el valor del select
-      const selectedOption = productoSelect.options[productoSelect.selectedIndex]
-      const producto = selectedOption ? selectedOption.value : ''
-      const unidad = unidadesMedida[index].value
-      const cantidad = cantidades[index].value
+      // Limpiar errores previos
+      document.querySelectorAll('.input-error').forEach(element => {
+        element.classList.remove('input-error')
+      })
+      // Limpiar errores previos
+      $('.select2-container.input-error').removeClass('input-error')
 
-      if (!producto) {
-        errores.push('Debe seleccionar un producto')
-        productoSelect.classList.add('input-error')
-        // Agregar clase de error al contenedor de Select2
-        $(productoSelect).next('.select2-container').addClass('input-error')
+      if (!productos || !unidadesMedida || !cantidades) {
+        mostrarError('Agregar almenos un producto')
       }
+      productos.forEach((productoSelect, index) => {
+        // Obtener el valor del select
+        const selectedOption = productoSelect.options[productoSelect.selectedIndex]
+        const producto = selectedOption ? selectedOption.value : ''
+        const unidad = unidadesMedida[index].value
+        const cantidad = cantidades[index].value
 
-      if (!unidad) {
-        errores.push('Debe seleccionar una unidad de medida')
-        unidadesMedida[index].classList.add('input-error')
-      }
-
-      if (!cantidad || parseFloat(cantidad) <= 0) {
-        errores.push('Debe ingresar una cantidad válida')
-        cantidades[index].classList.add('input-error')
-      }
-
-      if (producto) {
-        if (productosUnicos.has(producto)) {
-          errores.push('No se pueden agregar productos duplicados')
+        if (!producto) {
+          errores.push('Debe seleccionar un producto')
           productoSelect.classList.add('input-error')
+          // Agregar clase de error al contenedor de Select2
           $(productoSelect).next('.select2-container').addClass('input-error')
-        } else {
-          productosUnicos.add(producto)
         }
+
+        if (!unidad) {
+          errores.push('Debe seleccionar una unidad de medida')
+          unidadesMedida[index].classList.add('input-error')
+        }
+
+        if (!cantidad || parseFloat(cantidad) <= 0) {
+          errores.push('Debe ingresar una cantidad válida')
+          cantidades[index].classList.add('input-error')
+        }
+
+        if (producto) {
+          if (productosUnicos.has(producto)) {
+            errores.push('No se pueden agregar productos duplicados')
+            productoSelect.classList.add('input-error')
+            $(productoSelect).next('.select2-container').addClass('input-error')
+          } else {
+            productosUnicos.add(producto)
+          }
+        }
+      })
+
+      if (errores.length > 0) {
+        const erroresUnicos = [...new Set(errores)]
+        mostrarError(erroresUnicos.join('. '))
+        return false
       }
-    })
 
-    // Limpiar errores previos
-    document.querySelectorAll('.input-error').forEach(element => {
-      element.classList.remove('input-error')
-    })
-    $('.select2-container.input-error').removeClass('input-error')
-
-    if (errores.length > 0) {
-      const erroresUnicos = [...new Set(errores)]
-      this.mostrarError(erroresUnicos.join('. '))
+      return true
+    } catch (error) {
+      console.log('Error al validar productos:', error)
       return false
     }
-
-    return true
   }
 
   const validacionCantidad = (unidad) => {
-    const cantidadInput = document.querySelector('input[name="cantidad[]"]')
-
+    const cantidadInput = elementos.cantidadInput
     // Limpiar validaciones previas
     cantidadInput.setCustomValidity('') // Restablecer el mensaje de error
 
     // Establecer validaciones según la unidad seleccionada
     if (unidad === 'litro' || unidad === 'kilogramo') {
-      cantidadInput.setAttribute('pattern', '^(\\d+|\\d+\\.5)$') // Solo permite enteros o medios
-      cantidadInput.setAttribute('title', 'Por favor, ingresa un número válido (entero o medio).') // Mensaje de ayuda
+      cantidadInput.setAttribute('pattern', '^\\d+(\\.\\d{1,2})?$') // Permite enteros o hasta 2 decimales
+      cantidadInput.setAttribute('title', 'Por favor, ingresa un número válido (entero o con hasta 2 decimales).') // Mensaje de ayuda
 
       // Validar el valor actual del input
-      if (!cantidadInput.value.match(/^(\\d+|\\d+\\.5)$/)) {
-        cantidadInput.setCustomValidity('Por favor, ingresa un número válido (entero o medio).')
+      if (!cantidadInput.value.match(/^\d+(\.\d{1,2})?$/)) {
+        cantidadInput.setCustomValidity('Por favor, ingresa un número válido (entero o con hasta 2 decimales).')
       }
     } else {
       cantidadInput.removeAttribute('pattern') // Permitir cualquier número
@@ -267,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mostrar errores si existen
     if (errores.length > 0) {
       const erroresUnicos = [...new Set(errores)]
-      this.mostrarError(erroresUnicos.join('\n'))
+      mostrarError(erroresUnicos.join('\n'))
       return false
     }
     return true
@@ -442,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let receta
     let url = ''
     if (tipo === 'Fertilizantes' || tipo === 'Mezcla') {
-      url = '/api/solicitudes'
+      url = '/api/mezclas/registro'
       // OBTENEMOS DATOS DEL CENTRO DE COTE PARA SABER LA EMPRESA A LA QUE PERTENECE
       const centroCosteSelect = document.getElementById('centroCoste')
       const selectedIndex = centroCosteSelect.selectedIndex
@@ -494,6 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     productosItems.forEach(item => {
       // Obtener elementos del item
+      if (!item) return
       const select = item.querySelector('.select-producto')
       const selectUnidadMedida = item.querySelector('select[name="unidad_medida[]"]')
       const inputCantidad = item.querySelector('input[name="cantidad[]"]')
@@ -557,12 +595,13 @@ document.addEventListener('DOMContentLoaded', () => {
       redirectUrl: null // No redirigir en caso de error
     })
   }
-  const mostrarExito = (mensaje, redirectUrl) => {
+  const mostrarExito = async (mensaje, redirectUrl) => {
     mostrarMensaje({
       msg: mensaje,
       type: 'success',
       redirectUrl
     })
+    return true
   }
   // resolver respuestas fech y mostrar mensajes
   const fetchApi = async (url, method, data) => {
@@ -576,24 +615,31 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       return response
     } catch (error) {
-      console.error('Error:', error.message)
+      console.error('Error en fetchApi:', error)
+      mostrarError(error)
     }
   }
+
   const respuestaFetch = async ({ respuesta, formularios, modal, button, redirectUrl }) => {
     const resultado = await actualizarUI(async () => {
-      const res = mostrarExito(respuesta, redirectUrl)
-      if (res === true) {
-        hideSpinner()
-        if (formularios) formularios.reset()
-        // eslint-disable-next-line no-undef
-        const modalReset = $(`#${modal}`)
-        modalReset.modal('hide')
-        button.disabled = false
+      if (respuesta.ok) {
+        const resp = await respuesta.json()
+        const res = await mostrarExito(resp.message, redirectUrl)
+        if (res === true) {
+          hideSpinner()
+          if (formularios) formularios.reset()
+          // eslint-disable-next-line no-undef
+          $(`#${modal}`).modal('hide')
+          if (button) button.disabled = false
+        }
+        return res // Importante: retornar el resultado
       } else {
+        const resp = await respuesta.json()
+        mostrarError(resp.message)
         hideSpinner()
         button.disabled = false
+        return false // Importante: retornar el resultado
       }
-      return res // Importante: retornar el resultado
     })
     return resultado // Importante: retornar el resultado final
   }
@@ -607,7 +653,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // creacion de campos
   // crear formulario para la solicitud de cambio de porcentajes
   const crearFormulario = ({ variedades, porcentajes }) => {
     const formulario = document.getElementById('formPorcentaje')
@@ -753,10 +798,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const reiniciarCamposProductos = () => {
     const productosContainer = elementos.productosContainer
-    const productosActuales = productosContainer.querySelectorAll('.producto-item')
+    const productosActuales = productosContainer.querySelectorAll('.producto-item') || productosContainer.querySelectorAll('.producto-itemm')
 
     // Mantener solo el primer campo, eliminar el resto
     for (let i = 1; i < productosActuales.length; i++) {
+      if (!productosActuales[i]) continue
       const selectToDestroy = productosActuales[i].querySelector('.select-producto')
       if (selectToDestroy) {
         destruirSelect2(selectToDestroy)
@@ -771,17 +817,78 @@ document.addEventListener('DOMContentLoaded', () => {
     primerProducto.querySelector('.select-unidad-medida').disabled = true
     primerProducto.querySelector('input[name="cantidad[]"]').value = ''
   }
+  // obtener datos de la solicitud
+  const obtenerDatosSolicitud = async () => {
+    const data = {
+      id_solicitud: document.getElementById('idSolicit')?.value || document.getElementById('id')?.value,
+      folio: document.getElementById('FolioReceta')?.value,
+      solicita: document.getElementById('solicita')?.value,
+      fecha_solicitud: document.getElementById('fechaSolicitud')?.value,
+      rancho_destino: document.getElementById('ranchoDestino')?.value,
+      centro_coste: document.getElementById('centroCoste')?.value,
+      variedad: document.getElementById('variedad')?.value,
+      empresa: document.getElementById('empresa')?.value,
+      temporada: document.getElementById('temporada')?.value,
+      cantidad: document.getElementById('cantidad')?.value,
+      presentacion: document.getElementById('presentacion')?.value,
+      metodo_aplicacion: document.getElementById('metodoAplicacion')?.value,
+      descripcion: document.getElementById('descripcion')?.value
+    }
+    return data
+  }
+  const descargarReporte = async ({ url, metod, data }) => {
+    try {
+      // Esperar la respuesta del fetch
+      const response = await fetchApi(url, metod, data)
 
+      // Validar la respuesta
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al descargar el archivo')
+      }
+
+      // Obtener el blob de la respuesta
+      const blob = await response.blob()
+
+      // Crear URL del blob
+      const blobUrl = window.URL.createObjectURL(blob)
+
+      // Crear y configurar el elemento <a>
+      const downloadLink = document.createElement('a')
+      downloadLink.href = blobUrl
+      downloadLink.download = `solicitudes_${new Date().toISOString().split('T')[0]}.xlsx`
+
+      // Simular click y limpiar
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      document.body.removeChild(downloadLink)
+
+      // Liberar el objeto URL
+      window.URL.revokeObjectURL(blobUrl)
+
+      return true
+    } catch (error) {
+      hideSpinner()
+      console.error('Error al descargar Excel:', error)
+      await mostrarMensaje({
+        msg: `Error al descargar el archivo: ${error.message}`,
+        type: 'error'
+      })
+      return false
+    } finally {
+      hideSpinner()
+    }
+  }
   // delegacion de eventos
   const handlers = {
-    handleRegresar () {
+    handleRegresar() {
       requestAnimationFrame(() => {
         window.history.back()
       })
     },
-    handleCentroCosteChange (evento) {
+    handleCentroCosteChange(evento) {
       const id = evento.target.value
-      const url = `/api/variedades/${id}`
+      const url = `/api/centros_coste/${id}/variedades`
       const metod = 'GET'
       ejecutarSeguros(async () => {
         const response = await fetchApi(url, metod)
@@ -789,9 +896,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setPostVariedad(data)
       })
     },
-    handleRanchoChange (evento) {
+    handleRanchoChange(evento) {
       const rancho = evento.target.value
-      const url = `/api/cc/${rancho}`
+      const url = `/api/centros_coste/${rancho}/cc`
       const metod = 'GET'
       ejecutarSeguros(async () => {
         const response = await fetchApi(url, metod)
@@ -799,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setPostCentroCoste(data)
       })
     },
-    handleTipoAplicacionChange (evento) {
+    handleTipoAplicacionChange(evento) {
       const selectedOption = evento.target.options[evento.target.selectedIndex]
       const id = selectedOption.dataset.id
       const url = `/api/catalogos/aplicaciones/${id}`
@@ -810,7 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setPostAplicacion(data)
       })
     },
-    handleVariedadChange (evento) {
+    handleVariedadChange(evento) {
       const selecion = evento.target.value
       // obtener el valor de la variedad y porcentaje de dataset
       const variedad = evento.target.dataset.variedad
@@ -907,11 +1014,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
     },
-    handleUnidadMedidaChange (evento) {
+    handleUnidadMedidaChange(evento) {
       const unidadMedida = evento.target.value
       validacionCantidad(unidadMedida)
     },
-    handleAgregarProductoClick (evento) {
+    handleAgregarProductoClick(evento) {
       evento.preventDefault()
       ejecutarSeguros(async () => {
         try {
@@ -954,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       })
     },
-    handleCambioProducto (event) {
+    handleCambioProducto(event) {
       // Encontrar el contenedor del producto
       const contenedorProducto = event.target.closest('.producto-item')
       if (!contenedorProducto) {
@@ -1004,9 +1111,8 @@ document.addEventListener('DOMContentLoaded', () => {
         selectUnidadMedida.disabled = true
       }
     },
-    async handleSubmitReceta (event) {
+    async handleSubmitReceta(event) {
       let camposRequeridos = []
-      let submitButton = null
       try {
         event.preventDefault()
         showSpinner()
@@ -1055,17 +1161,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Enviar datos al servidor
         const respuesta = await fetchApi(url, 'POST', receta)
 
-        const res = await respuesta.json()
-
         // Manejar respuesta
         await respuestaFetch({
-          respuesta: res.message,
+          respuesta,
           formularios: elementos.FormSolicitud,
           button: submitButton,
           redirectUrl: '/protected/admin'
         })
-
-        reiniciarCamposProductos()
       } catch (error) {
         console.error('Error en handleSubmitReceta:', error)
         mostrarError(error.message || error)
@@ -1078,36 +1180,38 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
       }
     },
-    async handleSubmitPorcentaje (event) {
+    async handleSubmitPorcentaje(event) {
+      let submitButton = null
       try {
         event.preventDefault()
         showSpinner()
 
-        const submitButton = obtenerSubmitBtn(event)
+        submitButton = obtenerSubmitBtn(event)
         await actualizarUI(() => {
           if (submitButton) submitButton.disabled = true
           else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
         })
 
         // Validar campos requeridos
-        if (validarPorcentajes) {
+        if (!validarPorcentajes()) {
           return
         }
         // Recopilar datos
         const data = recopilarDatosPorcentaje()
 
         // Enviar datos al servidor
-        const respuesta = await fetchApi('/api/porcentajes', 'POST', data)
+        const respuesta = await fetchApi('/api/centros_coste/porcentaje_variedad', 'POST', data)
+        const res = await respuesta.json()
         // Manejar respuesta
         await respuestaFetch({
-          respuesta,
-          formularios: elementos.porcetajeForm,
-          modal: 'modalPorcentaje',
+          respuesta: res.message,
+          formularios: elementos.FormPorcentaje,
+          modal: 'ModalEditar',
           button: submitButton
         })
       } catch (error) {
         mostrarError(error)
-        submitButton.disabled = false
+        if (submitButton) submitButton.disabled = false
         hideSpinner()
       } finally {
         hideSpinner()
@@ -1116,6 +1220,350 @@ document.addEventListener('DOMContentLoaded', () => {
           else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
         })
       }
+    },
+    handleEditarSolicitud(event) {
+      event.preventDefault()
+      showSpinner()
+      document.getElementById('fechaSolicitud').readOnly = false
+      document.getElementById('ranchoDestino').readOnly = false
+      document.getElementById('empresa').readOnly = false
+      document.getElementById('centroCoste').readOnly = false
+      document.getElementById('variedad').readOnly = false
+      document.getElementById('FolioReceta').readOnly = false
+      document.getElementById('temporada').readOnly = false
+      document.getElementById('cantidad').readOnly = false
+      document.getElementById('presentacion').readOnly = false
+      document.getElementById('metodoAplicacion').readOnly = false
+      document.getElementById('descripcion').readOnly = false
+      hideSpinner()
+    },
+    async handleSubmitProducto(event) {
+      let camposRequeridos = []
+      const url = '/api/productos/agregar'
+      try {
+        const idSolicitud = document.getElementById('id').value || document.getElementById('idSolicit').value
+        event.preventDefault()
+        showSpinner()
+        // obtener el boton de submit
+        submitButton = obtenerSubmitBtn(event)
+        if (submitButton) submitButton.disabled = true
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
+
+        camposRequeridos = [
+          'producto', 'unidad_medida', 'cantidadP'
+        ]
+
+        const esValido = await validarFormulario(camposRequeridos)
+        if (!esValido) {
+          if (submitButton) submitButton.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+          return
+        }
+
+        if (!idSolicitud) {
+          mostrarError('No se encontro la solicitud')
+          if (submitButton) submitButton.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+          return
+        }
+
+        // // Validar productos
+        const productosValidos = validarProductos()
+        if (!productosValidos) {
+          if (submitButton) submitButton.disabled = false
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          hideSpinner()
+          return
+        }
+
+        const datos = {
+          idSolicitud,
+          producto: document.getElementById('producto').value,
+          unidadMedida: document.getElementById('unidad_medida').value,
+          cantidad: document.getElementById('cantidadP').value
+        }
+
+        // Enviar datos al servidor
+        const respuesta = await fetchApi(url, 'POST', datos)
+
+        // Manejar respuesta
+        const respFetch = await respuestaFetch({
+          respuesta,
+          formularios: elementos.FormProducto,
+          button: submitButton,
+          modal: 'exampleModal'
+        })
+
+        if (respFetch === true) {
+          iniciarProductosReceta(idSolicitud)
+          await verProductosReceta({
+            eliminarUltimaColumna: false,
+            depuracion: true
+          })
+        }
+      } catch (error) {
+        console.error('Error en handleSubmitReceta:', error)
+        mostrarError(error.message || error)
+        if (submitButton) submitButton.disabled = false
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        hideSpinner()
+      } finally {
+        hideSpinner()
+        if (submitButton) submitButton.disabled = false
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+      }
+    },
+    async handleBtnCancelar(event) {
+      try {
+        const idSolicitud = document.getElementById('id').value || document.getElementById('idSolicit').value
+        event.preventDefault()
+        showSpinner()
+
+        if (!idSolicitud) {
+          mostrarError('No se encontro la solicitud')
+          hideSpinner()
+          return
+        }
+
+        const url = `/api/mezclas/cancelar/${idSolicitud}`
+        const datos = {
+          confirmacion: 'Cancelada'
+        }
+        // Enviar datos al servidor
+        const respuesta = await fetchApi(url, 'PATCH', datos)
+
+        // Manejar respuesta
+        await respuestaFetch({
+          respuesta,
+          formularios: elementos.FormProducto,
+          modal: 'modalInformacion',
+          button: elementos.BtnCancelar
+        })
+
+        if (respuesta.status === 200) {
+          actualizarUI(() => {
+            $('#modalInformacion').modal('hide')
+            iniciarValidacion()
+          })
+        }
+      } catch (error) {
+        console.error('Error en handleSubmitReceta:', error)
+        mostrarError(error.message || error)
+        if (submitButton) submitButton.disabled = false
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        hideSpinner()
+      } finally {
+        hideSpinner()
+        if (submitButton) submitButton.disabled = false
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+      }
+    },
+    async handleBtnValidacion(event) {
+      try {
+        const idSolicitud = document.getElementById('id').value || document.getElementById('idSolicit').value
+        event.preventDefault()
+        showSpinner()
+
+        if (!idSolicitud) {
+          mostrarError('No se encontro la solicitud')
+          hideSpinner()
+          return
+        }
+
+        const url = `/api/mezclas/validacion/${idSolicitud}`
+        const datos = {
+          validacion: true,
+          ranchoDestino: document.getElementById('ranchoDestino').value
+        }
+        // Enviar datos al servidor
+        const respuesta = await fetchApi(url, 'PATCH', datos)
+
+        // Manejar respuesta
+        const respFetch = await respuestaFetch({
+          respuesta,
+          modal: 'modalInformacion',
+          button: elementos.btnValidar
+        })
+        if (respFetch === true) {
+          actualizarUI(() => {
+            iniciarValidacion()
+          })
+        }
+      } catch (error) {
+        console.error('Error en handleSubmitReceta:', error)
+        mostrarError(error.message || error)
+        if (submitButton) submitButton.disabled = false
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+        hideSpinner()
+      } finally {
+        hideSpinner()
+        if (submitButton) submitButton.disabled = false
+        else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+      }
+    },
+    handleAgregarProductoReceta(event) {
+      event.preventDefault()
+      $('#exampleModal').modal('show')
+      inicializarFormularioProductos()
+    },
+    async handleBtnReporteIndividual(e) {
+      alert('handleBtnReporteIndividual')
+      e.preventDefault()
+      showSpinner()
+      const url = '/api/descargar-solicitud'
+      const metod = 'POST'
+      const data = await obtenerDatosSolicitud()
+      try {
+        await descargarReporte({ url, metod, data })
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    async handleBtnEnviaEstadoProductos(e) {
+      e.preventDefault()
+      showSpinner()
+      const idSolicitud = document.getElementById('idSolicit').value || document.getElementById('id').value
+      const url = `/api/productos/actualizar/estado/${idSolicitud}`
+      const metod = 'PATCH'
+      const estados = {
+        estados: [], // Inicializa el array de estados
+        mensaje: '' // Inicializamos el campo mensaje
+      }
+      let todosSeleccionados = true // Variable para verificar si todos los radios están seleccionados
+      let algunFaltante = false
+
+      // Recorre todos los grupos de radio buttons en la tabla
+      $('#tbReceta input[type="radio"]:checked').each(function (e) {
+        const name = $(this).attr('name') // Obtener el atributo name
+        if (name) {
+          const id = name.split('_')[1] // Obtener el id del producto
+          const valorSeleccionado = $(this).val() // Obtener el valor del radio button seleccionado
+
+          // Solo agregar el producto si el estado es "existe" o "no_existe"
+          if (valorSeleccionado === '1' || valorSeleccionado === '0') {
+            // aqui agregamos al objeto estados los valores de la receta
+            estados.estados.push({
+              id_receta: id,
+              existe: valorSeleccionado === '1' // true si "existe", false si "no existe"
+            })
+            if (valorSeleccionado === '0') {
+              algunFaltante = true
+              document.getElementById('notaMezcla').setAttribute('required', 'required')
+            }
+          } else {
+            hideSpinner()
+            console.warn(`El estado para el producto con ID ${id} no es válido: ${valorSeleccionado}`)
+          }
+        } else {
+          hideSpinner()
+          console.error('El atributo name no está definido para el radio button')
+        }
+      })
+
+      // Validar que todos los grupos de radio buttons tengan una opción seleccionada
+      $('#tbReceta input[type="radio"]').each(function (e) {
+        const name = $(this).attr('name')
+        if (name && !$(`input[name="${name}"]:checked`).length) {
+          todosSeleccionados = false // Si hay un grupo sin selección, cambiar a false
+        }
+      })
+      if (!todosSeleccionados) {
+        hideSpinner()
+        mostrarMensaje({
+          msg: 'Por favor, selecciona una opción para cada producto.',
+          type: 'error'
+        })
+        return
+      }
+      // Validar que hay estados para enviar
+      if (estados.estados.length === 0) {
+        hideSpinner()
+        mostrarMensaje({
+          msg: 'No hay estados para enviar.',
+          type: 'error'
+        })
+        return
+      }
+
+      if (algunFaltante) {
+        $('#modalInformacion').modal('hide')
+        $('#modalNotaAlmacen').modal('show')
+        hideSpinner()
+        elementos.FormNotaAlmacen.onsubmit = async (event) => {
+          event.preventDefault()
+          showSpinner()
+          // obtener el boton de submit
+          const submitButton = obtenerSubmitBtn(event)
+          if (submitButton) submitButton.disabled = true
+          else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = true
+
+          const camposRequeridos = [
+            'notaMezcla'
+          ]
+
+          const esValido = await validarFormulario(camposRequeridos)
+          if (!esValido) {
+            if (submitButton) submitButton.disabled = false
+            else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+            hideSpinner()
+            return
+          }
+
+          estados.mensaje = document.getElementById('notaMezcla').value
+
+          try {
+            const respuesta = await fetchApi(url, metod, estados)
+            // Manejar respuesta
+            await respuestaFetch({
+              respuesta,
+              button: submitButton,
+              modal: 'modalNotaAlmacen'
+            })
+          } catch (error) {
+            hideSpinner()
+            console.error('Error en la conexión:', error)
+            mostrarMensaje({
+              msg: error.message || 'Error desconocido',
+              type: 'error'
+            })
+          } finally {
+            if (submitButton) submitButton.disabled = false
+            else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
+          }
+        }
+      } else {
+        try {
+          const respuesta = await fetchApi(url, metod, estados)
+          console.log(respuesta)
+          await respuestaFetch({
+            respuesta,
+            modal: 'modalInformacion'
+          })
+          if (respuesta.status === 200) {
+            actualizarUI(async () => {
+              iniciarPendiente()
+              await verPendiente()
+            })
+          }
+        } catch (error) {
+          hideSpinner()
+          console.error('Error en la conexión:', error)
+          mostrarMensaje({
+            msg: error.message || 'Error desconocido',
+            type: 'error'
+          })
+        }
+      }
+    },
+    async handleBtnCerrarMescla(e) {
+      e.preventDefault()
+      $('#modalInformacion').modal('hide')
+      document.getElementById('tablaFuciones').style.display = 'none'
+      document.getElementById('formCerrar').style.display = 'block'
+      document.getElementById('idMesclas').value = document.getElementById('FolioReceta').value || 'Solicitud sin folio'
+      new SolicitudFormulario()
     }
   }
 
@@ -1129,15 +1577,37 @@ document.addEventListener('DOMContentLoaded', () => {
   // Inicializar eventos
   // formularios
   inicializarFormulario(elementos.FormSolicitud, handlers.handleSubmitReceta)
-  inicializarFormulario(elementos.porcetajeForm, handlers.handleSubmitPorcentaje)
-  // botones y selects
+  inicializarFormulario(elementos.FormPorcentaje, handlers.handleSubmitPorcentaje)
+  inicializarFormulario(elementos.FormProducto, handlers.handleSubmitProducto)
+  // botones
   if (elementos.BtnRegresar) {
     elementos.BtnRegresar.addEventListener('click', handlers.handleRegresar)
   }
   if (elementos.BtnNewProducto) {
     elementos.BtnNewProducto.addEventListener('click', handlers.handleAgregarProductoClick)
   }
-
+  if (elementos.BtnEditar) {
+    elementos.BtnEditar.addEventListener('click', handlers.handleEditarSolicitud)
+  }
+  if (elementos.BtnAgregarProducto) {
+    elementos.BtnAgregarProducto.addEventListener('click', handlers.handleAgregarProductoReceta)
+  }
+  if (elementos.BtnCancelar) {
+    elementos.BtnCancelar.addEventListener('click', handlers.handleBtnCancelar)
+  }
+  if (elementos.btnValidar) {
+    elementos.btnValidar.addEventListener('click', handlers.handleBtnValidacion)
+  }
+  if (elementos.btnDescargar) {
+    elementos.btnDescargar.addEventListener('click', handlers.handleBtnReporteIndividual)
+  }
+  if (elementos.btnEnviarEstado) {
+    elementos.btnEnviarEstado.addEventListener('click', handlers.handleBtnEnviaEstadoProductos)
+  }
+  if (elementos.btnCerrar) {
+    elementos.btnCerrar.addEventListener('click', handlers.handleBtnCerrarMescla)
+  }
+  // selects
   if (elementos.centroCoste) {
     elementos.centroCoste.addEventListener('change', handlers.handleCentroCosteChange)
   }
@@ -1153,12 +1623,49 @@ document.addEventListener('DOMContentLoaded', () => {
   if (elementos.unidadMedida) {
     elementos.unidadMedida.addEventListener('change', handlers.handleUnidadMedidaChange)
   }
-
+  // otros
+  if (elementos.cantidadInput) {
+    elementos.cantidadInput.addEventListener('input', () => {
+      const unidad = elementos.unidadMedida ? elementos.unidadMedida.value : ''
+      validacionCantidad(unidad)
+    })
+  }
   if (elementos.FormSolicitud) {
-  // Iniciar tipo de solicitud
+    // Iniciar tipo de solicitud
     iniciarTipoSolicitud().then(() => {
-    // Iniciar Select2 después de seleccionar el tipo
+      // Iniciar Select2 después de seleccionar el tipo
       iniciarSelect2()
+    })
+  }
+
+  // Inicialización de tablas optimizada
+  if (elementos.tablaPendiente) {
+    actualizarUI(async () => {
+      iniciarPendiente()
+      await verPendiente()
+    })
+  }
+  if (elementos.tablaProceso) {
+    actualizarUI(async () => {
+      iniciarProceso()
+      await verProceso()
+    })
+  }
+  if (elementos.tablaCompletadas) {
+    actualizarUI(async () => {
+      iniciarCompletadas()
+      await verCompletadas()
+    })
+  }
+  if (elementos.tablaValidacion) {
+    actualizarUI(async () => {
+      iniciarValidacion()
+    })
+  }
+  if (elementos.tablaCanceladas) {
+    actualizarUI(async () => {
+      iniciarCanceladas()
+      verCanceladas()
     })
   }
 })

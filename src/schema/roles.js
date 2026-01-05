@@ -6,38 +6,23 @@ const rolesConfig = {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
-    allowNull: false // Añadir esta línea
+    allowNull: false
   },
-  empleado_id: {
+  nombre: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true, // Añadir esta línea para evitar duplicados
+    unique: true,
     validate: {
-      notEmpty: {
-        msg: 'El centro de coste es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'
-      }
+      notEmpty: { msg: 'El nombre del rol es requerido' },
+      len: { args: [3, 50], msg: 'El nombre debe tener entre 3 y 50 caracteres' }
     }
   },
-  rol: {
+  descripcion: {
     type: DataTypes.STRING,
-    allowNull: false,
-    validate: {
-      notEmpty: {
-        msg: 'El rol es requerido'
-      },
-      len: {
-        args: [3, 50],
-        msg: 'El rol debe tener entre 3 y 50 caracteres'
-      }
-    }
+    allowNull: true
   },
   status: {
     type: DataTypes.BOOLEAN,
-    allowNull: true,
     defaultValue: true
   }
 }

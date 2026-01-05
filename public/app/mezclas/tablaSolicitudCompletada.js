@@ -2,7 +2,7 @@
 import { iniciarProductosReceta, verProductosReceta } from '../productosReceta/productos.js'
 
 // Funciones de fetch con mejor manejo de errores
-async function fechTbSolicitadas (status) {
+async function fechTbSolicitadas(status) {
   try {
     const url = `/api/mezclasSolicitadas/${status}`
     const response = await fetch(url)

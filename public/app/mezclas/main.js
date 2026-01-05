@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Delegación de eventos
   const handlers = {
     // Manejadores optimizados Submit para los formularios
-    async handleSubmitAgregarEquipo (e) {
+    async handleSubmitAgregarEquipo(e) {
       e.preventDefault()
       showSpinner()
 
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarProducto (e) {
+    async handleSubmitAgregarProducto(e) {
       e.preventDefault()
       showSpinner()
 
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cantidad: cantidades[0]
       }
       try {
-        const url = '/api/productoSoli'
+        const url = '/api/productos/agregar'
         const metod = 'POST'
         const respuesta = await fetchApi(url, metod, datos)
         const resp = await respuestaFetch({ respuesta, formularios: elementos.formProducto, modal: 'exampleModal', button: elementos.btnRegistrar })
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitBajaActivo (e) {
+    async handleSubmitBajaActivo(e) {
       e.preventDefault()
       showSpinner()
 
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitEditarAsignacion (e) {
+    async handleSubmitEditarAsignacion(e) {
       e.preventDefault()
       showSpinner()
 
@@ -445,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitFormEmpresaReporte (e) {
+    async handleSubmitFormEmpresaReporte(e) {
       e.preventDefault()
       showSpinner()
 
@@ -480,20 +480,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
     // Manejador optimizado para regresar a la página anterior
-    handleRegresar () {
+    handleRegresar() {
       requestAnimationFrame(() => {
         window.history.back()
       })
     },
-    handleRegresarTabla () {
+    handleRegresarTabla() {
       document.getElementById('formPreparadas').style.display = 'none'
       document.getElementById('tablaFuciones').style.display = 'block'
     },
-    handleRegresarformCerrar () {
+    handleRegresarformCerrar() {
       document.getElementById('formCerrar').style.display = 'none'
       document.getElementById('formPreparadas').style.display = 'block'
     },
-    async handleBtnReporte (e) {
+    async handleBtnReporte(e) {
       e.preventDefault()
       showSpinner()
 
@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#empresasModal').modal('show')
       }
     },
-    async handleBtnNuevoProducto (e) {
+    async handleBtnNuevoProducto(e) {
       e.preventDefault()
 
       $('#staticBackdrop').modal('hide')
@@ -529,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(error)
       }
     },
-    async handleBtnReporteIndividual (e) {
+    async handleBtnReporteIndividual(e) {
       e.preventDefault()
       showSpinner()
       const url = '/api/descargar-solicitud'
@@ -541,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(error)
       }
     },
-    async handlebtnMostarReceta (e) {
+    async handlebtnMostarReceta(e) {
       e.preventDefault()
       const idSolicitud = document.getElementById('idSolicitud').value
       const rol = document.getElementById('rol').value
@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handlebtnMostarRecetaProceso (e) {
+    async handlebtnMostarRecetaProceso(e) {
       e.preventDefault()
       const idSolicitud = document.getElementById('idSolicitud').value
       $('#staticBackdrop').modal('show')
@@ -571,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
         depuracion: true
       })
     },
-    async handleBtnEnviaEstadoProductos (e) {
+    async handleBtnEnviaEstadoProductos(e) {
       e.preventDefault()
       showSpinner()
       const idSolicitud = document.getElementById('idSolicitud').value
@@ -671,7 +671,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleBtnGuardarMescla (e) {
+    async handleBtnGuardarMescla(e) {
       e.preventDefault()
       showSpinner()
 
@@ -716,7 +716,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleBtnCerrarMescla (e) {
+    async handleBtnCerrarMescla(e) {
       e.preventDefault()
       document.getElementById('formCerrar').style.display = 'block'
       document.getElementById('formPreparadas').style.display = 'none'
@@ -727,7 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
       new SolicitudFormulario()
     },
     // agregar campo para variedades
-    async handleAgregarVariedad () {
+    async handleAgregarVariedad() {
       // Crear nuevo campo de producto
       const nuevoCampo = await crearCampoProducto()
 
@@ -735,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
       elementos.productosContainer.appendChild(nuevoCampo)
     },
     // Otros manejadores optimizados para cargar datos en la pagina
-    async handleInicairDivsCentroCoste () {
+    async handleInicairDivsCentroCoste() {
       elementos.optionCentroCoste.innerHTML = ''
       const urlCentroCoste = '/api/centroCostess'
       try {
@@ -756,7 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(error)
       }
     },
-    async handleInicairDivsformAsignacion () {
+    async handleInicairDivsformAsignacion() {
       const usuarioTab = document.getElementById('usuario')
       const equipo = document.getElementById('equipo')
       usuarioTab.innerHTML = ''

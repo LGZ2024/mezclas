@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Delegación de eventos
   const handlers = {
     // Manejadores optimizados Submit para los formularios
-    async handleSubmitAgregarEquipo (e) {
+    async handleSubmitAgregarEquipo(e) {
       e.preventDefault()
       showSpinner()
 
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitCancelacion (e) {
+    async handleSubmitCancelacion(e) {
       e.preventDefault()
       showSpinner()
 
@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitConfirmacion (e) {
+    async handleSubmitConfirmacion(e) {
       e.preventDefault()
       showSpinner()
 
@@ -422,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
 
       try {
-        const respuesta = await fetchApi('/api/validacion/', 'POST', datos)
+        const respuesta = await fetchApi('/api/mezclas/validacion', 'POST', datos)
         await respuestaFetch({ respuesta, modal: 'modalInformacion', button: elementos.btnConfirmacion })
         if (elementos.tablaConfirmacion) {
           actualizarUI(async () => {
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarProducto (e) {
+    async handleSubmitAgregarProducto(e) {
       e.preventDefault()
       showSpinner()
 
@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarEmpresa (e) {
+    async handleSubmitAgregarEmpresa(e) {
       e.preventDefault()
       showSpinner()
 
@@ -547,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarDepartamento (e) {
+    async handleSubmitAgregarDepartamento(e) {
       e.preventDefault()
       showSpinner()
 
@@ -600,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarRancho (e) {
+    async handleSubmitAgregarRancho(e) {
       e.preventDefault()
       showSpinner()
 
@@ -653,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarUsuario (e) {
+    async handleSubmitAgregarUsuario(e) {
       e.preventDefault()
       showSpinner()
 
@@ -690,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarCentroCoste (e) {
+    async handleSubmitAgregarCentroCoste(e) {
       e.preventDefault()
       showSpinner()
       const submitBtn = obtenerSubmitBtn(e)
@@ -758,7 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (elementos.btnRegistrar) elementos.btnRegistrar.disabled = false
       }
     },
-    async handleSubmitAgregarFoto (e) {
+    async handleSubmitAgregarFoto(e) {
       e.preventDefault()
       showSpinner()
 
@@ -854,7 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarBaja (e) {
+    async handleSubmitAgregarBaja(e) {
       e.preventDefault()
       showSpinner()
 
@@ -925,7 +925,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAgregarFactura (e) {
+    async handleSubmitAgregarFactura(e) {
       e.preventDefault()
       showSpinner()
 
@@ -1021,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitEditarActivo (e) {
+    async handleSubmitEditarActivo(e) {
       e.preventDefault()
       showSpinner()
       const submitBtn = obtenerSubmitBtn(e)
@@ -1112,7 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitBajaActivo (e) {
+    async handleSubmitBajaActivo(e) {
       e.preventDefault()
       showSpinner()
 
@@ -1178,7 +1178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitAsignarActivo (e) {
+    async handleSubmitAsignarActivo(e) {
       e.preventDefault()
       showSpinner()
 
@@ -1268,7 +1268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitEditarAsignacion (e) {
+    async handleSubmitEditarAsignacion(e) {
       e.preventDefault()
       showSpinner()
 
@@ -1320,7 +1320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitEditarUsuario (e) {
+    async handleSubmitEditarUsuario(e) {
       e.preventDefault()
       showSpinner()
 
@@ -1360,7 +1360,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitActualizarUsuario (e) {
+    async handleSubmitActualizarUsuario(e) {
       e.preventDefault()
       showSpinner()
 
@@ -1400,7 +1400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitEditarResponsiva (e) {
+    async handleSubmitEditarResponsiva(e) {
       e.preventDefault()
       showSpinner()
       const submitBtn = obtenerSubmitBtn(e)
@@ -1446,7 +1446,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleSubmitActualizarContraseña (e) {
+    async handleSubmitActualizarContraseña(e) {
       e.preventDefault()
       showSpinner()
       const submitBtn = obtenerSubmitBtn(e)
@@ -1502,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       }
     },
-    async handleBtnValidacion (e) {
+    async handleBtnValidacion(e) {
       e.preventDefault()
       showSpinner()
       await actualizarUI(() => {
@@ -1529,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        const url = '/api/validacion'
+        const url = '/api/mezclas/validacion'
         const metodo = 'POST'
         const respuesta = await fetchApi(url, metodo, estados)
         await respuestaFetch({ respuesta, button: elementos.btnValidacion })
@@ -1551,7 +1551,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
     // manejador para estado
-    async handleEstadoChange (e) {
+    async handleEstadoChange(e) {
       const estado = e.target.value
       const campoMotivo = document.getElementById('campoEstado')
       if (estado === 'inactivo' || estado === 'reparacion') {
@@ -1587,20 +1587,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
     // Manejador optimizado para regresar a la página anterior
-    handleRegresar () {
+    handleRegresar() {
       // eslint-disable-next-line no-undef
       requestAnimationFrame(() => {
         window.history.back()
       })
     },
-    handleCancelar () {
+    handleCancelar() {
       // eslint-disable-next-line no-undef
       $('#modalInformacion').modal('hide')
       // eslint-disable-next-line no-undef
       $('#modalCancelacion').modal('show')
     },
     // agregar campo para variedades
-    async handleAgregarVariedad () {
+    async handleAgregarVariedad() {
       // Crear nuevo campo de producto
       const nuevoCampo = await crearCampoProducto()
 
@@ -1608,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
       elementos.productosContainer.appendChild(nuevoCampo)
     },
     // Otros manejadores optimizados para cargar datos en la pagina
-    async handleInicairDivsCentroCoste () {
+    async handleInicairDivsCentroCoste() {
       elementos.optionCentroCoste.innerHTML = ''
       const urlCentroCoste = '/api/centroCostess'
       try {
@@ -1629,7 +1629,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(error)
       }
     },
-    async handleInicairDivsformAsignacion () {
+    async handleInicairDivsformAsignacion() {
       const usuarioTab = document.getElementById('usuario')
       const equipo = document.getElementById('equipo')
       usuarioTab.innerHTML = ''

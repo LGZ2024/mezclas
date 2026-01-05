@@ -17,7 +17,7 @@ Op.like: Búsqueda con comodín
  */
 export class UsuarioModel {
   // obtener todos los datos
-  static async getAll () {
+  static async getAll() {
     try {
       const usuario = await Usuario.findAll({
         attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
@@ -33,7 +33,7 @@ export class UsuarioModel {
     }
   }
 
-  static async getUsuarios ({ nombre, rol, empresa }) {
+  static async getUsuarios({ nombre, rol, empresa }) {
     const logContext = {
       operation: 'getUsuarios Model',
       nombre,
@@ -92,7 +92,7 @@ export class UsuarioModel {
   }
 
   // uso
-  static async getUserEmail ({ rol, empresa }) {
+  static async getUserEmail({ rol, empresa }) {
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!rol || !empresa) {
@@ -120,7 +120,7 @@ export class UsuarioModel {
   }
 
   // uso
-  static async getUserEmailRancho ({ rol, empresa, rancho }) {
+  static async getUserEmailRancho({ rol, empresa, rancho }) {
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!rol || !empresa || !rancho) {
@@ -145,7 +145,7 @@ export class UsuarioModel {
     }
   }
 
-  static async getUserEmailRanchoRol ({ rol, rancho }) {
+  static async getUserEmailRanchoRol({ rol, rancho }) {
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!rol || !rancho) {
@@ -169,7 +169,7 @@ export class UsuarioModel {
     }
   }
 
-  static async getUserEmailGerente ({ rol, idUsuario }) {
+  static async getUserEmailGerente({ rol, idUsuario }) {
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!rol || !idUsuario) {
@@ -194,7 +194,7 @@ export class UsuarioModel {
   }
 
   // uso
-  static async getUserEmailEmpresa ({ rol, empresa }) {
+  static async getUserEmailEmpresa({ rol, empresa }) {
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!rol || !empresa) {
@@ -219,7 +219,7 @@ export class UsuarioModel {
   }
 
   // obtener todos los un ato por id
-  static async getOne ({ rol, empresa }) {
+  static async getOne({ rol, empresa }) {
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!rol || !empresa) {
@@ -247,7 +247,7 @@ export class UsuarioModel {
     }
   }
 
-  static async getOneId ({ id }) {
+  static async getOneId({ id }) {
     try {
       if (!id) {
         throw new ValidationError('ID no proporcionados')
@@ -268,7 +268,7 @@ export class UsuarioModel {
   }
 
   // eliminar usuario
-  static async delete ({ id, logContext, logger }) {
+  static async delete({ id, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         // Verificar si se proporcionaron los parámetros requeridos
@@ -293,7 +293,7 @@ export class UsuarioModel {
   }
 
   // crear usuario
-  static async create ({ data }) {
+  static async create({ data }) {
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!data.usuario || !data.email || !data.password || !data.rol || !data.empresa) {
@@ -303,8 +303,8 @@ export class UsuarioModel {
       const usuario = await Usuario.findOne({ where: { usuario: data.usuario, email: data.email } })
       if (usuario) throw new ValidationError('El usuario o email ya existe')
       // creamos el usuario
-      await Usuario.create({ ...data })
-      return { message: `usuario registrado exitosamente ${data.nombre}` }
+      const newUser = await Usuario.create({ ...data })
+      return { message: `usuario registrado exitosamente ${data.nombre}`, user: newUser }
     } catch (e) {
       if (e instanceof CustomError) throw e
       throw new DatabaseError('Error al crear usuario')
@@ -312,7 +312,7 @@ export class UsuarioModel {
   }
 
   // para actualizar datos de usuario
-  static async update ({ id, data }) {
+  static async update({ id, data }) {
     try {
       // Verificar si se proporcionaron los parámetros requeridos
       if (!id || !data.nombre || !data.email || !data.password || !data.rol || !data.empresa) {
@@ -337,10 +337,10 @@ export class UsuarioModel {
   }
 
   // funcion login
-  static async login ({ user, password, logContext, logger }) {
+  static async login({ user, password, logContext, logger }) {
     return await DbHelper.executeQuery(async () => {
       try {
-      // Verificar si se proporcionaron los parámetros requeridos
+        // Verificar si se proporcionaron los parámetros requeridos
         if (!user || !password) {
           throw new ValidationError('Datos requeridos no proporcionados')
         }
@@ -367,7 +367,7 @@ export class UsuarioModel {
   }
 
   // funcion cambiar contraseña usuario
-  static async changePassword ({ id, oldPassword, newPassword, logContext, logger }) {
+  static async changePassword({ id, oldPassword, newPassword, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         const usuario = await Usuario.findByPk(id)
@@ -389,7 +389,7 @@ export class UsuarioModel {
   }
 
   // funcion cambiar contraseña Admin
-  static async changePasswordAdmin ({ id, newPassword, logContext, logger }) {
+  static async changePasswordAdmin({ id, newPassword, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
         console.log('cambiar contraseña Admin', id, newPassword)

@@ -3,7 +3,7 @@
 
 <head>
     <!-- <%- include("../../templates/head-pwa") %> -->
-        <%- include("../../templates/mezclas/cabecera") %>
+    <%- include("../../templates/mezclas/cabecera") %>
 </head>
 
 
@@ -15,6 +15,9 @@
                 <% if (['solicita', 'solicitaVisual' , 'solicita2' ].includes(rol)) { %>
                     <div class="formulario__campo">
                         <button class="formulario__submit" type="button" id="solicitar">Solicitar</button>
+                    </div>
+                    <div class="formulario__campo">
+                        <button class="formulario__submit" type="button" id="solicitudes">Solicitudes</button>
                     </div>
                     <div class="formulario__campo">
                         <button class="formulario__submit" type="button" id="canceladas">Mezclas Canceldas</button>
@@ -46,7 +49,7 @@
                                     <% } %>
             </div>
         </section>
-        <section class="opciones" id="contenerdorCombustibles"  style="display: none;">
+        <section class="opciones" id="contenerdorCombustibles" style="display: none;">
             <div class="formulario contenedor">
                 <div class="formulario__campo">
                     <button class="formulario__submit" type="button" id="solicitar">Registrar Combustible
@@ -74,7 +77,7 @@
                 </div>
             </div>
         </section>
-        <section class="opciones" id="contenerdorVehiculos"  style="display: none;">
+        <section class="opciones" id="contenerdorVehiculos" style="display: none;">
             <div class="formulario contenedor">
                 <div class="formulario__campo">
                     <button class="formulario__submit" type="button" id="talleres">Talleres</button>

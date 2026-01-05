@@ -1,10 +1,11 @@
 /* eslint-disable no-undef */
 import { iniciarProductosReceta, verProductosReceta } from '../productosReceta/productos.js'
-
+import { mostrarMensaje } from '../mensajes.js'
+import { showSpinner, hideSpinner } from '../spinner.js'
 // Funciones de fetch con mejor manejo de errores
-async function fechTbSolicitadas () {
+async function fechTbSolicitadas() {
   try {
-    const response = await fetch('/api/mezclasConfirmar')
+    const response = await fetch('/api/mezclas/confirmar')
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -17,13 +18,24 @@ async function fechTbSolicitadas () {
 }
 const iniciarConfimaciones = async () => {
   try {
+    showSpinner()
     // Obtener datos primero
     const data = await obtenerSolicitudes()
 
     // Validar que tenemos datos
     if (!Array.isArray(data)) {
       console.error('Los datos no son un array:', data)
+      hideSpinner()
       return
+    }
+
+    // Validar que los datos no esten vacios
+    if (data.length === 0) {
+      mostrarMensaje({
+        msg: 'No hay solicitudes para confirmar',
+        type: 'info'
+      })
+      hideSpinner()
     }
 
     // Destruir tabla existente si existe
@@ -99,7 +111,13 @@ const iniciarConfimaciones = async () => {
     })
 
     configurarFomulario()
+    hideSpinner()
   } catch (error) {
+    hideSpinner()
+    mostrarMensaje({
+      msg: 'Error al iniciar solicitudes',
+      type: 'error'
+    })
     console.error('Error al iniciar solicitudes:', error)
   }
 }
@@ -151,6 +169,11 @@ const establecerValoresSolicitud = async ({ data }) => {
     columnaAEliminar: -1, // Última columna
     depuracion: true
   })
+
+  // OCULTAR BOTONES NO NESESARIOS PARA CONFIRMACION
+  document.getElementById('btnDescargar').style.display = 'none'
+  document.getElementById('btnEditar').style.display = 'none'
+  document.getElementById('btnEnviarEstado').style.display = 'none'
 }
 
 // Exportar funciones
