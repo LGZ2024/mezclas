@@ -1,9 +1,13 @@
-(function($) {
-	document.querySelector('#bannerClose').addEventListener('click',function() {
-		document.querySelector('#proBanner').classList.add('d-none');
-	});
+(function ($) {
+	const bannerClose = document.querySelector('#bannerClose');
+	if (bannerClose) {
+		bannerClose.addEventListener('click', function () {
+			const proBanner = document.querySelector('#proBanner');
+			if (proBanner) proBanner.classList.add('d-none');
+		});
+	}
 	'use strict';
-	$(function() {
+	$(function () {
 		if ($(".dashboard-progress-1").length) {
 			$('.dashboard-progress-1').circleProgress({
 				value: 0.70,
@@ -98,8 +102,8 @@
 					gradient: ["#9f041b", "#f5515f"]
 				}
 			});
-    }
-    
+		}
+
 		if ($("#total-profit").length) {
 			var totalProfitData = {
 				labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"],
@@ -166,8 +170,8 @@
 				data: totalProfitData,
 				options: totalProfitOptions,
 			});
-    }
-    
+		}
+
 		if ($("#total-profit-dark").length) {
 			var graphGradient = document.getElementById("total-profit-dark").getContext('2d');;
 			var saleGradientBg = graphGradient.createLinearGradient(15, 0, 15, 190);
@@ -306,8 +310,8 @@
 				data: totalExpencesData,
 				options: totalExpencesOptions,
 			});
-    }
-    
+		}
+
 		if ($("#total-expences-dark").length) {
 			var graphGradient = document.getElementById("total-expences-dark").getContext('2d');;
 			var saleGradientBg = graphGradient.createLinearGradient(15, 0, 15, 190);
@@ -382,29 +386,29 @@
 			var deviceSalesData = {
 				labels: ["Iphone", "Google", "Sumsung", "Huawei", "Xiaomi", "Oppo", "Vivo", "Lg"],
 				datasets: [{
-						label: 'Demand',
-						data: [450, 500, 300, 350, 200, 320, 310, 700],
-						backgroundColor: [
-							'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
-						],
-						borderColor: [
-							'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
-						],
-						borderWidth: 1,
-						fill: false
-					},
-					{
-						label: 'Supply',
-						data: [250, 100, 310, 75, 290, 100, 500, 260],
-						backgroundColor: [
-							'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
-						],
-						borderColor: [
-							'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
-						],
-						borderWidth: 1,
-						fill: false
-					}
+					label: 'Demand',
+					data: [450, 500, 300, 350, 200, 320, 310, 700],
+					backgroundColor: [
+						'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
+					],
+					borderColor: [
+						'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
+					],
+					borderWidth: 1,
+					fill: false
+				},
+				{
+					label: 'Supply',
+					data: [250, 100, 310, 75, 290, 100, 500, 260],
+					backgroundColor: [
+						'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
+					],
+					borderColor: [
+						'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
+					],
+					borderWidth: 1,
+					fill: false
+				}
 				]
 			};
 			var deviceSalesOptions = {
@@ -444,7 +448,7 @@
 							stepSize: 200,
 							fontColor: "#a7afb7",
 							fontSize: 14,
-							callback: function(value, index, values) {
+							callback: function (value, index, values) {
 								return value + 'k';
 							},
 						},
@@ -453,7 +457,7 @@
 				legend: {
 					display: false
 				},
-				legendCallback: function(chart) {
+				legendCallback: function (chart) {
 					var text = [];
 					text.push('<ul class="' + chart.id + '-legend">');
 					for (var i = 0; i < chart.data.datasets.length; i++) {
@@ -485,35 +489,35 @@
 				options: deviceSalesOptions
 			});
 			document.getElementById('device-sales-legend').innerHTML = barChart.generateLegend();
-    }
-    
+		}
+
 		if ($("#device-sales-dark").length) {
 			var deviceSalesDarkData = {
 				labels: ["Iphone", "Google", "Sumsung", "Huawei", "Xiaomi", "Oppo", "Vivo", "Lg"],
 				datasets: [{
-						label: 'Demand',
-						data: [450, 500, 300, 350, 200, 320, 310, 700],
-						backgroundColor: [
-							'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
-						],
-						borderColor: [
-							'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
-						],
-						borderWidth: 1,
-						fill: false
-					},
-					{
-						label: 'Supply',
-						data: [250, 100, 310, 75, 290, 100, 500, 260],
-						backgroundColor: [
-							'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
-						],
-						borderColor: [
-							'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
-						],
-						borderWidth: 1,
-						fill: false
-					}
+					label: 'Demand',
+					data: [450, 500, 300, 350, 200, 320, 310, 700],
+					backgroundColor: [
+						'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
+					],
+					borderColor: [
+						'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
+					],
+					borderWidth: 1,
+					fill: false
+				},
+				{
+					label: 'Supply',
+					data: [250, 100, 310, 75, 290, 100, 500, 260],
+					backgroundColor: [
+						'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
+					],
+					borderColor: [
+						'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
+					],
+					borderWidth: 1,
+					fill: false
+				}
 				]
 			};
 			var deviceSalesDarkOptions = {
@@ -553,7 +557,7 @@
 							stepSize: 200,
 							fontColor: "#3a3a43",
 							fontSize: 14,
-							callback: function(value, index, values) {
+							callback: function (value, index, values) {
 								return value + 'k';
 							},
 						},
@@ -562,7 +566,7 @@
 				legend: {
 					display: false
 				},
-				legendCallback: function(chart) {
+				legendCallback: function (chart) {
 					var text = [];
 					text.push('<ul class="' + chart.id + '-legend">');
 					for (var i = 0; i < chart.data.datasets.length; i++) {
@@ -601,28 +605,28 @@
 				labels: ["Iphone", "Google", "Sumsung", "Huawei", "Xiaomi", "Oppo", "Vivo", "Lg"],
 				datasets: [{
 					label: 'الطلب',
-						data: [450, 500, 300, 350, 200, 320, 310, 700],
-						backgroundColor: [
-							'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
-						],
-						borderColor: [
-							'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
-						],
-						borderWidth: 1,
-						fill: false
-					},
-					{
-						label: 'يتبرع',
-						data: [250, 100, 310, 75, 290, 100, 500, 260],
-						backgroundColor: [
-							'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
-						],
-						borderColor: [
-							'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
-						],
-						borderWidth: 1,
-						fill: false
-					}
+					data: [450, 500, 300, 350, 200, 320, 310, 700],
+					backgroundColor: [
+						'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
+					],
+					borderColor: [
+						'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
+					],
+					borderWidth: 1,
+					fill: false
+				},
+				{
+					label: 'يتبرع',
+					data: [250, 100, 310, 75, 290, 100, 500, 260],
+					backgroundColor: [
+						'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
+					],
+					borderColor: [
+						'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
+					],
+					borderWidth: 1,
+					fill: false
+				}
 				]
 			};
 			var deviceSalesDarkOptions = {
@@ -662,7 +666,7 @@
 							stepSize: 200,
 							fontColor: "#3a3a43",
 							fontSize: 14,
-							callback: function(value, index, values) {
+							callback: function (value, index, values) {
 								return value + 'k';
 							},
 						},
@@ -671,7 +675,7 @@
 				legend: {
 					display: false
 				},
-				legendCallback: function(chart) {
+				legendCallback: function (chart) {
 					var text = [];
 					text.push('<ul class="' + chart.id + '-legend">');
 					for (var i = 0; i < chart.data.datasets.length; i++) {
@@ -708,29 +712,29 @@
 			var deviceSalesData = {
 				labels: ["Iphone", "Google", "Sumsung", "Huawei", "Xiaomi", "Oppo", "Vivo", "Lg"],
 				datasets: [{
-						label: 'الطلب',
-						data: [450, 500, 300, 350, 200, 320, 310, 700],
-						backgroundColor: [
-							'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
-						],
-						borderColor: [
-							'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
-						],
-						borderWidth: 1,
-						fill: false
-					},
-					{
-						label: 'يتبرع',
-						data: [250, 100, 310, 75, 290, 100, 500, 260],
-						backgroundColor: [
-							'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
-						],
-						borderColor: [
-							'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
-						],
-						borderWidth: 1,
-						fill: false
-					}
+					label: 'الطلب',
+					data: [450, 500, 300, 350, 200, 320, 310, 700],
+					backgroundColor: [
+						'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
+					],
+					borderColor: [
+						'#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8', '#a461d8',
+					],
+					borderWidth: 1,
+					fill: false
+				},
+				{
+					label: 'يتبرع',
+					data: [250, 100, 310, 75, 290, 100, 500, 260],
+					backgroundColor: [
+						'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
+					],
+					borderColor: [
+						'#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a', '#fc5a5a',
+					],
+					borderWidth: 1,
+					fill: false
+				}
 				]
 			};
 			var deviceSalesOptions = {
@@ -770,7 +774,7 @@
 							stepSize: 200,
 							fontColor: "#a7afb7",
 							fontSize: 14,
-							callback: function(value, index, values) {
+							callback: function (value, index, values) {
 								return value + 'k';
 							},
 						},
@@ -779,7 +783,7 @@
 				legend: {
 					display: false
 				},
-				legendCallback: function(chart) {
+				legendCallback: function (chart) {
 					var text = [];
 					text.push('<ul class="' + chart.id + '-legend">');
 					for (var i = 0; i < chart.data.datasets.length; i++) {
@@ -811,47 +815,47 @@
 				options: deviceSalesOptions
 			});
 			document.getElementById('device-sales-legend').innerHTML = barChart.generateLegend();
-    }
+		}
 
 		if ($("#account-retension").length) {
 			var accountRetensionData = {
 				labels: ["Jan", "Feb", "Mar", "Apr", "May"],
 				datasets: [{
-						label: 'Demand',
-						data: [33, 48, 39, 36, 36],
-						backgroundColor: [
-							'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
-						],
-						borderColor: [
-							'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
-						],
-						borderWidth: 1,
-						fill: false
-					},
-					{
-						label: 'Demand',
-						data: [94, 28, 49, 25, 20],
-						backgroundColor: [
-							'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
-						],
-						borderColor: [
-							'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
-						],
-						borderWidth: 1,
-						fill: false
-					},
-					{
-						label: 'Demand',
-						data: [66, 33, 25, 36, 69],
-						backgroundColor: [
-							'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
-						],
-						borderColor: [
-							'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
-						],
-						borderWidth: 1,
-						fill: false
-					}
+					label: 'Demand',
+					data: [33, 48, 39, 36, 36],
+					backgroundColor: [
+						'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
+					],
+					borderColor: [
+						'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
+					],
+					borderWidth: 1,
+					fill: false
+				},
+				{
+					label: 'Demand',
+					data: [94, 28, 49, 25, 20],
+					backgroundColor: [
+						'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
+					],
+					borderColor: [
+						'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
+					],
+					borderWidth: 1,
+					fill: false
+				},
+				{
+					label: 'Demand',
+					data: [66, 33, 25, 36, 69],
+					backgroundColor: [
+						'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
+					],
+					borderColor: [
+						'#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8', '#d8d8d8',
+					],
+					borderWidth: 1,
+					fill: false
+				}
 				]
 			};
 			var accountRetensionOptions = {
@@ -891,7 +895,7 @@
 							stepSize: 40,
 							fontColor: "#a7afb7",
 							fontSize: 14,
-							callback: function(value, index, values) {
+							callback: function (value, index, values) {
 								return value + 'k';
 							},
 
@@ -925,37 +929,37 @@
 			var pageiVewAnalyticData = {
 				labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28"],
 				datasets: [{
-						label: 'This week',
-						data: [46, 49, 51, 58, 63.61, 65, 64, 69, 70, 78, 80, 80, 90, 85, 87, 92, 97, 102, 107, 109, 111, 111, 120, 130, 132, 136, 140, 145],
-						backgroundColor: [
-							'rgba(216,247,234, 0.19)',
-						],
-						borderColor: [
-							'#3dd597'
-						],
-						borderWidth: 2,
-						fill: true,
-						pointBorderColor: "#fff",
-						pointBackgroundColor: "#3dd597",
-						pointBorderWidth: 2,
-						pointRadius: 4,
-					},
-					{
-						label: 'Current week',
-						data: [16, 19, 21, 28, 33.31, 35, 34, 39, 40, 48, 50, 50, 51, 55, 57, 62, 67, 69, 68, 70, 72, 75, 74, 80, 79, 80, 84, 90],
-						backgroundColor: [
-							'rgba(216,247,234, 0.19)',
-						],
-						borderColor: [
-							'#3dd597'
-						],
-						borderWidth: 2,
-						fill: false,
-						pointBorderColor: "#fff",
-						pointBackgroundColor: "#0162ff",
-						pointBorderWidth: 2,
-						pointRadius: 4,
-					}
+					label: 'This week',
+					data: [46, 49, 51, 58, 63.61, 65, 64, 69, 70, 78, 80, 80, 90, 85, 87, 92, 97, 102, 107, 109, 111, 111, 120, 130, 132, 136, 140, 145],
+					backgroundColor: [
+						'rgba(216,247,234, 0.19)',
+					],
+					borderColor: [
+						'#3dd597'
+					],
+					borderWidth: 2,
+					fill: true,
+					pointBorderColor: "#fff",
+					pointBackgroundColor: "#3dd597",
+					pointBorderWidth: 2,
+					pointRadius: 4,
+				},
+				{
+					label: 'Current week',
+					data: [16, 19, 21, 28, 33.31, 35, 34, 39, 40, 48, 50, 50, 51, 55, 57, 62, 67, 69, 68, 70, 72, 75, 74, 80, 79, 80, 84, 90],
+					backgroundColor: [
+						'rgba(216,247,234, 0.19)',
+					],
+					borderColor: [
+						'#3dd597'
+					],
+					borderWidth: 2,
+					fill: false,
+					pointBorderColor: "#fff",
+					pointBackgroundColor: "#0162ff",
+					pointBorderWidth: 2,
+					pointRadius: 4,
+				}
 				],
 			};
 			var pageiVewAnalyticOptions = {
@@ -995,7 +999,7 @@
 				legend: {
 					display: false,
 				},
-				legendCallback: function(chart) {
+				legendCallback: function (chart) {
 					var text = [];
 					text.push('<ul class="' + chart.id + '-legend">');
 					for (var i = 0; i < chart.data.datasets.length; i++) {
@@ -1029,42 +1033,42 @@
 			});
 			document.getElementById('pageViewAnalyticLengend').innerHTML = barChart.generateLegend();
 		}
-		
+
 		if ($("#page-view-analytic-rtl").length) {
 			var pageiVewAnalyticData = {
 				labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28"],
 				datasets: [{
-						label: 'هذا الشهر',
-						data: [46, 49, 51, 58, 63.61, 65, 64, 69, 70, 78, 80, 80, 90, 85, 87, 92, 97, 102, 107, 109, 111, 111, 120, 130, 132, 136, 140, 145],
-						backgroundColor: [
-							'rgba(216,247,234, 0.19)',
-						],
-						borderColor: [
-							'#3dd597'
-						],
-						borderWidth: 2,
-						fill: true,
-						pointBorderColor: "#fff",
-						pointBackgroundColor: "#3dd597",
-						pointBorderWidth: 2,
-						pointRadius: 4,
-					},
-					{
-						label: 'الأسبوع الحالي',
-						data: [16, 19, 21, 28, 33.31, 35, 34, 39, 40, 48, 50, 50, 51, 55, 57, 62, 67, 69, 68, 70, 72, 75, 74, 80, 79, 80, 84, 90],
-						backgroundColor: [
-							'rgba(216,247,234, 0.19)',
-						],
-						borderColor: [
-							'#3dd597'
-						],
-						borderWidth: 2,
-						fill: false,
-						pointBorderColor: "#fff",
-						pointBackgroundColor: "#0162ff",
-						pointBorderWidth: 2,
-						pointRadius: 4,
-					}
+					label: 'هذا الشهر',
+					data: [46, 49, 51, 58, 63.61, 65, 64, 69, 70, 78, 80, 80, 90, 85, 87, 92, 97, 102, 107, 109, 111, 111, 120, 130, 132, 136, 140, 145],
+					backgroundColor: [
+						'rgba(216,247,234, 0.19)',
+					],
+					borderColor: [
+						'#3dd597'
+					],
+					borderWidth: 2,
+					fill: true,
+					pointBorderColor: "#fff",
+					pointBackgroundColor: "#3dd597",
+					pointBorderWidth: 2,
+					pointRadius: 4,
+				},
+				{
+					label: 'الأسبوع الحالي',
+					data: [16, 19, 21, 28, 33.31, 35, 34, 39, 40, 48, 50, 50, 51, 55, 57, 62, 67, 69, 68, 70, 72, 75, 74, 80, 79, 80, 84, 90],
+					backgroundColor: [
+						'rgba(216,247,234, 0.19)',
+					],
+					borderColor: [
+						'#3dd597'
+					],
+					borderWidth: 2,
+					fill: false,
+					pointBorderColor: "#fff",
+					pointBackgroundColor: "#0162ff",
+					pointBorderWidth: 2,
+					pointRadius: 4,
+				}
 				],
 			};
 			var pageiVewAnalyticOptions = {
@@ -1104,7 +1108,7 @@
 				legend: {
 					display: false,
 				},
-				legendCallback: function(chart) {
+				legendCallback: function (chart) {
 					var text = [];
 					text.push('<ul class="' + chart.id + '-legend">');
 					for (var i = 0; i < chart.data.datasets.length; i++) {
@@ -1137,8 +1141,8 @@
 				options: pageiVewAnalyticOptions,
 			});
 			document.getElementById('pageViewAnalyticLengend').innerHTML = barChart.generateLegend();
-    }
-    
+		}
+
 		if ($("#page-view-analytic-dark").length) {
 			var graphGradient = document.getElementById("page-view-analytic-dark").getContext('2d');;
 			var saleGradientBg = graphGradient.createLinearGradient(25, 0, 25, 420);
@@ -1147,35 +1151,35 @@
 			var pageiVewAnalyticDarkData = {
 				labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28"],
 				datasets: [{
-						label: 'This week',
-						data: [46, 49, 51, 58, 63.61, 65, 64, 69, 70, 78, 80, 80, 90, 85, 87, 92, 97, 102, 107, 109, 111, 111, 120, 130, 132, 136, 140, 145],
-						backgroundColor: saleGradientBg,
-						borderColor: [
-							'#3dd597'
-						],
-						borderWidth: 2,
-						fill: true,
-						pointBorderColor: "#fff",
-						pointBackgroundColor: "#3dd597",
-						pointBorderWidth: 2,
-						pointRadius: 3,
-					},
-					{
-						label: 'Current week',
-						data: [16, 19, 21, 28, 33.31, 35, 34, 39, 40, 48, 50, 50, 51, 55, 57, 62, 67, 69, 68, 70, 72, 75, 74, 80, 79, 80, 84, 90],
-						backgroundColor: [
-							'rgba(216,247,234, 0.19)',
-						],
-						borderColor: [
-							'#0162ff'
-						],
-						borderWidth: 2,
-						fill: false,
-						pointBorderColor: "#fff",
-						pointBackgroundColor: "#0162ff",
-						pointBorderWidth: 2,
-						pointRadius: 3,
-					}
+					label: 'This week',
+					data: [46, 49, 51, 58, 63.61, 65, 64, 69, 70, 78, 80, 80, 90, 85, 87, 92, 97, 102, 107, 109, 111, 111, 120, 130, 132, 136, 140, 145],
+					backgroundColor: saleGradientBg,
+					borderColor: [
+						'#3dd597'
+					],
+					borderWidth: 2,
+					fill: true,
+					pointBorderColor: "#fff",
+					pointBackgroundColor: "#3dd597",
+					pointBorderWidth: 2,
+					pointRadius: 3,
+				},
+				{
+					label: 'Current week',
+					data: [16, 19, 21, 28, 33.31, 35, 34, 39, 40, 48, 50, 50, 51, 55, 57, 62, 67, 69, 68, 70, 72, 75, 74, 80, 79, 80, 84, 90],
+					backgroundColor: [
+						'rgba(216,247,234, 0.19)',
+					],
+					borderColor: [
+						'#0162ff'
+					],
+					borderWidth: 2,
+					fill: false,
+					pointBorderColor: "#fff",
+					pointBackgroundColor: "#0162ff",
+					pointBorderWidth: 2,
+					pointRadius: 3,
+				}
 				],
 			};
 			var pageiVewAnalyticDarkOptions = {
@@ -1216,7 +1220,7 @@
 				legend: {
 					display: false,
 				},
-				legendCallback: function(chart) {
+				legendCallback: function (chart) {
 					var text = [];
 					text.push('<ul class="' + chart.id + '-legend">');
 					for (var i = 0; i < chart.data.datasets.length; i++) {
@@ -1259,34 +1263,34 @@
 				labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28"],
 				datasets: [{
 					label: 'هذا الشهر',
-						data: [46, 49, 51, 58, 63.61, 65, 64, 69, 70, 78, 80, 80, 90, 85, 87, 92, 97, 102, 107, 109, 111, 111, 120, 130, 132, 136, 140, 145],
-						backgroundColor: saleGradientBg,
-						borderColor: [
-							'#3dd597'
-						],
-						borderWidth: 2,
-						fill: true,
-						pointBorderColor: "#fff",
-						pointBackgroundColor: "#3dd597",
-						pointBorderWidth: 2,
-						pointRadius: 3,
-					},
-					{
-						label: 'الأسبوع الحالي',
-						data: [16, 19, 21, 28, 33.31, 35, 34, 39, 40, 48, 50, 50, 51, 55, 57, 62, 67, 69, 68, 70, 72, 75, 74, 80, 79, 80, 84, 90],
-						backgroundColor: [
-							'rgba(216,247,234, 0.19)',
-						],
-						borderColor: [
-							'#0162ff'
-						],
-						borderWidth: 2,
-						fill: false,
-						pointBorderColor: "#fff",
-						pointBackgroundColor: "#0162ff",
-						pointBorderWidth: 2,
-						pointRadius: 3,
-					}
+					data: [46, 49, 51, 58, 63.61, 65, 64, 69, 70, 78, 80, 80, 90, 85, 87, 92, 97, 102, 107, 109, 111, 111, 120, 130, 132, 136, 140, 145],
+					backgroundColor: saleGradientBg,
+					borderColor: [
+						'#3dd597'
+					],
+					borderWidth: 2,
+					fill: true,
+					pointBorderColor: "#fff",
+					pointBackgroundColor: "#3dd597",
+					pointBorderWidth: 2,
+					pointRadius: 3,
+				},
+				{
+					label: 'الأسبوع الحالي',
+					data: [16, 19, 21, 28, 33.31, 35, 34, 39, 40, 48, 50, 50, 51, 55, 57, 62, 67, 69, 68, 70, 72, 75, 74, 80, 79, 80, 84, 90],
+					backgroundColor: [
+						'rgba(216,247,234, 0.19)',
+					],
+					borderColor: [
+						'#0162ff'
+					],
+					borderWidth: 2,
+					fill: false,
+					pointBorderColor: "#fff",
+					pointBackgroundColor: "#0162ff",
+					pointBorderWidth: 2,
+					pointRadius: 3,
+				}
 				],
 			};
 			var pageiVewAnalyticDarkOptions = {
@@ -1327,7 +1331,7 @@
 				legend: {
 					display: false,
 				},
-				legendCallback: function(chart) {
+				legendCallback: function (chart) {
 					var text = [];
 					text.push('<ul class="' + chart.id + '-legend">');
 					for (var i = 0; i < chart.data.datasets.length; i++) {
@@ -1366,29 +1370,29 @@
 			var myBalanceData = {
 				labels: ["Jan", "Feb", "Mar", "Apr"],
 				datasets: [{
-						label: 'Demand',
-						data: [90, 85, 100, 105],
-						backgroundColor: [
-							'#0062ff', '#0062ff', '#0062ff', '#0062ff',
-						],
-						borderColor: [
-							'#0062ff', '#0062ff', '#0062ff', '#0062ff',
-						],
-						borderWidth: 1,
-						fill: false
-					},
-					{
-						label: 'Supply',
-						data: [200, 200, 200, 200],
-						backgroundColor: [
-							'#eef0fa', '#eef0fa', '#eef0fa', '#eef0fa',
-						],
-						borderColor: [
-							'#eef0fa', '#eef0fa', '#eef0fa', '#eef0fa',
-						],
-						borderWidth: 1,
-						fill: false
-					}
+					label: 'Demand',
+					data: [90, 85, 100, 105],
+					backgroundColor: [
+						'#0062ff', '#0062ff', '#0062ff', '#0062ff',
+					],
+					borderColor: [
+						'#0062ff', '#0062ff', '#0062ff', '#0062ff',
+					],
+					borderWidth: 1,
+					fill: false
+				},
+				{
+					label: 'Supply',
+					data: [200, 200, 200, 200],
+					backgroundColor: [
+						'#eef0fa', '#eef0fa', '#eef0fa', '#eef0fa',
+					],
+					borderColor: [
+						'#eef0fa', '#eef0fa', '#eef0fa', '#eef0fa',
+					],
+					borderWidth: 1,
+					fill: false
+				}
 				]
 			};
 			var myBalanceOptions = {
@@ -1427,7 +1431,7 @@
 							stepSize: 200,
 							fontColor: "#a7afb7",
 							fontSize: 14,
-							callback: function(value, index, values) {
+							callback: function (value, index, values) {
 								return value + 'k';
 							},
 
@@ -1455,35 +1459,35 @@
 				data: myBalanceData,
 				options: myBalanceOptions
 			});
-    }
-    
+		}
+
 		if ($("#my-balance-dark").length) {
 			var myBalanceDarkData = {
 				labels: ["Jan", "Feb", "Mar", "Apr"],
 				datasets: [{
-						label: 'Demand',
-						data: [90, 85, 100, 105],
-						backgroundColor: [
-							'#0062ff', '#0062ff', '#0062ff', '#0062ff',
-						],
-						borderColor: [
-							'#0062ff', '#0062ff', '#0062ff', '#0062ff',
-						],
-						borderWidth: 1,
-						fill: false
-					},
-					{
-						label: 'Supply',
-						data: [200, 200, 200, 200],
-						backgroundColor: [
-							'#2b2b36', '#2b2b36', '#2b2b36', '#2b2b36',
-						],
-						borderColor: [
-							'#2b2b36', '#2b2b36', '#2b2b36', '#2b2b36',
-						],
-						borderWidth: 1,
-						fill: false
-					}
+					label: 'Demand',
+					data: [90, 85, 100, 105],
+					backgroundColor: [
+						'#0062ff', '#0062ff', '#0062ff', '#0062ff',
+					],
+					borderColor: [
+						'#0062ff', '#0062ff', '#0062ff', '#0062ff',
+					],
+					borderWidth: 1,
+					fill: false
+				},
+				{
+					label: 'Supply',
+					data: [200, 200, 200, 200],
+					backgroundColor: [
+						'#2b2b36', '#2b2b36', '#2b2b36', '#2b2b36',
+					],
+					borderColor: [
+						'#2b2b36', '#2b2b36', '#2b2b36', '#2b2b36',
+					],
+					borderWidth: 1,
+					fill: false
+				}
 				]
 			};
 			var myBalanceDarkOptions = {
@@ -1522,7 +1526,7 @@
 							stepSize: 200,
 							fontColor: "#a7afb7",
 							fontSize: 14,
-							callback: function(value, index, values) {
+							callback: function (value, index, values) {
 								return value + 'k';
 							},
 
@@ -1693,8 +1697,8 @@
 				data: prediction1DataDark,
 				options: prediction1OptionsDark,
 			});
-    }
-    
+		}
+
 		if ($("#prediction-2").length) {
 			var graphGradient = document.getElementById("prediction-2").getContext('2d');;
 			var saleGradientBg = graphGradient.createLinearGradient(25, 0, 25, 80);
@@ -1838,8 +1842,8 @@
 				options: prediction2OptionsDark,
 
 			});
-    }
-    
+		}
+
 		if ($("#prediction-3").length) {
 			var graphGradient = document.getElementById("prediction-3").getContext('2d');;
 			var saleGradientBg = graphGradient.createLinearGradient(25, 0, 25, 80);
@@ -1909,7 +1913,7 @@
 				options: prediction1Options,
 			});
 		}
-		
+
 		if ($("#prediction-3-dark").length) {
 			var graphGradient = document.getElementById("prediction-3-dark").getContext('2d');;
 			var saleGradientBg = graphGradient.createLinearGradient(25, 0, 25, 75);
@@ -1978,8 +1982,8 @@
 				data: prediction3DataDark,
 				options: prediction3OptionsDark,
 			});
-    }
-    
+		}
+
 		if ($("#prediction-4").length) {
 			var graphGradient = document.getElementById("prediction-4").getContext('2d');;
 			var saleGradientBg = graphGradient.createLinearGradient(25, 0, 25, 110);
@@ -2117,7 +2121,7 @@
 				data: prediction4DataDark,
 				options: prediction4OptionsDark,
 			});
-    }
-    
+		}
+
 	});
 })(jQuery);

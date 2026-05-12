@@ -1,45 +1,31 @@
 {
-  "name": "Solicitudes Almacen",
-  "short_name": "Solicitudes",
-  "description": "Aplicación para gestión de solicitudes de mezclas y productos",
-  "start_url": "/?source=pwa",
+  "name": "LG Fertilizaciones",
+  "short_name": "LG Fert",
+  "description": "Sistema inteligente de gestión de fertilizaciones agrícolas",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "background_color": "#022c22",
+  "theme_color": "#84cc16",
+  "orientation": "portrait-primary",
   "lang": "es-MX",
-  "theme_color": "#0d6efd",
-  "orientation": "any",
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity",
+    "agriculture"
+  ],
   "icons": [
     {
-      "src": "/images/LogoTransp.webp",
+      "src": "/images/web-app-manifest-192x192.png",
       "sizes": "192x192",
-      "type": "image/webp",
-      "purpose": "any"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/images/LogoTransp.webp",
+      "src": "/images/web-app-manifest-512x512.png",
       "sizes": "512x512",
-      "type": "image/webp",
-      "purpose": "any"
-    },
-    {
-      "src": "/images/LogoTransp.webp",
-      "sizes": "192x192",
-      "type": "image/webp",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/images/LogoTransp.webp",
-      "sizes": "512x512",
-      "type": "image/webp",
-      "purpose": "maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Nueva Solicitud",
-      "url": "/protected/solicitud",
-      "description": "Crear nueva solicitud",
-      "icons": [{ "src": "/images/LogoTransp.webp", "sizes": "96x96" }]
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "screenshots": [
@@ -58,14 +44,5 @@
       "label": "Vista móvil"
     }
   ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "display_override": ["window-controls-overlay"],
-  "handle_links": "preferred",
-  "launch_handler": {
-    "client_mode": ["focus-existing", "auto"]
-  },
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+  "prefer_related_applications": false
 }

@@ -88,7 +88,8 @@ const validateEmailData = (type, data) => {
     cancelacion: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
     aprobada: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
     confirmacionInicial: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
-    devolucion: ['email', 'nombre', 'usuario', 'data']
+    devolucion: ['email', 'nombre', 'usuario', 'data'],
+    reporteMensualFertilizacion: ['email', 'nombre', 'data']
   }
 
   const fields = requiredFields[type] || []
@@ -118,7 +119,6 @@ export const enviarCorreo = async (params) => {
   // Validar datos requeridos según el tipo
   validateEmailData(type, params)
 
-  console.log(data)
   // Configurar mensaje según tipo
   if (!email || !type) {
     throw new ValidationError('Email y tipo de mensaje son requeridos')
@@ -565,6 +565,37 @@ export const enviarCorreo = async (params) => {
         <p>Atentamente,<br>El equipo de Grupo LG</p>
       </div>
     </body>`
+    },
+    reporteMensualFertilizacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Reporte Mensual de Fertilización - ${data.mes || ''}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Reporte Mensual de Fertilización</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Reporte Detallado de Fertilización</h2>
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Rancho:</strong> ${data.rancho}</li>
+              <li><strong>Mes:</strong> ${data.mes}</li>
+              <li><strong>Fecha de Generación:</strong> ${new Date().toLocaleString('es-MX')}</li>
+            </ul>
+          </div>
+
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0; overflow-x: auto;">
+             <!-- El contenido HTML de la tabla se inyecta aquí -->
+             ${data.htmlContent}
+          </div>
+
+          <p style="color: #666; font-size: 0.9em; margin-top: 20px;">
+            Este es un reporte generado automáticamente.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
     }
 
   }

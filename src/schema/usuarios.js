@@ -86,17 +86,6 @@ const usuarioConfig = {
         msg: 'El rancho debe tener entre 0 y 50 caracteres'
       }
     }
-  },
-  variedad: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    defaultValue: 'General',
-    validate: {
-      len: {
-        args: [0, 50],
-        msg: 'La variedad debe tener entre 0 y 50 caracteres'
-      }
-    }
   }
 }
 

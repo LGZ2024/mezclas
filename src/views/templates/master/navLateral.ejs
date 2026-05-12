@@ -2,179 +2,56 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
     <li class="nav-item nav-category">Panel de Administracion</li>
-    <!-- reporte -->
-    <li class="nav-item">
-      <a class="nav-link" href="/protected/admin">
-        <span class="icon-bg"><i class="mdi mdi-file-document menu-icon"></i></span>
-        <span class="menu-title">Reporte Mezclas</span>
-      </a>
-    </li>
-    <!-- Mesclas -->
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="collapse" href="#authSolicitudes" aria-expanded="false"
-        aria-controls="authSolicitudes">
-        <span class="icon-bg"><i class="mdi mdi-file-plus menu-icon"></i></span>
-        <span class="menu-title">Mezclas</span>
-        <i class="menu-arrow"></i>
-      </a>
-      <div class="collapse" id="authSolicitudes">
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/solicitud/confirmacion">
-              <span>
-                Confirmar Solicitudes
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/canceladas">
-              <span>
-                Solicitudes Canceladas
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/registrarSolicitud">
-              <span>
-                Registrar Mezcla
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/solicitud">
-              <span>Realizar Solicitud</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/solicitudes">
-              <span>
-                Solicitudes Pendientes
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/proceso">
-              <span>
-                Solicitudes En Proceso
-              </span>
-            </a>
-          </li>
-          <li class="nav-item"> <a class="nav-link" href="/protected/completadas">
-              <span>
-                Solicitudes Completadas
-            </a>
-          </li>
-        </ul>
-      </div>
-    </li>
-    <!-- Combustibles -->
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="collapse" href="#authCombustible" aria-expanded="false"
-        aria-controls="authCombustible">
-        <span class="icon-bg"><i class="mdi mdi-gas-station menu-icon"></i></span>
-        <span class="menu-title">Combustibles</span>
-        <i class="menu-arrow"></i>
-      </a>
-      <div class="collapse" id="authCombustible">
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/entradaCombustible">
-              <span>
-                Agregar Combustible
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/salidaCombustible">
-              <span>
-                Registrar Salida
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/cargaCombustible">
-              <span>
-                Registrar Carga
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/combustiblesEntrada">
-              <span>
-                Entradas De Combustible
-              </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/combustiblesSalida">
-              <span>
-                Salidas De Combustible
-              </span>
-            </a>
-          </li>
 
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/combustiblesCargas">
-              <span>
-                Cargas De Combustible
-              </span>
-            </a>
-          </li>
-          <li class="nav-item"> <a class="nav-link" href="/protected/inventario">
-              <span>
-                Inventario De Combustible
-            </a>
-          </li>
-        </ul>
-      </div>
-    </li>
-    <!-- Activos Fijos-->
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="collapse" href="#authActivos" aria-expanded="false" aria-controls="authActivos">
-        <span class="icon-bg"><i class="mmdi mdi-laptop menu-icon"></i></span>
-        <span class="menu-title">Activos Fijos</span>
+
+
+    <!-- Fertilización -->
+    <li class="nav-item" id="modulo_fertilizacion" style="display: none;">
+      <a class="nav-link" data-toggle="collapse" href="#authFertilizacion" aria-expanded="false"
+        aria-controls="authFertilizacion">
+        <span class="icon-bg"><i class="mdi mdi-leaf menu-icon"></i></span>
+        <span class="menu-title">Fertilización</span>
         <i class="menu-arrow"></i>
       </a>
-      <div class="collapse" id="authActivos">
+      <div class="collapse" id="authFertilizacion">
         <ul class="nav flex-column sub-menu">
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/FijosActivos">
+          <li class="nav-item" id="modulo_mezclas" style="display: none;">
+            <a class="nav-link" href="/api/fertilizacion/mezclas">
               <span>
-                Equipos
+                Catálogo de Mezclas
               </span>
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/asignaciones">
+          <li class="nav-item" id="modulo_preparar_tanque" style="display: none;">
+            <a class="nav-link" href="/api/fertilizacion/preparar-tanque">
               <span>
-                Asignaciones Activas
+                Preparar Tanque
               </span>
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/bajas">
+          <li class="nav-item" id="modulo_registrar_aplicacion" style="display: none;">
+            <a class="nav-link" href="/api/fertilizacion/nueva-estructura/registro">
               <span>
-                Equipos Baja
+                Registrar Aplicación
               </span>
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/historialA">
+          <li class="nav-item" id="modulo_reportes" style="display: none;">
+            <a class="nav-link" href="/api/fertilizacion/nueva-estructura/reportes">
               <span>
-                Historial De Asignaciones
+                Reportes y Gráficas
               </span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/protected/historialE">
-              <span>Historial Activos Fijos</span>
             </a>
           </li>
         </ul>
+
       </div>
     </li>
+
+
+
     <!-- Catálogos Corporativos -->
-    <li class="nav-item">
+    <li class="nav-item" id="modulo_catalogos_corporativos" style="display: none;">
       <a class="nav-link" data-toggle="collapse" href="#authCatalogo" aria-expanded="false"
         aria-controls="authCatalogo">
         <span class="icon-bg"><i class="mdi mdi-factory menu-icon"></i></span>
@@ -183,52 +60,39 @@
       </a>
       <div class="collapse" id="authCatalogo">
         <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="/protected/empleadosU">Empleados</a>
+          <li class="nav-item" id="modulo_empresas" style="display: none;">
+            <a class="nav-link" href="/corporativo/empresas">Empresas</a>
           </li>
-          <li class="nav-item"> <a class="nav-link" href="/protected/productos">Productos</a>
+          <li class="nav-item" id="modulo_ranchos" style="display: none;">
+            <a class="nav-link" href="/corporativo/ranchos">Ranchos</a>
           </li>
-          <li class="nav-item"> <a class="nav-link" href="/protected/centroCoste">Centros de Coste</a>
+          <li class="nav-item" id="modulo_rancho_dsa" style="display: none;">
+            <a class="nav-link" href="/corporativo/rancho-dsa">Rancho DSA</a>
           </li>
-          <li class="nav-item"> <a class="nav-link" href="/protected/empresas">Empresas</a>
+          <li class="nav-item" id="modulo_sectores" style="display: none;">
+            <a class="nav-link" href="/corporativo/sectores">Sectores</a>
           </li>
-          <li class="nav-item"> <a class="nav-link" href="/protected/departamentos">Departamentos</a></li>
-          <li class="nav-item"> <a class="nav-link" href="/protected/ranchos">Ranchos</a></li>
-        </ul>
-      </div>
-    </li>
-    <!-- Catálogos Corporativos -->
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="collapse" href="#authGrafica" aria-expanded="false" aria-controls="authGrafica">
-        <span class="icon-bg"><i class="mdi mdi-chart-arc menu-icon"></i></span>
-        <span class="menu-title">Graficas</span>
-        <i class="menu-arrow"></i>
-      </a>
-      <div class="collapse" id="authGrafica">
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="/protected/grafica/entradas">Ingresos de Combustible</a> </li>
-        </ul>
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="/protected/grafica/salidas">Salidas de Combustible</a> </li>
-        </ul>
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="/protected/grafica/cargas">Cargas de Combustible</a> </li>
-        </ul>
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="/protected/grafica/activos">Activos Fijos</a> </li>
+          <li class="nav-item" id="modulo_tanques" style="display: none;">
+            <a class="nav-link" href="/corporativo/tanques">Tanques</a>
+          </li>
+          <li class="nav-item" id="modulo_activos" style="display: none;">
+            <a class="nav-link" href="/corporativo/activos-mezcla">Activos</a>
+          </li>
         </ul>
       </div>
     </li>
 
+
     <li class="nav-item sidebar-user-actions">
       <div class="sidebar-user-menu">
-        <a href="#" class="nav-link"><i class="mdi mdi-settings menu-icon"></i>
+        <a href="" class="nav-link"><i class="mdi mdi-settings menu-icon"></i>
           <span class="menu-title">Configuraciones</span>
         </a>
       </div>
     </li>
     <li class="nav-item sidebar-user-actions">
       <div class="sidebar-user-menu">
-        <a href="/protected/cerrarSesion" class="nav-link"><i class="mdi mdi-logout menu-icon"></i>
+        <a href="/api/usuario/logout" class="nav-link"><i class="mdi mdi-logout menu-icon"></i>
           <span class="menu-title">Cerrar Sesion</span></a>
       </div>
     </li>
@@ -242,5 +106,3 @@
     <p class="spinner-text">Procesando...</p>
   </div>
 </div>
-<input type="hidden" name="rol" id="rol" value="<%= user.rol %>">
-<input type="hidden" name="id" id="id">

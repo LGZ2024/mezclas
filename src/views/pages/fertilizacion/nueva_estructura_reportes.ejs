@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/master/cabecera") %>
+            <link rel="stylesheet" href="/css/dashboard.css">
+            <style>
+                /* Mejora visual general */
+                body {
+                    background-color: #f3f4f7;
+                }
+
+                .page-header {
+                    margin-bottom: 1.5rem;
+                }
+
+                .card {
+                    border: none;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+                    transition: transform 0.2s;
+                }
+
+                .stat-box {
+                    background: #fff;
+                    padding: 24px;
+                    border-radius: 12px;
+                    margin-bottom: 20px;
+                    position: relative;
+                    overflow: hidden;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+                    transition: all 0.3s ease;
+                    border: 1px solid rgba(0, 0, 0, 0.05);
+                }
+
+                .stat-box:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+                }
+
+                .stat-box i {
+                    font-size: 32px;
+                    position: absolute;
+                    right: 20px;
+                    top: 20px;
+                    opacity: 0.15;
+                    transform: rotate(-15deg);
+                }
+
+                .stat-box h5 {
+                    font-size: 13px;
+                    color: #6c757d;
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .stat-box h2 {
+                    font-size: 28px;
+                    font-weight: 700;
+                    color: #2c3e50;
+                    margin-bottom: 4px;
+                }
+
+                /* Colores específicos para KPIs */
+                .stat-box.blue {
+                    border-left: 4px solid #3498db;
+                }
+
+                .stat-box.green {
+                    border-left: 4px solid #2ecc71;
+                }
+
+                .stat-box.orange {
+                    border-left: 4px solid #f39c12;
+                }
+
+                .stat-box.red {
+                    border-left: 4px solid #e74c3c;
+                }
+
+                .stat-box.purple {
+                    border-left: 4px solid #9b59b6;
+                }
+
+                .filter-section {
+                    background: rgba(255, 255, 255, 0.7);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    padding: 25px;
+                    border-radius: 16px;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+                    margin-bottom: 30px;
+                }
+
+                .form-control-custom {
+                    background: rgba(248, 249, 250, 0.8);
+                    border: 1.5px solid #edf2f7;
+                    border-radius: 8px;
+                    font-size: 0.75rem;
+                    color: #2d3748;
+                    transition: all 0.3s ease;
+                    height: 40px;
+                    padding: 0 4px;
+                    min-width: 40px;
+                }
+
+                .form-control-custom:focus {
+                    background: #fff;
+                    border-color: #3182ce;
+                    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+                    outline: 0;
+                }
+
+                .filter-label {
+                    font-weight: 600;
+                    color: #4a5568;
+                    margin-bottom: 0.5rem;
+                    display: block;
+                    letter-spacing: 0.025em;
+                }
+
+                .btn-group-filters {
+                    display: flex;
+                    gap: 4px;
+                    align-items: center;
+                    padding-top: 24px;
+                }
+
+                .btn-filtrar {
+                    background: linear-gradient(135deg, #3182ce, #2b6cb0);
+                    border: none;
+                    color: #fff !important;
+                    font-weight: 700;
+                    border-radius: 8px;
+                    padding: 0 10px;
+                    height: 40px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 0 4px 6px -1px rgba(49, 130, 206, 0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    white-space: nowrap;
+                    font-size: 0.82rem;
+                    flex-shrink: 0;
+                }
+
+                .btn-filtrar:hover {
+                    background: linear-gradient(135deg, #2b6cb0, #2c5282);
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 15px -3px rgba(49, 130, 206, 0.3);
+                }
+
+                .btn-action-custom {
+                    width: 40px;
+                    min-width: 40px;
+                    height: 40px;
+                    padding: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 8px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 1.5px solid transparent;
+                    font-size: 1.1rem;
+                    flex-shrink: 0;
+                }
+
+                .btn-limpiar {
+                    background: #fff;
+                    border-color: #e2e8f0;
+                    color: #4a5568 !important;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                }
+
+                .btn-limpiar:hover {
+                    background: #f7fafc;
+                    border-color: #cbd5e0;
+                    color: #2d3748 !important;
+                    transform: rotate(15deg);
+                }
+
+                .btn-exportar {
+                    background: linear-gradient(135deg, #48bb78, #38a169);
+                    color: #fff !important;
+                    box-shadow: 0 4px 6px -1px rgba(72, 187, 120, 0.2);
+                }
+
+                .btn-exportar:hover:not(:disabled) {
+                    background: linear-gradient(135deg, #38a169, #2f855a);
+                    transform: scale(1.08);
+                    box-shadow: 0 10px 15px -3px rgba(72, 187, 120, 0.3);
+                }
+
+                .btn-reporte {
+                    background: linear-gradient(135deg, #9f7aea, #805ad5);
+                    color: #fff !important;
+                    box-shadow: 0 4px 6px -1px rgba(159, 122, 234, 0.2);
+                }
+
+                .btn-reporte:hover:not(:disabled) {
+                    background: linear-gradient(135deg, #805ad5, #6b46c1);
+                    transform: scale(1.08);
+                    box-shadow: 0 10px 15px -3px rgba(159, 122, 234, 0.3);
+                }
+
+                .btn-action-custom:disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                    background: #f8fafc !important;
+                    border-color: #edf2f7;
+                    color: #cbd5e0 !important;
+                    box-shadow: none;
+                    transform: none !important;
+                }
+            </style>
+</head>
+
+<body>
+    <div class="container-scroller">
+        <%- include("../../templates/master/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <%- include("../../templates/master/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="page-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h3 class="page-title display-4"
+                                        style="font-size: 1.5rem; font-weight: 700; color: #34495e;">
+                                        <i class="mdi mdi-chart-box-outline mr-2 text-primary"></i>
+                                        Tablero de Control de Fertilización
+                                    </h3>
+                                    <nav aria-label="breadcrumb">
+                                        <ol class="breadcrumb border-0 p-0 bg-transparent mt-2">
+                                            <li class="breadcrumb-item"><a href="/protected/fertilizacion/graficas"
+                                                    class="text-muted">Inicio</a></li>
+                                            <li class="breadcrumb-item active text-primary" aria-current="page">Reportes
+                                                Detallados</li>
+                                        </ol>
+                                    </nav>
+                                </div>
+                            </div>
+
+                            <!-- FILTROS -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="filter-section">
+                                        <h5 class="mb-4"><i class="mdi mdi-filter-variant mr-1"></i> Filtros de Búsqueda
+                                        </h5>
+                                        <div class="row">
+                                            <form id="formFiltros" class="w-100 d-flex flex-wrap">
+                                                <div class="col-md-1 mb-3">
+                                                    <label for="filtro_anio" class="filter-label small">Año</label>
+                                                    <select id="filtro_anio" name="anio"
+                                                        class="form-control-custom w-100">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 mb-3">
+                                                    <label for="filtro_mes" class="filter-label small">Mes</label>
+                                                    <select id="filtro_mes" name="mes"
+                                                        class="form-control-custom w-100">
+                                                        <option value="">Todos</option>
+                                                        <option value="1">Enero</option>
+                                                        <option value="2">Febrero</option>
+                                                        <option value="3">Marzo</option>
+                                                        <option value="4">Abril</option>
+                                                        <option value="5">Mayo</option>
+                                                        <option value="6">Junio</option>
+                                                        <option value="7">Julio</option>
+                                                        <option value="8">Agosto</option>
+                                                        <option value="9">Septiembre</option>
+                                                        <option value="10">Octubre</option>
+                                                        <option value="11">Noviembre</option>
+                                                        <option value="12">Diciembre</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 mb-3">
+                                                    <label for="filtro_temporada"
+                                                        class="filter-label small">Temporada</label>
+                                                    <select id="filtro_temporada" name="temporada"
+                                                        class="form-control-custom w-100">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2 mb-3">
+                                                    <label for="filtro_rancho_dsa" class="filter-label small">Rancho
+                                                        DSA</label>
+                                                    <select id="filtro_rancho_dsa" name="id_rancho_dsa"
+                                                        class="form-control-custom w-100">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-1 mb-3">
+                                                    <label for="filtro_sector" class="filter-label small">Sector</label>
+                                                    <select id="filtro_sector" name="id_sector"
+                                                        class="form-control-custom w-100">
+                                                        <option value="">Todos</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 mb-3 btn-group-filters">
+                                                    <button type="submit" id="btnFiltrar" class="btn btn-filtrar">
+                                                        <i class="mdi mdi-magnify mr-1"></i> Consultar
+                                                    </button>
+                                                    <button type="button" id="btnLimpiar"
+                                                        class="btn btn-limpiar btn-action-custom"
+                                                        title="Limpiar Filtros">
+                                                        <i class="mdi mdi-refresh"></i>
+                                                    </button>
+                                                    <button type="button" id="btnReporte"
+                                                        class="btn btn-reporte btn-action-custom" title="Ver Reporte"
+                                                        disabled>
+                                                        <i class="mdi mdi-file-document-outline"></i>
+                                                    </button>
+                                                    <button type="button" id="btnExportar"
+                                                        class="btn btn-exportar btn-action-custom"
+                                                        title="Exportar Excel" disabled>
+                                                        <i class="mdi mdi-file-excel"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ESTADÍSTICAS PRINCIPALES -->
+                            <div class="row mb-4" id="estadisticasRow" style="display:none;">
+                                <div class="col-xl-2 col-md-4 col-sm-6">
+                                    <div class="stat-box blue">
+                                        <i class="mdi mdi-format-list-numbered text-primary"></i>
+                                        <h5>Eventos</h5>
+                                        <h2 id="totalEventos">0</h2>
+                                        <small class="text-muted">Fertilizaciones</small>
+                                    </div>
+                                </div>
+                                <div class="col-xl-2 col-md-4 col-sm-6">
+                                    <div class="stat-box green">
+                                        <i class="mdi mdi-water text-success"></i>
+                                        <h5>Litros</h5>
+                                        <h2 id="totalLitros">0</h2>
+                                        <small class="text-muted">Mezcla Total</small>
+                                    </div>
+                                </div>
+                                <div class="col-xl-2 col-md-4 col-sm-6">
+                                    <div class="stat-box orange">
+                                        <i class="mdi mdi-barrel text-warning"></i>
+                                        <h5>Tanques</h5>
+                                        <h2 id="totalTanques">0</h2>
+                                        <small class="text-muted">Preparados</small>
+                                    </div>
+                                </div>
+                                <div class="col-xl-2 col-md-4 col-sm-6">
+                                    <div class="stat-box red">
+                                        <i class="mdi mdi-ruler-square text-danger"></i>
+                                        <h5>Hectáreas</h5>
+                                        <h2 id="totalHectareas">0</h2>
+                                        <small class="text-muted">Superficie</small>
+                                    </div>
+                                </div>
+                                <div class="col-xl-4 col-md-8 col-sm-12">
+                                    <div class="stat-box purple d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5>Total NPK (kg)</h5>
+                                            <div class="d-flex mt-2">
+                                                <div class="mr-4">
+                                                    <span class="text-primary font-weight-bold">N:</span>
+                                                    <span id="totalN" class="font-weight-bold h5 mb-0">0</span>
+                                                </div>
+                                                <div class="mr-4">
+                                                    <span class="text-success font-weight-bold">P:</span>
+                                                    <span id="totalP" class="font-weight-bold h5 mb-0">0</span>
+                                                </div>
+                                                <div>
+                                                    <span class="text-warning font-weight-bold">K:</span>
+                                                    <span id="totalK" class="font-weight-bold h5 mb-0">0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <i class="mdi mdi-chart-pie text-purple" style="opacity: 0.2"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- GRÁFICAS Y TABLAS DE DESGLOSE -->
+                            <div class="row mb-5" id="graficas_tablas" style="display:none;">
+                                <!-- NPK por Rancho -->
+                                <div class="col-lg-4 d-flex">
+                                    <div class="card w-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h4 class="card-title mb-0">NPK por Rancho DSA</h4>
+                                                <span class="badge badge-outline-primary badge-pill">Kg</span>
+                                            </div>
+                                            <div class="chart-container-wrapper">
+                                                <canvas id="chartRancho"></canvas>
+                                            </div>
+                                            <div class="table-responsive mt-3"
+                                                style="max-height: 200px; overflow-y: auto;">
+                                                <table class="table table-hover table-sm" id="tableRancho">
+                                                    <thead
+                                                        style="position: sticky; top: 0; background: #fff; z-index: 10;">
+                                                        <tr>
+                                                            <th>Rancho DSA</th>
+                                                            <th class="text-right">N</th>
+                                                            <th class="text-right">P</th>
+                                                            <th class="text-right">K</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="bodyNpkRancho"></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- NPK por Variedad -->
+                                <div class="col-lg-4 d-flex">
+                                    <div class="card w-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h4 class="card-title mb-0">NPK por Variedad</h4>
+                                                <span class="badge badge-outline-success badge-pill">Kg</span>
+                                            </div>
+                                            <div class="chart-container-wrapper">
+                                                <canvas id="chartVariedad"></canvas>
+                                            </div>
+                                            <div class="table-responsive mt-3"
+                                                style="max-height: 200px; overflow-y: auto;">
+                                                <table class="table table-hover table-sm" id="tableVariedad">
+                                                    <thead
+                                                        style="position: sticky; top: 0; background: #fff; z-index: 10;">
+                                                        <tr>
+                                                            <th>Variedad</th>
+                                                            <th class="text-right">N</th>
+                                                            <th class="text-right">P</th>
+                                                            <th class="text-right">K</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="bodyNpkVariedad"></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- NPK por Sector (Top 10) -->
+                                <div class="col-lg-4 d-flex">
+                                    <div class="card w-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h4 class="card-title mb-0">NPK por Sector</h4>
+                                                <span class="badge badge-outline-warning badge-pill">Top 10</span>
+                                            </div>
+                                            <div class="chart-container-wrapper">
+                                                <canvas id="chartSector"></canvas>
+                                            </div>
+                                            <div class="table-responsive mt-3"
+                                                style="max-height: 200px; overflow-y: auto;">
+                                                <table class="table table-hover table-sm" id="tableSector">
+                                                    <thead
+                                                        style="position: sticky; top: 0; background: #fff; z-index: 10;">
+                                                        <tr>
+                                                            <th>Sector</th>
+                                                            <th class="text-right">N</th>
+                                                            <th class="text-right">P</th>
+                                                            <th class="text-right">K</th>
+                                                            <th class="text-right text-info">N/ha</th>
+                                                            <th class="text-right text-info">P/ha</th>
+                                                            <th class="text-right text-info">K/ha</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="bodyNpkSector"></tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Fertilizacion NPK</h4>
+                                            <div class="table-responsive w-100">
+                                                <table class="table table-striped table-bordered w-100 display nowrap "
+                                                    style="width: 100%;" id="tbFertilizacionNPK">
+                                                    <thead>
+                                                        <tr>
+                                                            <th> id# </th>
+                                                            <th> fecha</th>
+                                                            <th> Razon Social</th>
+                                                            <th> Rancho</th>
+                                                            <th> Sector Interno</th>
+                                                            <th> Variedad</th>
+                                                            <th> Hectáreas</th>
+                                                            <th> Tanques Utilizados</th>
+                                                            <th> Litros Aplicados</th>
+                                                            <th> N (Kg)</th>
+                                                            <th> P (Kg)</th>
+                                                            <th> K (Kg)</th>
+                                                            <th> N (Kg/Ha)</th>
+                                                            <th> P (Kg/Ha)</th>
+                                                            <th> K (Kg/Ha)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <%- include("../../templates/master/footer") %>
+                    </div>
+            </div>
+    </div>
+
+    <%- include("../../templates/master/scripts") %>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+        <script src="/js/xlsx.full.min.js"></script>
+
+
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+        <script src="/js/date-fns-fixed.js"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+        <script type="module" src="/app/Fertilizacion/dashboard_reportes.js"></script>
+
+</body>
+
+</html>

@@ -11,7 +11,7 @@ class PWAManager {
 
     try {
       const registration = await navigator.serviceWorker.register('/service-worker.js')
-      console.log('✅ Service Worker registrado:', registration.scope)
+      // Service Worker registrado
       this.handleServiceWorkerUpdates(registration)
       this.setupPeriodicUpdates(registration)
     } catch (error) {
@@ -65,7 +65,8 @@ class PWAManager {
     try {
       this.deferredPrompt.prompt()
       const { outcome } = await this.deferredPrompt.userChoice
-      console.log(`Usuario ${outcome === 'accepted' ? 'aceptó' : 'rechazó'} la instalación`)
+      // Usuario aceptó o rechazó la instalación
+      // Usar el outcome si es necesario para lógica futura
     } catch (error) {
       console.error('Error durante la instalación:', error)
     } finally {
@@ -77,7 +78,7 @@ class PWAManager {
   }
 
   handleAppInstalled () {
-    console.log('✅ PWA instalada exitosamente')
+    // PWA instalada exitosamente
     if (this.installButton) {
       this.installButton.style.display = 'none'
     }
@@ -105,7 +106,7 @@ class PWAManager {
 
   showUpdateNotification () {
     // Implementar lógica de notificación de actualización
-    console.log('🔄 Nueva actualización disponible')
+    // Nueva actualización disponible
   }
 
   async sharePwa () {

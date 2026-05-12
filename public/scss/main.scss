@@ -1,0 +1,73 @@
+// =============================================================================
+// MAIN SCSS - Compilación del Design System
+// Manteniendo tu estética pero con sistema profesional
+// =============================================================================
+
+// 1. IMPORTACIONES DE FRAMEWORKS
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/mixins";
+
+// 2. VARIABLES PERSONALIZADAS (sobrescriben Bootstrap)
+@import "variables";
+
+// 3. BOOTSTRAP COMPONENTS (selectivos para reducir bundle)
+@import "~bootstrap/scss/utilities";
+@import "~bootstrap/scss/reboot";
+@import "~bootstrap/scss/type";
+@import "~bootstrap/scss/images";
+@import "~bootstrap/scss/containers";
+@import "~bootstrap/scss/grid";
+@import "~bootstrap/scss/tables";
+@import "~bootstrap/scss/forms";
+@import "~bootstrap/scss/buttons";
+@import "~bootstrap/scss/transitions";
+@import "~bootstrap/scss/dropdown";
+@import "~bootstrap/scss/button-group";
+@import "~bootstrap/scss/nav";
+@import "~bootstrap/scss/navbar";
+@import "~bootstrap/scss/card";
+@import "~bootstrap/scss/accordion";
+@import "~bootstrap/scss/breadcrumb";
+@import "~bootstrap/scss/pagination";
+@import "~bootstrap/scss/badge";
+@import "~bootstrap/scss/alert";
+@import "~bootstrap/scss/progress";
+@import "~bootstrap/scss/list-group";
+@import "~bootstrap/scss/close";
+@import "~bootstrap/scss/toasts";
+@import "~bootstrap/scss/modal";
+@import "~bootstrap/scss/tooltip";
+@import "~bootstrap/scss/popover";
+@import "~bootstrap/scss/carousel";
+@import "~bootstrap/scss/spinners";
+@import "~bootstrap/scss/offcanvas";
+@import "~bootstrap/scss/placeholders";
+@import "~bootstrap/scss/helpers";
+
+// 4. DARK MODE
+@import "dark-mode";
+
+// 5. UTILIDADES PERSONALIZADAS
+@import "utilities";
+
+// 6. COMPONENTES PERSONALIZADOS
+@import "components/navbar-custom";
+@import "components/sidebar-custom";
+@import "components/cards-custom";
+@import "components/datatables-custom";
+@import "components/forms-custom";
+@import "components/modals-custom";
+
+// 7. PWA COMPONENTS
+@import "pwa/install-button";
+@import "pwa/connection-status";
+@import "pwa/offline-indicator";
+
+// 8. PRINT STYLES
+@media print {
+  @import "print";
+}
+
+// 9. UTILIDADES DE BOOTSTRAP
+@import "~bootstrap/scss/utilities/api";

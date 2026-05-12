@@ -1,4 +1,4 @@
-import { sequelize } from '../config/database.js'
+import sequelize from '../db/db.js'
 import { enrichError, handleDatabaseError } from '../utils/errorHandlers.js'
 import { CircuitBreaker, retryOperation } from '../utils/retryOperation.js'
 import logger from '../utils/logger.js'

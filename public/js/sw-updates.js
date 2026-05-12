@@ -1,4 +1,4 @@
-class ServiceWorkerUpdater {
+export class ServiceWorkerUpdater {
   constructor () {
     this.notificationTimeout = 5000 // 5 segundos para auto-ocultar
     this.registerMessageListener()
@@ -22,7 +22,7 @@ class ServiceWorkerUpdater {
 
   registerMessageListener () {
     if (!navigator.serviceWorker) {
-      console.warn('Service Worker no soportado')
+      // Service Worker no soportado
       return
     }
 

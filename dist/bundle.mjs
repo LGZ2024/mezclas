@@ -1,902 +1,7185 @@
-/*
- * ATTENTION: The "eval" devtool has been used (maybe by default in mode: "development").
- * This devtool is neither made for production nor for readable output files.
- * It uses "eval()" calls to create a separate source file in the browser devtools.
- * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
- * or disable the default devtool with "devtool: false".
- * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
- */
-import * as __WEBPACK_EXTERNAL_MODULE_uuid__ from "uuid";
-import * as __WEBPACK_EXTERNAL_MODULE_chalk__ from "chalk";
+import { createRequire as __WEBPACK_EXTERNAL_createRequire } from "node:module";
 import * as __WEBPACK_EXTERNAL_MODULE_compression__ from "compression";
 import * as __WEBPACK_EXTERNAL_MODULE_exceljs__ from "exceljs";
 import * as __WEBPACK_EXTERNAL_MODULE_body_parser_496b7721__ from "body-parser";
-import * as __WEBPACK_EXTERNAL_MODULE_express_fileupload_7aacc68d__ from "express-fileupload";
-import { createRequire as __WEBPACK_EXTERNAL_createRequire } from "node:module";
+import * as __WEBPACK_EXTERNAL_MODULE_cors__ from "cors";
 import * as __WEBPACK_EXTERNAL_MODULE_express__ from "express";
+import * as __WEBPACK_EXTERNAL_MODULE_winston__ from "winston";
+import * as __WEBPACK_EXTERNAL_MODULE_winston_daily_rotate_file_69928d76__ from "winston-daily-rotate-file";
+import * as __WEBPACK_EXTERNAL_MODULE_chalk__ from "chalk";
 import * as __WEBPACK_EXTERNAL_MODULE_bcryptjs__ from "bcryptjs";
 import * as __WEBPACK_EXTERNAL_MODULE_swagger_ui_express_613ebf08__ from "swagger-ui-express";
-import * as __WEBPACK_EXTERNAL_MODULE_winston_daily_rotate_file_69928d76__ from "winston-daily-rotate-file";
 import * as __WEBPACK_EXTERNAL_MODULE_cookie_parser_591162dd__ from "cookie-parser";
-import * as __WEBPACK_EXTERNAL_MODULE_date_fns_f4130be9__ from "date-fns";
 import * as __WEBPACK_EXTERNAL_MODULE_nodemailer__ from "nodemailer";
-import * as __WEBPACK_EXTERNAL_MODULE_cors__ from "cors";
 import * as __WEBPACK_EXTERNAL_MODULE_dotenv__ from "dotenv";
+import * as __WEBPACK_EXTERNAL_MODULE_swagger_jsdoc_4cc0b3b9__ from "swagger-jsdoc";
 import * as __WEBPACK_EXTERNAL_MODULE_helmet__ from "helmet";
 import * as __WEBPACK_EXTERNAL_MODULE_sequelize__ from "sequelize";
 import * as __WEBPACK_EXTERNAL_MODULE_jsonwebtoken__ from "jsonwebtoken";
-import * as __WEBPACK_EXTERNAL_MODULE_swagger_jsdoc_4cc0b3b9__ from "swagger-jsdoc";
-import * as __WEBPACK_EXTERNAL_MODULE_winston__ from "winston";
 import * as __WEBPACK_EXTERNAL_MODULE_express_rate_limit_c965cf1c__ from "express-rate-limit";
 /******/ var __webpack_modules__ = ({
 
-/***/ 37:
-/*!***********************!*\
-  !*** external "uuid" ***!
-  \***********************/
-/***/ ((module) => {
+/***/ 43:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_uuid__;
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Y: () => (/* binding */ withDatabaseQuery),
+/* harmony export */   r: () => (/* binding */ withTransaction)
+/* harmony export */ });
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9815);
+/* harmony import */ var _utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6963);
+/* harmony import */ var _utils_retryOperation_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(6717);
+/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(3014);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_0__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+
+
+// Circuit breaker compartido para operaciones de base de datos
+const dbCircuitBreaker = new _utils_retryOperation_js__WEBPACK_IMPORTED_MODULE_2__/* .CircuitBreaker */ .aG({
+  failureThreshold: 5,
+  resetTimeout: 60000
+});
+
+// Opciones por defecto para retry
+const defaultRetryOptions = {
+  maxRetries: 3,
+  baseDelay: 1000,
+  circuitBreaker: dbCircuitBreaker
+};
+
+/**
+ * Ejecuta una operación dentro de una transacción con retry y circuit breaker
+ * @param {Function} operation - Función que recibe la transacción como parámetro
+ * @param {Object} context - Contexto de la operación para logs y errores
+ * @param {Object} options - Opciones de retry y circuit breaker
+ */
+const withTransaction = async (operation, context = {}, options = {}) => {
+  const retryOpts = {
+    ...defaultRetryOptions,
+    ...options
+  };
+  const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A.transaction();
+  try {
+    const result = await (0,_utils_retryOperation_js__WEBPACK_IMPORTED_MODULE_2__/* .retryOperation */ .Uq)(async () => operation(transaction), {
+      ...context,
+      transactionId: transaction.id
+    }, retryOpts);
+    await transaction.commit();
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A.info('Transacción completada exitosamente', {
+      ...context,
+      transactionId: transaction.id
+    });
+    return result;
+  } catch (error) {
+    await transaction.rollback();
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A.error('Error en transacción - rollback ejecutado', {
+      ...context,
+      transactionId: transaction.id,
+      error: {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      }
+    });
+    throw (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_1__/* .enrichError */ .eX)(error, {
+      ...context,
+      transactionId: transaction.id,
+      rolledBack: true
+    });
+  }
+};
+
+/**
+ * Ejecuta una consulta de base de datos con retry y circuit breaker
+ * @param {Function} query - Función que ejecuta la consulta
+ * @param {Object} context - Contexto de la operación
+ * @param {Object} options - Opciones de retry y circuit breaker
+ */
+const withDatabaseQuery = async (query, context = {}, options = {}) => {
+  const retryOpts = {
+    ...defaultRetryOptions,
+    ...options
+  };
+  try {
+    return await (0,_utils_retryOperation_js__WEBPACK_IMPORTED_MODULE_2__/* .retryOperation */ .Uq)(query, context, retryOpts);
+  } catch (error) {
+    throw (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_1__/* .handleDatabaseError */ .ie)(error, context.operation || 'QUERY', context);
+  }
+};
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
-/***/ 169:
-/*!************************!*\
-  !*** external "chalk" ***!
-  \************************/
-/***/ ((module) => {
+/***/ 245:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_chalk__;
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  f: () => (/* binding */ paths)
+});
+
+;// external "url"
+const external_url_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("url");
+// EXTERNAL MODULE: external "path"
+var external_path_ = __webpack_require__(6928);
+;// ./src/config/paths.js
+
+
+const paths_filename = (0,external_url_namespaceObject.fileURLToPath)("file:///C:/Users/ZARAGOZA051/Desktop/FERILIZACION/src/config/paths.js");
+const paths_dirname = (0,external_path_.dirname)(paths_filename);
+const paths = {
+  root: (0,external_path_.join)(paths_dirname, '..'),
+  views: (0,external_path_.join)(paths_dirname, '..', 'views'),
+  public: (0,external_path_.join)(paths_dirname, '..', '..', 'public'),
+  uploads: (0,external_path_.join)(paths_dirname, '..', 'uploads')
+};
 
 /***/ }),
 
 /***/ 702:
-/*!***************************************************!*\
-  !*** ./src/middlewares/validateJsonMiddleware.js ***!
-  \***************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   validateJSON: () => (/* binding */ validateJSON)\n/* harmony export */ });\nconst validateJSON = async (err, req, res, next) => {\n  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {\n    return res.status(400).json({\n      error: 'El cuerpo de la solicitud no es un JSON válido'\n    });\n  }\n  next();\n};\n\n\n//# sourceURL=webpack://mezclas/./src/middlewares/validateJsonMiddleware.js?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   B: () => (/* binding */ validateJSON)
+/* harmony export */ });
+const validateJSON = async (err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      error: 'El cuerpo de la solicitud no es un JSON válido'
+    });
+  }
+  next();
+};
+
+
+/***/ }),
+
+/***/ 731:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   B: () => (/* binding */ ActivoMezcla)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const activoMezclaConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  nombre: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(50),
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El nombre es requerido'
+      },
+      len: {
+        args: [1, 50],
+        msg: 'El nombre debe tener entre 1 y 50 caracteres'
+      }
+    }
+  },
+  codigo: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(20),
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El código es requerido'
+      },
+      len: {
+        args: [1, 20],
+        msg: 'El código debe tener entre 1 y 20 caracteres'
+      }
+    }
+  },
+  tipo: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(20),
+    allowNull: true
+  },
+  es_principal: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.TINYINT,
+    // or BOOLEAN
+    allowNull: false,
+    defaultValue: 0
+  },
+  unidad: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.ENUM('KG', 'LITRO'),
+    allowNull: false,
+    validate: {
+      isIn: {
+        args: [['KG', 'LITRO']],
+        msg: 'La unidad debe ser KG o LITRO'
+      }
+    }
+  }
+};
+const ActivoMezcla = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('ActivoMezcla', activoMezclaConfig, {
+  tableName: 'activo_mezcla',
+  timestamps: false
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 777:
-/*!***************************!*\
-  !*** ./deploy.config.mjs ***!
-  \***************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (__WEBPACK_DEFAULT_EXPORT__)\n/* harmony export */ });\n/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({\n  development: {\n    nodeVersion: '21.6.2',\n    env: {\n      NODE_ENV: 'development',\n      PORT: 3000,\n      HOST: 'localhost'\n    },\n    build: {\n      sourceMaps: false,\n      minify: true,\n      target: 'node24.0'\n    }\n  },\n  production: {\n    nodeVersion: '24.0.1',\n    env: {\n      NODE_ENV: 'production',\n      PORT: process.env.PORT || process.env.PLESK_PORT || 3000,\n      HOST: '0.0.0.0'\n    },\n    build: {\n      sourceMaps: false,\n      minify: true,\n      target: 'node24.0'\n    }\n  },\n  common: {\n    appName: 'mezclas-lg',\n    logLevel: process.env.LOG_LEVEL || 'info',\n    database: {\n      dialect: 'mysql',\n      logging: false\n    }\n  }\n});\n\n//# sourceURL=webpack://mezclas/./deploy.config.mjs?");
-
-/***/ }),
-
-/***/ 786:
-/*!*************************************!*\
-  !*** ./src/routes/centro.routes.js ***!
-  \*************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createCentroCosteRouter: () => (/* binding */ createCentroCosteRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_centro_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/centro.controller.js */ 8398);\n\n\nconst createCentroCosteRouter = ({\n  centroModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const centroController = new _controller_centro_controller_js__WEBPACK_IMPORTED_MODULE_1__.CentroController({\n    centroModel\n  });\n\n  // Obtener centros de coste. pasamos\n  router.get('/cc/:rancho', centroController.getCentrosPorRancho);\n\n  // obtener variedades de contros de costo\n  router.get('/variedades/:id', centroController.getVariedadPorCentroCoste);\n\n  // obtener todos los centros de costo\n  router.get('/centroCoste', centroController.getAll);\n\n  // actualizar los datos del porcentaje de las variedades de contros de costo\n  router.post('/porcentajeVariedad', centroController.porcentajeVariedad);\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/centro.routes.js?");
-
-/***/ }),
-
-/***/ 846:
-/*!*****************************!*\
-  !*** ./src/config/foto.mjs ***!
-  \*****************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   guardarImagen: () => (/* binding */ guardarImagen)\n/* harmony export */ });\n/* harmony import */ var fs_promises__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! fs/promises */ 1943);\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! path */ 6928);\n/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! url */ 7016);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n\n\n\n\nconst __filename = (0,url__WEBPACK_IMPORTED_MODULE_2__.fileURLToPath)(\"file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/config/foto.mjs\");\nconst __dirname = (0,path__WEBPACK_IMPORTED_MODULE_1__.dirname)(__filename);\n\n// Configuración\nconst CONFIG = {\n  maxSize: 5 * 1024 * 1024,\n  // 5MB\n  allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],\n  uploadDir: path__WEBPACK_IMPORTED_MODULE_1__.join(__dirname, '..', 'uploads', 'images')\n};\nconst guardarImagen = async ({\n  imagen\n}) => {\n  try {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].info('Guardando imagen...');\n    if (!imagen) {\n      throw new Error('No se ha enviado ninguna imagen');\n    }\n\n    // Validar formato base64\n    const matches = imagen.match(/^data:image\\/([A-Za-z-+/]+);base64,(.+)$/);\n    if (!matches || matches.length !== 3) {\n      throw new Error('Formato de imagen no válido');\n    }\n\n    // Validar tipo de imagen\n    const mimeType = `image/${matches[1]}`;\n    if (!CONFIG.allowedTypes.includes(mimeType)) {\n      throw new Error('Tipo de imagen no permitido');\n    }\n\n    // Validar tamaño\n    const buffer = Buffer.from(matches[2], 'base64');\n    if (buffer.length > CONFIG.maxSize) {\n      throw new Error('Imagen demasiado grande');\n    }\n\n    // Verificar y crear directorio\n    try {\n      const stats = await fs_promises__WEBPACK_IMPORTED_MODULE_0__.stat(CONFIG.uploadDir);\n      if (!stats.isDirectory()) {\n        throw new Error('La ruta de uploads no es un directorio');\n      }\n    } catch (error) {\n      if (error.code === 'ENOENT') {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].info('Creando directorio de uploads...');\n        await fs_promises__WEBPACK_IMPORTED_MODULE_0__.mkdir(CONFIG.uploadDir, {\n          recursive: true\n        });\n      } else {\n        throw error;\n      }\n    }\n\n    // Generar nombre único\n    const imageExtension = `.${matches[1]}`;\n    const imageName = `image_${Date.now()}_${Math.random().toString(36).substring(2)}${imageExtension}`;\n    const imagePath = path__WEBPACK_IMPORTED_MODULE_1__.join(CONFIG.uploadDir, imageName);\n\n    // Debug: Mostrar ruta completa\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].debug('Ruta completa de la imagen:', imagePath);\n    try {\n      await fs_promises__WEBPACK_IMPORTED_MODULE_0__.writeFile(imagePath, buffer);\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].info('Imagen guardada exitosamente');\n    } catch (writeError) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error('Error al escribir el archivo:', writeError);\n      throw new Error(`Error al guardar la imagen: ${writeError.message}`);\n    }\n\n    // Verificar que el archivo se haya creado\n    try {\n      await fs_promises__WEBPACK_IMPORTED_MODULE_0__.access(imagePath);\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].info('Archivo verificado correctamente');\n    } catch (accessError) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error('El archivo no se creó correctamente:', accessError);\n      throw new Error('No se pudo verificar la creación del archivo');\n    }\n\n    // Formatear fecha\n    const fechaActual = new Date();\n    const fechaFormateada = fechaActual.toISOString().split('T')[0];\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].info(`ruta absoluta: ${imagePath}`);\n    return {\n      relativePath: `/uploads/images/${imageName}`,\n      fecha: fechaFormateada,\n      success: true\n    };\n  } catch (error) {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error('Error en guardarImagen:', error);\n    throw error;\n  }\n};\n\n//# sourceURL=webpack://mezclas/./src/config/foto.mjs?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   A: () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  development: {
+    nodeVersion: '21.6.2',
+    env: {
+      NODE_ENV: 'development',
+      PORT: 3000,
+      HOST: 'localhost'
+    },
+    build: {
+      sourceMaps: false,
+      minify: true,
+      target: 'node24.0'
+    }
+  },
+  production: {
+    nodeVersion: '24.0.1',
+    env: {
+      NODE_ENV: 'production',
+      PORT: process.env.PORT || process.env.PLESK_PORT || 3000,
+      HOST: '0.0.0.0'
+    },
+    build: {
+      sourceMaps: false,
+      minify: true,
+      target: 'node24.0'
+    }
+  },
+  common: {
+    appName: 'mezclas-lg',
+    logLevel: process.env.LOG_LEVEL || 'info',
+    database: {
+      dialect: 'mysql',
+      logging: false
+    }
+  }
+});
 
 /***/ }),
 
 /***/ 876:
-/*!******************************!*\
-  !*** external "compression" ***!
-  \******************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_compression__;
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_compression__["default"]) });
 
 /***/ }),
 
 /***/ 936:
-/*!*******************************************!*\
-  !*** ./src/middlewares/authMiddleware.js ***!
-  \*******************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   authenticate: () => (/* binding */ authenticate),\n/* harmony export */   isAdmin: () => (/* binding */ isAdmin),\n/* harmony export */   isAdminsitrativoOrAdmin: () => (/* binding */ isAdminsitrativoOrAdmin),\n/* harmony export */   isGeneral: () => (/* binding */ isGeneral),\n/* harmony export */   isSolicitaOrMezclador: () => (/* binding */ isSolicitaOrMezclador),\n/* harmony export */   isaAdminMezclador: () => (/* binding */ isaAdminMezclador)\n/* harmony export */ });\n/* harmony import */ var jsonwebtoken__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! jsonwebtoken */ 9071);\n/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../config/env.mjs */ 9097);\n\n\nconst authenticate = async (req, res, next) => {\n  const token = req.cookies.access_token;\n  let decoded = null;\n  req.session = {\n    user: null\n  };\n  try {\n    if (!token) return res.status(403).render('errorSesion', {\n      codeError: 403,\n      title: '403 - token no proveeido',\n      errorMsg: 'No se ha iniciado sesion'\n    });\n    // Verificamos token\n    decoded = await verifyToken(token);\n    if (!decoded) return res.status(401).render('errorSesion', {\n      codeError: 401,\n      title: '401 - Token Invalido',\n      errorMsg: 'Error de autenticación'\n    });\n    req.session.user = decoded;\n    req.userRole = decoded.userRole; // Establece la propiedad req.userRole\n    next();\n  } catch (error) {\n    req.session.user = null;\n    return res.status(401).render('errorSesion', {\n      codeError: 401,\n      title: '401 - Token Invalido',\n      errorMsg: 'Error de autenticación'\n    });\n  }\n};\nconst verifyToken = async token => {\n  try {\n    const decoded = jsonwebtoken__WEBPACK_IMPORTED_MODULE_0__[\"default\"].verify(token, _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.SECRET_JWT_KEY);\n    decoded.userRole = decoded.rol; // Agrega la propiedad userRole al objeto decoded\n    return decoded;\n  } catch (error) {\n    return null;\n  }\n};\nconst isAdmin = (req, res, next) => {\n  if (req.userRole !== 'admin') return res.status(403).render('errorPage', {\n    codeError: 403,\n    title: 'Sin Autorizacion',\n    errorMsg: 'No autorizado'\n  });\n  next();\n};\nconst isGeneral = (req, res, next) => {\n  if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo' && req.userRole !== 'admin' && req.userRole !== 'adminMezclador') return res.status(403).render('errorPage', {\n    codeError: 403,\n    errorMsg: 'No autorizado',\n    title: 'Sin Autorizacion'\n  });\n  next();\n};\nconst isAdminsitrativoOrAdmin = (req, res, next) => {\n  if (req.userRole !== 'administrativo' && req.userRole !== 'admin') return res.status(403).render('errorPage', {\n    codeError: 403,\n    title: 'Sin Autorizacion',\n    errorMsg: 'No autorizado'\n  });\n  next();\n};\nconst isSolicitaOrMezclador = (req, res, next) => {\n  if (req.userRole !== 'solicita' && req.userRole !== 'solicita2' && req.userRole !== 'mezclador' && req.userRole !== 'administrativo') return res.status(403).render('errorPage', {\n    codeError: 403,\n    title: 'Sin Autorizacion',\n    errorMsg: 'No autorizado'\n  });\n  next();\n};\nconst isaAdminMezclador = (req, res, next) => {\n  if (req.userRole !== 'adminMezclador') return res.status(403).render('errorPage', {\n    codeError: 403,\n    title: 'Sin Autorizacion',\n    errorMsg: 'No autorizado'\n  });\n  next();\n};\n\n\n//# sourceURL=webpack://mezclas/./src/middlewares/authMiddleware.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   QF: () => (/* binding */ authenticate),
+/* harmony export */   tE: () => (/* binding */ checkRoleAuth)
+/* harmony export */ });
+/* unused harmony export checkAccess */
+/* harmony import */ var jsonwebtoken__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9071);
+/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9097);
+/* harmony import */ var _utils_authHelper_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9648);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_utils_authHelper_js__WEBPACK_IMPORTED_MODULE_2__]);
+_utils_authHelper_js__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+const authenticate = async (req, res, next) => {
+  const token = req.cookies.access_token;
+  let decoded = null;
+  req.session = {
+    user: null
+  };
+  try {
+    if (!token) return res.status(403).render('errorSesion', {
+      codeError: 403,
+      title: '403 - token no proveeido',
+      errorMsg: 'No se ha iniciado sesion'
+    });
+    // Verificamos token
+    decoded = await verifyToken(token);
+    if (!decoded) return res.status(401).render('errorSesion', {
+      codeError: 401,
+      title: '401 - Token Invalido',
+      errorMsg: 'Error de autenticación'
+    });
+    req.session.user = decoded;
+    req.user = {
+      ...decoded,
+      idUsuario: decoded.id
+    };
+    req.userRole = decoded.userRole; // Establece la propiedad req.userRole
+    next();
+  } catch (error) {
+    req.session.user = null;
+    return res.status(401).render('errorSesion', {
+      codeError: 401,
+      title: '401 - Token Invalido',
+      errorMsg: 'Error de autenticación'
+    });
+  }
+};
+const verifyToken = async token => {
+  try {
+    const decoded = jsonwebtoken__WEBPACK_IMPORTED_MODULE_0__["default"].verify(token, _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.SECRET_JWT_KEY);
+    decoded.userRole = decoded.rol; // Agrega la propiedad userRole al objeto decoded
+    return decoded;
+  } catch (error) {
+    return null;
+  }
+};
+const checkAccess = ({
+  idSistema,
+  moduleClave,
+  accion,
+  requireRancho = false
+}) => {
+  return async (req, res, next) => {
+    const user = req.user;
+    if (!user) return res.status(401).json({
+      msg: 'No autenticado'
+    });
+
+    // 1) Sistema
+    const accesoSistema = await tieneAccesoASistema(user.idUsuario, idSistema);
+    if (!accesoSistema) return res.status(403).json({
+      msg: 'Sin acceso al sistema'
+    });
+
+    // 2) Dominio empresa/rancho - se esperan idEmpresa e idRancho en body/query/params
+    const idEmpresa = req.body.idEmpresa || req.query.idEmpresa || req.params.idEmpresa;
+    const idRancho = req.body.idRancho || req.query.idRancho || req.params.idRancho || null;
+    if (!idEmpresa) {
+      // si la ruta requiere empresa explícita, forzarla
+      return res.status(400).json({
+        msg: 'Falta idEmpresa en la solicitud'
+      });
+    }
+    const accesoDominio = await tieneAccesoARancho(user.idUsuario, idRancho, idEmpresa);
+    if (!accesoDominio) return res.status(403).json({
+      msg: 'Sin acceso al dominio (empresa/rancho)'
+    });
+
+    // 3) Permiso sobre módulo/acción
+    const permiso = await tienePermiso(user.idUsuario, moduleClave, accion, idSistema);
+    if (!permiso) return res.status(403).json({
+      msg: 'Sin permisos en el módulo'
+    });
+
+    // Adjuntar contexto útil
+    req.ctx = {
+      idSistema,
+      moduleClave,
+      accion,
+      idEmpresa: Number(idEmpresa),
+      idRancho: idRancho ? Number(idRancho) : null
+    };
+    next();
+  };
+};
+const checkRoleAuth = roles => (req, res, next) => {
+  if (req.user && roles.includes(req.user.userRole)) {
+    next();
+  } else {
+    res.status(403).render('errorSesion', {
+      codeError: 403,
+      title: '403 - Acceso Denegado',
+      errorMsg: 'No tienes permisos para acceder a este recurso'
+    });
+  }
+};
+
+
+/**
+Sistema 1 = almacén (ejemplo), modulo clave 'almacen', acción 'create'
+router.post(
+  '/solicitudes',
+  auth,
+  checkAccess({ idSistema: 1, moduleClave: 'almacen', accion: 'create', requireRancho: true }),
+  async (req, res) => {
+    try {
+      const { idEmpresa, idRancho } = req.ctx;
+      const { descripcion, cantidad } = req.body;
+      const [result] = await pool.query(
+        `INSERT INTO solicitudes (idEmpresa, idRancho, descripcion, cantidad, idUsuarioSolicita, fechaSolicitud, status)
+         VALUES (?, ?, ?, ?, ?, NOW(), 'PENDIENTE')`,
+        [idEmpresa, idRancho, descripcion, cantidad, req.user.idUsuario]
+      );
+      res.json({ ok: true, id: result.insertId });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+);
+
+Ruta para aprobar (accion 'approve', módulo 'almacen')
+router.post(
+  '/solicitudes/:id/aprobar',
+  auth,
+  checkAccess({ idSistema: 1, moduleClave: 'almacen', accion: 'approve', requireRancho: true }),
+  async (req, res) => {
+    const idSolicitud = req.params.id;
+    // lógica de aprobación...
+    res.json({ ok: true });
+  }
+);
+*/
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 1078:
-/*!**************************!*\
-  !*** external "exceljs" ***!
-  \**************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_exceljs__;
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_exceljs__["default"]) });
 
 /***/ }),
 
 /***/ 1087:
-/*!***********************************************!*\
-  !*** ./src/middlewares/error500Middleware.js ***!
-  \***********************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   error404: () => (/* binding */ error404),\n/* harmony export */   errorHandler: () => (/* binding */ errorHandler)\n/* harmony export */ });\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../config/env.mjs */ 9097);\n\n\n\nconst error404 = async (req, res, next) => {\n  res.status(404).render('errorPage', {\n    codeError: '404',\n    title: '404 - Página no encontrada',\n    errorMsg: 'La página que buscas no fue encontrada.'\n  });\n};\nconst errorHandler = (err, req, res, next) => {\n  const errorContext = {\n    url: req.originalUrl,\n    method: req.method,\n    userId: req.session?.user?.id,\n    userRole: req.session?.user?.rol,\n    ip: req.ip,\n    userAgent: req.headers['user-agent']\n  };\n  _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].logError(err, errorContext);\n\n  // Errores conocidos\n  if (err instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) {\n    return res.status(err.statusCode).json({\n      error: err.errorCode,\n      message: err.message,\n      details: _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__.envs.MODE === 'development' ? err.details : undefined,\n      timestamp: err.timestamp\n    });\n  }\n\n  // Error de Sequelize\n  if (err.name === 'SequelizeValidationError') {\n    return res.status(400).json({\n      error: 'VALIDATION_ERROR',\n      message: 'Error de validación en la base de datos',\n      details: err.errors.map(e => ({\n        field: e.path,\n        message: e.message\n      }))\n    });\n  }\n\n  // Error no controlado\n  const statusCode = err.statusCode || 500;\n  return res.status(statusCode).json({\n    error: 'INTERNAL_SERVER_ERROR',\n    message: _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__.envs.MODE === 'production' ? 'Error interno del servidor' : err.message,\n    timestamp: new Date().toISOString()\n  });\n};\n\n//# sourceURL=webpack://mezclas/./src/middlewares/error500Middleware.js?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   r: () => (/* binding */ errorHandler),
+/* harmony export */   v: () => (/* binding */ error404)
+/* harmony export */ });
+/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3014);
+/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2551);
+/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9097);
+
+
+
+const error404 = async (req, res, next) => {
+  res.status(404).render('errorPage', {
+    codeError: '404',
+    title: '404 - Página no encontrada',
+    errorMsg: 'La página que buscas no fue encontrada.'
+  });
+};
+const errorHandler = (err, req, res, next) => {
+  const errorContext = {
+    url: req.originalUrl,
+    method: req.method,
+    userId: req.session?.user?.id,
+    userRole: req.session?.user?.rol,
+    ip: req.ip,
+    userAgent: req.headers['user-agent']
+  };
+  _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A.logError(err, errorContext);
+
+  // Errores conocidos
+  if (err instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__/* .CustomError */ .eo) {
+    return res.status(err.statusCode).json({
+      error: err.errorCode,
+      message: err.message,
+      details: _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__/* .envs */ .D.MODE === 'development' ? err.details : undefined,
+      timestamp: err.timestamp
+    });
+  }
+
+  // Error de Sequelize
+  if (err.name === 'SequelizeValidationError') {
+    return res.status(400).json({
+      error: 'VALIDATION_ERROR',
+      message: 'Error de validación en la base de datos',
+      details: err.errors.map(e => ({
+        field: e.path,
+        message: e.message
+      }))
+    });
+  }
+
+  // Error no controlado
+  const statusCode = err.statusCode || 500;
+  return res.status(statusCode).json({
+    error: 'INTERNAL_SERVER_ERROR',
+    message: _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__/* .envs */ .D.MODE === 'production' ? 'Error interno del servidor' : err.message,
+    timestamp: new Date().toISOString()
+  });
+};
 
 /***/ }),
 
 /***/ 1148:
-/*!*****************************************!*\
-  !*** ./src/models/modelAssociations.js ***!
-  \*****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   setupAssociations: () => (/* binding */ setupAssociations)\n/* harmony export */ });\n/* harmony import */ var _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/usuarios.js */ 9491);\n/* harmony import */ var _schema_centro_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../schema/centro.js */ 6519);\n/* harmony import */ var _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../schema/mezclas.js */ 3231);\n/* harmony import */ var _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../schema/solicitud_receta.js */ 7399);\n/* harmony import */ var _schema_productos_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../schema/productos.js */ 4601);\n/* harmony import */ var _schema_recetas_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../schema/recetas.js */ 5503);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n// models/modelAssociations.js\n\n\n\n\n\n\n// logger\n\nfunction setupAssociations() {\n  // Asociaciones para Solicitud\n  _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_2__.Solicitud.belongsTo(_schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario, {\n    foreignKey: 'idUsuarioSolicita'\n  });\n\n  // Solicitud.belongsTo(Usuario, {\n  //   foreignKey: 'idUsuarioMezcla'\n  // })\n\n  _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_2__.Solicitud.belongsTo(_schema_centro_js__WEBPACK_IMPORTED_MODULE_1__.Centrocoste, {\n    foreignKey: 'idCentroCoste'\n  });\n\n  // Asociaciones para productos Solicitud\n  _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_3__.SolicitudProductos.belongsTo(_schema_productos_js__WEBPACK_IMPORTED_MODULE_4__.Productos, {\n    foreignKey: 'id_producto'\n  });\n  // Asociaciones para productos Solicitud\n  _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_3__.SolicitudProductos.belongsTo(_schema_recetas_js__WEBPACK_IMPORTED_MODULE_5__.Recetas, {\n    foreignKey: 'id_receta'\n  });\n  _utils_logger_js__WEBPACK_IMPORTED_MODULE_6__[\"default\"].info('✔ Asociaciones configuradas correctamente');\n}\n\n//# sourceURL=webpack://mezclas/./src/models/modelAssociations.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   i: () => (/* binding */ setupAssociations)
+/* harmony export */ });
+/* harmony import */ var _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5458);
+/* harmony import */ var _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5964);
+/* harmony import */ var _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(1682);
+/* harmony import */ var _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9491);
+/* harmony import */ var _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(731);
+/* harmony import */ var _schema_tanques_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(8293);
+/* harmony import */ var _schema_sectores_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(2692);
+/* harmony import */ var _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(8118);
+/* harmony import */ var _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(6386);
+/* harmony import */ var _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(8300);
+/* harmony import */ var _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(4831);
+/* harmony import */ var _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(8518);
+/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(3014);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__, _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__, _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_2__, _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_3__, _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_4__, _schema_tanques_js__WEBPACK_IMPORTED_MODULE_5__, _schema_sectores_js__WEBPACK_IMPORTED_MODULE_6__, _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_7__, _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_8__, _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__, _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__, _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_11__]);
+([_schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__, _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__, _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_2__, _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_3__, _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_4__, _schema_tanques_js__WEBPACK_IMPORTED_MODULE_5__, _schema_sectores_js__WEBPACK_IMPORTED_MODULE_6__, _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_7__, _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_8__, _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__, _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__, _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_11__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
+
+
+
+// Fertilization Module Schemas
+
+
+
+
+
+
+
+
+
+// logger
+
+function setupAssociations() {
+  // --- Asociaciones Modulo Fertilizacion ---
+  // Ranchos <-> Empresas
+  _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__/* .Ranchos */ .h.belongsTo(_schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__/* .Empresas */ .p, {
+    foreignKey: 'id_empresa'
+  });
+  _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__/* .Empresas */ .p.hasMany(_schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__/* .Ranchos */ .h, {
+    foreignKey: 'id_empresa'
+  });
+
+  // Mezcla <-> Activos (Many-to-Many via MezclaActivos)
+  _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_7__/* .MezclaCatalogo */ .p.hasMany(_schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_8__/* .MezclaActivos */ .k, {
+    foreignKey: 'id_mezcla'
+  });
+  _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_8__/* .MezclaActivos */ .k.belongsTo(_schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_7__/* .MezclaCatalogo */ .p, {
+    foreignKey: 'id_mezcla'
+  });
+  _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_4__/* .ActivoMezcla */ .B.hasMany(_schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_8__/* .MezclaActivos */ .k, {
+    foreignKey: 'id_activo'
+  });
+  _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_8__/* .MezclaActivos */ .k.belongsTo(_schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_4__/* .ActivoMezcla */ .B, {
+    foreignKey: 'id_activo'
+  });
+
+  // Relacion One-to-Many con MezclasTanque (detalle)
+  _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__/* .TanquesPreparados */ .t.hasMany(_schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_11__/* .MezclasTanque */ .e, {
+    foreignKey: 'id_tanque_preparado'
+  });
+  _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_11__/* .MezclasTanque */ .e.belongsTo(_schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__/* .TanquesPreparados */ .t, {
+    foreignKey: 'id_tanque_preparado'
+  });
+
+  // Detalle MezclaTanque -> MezclaCatalogo
+  _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_11__/* .MezclasTanque */ .e.belongsTo(_schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_7__/* .MezclaCatalogo */ .p, {
+    foreignKey: 'id_mezcla'
+  });
+  _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__/* .TanquesPreparados */ .t.belongsTo(_schema_tanques_js__WEBPACK_IMPORTED_MODULE_5__/* .Tanques */ .C, {
+    foreignKey: 'id_tanque'
+  });
+  _schema_tanques_js__WEBPACK_IMPORTED_MODULE_5__/* .Tanques */ .C.hasMany(_schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__/* .TanquesPreparados */ .t, {
+    foreignKey: 'id_tanque'
+  });
+  _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__/* .TanquesPreparados */ .t.belongsTo(_schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__/* .Ranchos */ .h, {
+    foreignKey: 'id_rancho'
+  });
+  _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__/* .Ranchos */ .h.hasMany(_schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__/* .TanquesPreparados */ .t, {
+    foreignKey: 'id_rancho'
+  });
+
+  // Sectores <-> RanchoDsa
+  _schema_sectores_js__WEBPACK_IMPORTED_MODULE_6__/* .Sectores */ .d.belongsTo(_schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_2__/* .RanchoDsa */ .M, {
+    foreignKey: 'id_rancho_dsa'
+  });
+  _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_2__/* .RanchoDsa */ .M.hasMany(_schema_sectores_js__WEBPACK_IMPORTED_MODULE_6__/* .Sectores */ .d, {
+    foreignKey: 'id_rancho_dsa'
+  });
+
+  // RanchoDsa <-> Ranchos
+  _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_2__/* .RanchoDsa */ .M.belongsTo(_schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__/* .Ranchos */ .h, {
+    foreignKey: 'id_rancho'
+  });
+  _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__/* .Ranchos */ .h.hasMany(_schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_2__/* .RanchoDsa */ .M, {
+    foreignKey: 'id_rancho'
+  });
+
+  // Aplicaciones
+  _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .AplicacionesTanque */ .y.belongsTo(_schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__/* .TanquesPreparados */ .t, {
+    foreignKey: 'id_tanque_preparado'
+  });
+  _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_10__/* .TanquesPreparados */ .t.hasMany(_schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .AplicacionesTanque */ .y, {
+    foreignKey: 'id_tanque_preparado'
+  });
+  _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .AplicacionesTanque */ .y.belongsTo(_schema_sectores_js__WEBPACK_IMPORTED_MODULE_6__/* .Sectores */ .d, {
+    foreignKey: 'id_sector'
+  });
+  _schema_sectores_js__WEBPACK_IMPORTED_MODULE_6__/* .Sectores */ .d.hasMany(_schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .AplicacionesTanque */ .y, {
+    foreignKey: 'id_sector'
+  });
+  _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .AplicacionesTanque */ .y.belongsTo(_schema_tanques_js__WEBPACK_IMPORTED_MODULE_5__/* .Tanques */ .C, {
+    foreignKey: 'id_tanque'
+  });
+
+  // Optional: Link Application to User if 'id_responsable' is used
+  _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .AplicacionesTanque */ .y.belongsTo(_schema_usuarios_js__WEBPACK_IMPORTED_MODULE_3__/* .Usuario */ .P, {
+    foreignKey: 'id_responsable'
+  });
+
+  // Tanques <-> Ranchos
+  _schema_tanques_js__WEBPACK_IMPORTED_MODULE_5__/* .Tanques */ .C.belongsTo(_schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__/* .Ranchos */ .h, {
+    foreignKey: 'id_rancho'
+  });
+  _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_1__/* .Ranchos */ .h.hasMany(_schema_tanques_js__WEBPACK_IMPORTED_MODULE_5__/* .Tanques */ .C, {
+    foreignKey: 'id_rancho'
+  });
+  _utils_logger_js__WEBPACK_IMPORTED_MODULE_12__/* ["default"] */ .A.info('✔ Asociaciones configuradas correctamente');
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 1242:
-/*!******************************!*\
-  !*** external "body-parser" ***!
-  \******************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_body_parser_496b7721__;
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_body_parser_496b7721__["default"]) });
 
 /***/ }),
 
-/***/ 1366:
-/*!***********************************************!*\
-  !*** ./src/routes/productosSolitud.routes.js ***!
-  \***********************************************/
+/***/ 1682:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   M: () => (/* binding */ RanchoDsa)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const ranchoDsaConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  id_rancho: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'ranchos',
+      key: 'id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE'
+  },
+  nombre_rancho_dsa: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(100),
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El nombre del rancho DSA es requerido'
+      },
+      len: {
+        args: [3, 100],
+        msg: 'El nombre del rancho DSA debe tener entre 3 y 100 caracteres'
+      }
+    }
+  },
+  numero_rancho_dsa: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'El número de rancho DSA es requerido'
+      },
+      min: {
+        args: 1,
+        msg: 'El número de rancho DSA debe ser mayor a 0'
+      }
+    }
+  },
+  status: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true
+  }
+};
+const RanchoDsa = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('rancho_dsa', ranchoDsaConfig, {
+  tableName: 'rancho_dsa',
+  timestamps: true // Agrega createdAt y updatedAt automáticamente
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ 1764:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createProductosSoliRouter: () => (/* binding */ createProductosSoliRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_productosSolicitud_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/productosSolicitud.controller.js */ 5638);\n\n\nconst createProductosSoliRouter = ({\n  productossModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const productossController = new _controller_productosSolicitud_controller_js__WEBPACK_IMPORTED_MODULE_1__.ProductosController({\n    productossModel\n  });\n\n  // Crear solicitud\n  router.get('/productoSolicitud/:idSolicitud', productossController.obtenerProductosSolicitud);\n  router.get('/mezclasId/:id', productossController.obtenerTablaMezclasId);\n  router.post('/productoSoli', productossController.create);\n  router.post('/actualizarEstadoProductos', productossController.actulizarEstado);\n  router.delete('/eliminarProducto/:id', productossController.EliminarPorducto);\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/productosSolitud.routes.js?");
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  C: () => (/* binding */ corsMiddleware)
+});
+
+;// external "cors"
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+const external_cors_namespaceObject = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_cors__["default"]) });
+;// ./src/middlewares/cors.js
+
+const ACCEPTED_ORIGINS = ['http://localhost:3000', 'http://localhost', 'https://solicitudmezclas.portalrancho.com.mx', 'https://mezclas.portalrancho.com.mx', 'https://5xx636dm-3000.usw3.devtunnels.ms/'];
+const corsMiddleware = ({
+  acceptedOrigins = ACCEPTED_ORIGINS
+} = {}) => (0,external_cors_namespaceObject["default"])({
+  origin: (origin, callback) => {
+    if (acceptedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    if (!origin) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  }
+});
 
 /***/ }),
 
-/***/ 1592:
-/*!**************************************!*\
-  !*** ./src/routes/mezclas.routes.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ 1938:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createMezclasRouter: () => (/* binding */ createMezclasRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_mezclas_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/mezclas.controller.js */ 7392);\n\n\nconst createMezclasRouter = ({\n  mezclaModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const mezclasController = new _controller_mezclas_controller_js__WEBPACK_IMPORTED_MODULE_1__.MezclasController({\n    mezclaModel\n  });\n\n  // Crear solicitud\n  // router.post('/solicitudes', mezclasController.create)\n  // router.post('/CerrarSolicitud', mezclasController.cerrarSolicitid) // cerrar mezcla\n  router.get('/mezclasSolicitadas/:status', mezclasController.obtenerTablaMezclasEmpresa); // obtener mezclas\n  // router.get('/mezclasId/:id', mezclasController.obtenerTablaMezclasId) // obtener mezclas con id\n  // router.patch('/solicitudProceso/:idSolicitud', mezclasController.estadoProceso) // actualizar estado proceso\n  // router.patch('/notificacion/:idSolicitud', mezclasController.notificacion) // actualizar mensaje de notificacion\n  // router.post('/validacion', mezclasController.validacion) // actualizar mensaje de notificacion\n  // router.patch('/cancelarSolicitud/:idSolicitud', mezclasController.cancelar) // actualizar mensaje de notificacion\n  // router.get('/mezclasConfirmar/', mezclasController.obtenerTablasConfirmar) // obtener solicitud\n  // router.patch('/mezclasConfirmar/:idSolicitud', mezclasController.mezclaConfirmar) // obtener solicitud\n  // router.get('/mezclasCancelada/', mezclasController.obtenerTablasCancelada) // obtener solicitud\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/mezclas.routes.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   w: () => (/* binding */ FertilizacionController)
+/* harmony export */ });
+/* harmony import */ var _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(731);
+/* harmony import */ var _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(8293);
+/* harmony import */ var _schema_sectores_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(2692);
+/* harmony import */ var _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8118);
+/* harmony import */ var _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(6386);
+/* harmony import */ var _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(8300);
+/* harmony import */ var _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(5964);
+/* harmony import */ var _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(1682);
+/* harmony import */ var _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(4831);
+/* harmony import */ var _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(8518);
+/* harmony import */ var exceljs__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(1078);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(9815);
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(8265);
+/* harmony import */ var _utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(43);
+/* harmony import */ var _utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(6963);
+/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(2551);
+/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(6466);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__, _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__, _schema_sectores_js__WEBPACK_IMPORTED_MODULE_2__, _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__, _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__, _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_5__, _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__, _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_7__, _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__, _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__, _db_db_js__WEBPACK_IMPORTED_MODULE_11__, _utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__]);
+([_schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__, _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__, _schema_sectores_js__WEBPACK_IMPORTED_MODULE_2__, _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__, _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__, _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_5__, _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__, _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_7__, _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__, _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__, _db_db_js__WEBPACK_IMPORTED_MODULE_11__, _utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* eslint-disable camelcase */
 
-/***/ }),
 
-/***/ 1762:
-/*!*************************************!*\
-  !*** external "express-fileupload" ***!
-  \*************************************/
-/***/ ((module) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_express_fileupload_7aacc68d__;
 
-/***/ }),
 
-/***/ 1877:
-/*!*****************************************!*\
-  !*** ./src/routes/produccion.routes.js ***!
-  \*****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createProduccionRouter: () => (/* binding */ createProduccionRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_produccion_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/produccion.controller.js */ 5977);\n\n\nconst createProduccionRouter = ({\n  produccionModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const produccionController = new _controller_produccion_controller_js__WEBPACK_IMPORTED_MODULE_1__.ProduccionController({\n    produccionModel\n  });\n  router.get('/solicitudReporte', produccionController.solicitudReporte);\n  router.get('/asignacionesActivos', produccionController.solicitudReporte);\n  router.post('/descargar-excel', produccionController.descargarEcxel);\n  router.post('/descargar-solicitud', produccionController.descargarSolicitud); // uso\n  router.get('/obetenerReceta', produccionController.ObtenerReceta);\n  router.post('/descargarReporte', produccionController.descargarReporte); // uso\n  router.post('/descargarReporte-v2', produccionController.descargarReporteV2); // uso\n  router.get('/reporte-pendientes', produccionController.descargarReportePendientes); // uso\n  router.get('/reporte-pendientes/:empresa', produccionController.descargarReportePendientes); // uso\n\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/produccion.routes.js?");
 
-/***/ }),
 
-/***/ 1899:
-/*!**************************************!*\
-  !*** ./src/models/equipos.models.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   EquiposModel: () => (/* binding */ EquiposModel)\n/* harmony export */ });\n/* harmony import */ var _schema_equipos_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/equipos.js */ 4694);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n// utils\n\nclass EquiposModel {\n  // uso\n  static async getAllDisponible() {\n    try {\n      const equipo = await _schema_equipos_js__WEBPACK_IMPORTED_MODULE_0__.Equipos.findAll({\n        where: {\n          status: 'disponible'\n        },\n        attributes: ['id', 'ns']\n      });\n      if (!equipo) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('Equipos de coste no encontrados');\n      return equipo;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al obtener los equipos');\n    }\n  }\n  static async actualizarEquipo({\n    id,\n    estado\n  }) {\n    try {\n      // validamos que el id sea un numero\n      if (isNaN(id)) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.ValidationError('El id debe ser un numero');\n      const equipo = await _schema_equipos_js__WEBPACK_IMPORTED_MODULE_0__.Equipos.findByPk(id);\n      if (!equipo) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('Equipo no encontrado');\n      // Actualiza solo los campos que se han proporcionado\n      if (estado) equipo.estado = estado;\n      await equipo.save();\n      return {\n        message: 'Equipo actualizado correctamente',\n        id\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al actualizar equipo');\n    }\n  }\n  static async delete({\n    id\n  }) {\n    try {\n      const usuario = await _schema_equipos_js__WEBPACK_IMPORTED_MODULE_0__.Equipos.findByPk(id);\n      if (!usuario) return {\n        error: 'usuario no encontrado'\n      };\n      await usuario.destroy();\n      return {\n        message: `usuario eliminada correctamente con id ${id}`\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la usuario\n      return {\n        error: 'Error al elimiar el usuario'\n      };\n    }\n  }\n  static async create({\n    data\n  }) {\n    try {\n      // verificamos que no exista el usuario\n      const usuario = await _schema_equipos_js__WEBPACK_IMPORTED_MODULE_0__.Equipos.findOne({\n        where: {\n          usuario: data.usuario\n        }\n      });\n      if (usuario) return {\n        error: 'usuario ya existe'\n      };\n      // creamos el usuario\n      await _schema_equipos_js__WEBPACK_IMPORTED_MODULE_0__.Equipos.create({\n        ...data\n      });\n      return {\n        message: `usuario registrado exitosamente ${data.nombre}`\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la usuario\n      return {\n        error: 'Error al crear al usuario'\n      };\n    }\n  }\n}\n\n//# sourceURL=webpack://mezclas/./src/models/equipos.models.js?");
 
-/***/ }),
 
-/***/ 1943:
-/*!******************************!*\
-  !*** external "fs/promises" ***!
-  \******************************/
-/***/ ((module) => {
 
-module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("fs/promises");
+// DB
 
-/***/ }),
 
-/***/ 1954:
-/*!*************************************************!*\
-  !*** ./src/models/productosSolicitud.models.js ***!
-  \*************************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   SolicitudRecetaModel: () => (/* binding */ SolicitudRecetaModel)\n/* harmony export */ });\n/* harmony import */ var _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/solicitud_receta.js */ 7399);\n/* harmony import */ var _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../schema/mezclas.js */ 3231);\n/* harmony import */ var _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../schema/usuarios.js */ 9491);\n/* harmony import */ var _schema_productos_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../schema/productos.js */ 4601);\n/* harmony import */ var _schema_recetas_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../schema/recetas.js */ 5503);\n/* harmony import */ var _schema_notificaciones_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../schema/notificaciones.js */ 7234);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../db/db.js */ 9815);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n\n\n // Asegúrate de importar el modelo de Usuario\n // Asegúrate de importar el modelo de Usuario\n // Asegúrate de importar el modelo de Usuario\n\n// utlis\n\n\nclass SolicitudRecetaModel {\n  // crear asistencia\n\n  static async obtenerProductosSolicitud({\n    idSolicitud\n  }) {\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].info('Obteniendo productos de solicitud...', {\n        idSolicitud\n      });\n      const productosSolicitud = await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudProductos.findAll({\n        where: {\n          id_solicitud: idSolicitud\n        },\n        include: [{\n          model: _schema_productos_js__WEBPACK_IMPORTED_MODULE_3__.Productos,\n          // producto\n          attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario\n        }, {\n          model: _schema_recetas_js__WEBPACK_IMPORTED_MODULE_4__.Recetas,\n          // Modelo de Recetas\n          attributes: ['nombre'] // Campos que quieres obtener del modelo Recetas\n        }],\n        attributes: ['id_receta', 'id_solicitud', 'id_producto', 'unidad_medida', 'cantidad']\n      });\n\n      // Transformar los resultados\n      const resultadosFormateados = productosSolicitud.map(productos => {\n        const m = productos.toJSON();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].info('Productos obtenidos exitosamente', {\n          productos: m\n        });\n        return {\n          id_receta: m.id_receta,\n          id_solicitud: m.id_solicitud,\n          id_sap: m.producto.id_sap,\n          nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : m.receta ? m.receta.nombre : 'Producto y receta no encontrados',\n          unidad_medida: m.unidad_medida,\n          cantidad: m.cantidad\n        };\n      });\n\n      // Devolver los resultados\n      return resultadosFormateados || [];\n    } catch (e) {\n      console.log(e);\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al obtener los productos');\n    }\n  }\n  static async obtenerTablaMezclasId({\n    id\n  }) {\n    try {\n      // Consulta para obtener las mezclas filtradas por empresa y status\n      const mezclas = await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudProductos.findAll({\n        where: {\n          id\n        },\n        include: [{\n          model: _schema_productos_js__WEBPACK_IMPORTED_MODULE_3__.Productos,\n          // Modelo de Usuario\n          attributes: ['nombre'] // Campos que quieres obtener del usuario\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenSolicitud']\n      });\n\n      // Verificar si se encontraron resultados\n      if (mezclas.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.NotFoundError('No se encontraron mezclas para los criterios especificados');\n      }\n\n      // Transformar los resultados\n      // Transformar los resultados\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        return {\n          id: m.id,\n          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagen: m.imagenSolicitud,\n          descripcion: m.descripcion,\n          status: m.status\n        };\n      });\n\n      // Devolver los resultados\n      return {\n        message: 'Mezclas obtenidas correctamente',\n        data: resultadosFormateados\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al obtener las mezclas');\n    }\n  }\n  static async obtenerProductoNoDisponibles({\n    idSolicitud\n  }) {\n    try {\n      const productoSolicitud = await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudProductos.findAll({\n        where: {\n          id_solicitud: idSolicitud,\n          status: 0\n        },\n        include: [{\n          model: _schema_productos_js__WEBPACK_IMPORTED_MODULE_3__.Productos,\n          // producto\n          attributes: ['nombre', 'id_sap'] // Campos que quieres obtener del usuario\n        }],\n        attributes: ['id_solicitud', 'id_producto', 'unidad_medida', 'cantidad']\n      });\n\n      // Verificar si se encontraron resultados\n      if (productoSolicitud.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.NotFoundError('No se encontraron productos para los criterios especificados');\n      }\n\n      // Transformar los resultados\n      const resultadosFormateados = productoSolicitud.map(productos => {\n        const m = productos.toJSON();\n        return {\n          id_solicitud: m.id_solicitud,\n          id_sap: m.producto.id_sap,\n          nombre_producto: m.producto && m.producto.nombre ? m.producto.nombre : m.receta ? m.receta.nombre : 'Producto y receta no encontrados',\n          unidad_medida: m.unidad_medida,\n          cantidad: m.cantidad\n        };\n      });\n\n      // Devolver los resultados\n      return resultadosFormateados;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al obtener los producto solicitud');\n    }\n  }\n  static async create({\n    data\n  }) {\n    const logContext = {\n      operation: 'CREATE_PRODUCTO_SOLICITUD',\n      requestData: {\n        idSolicitud: data.idSolicitud,\n        producto: data.producto,\n        unidadMedida: data.unidadMedida,\n        cantidad: data.cantidad\n      },\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].info('Iniciando creación de producto en solicitud', logContext);\n\n      // Validación inicial de datos\n      this.validarDatosProducto(data);\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].debug('Verificando existencia de producto', logContext);\n\n      // Verificar si el producto ya existe\n      const productoExistente = await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudProductos.findOne({\n        where: {\n          id_solicitud: data.idSolicitud,\n          id_producto: data.producto\n        }\n      });\n      if (productoExistente) {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].warn('Intento de crear producto duplicado', {\n          ...logContext,\n          productoId: data.producto\n        });\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.ValidationError('Producto ya existe en la solicitud');\n      }\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].debug('Creando nuevo producto', {\n        ...logContext,\n        producto: data.producto\n      });\n\n      // Crear el producto\n      const nuevoProducto = await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudProductos.create({\n        id_solicitud: data.idSolicitud,\n        id_producto: data.producto,\n        unidad_medida: data.unidadMedida,\n        cantidad: data.cantidad\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].info('Producto creado exitosamente', {\n        ...logContext,\n        productoId: nuevoProducto.id,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return {\n        status: 'success',\n        message: `Producto procesado exitosamente: ${data.producto}`,\n        data: {\n          id: nuevoProducto.id,\n          idSolicitud: nuevoProducto.id_solicitud,\n          producto: nuevoProducto.id_producto\n        }\n      };\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].error('Error al crear producto', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al procesar producto', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  // uso\n  static async EliminarPorducto({\n    id\n  }) {\n    try {\n      // validamos que el id sea un numero\n      if (isNaN(id)) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.ValidationError('El id debe ser un numero');\n\n      // Comprobar que el producto exista\n      const producto = await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudProductos.findByPk(id); // Usar findByPk correctamente\n      if (!producto) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.NotFoundError(`Producto con ID ${id} no encontrado`);\n\n      // Eliminar el producto\n      await producto.destroy();\n      return {\n        message: `Producto eliminado correctamente con id ${id}`\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al eliminar el producto');\n    }\n  }\n\n  /**\r\n   * Actualiza el estado de los productos y crea notificaciones relacionadas\r\n   * @param {Object} params - Parámetros de actualización\r\n   * @param {Object} params.data - Datos de los productos y mensaje\r\n   * @param {string} params.idUsuarioMezcla - ID del mezclador\r\n   * @returns {Promise<Object>} Resultado de la actualización\r\n   */\n\n  static async actualizarEstado({\n    data,\n    idUsuarioMezcla\n  }) {\n    const logContext = {\n      operation: 'ACTUALIZAR_ESTADO_PRODUCTOS',\n      userId: idUsuarioMezcla,\n      userRole: 'mezclador',\n      requestBody: data,\n      timestamp: new Date().toISOString()\n    };\n    let transaction;\n    try {\n      // Validación inicial\n      await this.#validarDatosActualizacion(data, idUsuarioMezcla);\n\n      // Iniciar transacción\n      transaction = await this.#iniciarTransaccion(logContext);\n\n      // Procesar estados\n      const resultado = await this.#procesarActualizacionEstados({\n        data,\n        transaction,\n        logContext\n      });\n\n      // Commit de la transacción\n      await transaction.commit();\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].logOperation('ACTUALIZAR_ESTADO_PRODUCTOS', 'completed', {\n        ...logContext,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return resultado;\n    } catch (error) {\n      if (transaction) await transaction.rollback();\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al actualizar estados de productos', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  // Métodos auxiliares\n  // Método auxiliar para validación\n  static validarDatosProducto(data) {\n    const errores = [];\n    if (!data.idSolicitud) errores.push('El ID de solicitud es requerido');\n    if (!data.producto) errores.push('El ID de producto es requerido');\n    if (!data.unidadMedida) errores.push('La unidad de medida es requerida');\n    if (!data.cantidad || data.cantidad <= 0) errores.push('La cantidad debe ser mayor a 0');\n    if (errores.length > 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.ValidationError('Datos de producto inválidos', {\n        details: errores\n      });\n    }\n  }\n  static async procesarEstadosProductos(data, noExistencia, transaction) {\n    let ultimaReceta = null;\n    try {\n      const estadosPromesas = data.estados.map(async estado => {\n        if (!estado.existe) {\n          noExistencia.push({\n            id_receta: estado.id_receta\n          });\n        }\n        const receta = await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudProductos.findByPk(estado.id_receta, {\n          transaction\n        });\n        if (!receta) {\n          throw new Error(`Producto ${estado.id_receta} no encontrado`);\n        }\n        receta.status = estado.existe;\n        await receta.save({\n          transaction\n        });\n        ultimaReceta = receta;\n      });\n      await Promise.all(estadosPromesas);\n      return ultimaReceta;\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al procesar estados productos');\n    }\n  }\n  static async actualizarSolicitudYNotificacion({\n    id,\n    idUsuarioMezcla,\n    mensaje,\n    transaction\n  }) {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].info('Actualizando solicitud y notificación', {\n      id,\n      idUsuarioMezcla,\n      mensaje\n    });\n    try {\n      const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_1__.Solicitud.findByPk(id, {\n        transaction,\n        lock: true // Bloqueo explícito\n      });\n      if (!solicitud) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.NotFoundError('No se encontró la solicitud');\n      solicitud.idUsuarioMezcla = idUsuarioMezcla;\n      if (mensaje) solicitud.respuestaMezclador = mensaje;\n      await solicitud.save({\n        transaction\n      });\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al actualizar solicitud y notificacion');\n    }\n  }\n  static async crearNotificacion({\n    id,\n    mensaje,\n    idUsuario,\n    transaction\n  }) {\n    try {\n      if (!id || !mensaje || !idUsuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.ValidationError('Datos requeridos no proporcionados');\n      }\n      // Crear la notificación\n      const notificacionData = {\n        id_solicitud: id,\n        mensaje,\n        id_usuario: idUsuario\n      };\n      await _schema_notificaciones_js__WEBPACK_IMPORTED_MODULE_5__.Notificaciones.create(notificacionData, {\n        transaction\n      });\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al crear la notificación');\n    }\n  }\n  static async obtenerProductosNoDisponibles(noExistencia) {\n    const idsRecetas = noExistencia.map(item => item.id_receta);\n    try {\n      const productos = await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudProductos.findAll({\n        where: {\n          id_receta: idsRecetas\n        },\n        include: [{\n          model: _schema_productos_js__WEBPACK_IMPORTED_MODULE_3__.Productos,\n          attributes: ['nombre']\n        }],\n        attributes: ['id_producto', 'unidad_medida', 'cantidad']\n      });\n      // Verificar si se encontraron resultados\n      if (productos.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.NotFoundError('No se encontraron productos para los criterios especificados');\n      }\n      return productos.map(item => ({\n        id_producto: item.id_producto,\n        nombre_producto: item.producto?.nombre || 'Producto no encontrado',\n        unidad_medida: item.unidad_medida,\n        cantidad: item.cantidad\n      }));\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al obtener productos no disponibles');\n    }\n  }\n  static async obtenerDatosUsuarioSolicitante(idSolicitud) {\n    try {\n      const usuarios = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_1__.Solicitud.findAll({\n        where: {\n          id: idSolicitud\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre', 'email']\n        }],\n        attributes: ['folio', 'idUsuarioSolicita']\n      });\n      // Verificar si se encontraron resultados\n      if (usuarios.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.NotFoundError('No se encontraron usuarios para los criterios especificados');\n      }\n      return usuarios.map(item => ({\n        nombre: item.usuario?.nombre || 'No se encontró Nombre',\n        email: item.usuario?.email || 'No se encontró Correo',\n        idUsuarioSolicita: item.idUsuarioSolicita\n      }));\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.DatabaseError('Error al obtener datos usuario solicitante');\n    }\n  }\n\n  // Métodos privados auxiliares\n  static #validarDatosActualizacion(data, idUsuarioMezcla) {\n    if (!data?.estados?.length || !idUsuarioMezcla) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.ValidationError('Datos requeridos no proporcionados');\n    }\n  }\n  static async #iniciarTransaccion(logContext) {\n    const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_6__[\"default\"].transaction();\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_7__[\"default\"].logDBTransaction('ACTUALIZAR_ESTADO_PRODUCTOS', 'started', {\n      correlationId: logContext.correlationId\n    });\n    return transaction;\n  }\n  static async #procesarActualizacionEstados({\n    data,\n    transaction,\n    logContext\n  }) {\n    const noExistencia = [];\n    const estados = {\n      estados: []\n    };\n\n    // Si hay productos no existentes\n    if (data.estados.some(estado => !estado.existe)) {\n      return this.#procesarProductosNoExistentes({\n        data,\n        noExistencia,\n        transaction,\n        logContext\n      });\n    }\n\n    // Si todos los productos existen\n    await this.procesarEstadosProductos(data, noExistencia, transaction);\n    return {\n      message: 'Mezcla Guardada correctamente'\n    };\n  }\n  static async #procesarProductosNoExistentes({\n    data,\n    noExistencia,\n    transaction,\n    logContext\n  }) {\n    const receta = await this.procesarEstadosProductos(data, noExistencia, transaction);\n    if (!receta?.dataValues?.id) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__.NotFoundError('No se pudo obtener el ID de la solicitud');\n    }\n    await this.actualizarSolicitudYNotificacion({\n      id: receta.dataValues.id_solicitud,\n      idUsuarioMezcla: logContext.userId,\n      mensaje: data.mensaje,\n      transaction\n    });\n    const datosUsuario = await this.obtenerDatosUsuarioSolicitante(data.id_solicitud);\n    if (noExistencia.length > 0) {\n      const productosNoDisponibles = await this.obtenerProductosNoDisponibles(noExistencia);\n      return {\n        data: datosUsuario,\n        productos: productosNoDisponibles,\n        message: 'Mezcla Guardada correctamente'\n      };\n    }\n    return {\n      data: datosUsuario,\n      message: 'Mezcla Guardada correctamente'\n    };\n  }\n} // fin modelo\n\n//# sourceURL=webpack://mezclas/./src/models/productosSolicitud.models.js?");
+// Utils
 
-/***/ }),
 
-/***/ 2020:
-/*!**************************************!*\
-  !*** ./src/models/mezclas.models.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   MezclaModel: () => (/* binding */ MezclaModel)\n/* harmony export */ });\n/* harmony import */ var _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/mezclas.js */ 3231);\n/* harmony import */ var _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../schema/solicitud_receta.js */ 7399);\n/* harmony import */ var _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../schema/usuarios.js */ 9491);\n/* harmony import */ var _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../schema/centro.js */ 6519);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../db/db.js */ 9815);\n/* harmony import */ var _config_foto_mjs__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../config/foto.mjs */ 846);\n/* harmony import */ var _config_smtp_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../config/smtp.js */ 6909);\n/* harmony import */ var _models_centro_models_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../models/centro.models.js */ 7818);\n/* harmony import */ var _models_notificaciones_models_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../models/notificaciones.models.js */ 3261);\n/* harmony import */ var _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../models/usuario.models.js */ 2477);\n/* harmony import */ var date_fns__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! date-fns */ 3678);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! sequelize */ 8265);\n// Modelos de Base de Datos\n\n\n\n\n\n// Configuraciones\n\n\n\n\n// Modelos de Negocio\n\n\n\n\n// Utilidades\n\n\n\n // Agregar esta importación\n\nclass MezclaModel {\n  // funciones privadas\n  static async create({\n    data,\n    idUsuario\n  }) {\n    const logContext = {\n      operation: 'CREATE_MEZCLA',\n      userId: idUsuario,\n      requestData: {\n        ...data,\n        // Excluir datos sensibles o muy largos\n        productos: data.productos?.length\n      },\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('CREATE_MEZCLA', 'started', logContext);\n\n      // Validación de datos\n      this.#validarDatosEntrada({\n        data,\n        idUsuario\n      });\n      const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].transaction();\n      try {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('CREATE_MEZCLA', 'started', {\n          userId: idUsuario,\n          correlationId: logContext.correlationId\n        });\n        const {\n          variedad,\n          porcentajes\n        } = await this.#procesarVariedades({\n          data,\n          transaction\n        });\n        const solicitud = await this.#crearSolicitudBase({\n          data,\n          variedad,\n          porcentajes,\n          idUsuario,\n          transaction\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'created', {\n          solicitudId: solicitud.id,\n          userId: idUsuario,\n          correlationId: logContext.correlationId\n        });\n        if (data.productos?.length) {\n          await this.#procesarProductos({\n            productos: data.productos,\n            idSolicitud: solicitud.id,\n            transaction\n          });\n        }\n        await transaction.commit();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('CREATE_MEZCLA', 'committed', {\n          solicitudId: solicitud.id,\n          correlationId: logContext.correlationId\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('CREATE_MEZCLA', 'completed', {\n          ...logContext,\n          solicitudId: solicitud.id,\n          duration: Date.now() - new Date(logContext.timestamp).getTime()\n        });\n        return {\n          message: 'Solicitud de mezcla registrada correctamente',\n          idSolicitud: solicitud.id,\n          fechaSolicitud: solicitud.fechaSolicitud,\n          data: solicitud\n        };\n      } catch (error) {\n        await transaction.rollback();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('CREATE_MEZCLA', 'rolled_back', {\n          error: error.message,\n          correlationId: logContext.correlationId\n        });\n        throw error;\n      }\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al registrar solicitud de mezcla', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n  static async cerrarSolicitud({\n    data,\n    idUsuario\n  }) {\n    const logContext = {\n      operation: 'CERRAR_SOLICITUD',\n      userId: idUsuario,\n      solicitudId: data?.idSolicitud,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('CERRAR_SOLICITUD', 'started', logContext);\n\n      // Validar datos de entrada\n      this.#validarDatosCierre({\n        data,\n        idUsuario\n      });\n      const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].transaction();\n      try {\n        // Buscar y validar la solicitud\n        const solicitud = await this.#buscarSolicitud({\n          id: data.idSolicitud,\n          transaction\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n          solicitudId: solicitud.id,\n          estadoActual: solicitud.status\n        });\n\n        // Procesar imagen\n        const imageResponse = await this.#procesarImagen({\n          imagen: data.imagen\n        });\n\n        // Actualizar solicitud\n        const {\n          solicitudActualizada,\n          cambiosRealizados\n        } = await this.#actualizarSolicitud({\n          solicitud,\n          data: {\n            imagenPath: imageResponse.relativePath,\n            fecha: imageResponse.fecha\n          },\n          idUsuario,\n          transaction\n        });\n\n        // Notificar al solicitante\n        await this.#notificarCierreSolicitud({\n          solicitud: solicitudActualizada,\n          idUsuario\n        });\n        await transaction.commit();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('CERRAR_SOLICITUD', 'completed', {\n          ...logContext,\n          duration: Date.now() - new Date(logContext.timestamp).getTime()\n        });\n        return {\n          message: 'Solicitud cerrada correctamente',\n          status: solicitudActualizada.status,\n          idUsuarioSolicita: solicitudActualizada.idUsuarioSolicita,\n          id: solicitudActualizada.id\n        };\n      } catch (error) {\n        await transaction.rollback();\n        throw error;\n      }\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, logContext);\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al cerrar solicitud', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n  static async validacion({\n    data,\n    idUsuario,\n    user\n  }) {\n    const logContext = {\n      operation: 'VALIDAR_MEZCLA',\n      userId: idUsuario,\n      userName: user?.nombre,\n      requestData: {\n        solicitudesCount: data?.length\n      },\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('VALIDAR_MEZCLA', 'started', logContext);\n\n      // Validación de datos\n      if (!data || !idUsuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['data', 'idUsuario'],\n          received: {\n            data: !!data,\n            idUsuario: !!idUsuario\n          }\n        });\n      }\n      const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].transaction();\n      try {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('VALIDAR_MEZCLA', 'started', {\n          userId: idUsuario,\n          correlationId: logContext.correlationId\n        });\n        const resultados = await Promise.all(data.map(async estado => {\n          _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'processing', {\n            solicitudId: estado.id_solicitud,\n            userId: idUsuario\n          });\n          const resultado = await procesarSolicitud({\n            estado,\n            idUsuario,\n            user,\n            transaction\n          });\n          _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'processed', {\n            solicitudId: estado.id_solicitud,\n            status: resultado.status\n          });\n          return resultado;\n        }));\n        await transaction.commit();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('VALIDAR_MEZCLA', 'committed', {\n          resultCount: resultados.length,\n          correlationId: logContext.correlationId\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('VALIDAR_MEZCLA', 'completed', {\n          ...logContext,\n          resultCount: resultados.length,\n          duration: Date.now() - new Date(logContext.timestamp).getTime()\n        });\n        return {\n          message: 'Solicitudes guardadas correctamente',\n          resultados\n        };\n      } catch (error) {\n        await transaction.rollback();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('VALIDAR_MEZCLA', 'rolled_back', {\n          error: error.message,\n          correlationId: logContext.correlationId\n        });\n        throw error;\n      }\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al validar solicitudes', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n  static async cancelar({\n    idSolicitud,\n    data,\n    idUsuario,\n    usuario\n  }) {\n    const logContext = {\n      operation: 'CANCELAR_MEZCLA',\n      userId: idUsuario,\n      solicitudId: idSolicitud,\n      usuario: usuario ? usuario.nombre : 'Usuario no identificado',\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('CANCELAR_MEZCLA', 'started', logContext);\n      if (!idSolicitud || !data || !idUsuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['idSolicitud', 'data', 'idUsuario'],\n          received: {\n            idSolicitud,\n            data: !!data,\n            idUsuario\n          }\n        });\n      }\n      const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].transaction();\n      try {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('CANCELAR_MEZCLA', 'started', {\n          solicitudId: idSolicitud,\n          correlationId: logContext.correlationId\n        });\n        const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findByPk(idSolicitud);\n        if (!solicitud) {\n          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError(`Solicitud ${idSolicitud} no encontrada`);\n        }\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n          solicitudId: solicitud.id,\n          estadoActual: solicitud.status\n        });\n\n        // Actualizar solicitud\n        solicitud.confirmacion = data.validacion === false ? 'Cancelada' : solicitud.confirmacion;\n        solicitud.idUsuarioValida = idUsuario;\n        solicitud.motivoCancelacion = data.motivo;\n        await solicitud.save({\n          transaction\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'updated', {\n          solicitudId: solicitud.id,\n          nuevoEstado: solicitud.confirmacion\n        });\n\n        // Notificación por correo\n        const solicitante = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_9__.UsuarioModel.getOneId({\n          id: solicitud.idUsuarioSolicita\n        });\n        if (solicitante?.email) {\n          const respuesta = await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_6__.enviarCorreo)({\n            type: 'cancelacion',\n            email: solicitante.email,\n            nombre: solicitante.nombre,\n            solicitudId: solicitud.id,\n            usuario: {\n              empresa: solicitud.empresa,\n              ranchos: solicitud.ranchoDestino\n            },\n            data: {\n              motivo: data.motivo\n            }\n          });\n          _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Notificacion', 'sent', {\n            solicitudId: solicitud.id,\n            destinatario: solicitante.email,\n            status: respuesta.error ? 'error' : 'success'\n          });\n        }\n        await transaction.commit();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('CANCELAR_MEZCLA', 'completed', {\n          ...logContext,\n          duration: Date.now() - new Date(logContext.timestamp).getTime()\n        });\n        return {\n          message: 'Solicitud cancelada correctamente',\n          solicitudId: solicitud.id\n        };\n      } catch (error) {\n        await transaction.rollback();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('CANCELAR_MEZCLA', 'rolled_back', {\n          error: error.message,\n          correlationId: logContext.correlationId\n        });\n        throw error;\n      }\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al cancelar solicitud', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n  static async mezclaConfirmar({\n    idSolicitud,\n    data,\n    usuario\n  }) {\n    const logContext = {\n      operation: 'CONFIRMAR_MEZCLA',\n      userId: usuario?.id,\n      solicitudId: idSolicitud,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('CONFIRMAR_MEZCLA', 'started', logContext);\n      if (!idSolicitud || !data) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['idSolicitud', 'data'],\n          received: {\n            idSolicitud,\n            data: !!data\n          }\n        });\n      }\n      const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].transaction();\n      try {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('CONFIRMAR_MEZCLA', 'started', {\n          solicitudId: idSolicitud,\n          correlationId: logContext.correlationId\n        });\n        const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findByPk(idSolicitud);\n        if (!solicitud) {\n          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError(`Solicitud ${idSolicitud} no encontrada`);\n        }\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n          solicitudId: solicitud.id,\n          estadoActual: solicitud.status\n        });\n\n        // Actualizar campos\n        const cambios = {\n          confirmacion: 'Pendiente',\n          ...(data.comentarios && {\n            comentarios: data.comentarios\n          }),\n          ...(data.fechaSolicitud && {\n            fechaSolicitud: data.fechaSolicitud\n          }),\n          ...(data.empresa && {\n            empresa: data.empresa\n          }),\n          ...(data.ranchoDestino && {\n            ranchoDestino: data.ranchoDestino\n          }),\n          ...(data.descripcion && {\n            descripcion: data.descripcion\n          }),\n          ...(data.folio && {\n            folio: data.folio\n          }),\n          ...(data.temporada && {\n            temporada: data.temporada\n          }),\n          ...(data.cantidad && {\n            cantidad: data.cantidad\n          }),\n          ...(data.presentacion && {\n            presentacion: data.presentacion\n          }),\n          ...(data.metodoAplicacion && {\n            metodoAplicacion: data.metodoAplicacion\n          })\n        };\n        Object.assign(solicitud, cambios);\n        await solicitud.save({\n          transaction\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'updated', {\n          solicitudId: solicitud.id,\n          cambios\n        });\n\n        // Notificar al mezclador\n        const mezclador = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_9__.UsuarioModel.getOneId({\n          id: solicitud.idUsuarioValida\n        });\n        if (mezclador?.email) {\n          const respuesta = await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_6__.enviarCorreo)({\n            type: 'reevaluacion',\n            email: mezclador.email,\n            nombre: usuario.nombre,\n            solicitudId: solicitud.id,\n            usuario: {\n              empresa: usuario.empresa,\n              ranchos: mezclador.ranchoDestino\n            },\n            data: {\n              folio: solicitud.folio || 'No Aplica',\n              cantidad: solicitud.cantidad || 'No Aplica',\n              presentacion: solicitud.presentacion || 'No Aplica',\n              metodoAplicacion: solicitud.metodoAplicacion,\n              motivo: solicitud.motivoCancelacion,\n              comentarios: solicitud.comentario || 'Por favor, revisar las proporciones'\n            }\n          });\n          _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Notificacion', 'sent', {\n            solicitudId: solicitud.id,\n            destinatario: mezclador.email,\n            status: respuesta.error ? 'error' : 'success'\n          });\n        }\n        await transaction.commit();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('CONFIRMAR_MEZCLA', 'completed', {\n          ...logContext,\n          duration: Date.now() - new Date(logContext.timestamp).getTime()\n        });\n        return {\n          message: 'Solicitud actualizada correctamente',\n          solicitudId: solicitud.id\n        };\n      } catch (error) {\n        await transaction.rollback();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('CONFIRMAR_MEZCLA', 'rolled_back', {\n          error: error.message,\n          correlationId: logContext.correlationId\n        });\n        throw error;\n      }\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al confirmar mezcla', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n  static async estadoProceso({\n    id,\n    data\n  }) {\n    const logContext = {\n      operation: 'ACTUALIZAR_ESTADO',\n      solicitudId: id,\n      nuevoEstado: data?.status,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('ACTUALIZAR_ESTADO', 'started', logContext);\n\n      // Validación de datos\n      if (!id || !data) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['id', 'data'],\n          received: {\n            id,\n            data: !!data\n          }\n        });\n      }\n      const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].transaction();\n      try {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('ACTUALIZAR_ESTADO', 'started', {\n          solicitudId: id,\n          correlationId: logContext.correlationId\n        });\n\n        // Buscar solicitud\n        const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findByPk(id);\n        if (!solicitud) {\n          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError(`Solicitud con ID ${id} no encontrada`, {\n            solicitudId: id\n          });\n        }\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n          solicitudId: solicitud.id,\n          estadoActual: solicitud.status\n        });\n\n        // Actualizar campos\n        const cambios = {\n          ...(data.notaMezcla && {\n            notaMezcla: data.notaMezcla\n          }),\n          ...(data.status && {\n            status: data.status\n          })\n        };\n        Object.assign(solicitud, cambios);\n        await solicitud.save({\n          transaction\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'updated', {\n          solicitudId: solicitud.id,\n          cambios\n        });\n        await transaction.commit();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('ACTUALIZAR_ESTADO', 'completed', {\n          ...logContext,\n          duration: Date.now() - new Date(logContext.timestamp).getTime()\n        });\n        return {\n          message: 'Solicitud actualizada correctamente',\n          idUsuarioSolicita: solicitud.idUsuarioSolicita\n        };\n      } catch (error) {\n        await transaction.rollback();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('ACTUALIZAR_ESTADO', 'rolled_back', {\n          error: error.message,\n          correlationId: logContext.correlationId\n        });\n        throw error;\n      }\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al actualizar estado de solicitud', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n  static async mensajeSolicita({\n    id,\n    mensajes,\n    idUsuario\n  }) {\n    const logContext = {\n      operation: 'MENSAJE_SOLICITUD',\n      userId: idUsuario,\n      solicitudId: id,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('MENSAJE_SOLICITUD', 'started', logContext);\n\n      // Validación de datos\n      if (!id || !mensajes || !idUsuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['id', 'mensajes', 'idUsuario'],\n          received: {\n            id,\n            mensajes: !!mensajes,\n            idUsuario\n          }\n        });\n      }\n      const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].transaction();\n      try {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('MENSAJE_SOLICITUD', 'started', {\n          solicitudId: id,\n          correlationId: logContext.correlationId\n        });\n\n        // Buscar solicitud\n        const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findByPk(id);\n        if (!solicitud) {\n          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError(`Solicitud con ID ${id} no encontrada`, {\n            solicitudId: id\n          });\n        }\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n          solicitudId: solicitud.id,\n          mensajeAnterior: solicitud.respuestaSolicitud\n        });\n\n        // Actualizar mensaje\n        solicitud.respuestaSolicitud = mensajes;\n        await solicitud.save({\n          transaction\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'updated', {\n          solicitudId: solicitud.id,\n          nuevoMensaje: mensajes\n        });\n\n        // Crear notificación\n        await _models_notificaciones_models_js__WEBPACK_IMPORTED_MODULE_8__.NotificacionModel.create({\n          idSolicitud: id,\n          mensaje: `Respuesta para solicitud:${id}`,\n          idUsuario\n        }, {\n          transaction\n        });\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Notificacion', 'created', {\n          solicitudId: id,\n          userId: idUsuario\n        });\n        await transaction.commit();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('MENSAJE_SOLICITUD', 'completed', {\n          ...logContext,\n          duration: Date.now() - new Date(logContext.timestamp).getTime()\n        });\n        return {\n          message: 'Notificación guardada correctamente',\n          solicitudId: id\n        };\n      } catch (error) {\n        await transaction.rollback();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logDBTransaction('MENSAJE_SOLICITUD', 'rolled_back', {\n          error: error.message,\n          correlationId: logContext.correlationId\n        });\n        throw error;\n      }\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al guardar mensaje de solicitud', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  // metodos de consultas especificos\n  //\n  static async getAll() {\n    const logContext = {\n      operation: 'GET_ALL_MEZCLAS',\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_ALL_MEZCLAS', 'started', logContext);\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        count: mezclas.length\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].debug('Procesando mezcla', {\n          id: m.id,\n          usuario: m.usuario?.nombre,\n          centroCoste: m.centrocoste?.centroCoste\n        });\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_ALL_MEZCLAS', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener todas las mezclas', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async obtenerMezclasMichoacan() {\n    const logContext = {\n      operation: 'GET_MEZCLAS_MICHOACAN',\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_MICHOACAN', 'started', logContext);\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          empresa: {\n            [sequelize__WEBPACK_IMPORTED_MODULE_13__.Op.or]: ['Moras Finas', 'Bayas del Centro']\n          }\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        count: mezclas.length,\n        empresas: ['Moras Finas', 'Bayas del Centro']\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].debug('Procesando mezcla', {\n          id: m.id,\n          usuario: m.usuario?.nombre\n        });\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_MICHOACAN', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return {\n        message: 'Mezclas obtenidas correctamente',\n        data: Array.isArray(resultadosFormateados) ? resultadosFormateados : []\n      };\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezclas de Michoacán', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async obtenerTablaMezclasEmpresa({\n    status,\n    empresa,\n    confirmacion,\n    idUsuario\n  }) {\n    const logContext = {\n      operation: 'GET_MEZCLAS_EMPRESA_MODELO',\n      empresa,\n      status,\n      confirmacion,\n      userId: idUsuario,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_EMPRESA', 'started', logContext);\n\n      // Validación de datos\n      if (!status || !empresa) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['status', 'empresa'],\n          received: {\n            status,\n            empresa\n          }\n        });\n      }\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          empresa,\n          status,\n          confirmacion\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        count: mezclas.length,\n        empresa,\n        status\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status,\n          respuestaSolicitud: m.respuestaSolicitud\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_EMPRESA', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezclas por empresa', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async obtenerTablaMezclasValidados({\n    status,\n    empresa,\n    confirmacion,\n    idUsuario\n  }) {\n    if (!status || !empresa) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n        required: ['status', 'empresa'],\n        received: {\n          status,\n          empresa\n        }\n      });\n    }\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].info('Iniciando consulta de tablas de mezclas validadas', {\n        status,\n        empresa,\n        confirmacion,\n        userId: idUsuario\n      });\n      // Consulta para obtener las mezclas filtradas por empresa y status\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          empresa,\n          status,\n          confirmacion,\n          // Solo mezclas no confirmadas\n          id: {\n            [sequelize__WEBPACK_IMPORTED_MODULE_13__.Op.ne]: 33 // Excluir ID 33\n          },\n          idUsuarioSolicita: {\n            [sequelize__WEBPACK_IMPORTED_MODULE_13__.Op.ne]: 33 // Excluir ID 33\n          }\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          // Modelo de Usuario\n          attributes: ['nombre'] // Campos que quieres obtener del usuario\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          // Modelo de CentroCoste\n          attributes: ['centroCoste'] // Campos que quieres obtener del centro de coste\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']\n      });\n\n      // 4. Logging de resultados encontrados\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].debug('Mezclas encontradas', {\n        count: mezclas.length,\n        empresa,\n        status\n      });\n\n      // Transformar los resultados\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        // Logging detallado para debugging\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].debug('Procesando mezcla', {\n          id: m.id,\n          usuario: m.usuario?.nombre,\n          centroCoste: m.centrocoste?.centroCoste\n        });\n        return {\n          id: m.id,\n          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status,\n          respuestaSolicitud: m.respuestaSolicitud\n        };\n      });\n      // 6. Logging final\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].info('Consulta completada exitosamente', {\n        resultados: resultadosFormateados.length,\n        empresa,\n        status\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      // 8. Manejo de errores\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].error('Error al obtener mezclas por empresa', {\n        error: error.message,\n        stack: error.stack,\n        params: {\n          empresa,\n          status,\n          confirmacion\n        }\n      });\n\n      // Re-throw de errores conocidos\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) {\n        throw error;\n      }\n\n      // Error general de base de datos\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener las mezclas', {\n        originalError: error.message,\n        context: {\n          empresa,\n          status,\n          confirmacion\n        }\n      });\n    }\n  }\n\n  //\n  static async obtenerTablaMezclasValidadosMichoacan({\n    status,\n    confirmacion,\n    idUsuario\n  }) {\n    const logContext = {\n      operation: 'GET_MEZCLAS_VALIDADAS_MICHOACAN',\n      status,\n      confirmacion,\n      userId: idUsuario,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_VALIDADAS_MICHOACAN', 'started', logContext);\n\n      // Validación de datos\n      if (!status || !confirmacion) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['status', 'confirmacion'],\n          received: {\n            status,\n            confirmacion\n          }\n        });\n      }\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          empresa: {\n            [sequelize__WEBPACK_IMPORTED_MODULE_13__.Op.or]: ['Moras Finas', 'Bayas del Centro']\n          },\n          status,\n          confirmacion\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        count: mezclas.length,\n        empresas: ['Moras Finas', 'Bayas del Centro']\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].debug('Procesando mezcla', {\n          id: m.id,\n          usuario: m.usuario?.nombre,\n          centroCoste: m.centrocoste?.centroCoste\n        });\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status,\n          respuestaSolicitud: m.respuestaSolicitud\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_VALIDADAS_MICHOACAN', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezclas validadas de Michoacán', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async obtenerTablaMezclasRancho({\n    status,\n    ranchoDestino,\n    confirmacion,\n    idUsuario\n  }) {\n    const logContext = {\n      operation: 'GET_MEZCLAS_RANCHO',\n      status,\n      ranchoDestino,\n      confirmacion,\n      userId: idUsuario,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_RANCHO', 'started', logContext);\n\n      // Validación de datos\n      if (!status || !ranchoDestino) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['status', 'ranchoDestino'],\n          received: {\n            status,\n            ranchoDestino\n          }\n        });\n      }\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          ranchoDestino,\n          status,\n          confirmacion\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        count: mezclas.length,\n        ranchoDestino,\n        status\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status,\n          respuestaSolicitud: m.respuestaSolicitud\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_RANCHO', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezclas por rancho', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n  static async obtenerTablaMezclasUsuario({\n    status,\n    idUsuarioSolicita,\n    confirmacion\n  }) {\n    const logContext = {\n      operation: 'GET_MEZCLAS_USUARIO',\n      userId: idUsuarioSolicita,\n      status,\n      confirmacion,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_USUARIO', 'started', logContext);\n\n      // Validación de datos\n      if (!status || !idUsuarioSolicita) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['status', 'idUsuarioSolicita'],\n          received: {\n            status,\n            idUsuarioSolicita\n          }\n        });\n      }\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          idUsuarioSolicita,\n          status,\n          confirmacion\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud', 'respuestaMezclador']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        solicitudId: idUsuarioSolicita,\n        count: mezclas.length\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status,\n          respuestaSolicitud: m.respuestaSolicitud,\n          respuestaMezclador: m.respuestaMezclador\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_USUARIO', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezclas de usuario', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n  static async obtenerTablaMezclasCancelada({\n    idUsuario,\n    confirmacion,\n    rol\n  }) {\n    const logContext = {\n      operation: 'GET_MEZCLAS_CANCELADAS',\n      userId: idUsuario,\n      rol,\n      confirmacion,\n      timestamp: new Date().toISOString()\n    };\n    let mezclas;\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_CANCELADAS', 'started', logContext);\n      if (!idUsuario || !rol) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['idUsuario', 'rol'],\n          received: {\n            idUsuario,\n            rol\n          }\n        });\n      }\n      const queryConfig = {\n        where: {\n          confirmacion\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud', 'respuestaMezclador', 'motivoCancelacion']\n      };\n      if (rol === 'adminMezclador') {\n        queryConfig.where.idUsuarioValida = idUsuario;\n      } else if (rol === 'solicita' || rol === 'solicita2') {\n        queryConfig.where.idUsuarioSolicita = idUsuario;\n      } else if (rol !== 'administrativo') {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Rol no válido');\n      }\n      mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll(queryConfig);\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        count: mezclas.length,\n        rol,\n        userId: idUsuario\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status,\n          motivoCancelacion: m.motivoCancelacion\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_CANCELADAS', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezclas canceladas', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async obtenerTablaMezclasId({\n    id,\n    usuario\n  }) {\n    const logContext = {\n      operation: 'GET_MEZCLA_BY_ID',\n      solicitudId: id,\n      usuario: usuario?.nombre || 'Usuario no identificado',\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLA_BY_ID', 'started', logContext);\n\n      // Validación de datos\n      if (!id || !usuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['id', 'usuario'],\n          received: {\n            id: !!id,\n            usuario: !!usuario\n          }\n        });\n      }\n\n      // Consulta de mezclas\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          id\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenSolicitud']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        solicitudId: id,\n        count: mezclas.length\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].debug('Procesando mezcla', {\n          id: m.id,\n          usuario: m.usuario?.nombre,\n          centroCoste: m.centrocoste?.centroCoste\n        });\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagen: m.imagenSolicitud,\n          descripcion: m.descripcion,\n          status: m.status\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLA_BY_ID', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezcla por ID', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async obtenerTablaMezclasJalisco({\n    status,\n    confirmacion\n  }) {\n    const logContext = {\n      operation: 'GET_MEZCLAS_JALISCO',\n      status,\n      confirmacion,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_JALISCO', 'started', logContext);\n\n      // Validar datos\n      if (!status) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['status'],\n          received: {\n            status\n          }\n        });\n      }\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          ranchoDestino: {\n            [sequelize__WEBPACK_IMPORTED_MODULE_13__.Op.or]: ['', 'La Loma', 'Zapote', 'Ojo de Agua']\n          },\n          status,\n          confirmacion\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega', 'respuestaSolicitud']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        count: mezclas.length,\n        ranchos: ['La Loma', 'Zapote', 'Ojo de Agua']\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].debug('Procesando mezcla', {\n          id: m.id,\n          usuario: m.usuario?.nombre,\n          centroCoste: m.centrocoste?.centroCoste\n        });\n        return {\n          id: m.id,\n          Solicita: m.usuario ? m.usuario.nombre : 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste ? m.centrocoste.centroCoste : 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status,\n          respuestaSolicitud: m.respuestaSolicitud\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_MEZCLAS_JALISCO', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezclas de Jalisco', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async obtenerPorcentajes({\n    id\n  }) {\n    const logContext = {\n      operation: 'GET_PORCENTAJES',\n      solicitudId: id,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_PORCENTAJES', 'started', logContext);\n      if (!id) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('ID es requerido', {\n          required: ['id'],\n          received: {\n            id\n          }\n        });\n      }\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          id\n        },\n        attributes: ['porcentajes', 'variedad']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        solicitudId: id,\n        count: mezclas.length\n      });\n      if (mezclas.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError('No se encontraron mezclas', {\n          solicitudId: id\n        });\n      }\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_PORCENTAJES', 'completed', {\n        ...logContext,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(mezclas) ? mezclas : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener porcentajes', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async obtenerDatosSolicitud({\n    id\n  }) {\n    const logContext = {\n      operation: 'GET_DATOS_SOLICITUD',\n      solicitudId: id,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_DATOS_SOLICITUD', 'started', logContext);\n      if (!id) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('ID es requerido', {\n          required: ['id'],\n          received: {\n            id\n          }\n        });\n      }\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          id\n        },\n        attributes: ['cantidad', 'presentacion', 'metodoAplicacion', 'descripcion']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        solicitudId: id,\n        count: mezclas.length\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_DATOS_SOLICITUD', 'completed', {\n        ...logContext,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(mezclas) ? mezclas : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener datos de solicitud', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async getOneSolicita({\n    id,\n    idSolicita\n  }) {\n    const logContext = {\n      operation: 'GET_ONE_SOLICITA',\n      solicitudId: id,\n      userId: idSolicita,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_ONE_SOLICITA', 'started', logContext);\n      if (!id || !idSolicita) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['id', 'idSolicita'],\n          received: {\n            id,\n            idSolicita\n          }\n        });\n      }\n      const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findOne({\n        where: {\n          id,\n          idUsuarioSolicita: idSolicita\n        },\n        attributes: ['idUsuarioMezcla', 'respuestaMezclador']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        solicitudId: id,\n        encontrado: !!solicitud\n      });\n      if (!solicitud) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError('No se encontraron respuestas del mezclador', {\n          solicitudId: id,\n          idSolicita\n        });\n      }\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_ONE_SOLICITA', 'completed', {\n        ...logContext,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return solicitud;\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener respuesta del mezclador', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async getOneMezclador({\n    id,\n    idSolicita\n  }) {\n    const logContext = {\n      operation: 'GET_ONE_MEZCLADOR',\n      solicitudId: id,\n      mezcladorId: idSolicita,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_ONE_MEZCLADOR', 'started', logContext);\n      if (!id || !idSolicita) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['id', 'idSolicita'],\n          received: {\n            id,\n            idSolicita\n          }\n        });\n      }\n      const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findOne({\n        where: {\n          id,\n          idUsuarioMezcla: idSolicita\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'folio', 'ranchoDestino', 'variedad', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'empresa', 'fechaSolicitud', 'respuestaSolicitud', 'respuestaMezclador']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        solicitudId: id,\n        encontrado: !!solicitud\n      });\n      if (!solicitud) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError('No se encontró la mezcla especificada', {\n          solicitudId: id,\n          mezcladorId: idSolicita\n        });\n      }\n      const resultadoFormateado = {\n        id: solicitud.id,\n        Solicita: solicitud.usuario?.nombre || 'Usuario no encontrado',\n        fechaSolicitud: solicitud.fechaSolicitud,\n        ranchoDestino: solicitud.ranchoDestino,\n        empresa: solicitud.empresa,\n        centroCoste: solicitud.centrocoste?.centroCoste || 'Centro no encontrado',\n        variedad: solicitud.variedad,\n        FolioReceta: solicitud.folio,\n        temporada: solicitud.temporada,\n        cantidad: solicitud.cantidad,\n        prensetacion: solicitud.presentacion,\n        metodoAplicacion: solicitud.metodoAplicacion,\n        descripcion: solicitud.descripcion,\n        respuestaSolicitud: solicitud.respuestaSolicitud,\n        respuestaMezclador: solicitud.respuestaMezclador\n      };\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_ONE_MEZCLADOR', 'completed', {\n        ...logContext,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return {\n        message: 'Mezcla obtenida correctamente',\n        data: resultadoFormateado\n      };\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezcla', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  //\n  static async getAllGeneral({\n    status,\n    confirmacion,\n    idUsuario\n  }) {\n    const logContext = {\n      operation: 'GET_ALL_GENERAL',\n      status,\n      confirmacion,\n      userId: idUsuario,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_ALL_GENERAL', 'started', logContext);\n      if (!status || !confirmacion || !idUsuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n          required: ['status', 'confirmacion', 'idUsuario'],\n          received: {\n            status,\n            confirmacion,\n            idUsuario\n          }\n        });\n      }\n      const mezclas = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findAll({\n        where: {\n          status,\n          confirmacion\n        },\n        include: [{\n          model: _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_2__.Usuario,\n          attributes: ['nombre']\n        }, {\n          model: _schema_centro_js__WEBPACK_IMPORTED_MODULE_3__.Centrocoste,\n          attributes: ['centroCoste']\n        }],\n        attributes: ['id', 'ranchoDestino', 'variedad', 'notaMezcla', 'folio', 'temporada', 'cantidad', 'presentacion', 'metodoAplicacion', 'descripcion', 'status', 'empresa', 'fechaSolicitud', 'imagenEntrega', 'fechaEntrega']\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logModelOperation('Solicitud', 'found', {\n        count: mezclas.length,\n        status,\n        confirmacion\n      });\n      const resultadosFormateados = mezclas.map(mezcla => {\n        const m = mezcla.toJSON();\n        return {\n          id: m.id,\n          Solicita: m.usuario?.nombre || 'Usuario no encontrado',\n          fechaSolicitud: m.fechaSolicitud,\n          ranchoDestino: m.ranchoDestino,\n          notaMezcla: m.notaMezcla,\n          empresa: m.empresa,\n          centroCoste: m.centrocoste?.centroCoste || 'Centro no encontrado',\n          variedad: m.variedad,\n          FolioReceta: m.folio,\n          temporada: m.temporada,\n          cantidad: m.cantidad,\n          prensetacion: m.presentacion,\n          metodoAplicacion: m.metodoAplicacion,\n          imagenEntrega: m.imagenEntrega,\n          descripcion: m.descripcion,\n          fechaEntrega: m.fechaEntrega,\n          status: m.status\n        };\n      });\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logOperation('GET_ALL_GENERAL', 'completed', {\n        ...logContext,\n        count: resultadosFormateados.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return Array.isArray(resultadosFormateados) ? resultadosFormateados : [];\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].logError(error, {\n        ...logContext,\n        stack: error.stack\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al obtener mezclas generales', {\n        originalError: error.message,\n        context: logContext\n      });\n    }\n  }\n\n  // Métodos auxiliares y utilitarios\n  static #validarDatosEntrada({\n    data,\n    idUsuario\n  }) {\n    const errores = [];\n    // Validar que los datos requeridos estén presentes\n    if (!data) {\n      errores.push('la data es requerida');\n    }\n    if (!idUsuario) {\n      errores.push('El campo idUsuario es requerido');\n    }\n    if (errores.length > 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n        errores,\n        received: data\n      });\n    }\n  }\n  static async #procesarVariedades({\n    data,\n    transaction\n  }) {\n    if (data.variedad !== 'todo') {\n      return {\n        variedad: data.variedad,\n        porcentajes: '100'\n      };\n    }\n    const variedades = await _models_centro_models_js__WEBPACK_IMPORTED_MODULE_7__.CentroCosteModel.getVariedadPorCentroCoste({\n      id: data.centroCoste\n    });\n    const {\n      variedadesFiltradas,\n      porcentajesFiltrados\n    } = this.#filtrarVariedades(variedades[0].dataValues);\n    return {\n      variedad: variedadesFiltradas.join(','),\n      porcentajes: porcentajesFiltrados.join(',')\n    };\n  }\n  static #filtrarVariedades(datos) {\n    const variedadesArray = datos.variedad.split(',').slice(0, -1);\n    const porcentajesArray = datos.porcentajes.split(',').slice(0, -1);\n    return variedadesArray.reduce((acc, variedad, index) => {\n      if (parseInt(porcentajesArray[index].trim()) !== 0) {\n        acc.variedadesFiltradas.push(variedad);\n        acc.porcentajesFiltrados.push(porcentajesArray[index]);\n      }\n      return acc;\n    }, {\n      variedadesFiltradas: [],\n      porcentajesFiltrados: []\n    });\n  }\n  static #procesarProductos = async ({\n    productos,\n    idSolicitud,\n    transaction\n  }) => {\n    const productosValidos = productos.filter(producto => producto.id_producto && producto.unidad_medida && producto.cantidad);\n    // Validar que haya productos\n    if (productosValidos.length === 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('No se encontraron productos válidos para procesar');\n    }\n    return Promise.all(productosValidos.map(async (producto, index) => {\n      const productoData = {\n        id_solicitud: idSolicitud,\n        id_producto: parseInt(producto.id_producto),\n        unidad_medida: producto.unidad_medida,\n        cantidad: producto.cantidad\n      };\n      await _schema_solicitud_receta_js__WEBPACK_IMPORTED_MODULE_1__.SolicitudProductos.create(productoData, {\n        transaction\n      });\n    }));\n  };\n  static #crearSolicitudBase = async ({\n    data,\n    variedad,\n    porcentajes,\n    idUsuario,\n    transaction\n  }) => {\n    const solicitudData = {\n      idUsuarioSolicita: idUsuario,\n      ranchoDestino: data.rancho,\n      variedad,\n      folio: data.folio,\n      temporada: data.temporada,\n      cantidad: data.cantidad,\n      idCentroCoste: data.centroCoste,\n      presentacion: data.presentacion,\n      metodoAplicacion: data.metodoAplicacion,\n      descripcion: data.descripcion,\n      empresa: data.empresaPertece,\n      imagenEntrega: data.imagenEntrega || null,\n      fechaEntrega: data.fechaEntrega || null,\n      porcentajes\n    };\n    return _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.create(solicitudData, {\n      transaction\n    });\n  };\n\n  // Métodos auxiliares para cerrarSolicitud\n  static #validarDatosCierre({\n    data,\n    idUsuario\n  }) {\n    const errores = [];\n    if (!idUsuario) {\n      errores.push('El ID de usuario es requerido');\n    }\n    if (!data?.idSolicitud) {\n      errores.push('El ID de solicitud es requerido');\n    }\n    if (!data?.imagen) {\n      errores.push('La imagen de entrega es requerida');\n    }\n    if (errores.length > 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.ValidationError('Datos requeridos no proporcionados', {\n        errores,\n        received: {\n          idUsuario,\n          idSolicitud: data?.idSolicitud,\n          tieneImagen: !!data?.imagen\n        }\n      });\n    }\n  }\n  static async #buscarSolicitud({\n    id,\n    transaction\n  }) {\n    const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findByPk(id);\n    if (!solicitud) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError(`Solicitud con ID ${id} no encontrada`, {\n        solicitudId: id\n      });\n    }\n    return solicitud;\n  }\n  static async #actualizarSolicitud({\n    solicitud,\n    data,\n    idUsuario,\n    transaction\n  }) {\n    const cambios = {\n      status: 'Completada',\n      idUsuarioMezcla: idUsuario,\n      fechaEntrega: data.fecha || new Date()\n    };\n    if (data.imagenPath) {\n      cambios.imagenEntrega = data.imagenPath;\n    }\n    Object.assign(solicitud, cambios);\n    await solicitud.save({\n      transaction\n    });\n    return {\n      solicitudActualizada: solicitud,\n      cambiosRealizados: cambios\n    };\n  }\n  static async #procesarImagen({\n    imagen\n  }) {\n    try {\n      const response = await (0,_config_foto_mjs__WEBPACK_IMPORTED_MODULE_5__.guardarImagen)({\n        imagen\n      });\n      if (!response?.relativePath) {\n        throw new Error('No se pudo guardar la imagen');\n      }\n      return response;\n    } catch (error) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.DatabaseError('Error al procesar la imagen', {\n        originalError: error.message\n      });\n    }\n  }\n  static async #notificarCierreSolicitud({\n    solicitud,\n    idUsuario\n  }) {\n    try {\n      const solicitante = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_9__.UsuarioModel.getOneId({\n        id: solicitud.idUsuarioSolicita\n      });\n      if (solicitante?.email) {\n        await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_6__.enviarCorreo)({\n          type: 'cierre_solicitud',\n          email: solicitante.email,\n          nombre: solicitante.nombre,\n          solicitudId: solicitud.id,\n          data: {\n            fechaEntrega: solicitud.fechaEntrega,\n            status: solicitud.status\n          }\n        });\n      }\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].warn('Error al enviar notificación de cierre', {\n        error: error.message,\n        solicitudId: solicitud.id,\n        userId: idUsuario\n      });\n      // No lanzamos el error para no interrumpir el flujo principal\n    }\n  }\n} // fin modelo\n\n// Función auxiliar para procesar cada solicitud\n/**\r\n * Procesa una solicitud de mezcla\r\n * @param {Object} params Parámetros de la solicitud\r\n * @param {string} params.estado Estado actual de la solicitud\r\n * @param {number} params.idUsuario ID del usuario que procesa\r\n * @returns {Promise<Object>} Resultado del procesamiento\r\n * @throws {ValidationError} Si los datos son inválidos\r\n */\nasync function procesarSolicitud({\n  estado,\n  idUsuario,\n  user,\n  transaction\n}) {\n  // Buscar la solicitud\n  const solicitud = await _schema_mezclas_js__WEBPACK_IMPORTED_MODULE_0__.Solicitud.findByPk(estado.id_solicitud);\n  if (!solicitud) {\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_12__.NotFoundError(`Solicitud ${estado.id_solicitud} no encontrada`, {\n      id: estado.id_solicitud,\n      userId: idUsuario,\n      user: user.nombre\n    });\n  }\n\n  // Actualizar solicitud\n  solicitud.confirmacion = estado.validacion === true ? 'Confirmada' : solicitud.confirmacion;\n  solicitud.idUsuarioValida = idUsuario;\n  await solicitud.save({\n    transaction\n  });\n\n  // Obtener mezclador según la empresa\n  let mezclador;\n  if (solicitud.empresa === 'Moras Finas' || solicitud.empresa === 'Bayas del Centro') {\n    mezclador = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_9__.UsuarioModel.getUserEmail({\n      rol: 'mezclador',\n      empresa: solicitud.empresa\n    });\n  } else {\n    mezclador = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_9__.UsuarioModel.getUserEmailRancho({\n      rol: 'mezclador',\n      empresa: solicitud.empresa,\n      rancho: solicitud.ranchoDestino\n    });\n  }\n\n  // Obtener solicitante\n  const solicitante = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_9__.UsuarioModel.getOneId({\n    id: solicitud.idUsuarioSolicita\n  });\n\n  // Enviar correos si se tienen los datos necesarios\n  if (mezclador?.[0] && solicitante) {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].info(`nombre mezclador:${mezclador[0].nombre}, correo:${mezclador[0].email}`);\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].info(`nombre solicitante:${solicitante.nombre}, correo:${solicitante.email}`);\n    const respues = await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_6__.enviarCorreo)({\n      type: 'solicitud',\n      email: mezclador[0].email,\n      nombre: mezclador[0].nombre,\n      solicitudId: solicitud.id,\n      fechaSolicitud: (0,date_fns__WEBPACK_IMPORTED_MODULE_10__.format)(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm:ss'),\n      data: solicitud,\n      usuario: {\n        nombre: solicitante.nombre,\n        empresa: solicitante.empresa,\n        ranchos: solicitud.ranchoDestino\n      }\n    });\n    const respuesSolicitante = await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_6__.enviarCorreo)({\n      type: 'aprobada',\n      email: solicitante.email,\n      nombre: solicitante.nombre,\n      solicitudId: solicitud.id,\n      usuario: {\n        empresa: solicitante.empresa,\n        ranchos: solicitud.ranchoDestino\n      },\n      data: {\n        folio: solicitud.folio,\n        cantidad: solicitud.cantidad,\n        presentacion: solicitud.presentacion,\n        metodoAplicacion: solicitud.metodoAplicacion\n      }\n    });\n    if (respues.error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].error('Error al enviar correo:', respues.error);\n    } else {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].info('Correo enviado:', respues.messageId);\n    }\n    if (respuesSolicitante.error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].error('Error al enviar correo:', respuesSolicitante.error);\n    } else {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_11__[\"default\"].info('Correo enviado:', respuesSolicitante.messageId);\n    }\n  }\n  return {\n    idSolicitud: estado.id_solicitud,\n    empresa: solicitud.empresa,\n    status: 'procesado'\n  };\n}\n\n//# sourceURL=webpack://mezclas/./src/models/mezclas.models.js?");
+
+class FertilizacionController {
+  static getCatalogos = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const logger = req.logger;
+    const catalogos = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(async () => {
+      const [activos, tanques, sectores, mezclas, ranchos, ranchos_dsa, temporadas] = await Promise.all([_schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__/* .ActivoMezcla */ .B.findAll(), _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__/* .Tanques */ .C.findAll({
+        where: {
+          status: 1
+        },
+        include: [{
+          model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__/* .Ranchos */ .h,
+          attributes: ['id', 'rancho']
+        }]
+      }), _schema_sectores_js__WEBPACK_IMPORTED_MODULE_2__/* .Sectores */ .d.findAll({
+        where: {
+          status: 1
+        },
+        include: [{
+          model: _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_7__/* .RanchoDsa */ .M,
+          attributes: ['id', 'nombre_rancho_dsa', 'numero_rancho_dsa'],
+          include: [{
+            model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__/* .Ranchos */ .h,
+            attributes: ['id', 'rancho']
+          }]
+        }]
+      }), _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.findAll({
+        include: [{
+          model: _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k,
+          include: [_schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__/* .ActivoMezcla */ .B]
+        }]
+      }), _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__/* .Ranchos */ .h.findAll({
+        where: {
+          status: 1
+        }
+      }), _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_7__/* .RanchoDsa */ .M.findAll({
+        where: {
+          status: 1
+        }
+      }), _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query(`
+                    SELECT anio FROM npk_fertilizacion_completo GROUP by anio
+                    `, {
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT
+      }), _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query(`
+                    SELECT temporada FROM temporada WHERE status=1`, {
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT
+      })]);
+      return {
+        activos,
+        tanques,
+        sectores,
+        mezclas,
+        ranchos,
+        ranchos_dsa,
+        anios: [],
+        temporadas
+      };
+    }, {
+      operation: 'GET_CATALOGOS',
+      userId: req.user?.id
+    });
+    logger.logOperation('GET_CATALOGOS', 'success', {
+      activosCount: catalogos.activos.length,
+      tanquesCount: catalogos.tanques.length,
+      sectoresCount: catalogos.sectores.length,
+      mezclasCount: catalogos.mezclas.length,
+      ranchosCount: catalogos.ranchos.length,
+      anios: catalogos.anios.length,
+      temporadas: catalogos.temporadas.length
+    });
+    res.json({
+      success: true,
+      data: catalogos
+    });
+  });
+
+  // ========== RENDERIZAR PÁGINAS ==========
+  static renderMezclas = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/fertilizacion/mezclas', {
+      title: 'Catálogo de Mezclas',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+  static renderGraficas = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/fertilizacion/graficas', {
+      title: 'Reportes de Fertilización',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+  static renderRegistro = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/fertilizacion/nueva_estructura_registro', {
+      title: 'Registro de Aplicación',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+  static renderNuevaEstructuraRegistro = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/fertilizacion/nueva_estructura_registro', {
+      title: 'Registro de Fertilización - Nueva Estructura',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+  static renderNuevaEstructuraReportes = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/fertilizacion/nueva_estructura_reportes', {
+      title: 'Reportes V2 - Nueva Estructura',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+  static renderPrepararTanque = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/fertilizacion/preparar_tanque', {
+      title: 'Preparar Tanque',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+
+  // ========== GESTIÓN DE MEZCLAS CATÁLOGO ==========
+  static crearMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const logger = req.logger;
+    const {
+      nombre,
+      fabricante,
+      descripcion
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.body, ['nombre', 'fabricante'], {
+      operation: 'CREATE_MEZCLA'
+    });
+    const nuevaMezcla = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const mezcla = await _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.create({
+        nombre: nombre.trim(),
+        fabricante: fabricante.trim(),
+        descripcion: descripcion ? descripcion.trim() : null
+      }, {
+        transaction
+      });
+      logger.logOperation('CREATE_MEZCLA', 'success', {
+        mezclaId: mezcla.id,
+        nombre: mezcla.nombre
+      });
+      return mezcla;
+    }, {
+      operation: 'CREATE_MEZCLA',
+      userId: req.user?.id
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Mezcla creada correctamente',
+      data: nuevaMezcla
+    });
+  });
+  static actualizarMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const logger = req.logger;
+    const {
+      id
+    } = req.params;
+    const {
+      nombre,
+      fabricante,
+      descripcion
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.body, ['nombre', 'fabricante'], {
+      operation: 'UPDATE_MEZCLA'
+    });
+    const mezclaActualizada = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const mezcla = await _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.findByPk(id, {
+        transaction
+      });
+      if (!mezcla) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Mezcla no encontrada', {
+          mezclaId: id
+        });
+      }
+      await mezcla.update({
+        nombre,
+        fabricante,
+        descripcion
+      }, {
+        transaction
+      });
+      logger.logOperation('UPDATE_MEZCLA', 'success', {
+        mezclaId: mezcla.id,
+        nombre: mezcla.nombre
+      });
+      return mezcla;
+    }, {
+      operation: 'UPDATE_MEZCLA',
+      mezclaId: id,
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      message: 'Mezcla actualizada correctamente',
+      data: mezclaActualizada
+    });
+  });
+  static eliminarMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const logger = req.logger;
+    const {
+      id
+    } = req.params;
+    await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const mezcla = await _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.findByPk(id, {
+        transaction
+      });
+      if (!mezcla) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Mezcla no encontrada', {
+          mezclaId: id
+        });
+      }
+
+      // Eliminar los activos asociados a la mezcla
+      await _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k.destroy({
+        where: {
+          id_mezcla: id
+        },
+        transaction
+      });
+
+      // Eliminar la mezcla
+      await mezcla.destroy({
+        transaction
+      });
+      logger.logOperation('DELETE_MEZCLA', 'success', {
+        mezclaId: id,
+        userId: req.user?.id
+      });
+    }, {
+      operation: 'DELETE_MEZCLA',
+      mezclaId: id,
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      message: 'Mezcla eliminada correctamente'
+    });
+  });
+  static obtenerMezclas = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const mezclas = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.findAll({
+      include: [{
+        model: _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k,
+        include: [_schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__/* .ActivoMezcla */ .B]
+      }]
+    }), {
+      operation: 'GET_MEZCLAS',
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      data: mezclas
+    });
+  });
+  static obtenerMezclaPorId = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const mezcla = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.findByPk(id, {
+      include: [{
+        model: _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k,
+        include: [_schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__/* .ActivoMezcla */ .B]
+      }]
+    }), {
+      operation: 'GET_MEZCLA_BY_ID',
+      userId: req.user?.id,
+      mezclaId: id
+    });
+    if (!mezcla) {
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Mezcla no encontrada', {
+        id
+      });
+    }
+    res.json({
+      success: true,
+      data: mezcla
+    });
+  });
+
+  // ========== ASIGNACIÓN DE ACTIVOS A MEZCLAS ==========
+  static asignarActivosMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const logger = req.logger;
+    const {
+      id_mezcla
+    } = req.params;
+    const {
+      activos
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)({
+      id_mezcla,
+      activos
+    }, ['id_mezcla', 'activos'], {
+      operation: 'ASSIGN_MEZCLA_ACTIVOS'
+    });
+    if (!Array.isArray(activos) || activos.length === 0) {
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .ValidationError */ .yI('Debe proporcionar al menos un activo', {
+        field: 'activos'
+      });
+    }
+    const nuevosActivos = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const mezcla = await _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.findByPk(id_mezcla, {
+        transaction
+      });
+      if (!mezcla) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Mezcla no encontrada', {
+          mezclaId: id_mezcla
+        });
+      }
+      await _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k.destroy({
+        where: {
+          id_mezcla
+        }
+      }, {
+        transaction
+      });
+      const nuevos = await _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k.bulkCreate(activos.map(a => ({
+        id_mezcla,
+        id_activo: a.id_activo,
+        porcentaje: a.porcentaje || a.cantidad // Fallback for transition
+      })), {
+        transaction
+      });
+      logger.logOperation('ASSIGN_MEZCLA_ACTIVOS', 'success', {
+        mezclaId: id_mezcla,
+        activosCount: nuevos.length
+      });
+      return nuevos;
+    }, {
+      operation: 'ASSIGN_MEZCLA_ACTIVOS',
+      mezclaId: id_mezcla,
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      message: 'Ingredientes asignados a la mezcla',
+      data: nuevosActivos
+    });
+  });
+  static actualizarActivosMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const logger = req.logger;
+    const {
+      id_mezcla
+    } = req.params;
+    const {
+      activos
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)({
+      id_mezcla,
+      activos
+    }, ['id_mezcla', 'activos'], {
+      operation: 'UPDATE_MEZCLA_ACTIVOS'
+    });
+    if (!Array.isArray(activos) || activos.length === 0) {
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .ValidationError */ .yI('Debe proporcionar al menos un activo', {
+        field: 'activos'
+      });
+    }
+    const nuevosActivos = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const mezcla = await _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.findByPk(id_mezcla, {
+        transaction
+      });
+      if (!mezcla) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Mezcla no encontrada', {
+          mezclaId: id_mezcla
+        });
+      }
+      await _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k.destroy({
+        where: {
+          id_mezcla
+        }
+      }, {
+        transaction
+      });
+      const nuevos = await _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k.bulkCreate(activos.map(a => ({
+        id_mezcla,
+        id_activo: a.id_activo,
+        porcentaje: a.porcentaje || a.cantidad
+      })), {
+        transaction
+      });
+      logger.logOperation('UPDATE_MEZCLA_ACTIVOS', 'success', {
+        mezclaId: id_mezcla,
+        activosCount: nuevos.length
+      });
+      return nuevos;
+    }, {
+      operation: 'UPDATE_MEZCLA_ACTIVOS',
+      mezclaId: id_mezcla,
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      message: 'Receta actualizada correctamente',
+      data: nuevosActivos
+    });
+  });
+  static obtenerActivosMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id_mezcla
+    } = req.params;
+    const mezcla = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p.findByPk(id_mezcla, {
+      include: [{
+        model: _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k,
+        include: [_schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__/* .ActivoMezcla */ .B]
+      }]
+    }), {
+      operation: 'GET_MEZCLA_ACTIVOS',
+      mezclaId: id_mezcla,
+      userId: req.user?.id
+    });
+    if (!mezcla) {
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Mezcla no encontrada', {
+        id_mezcla
+      });
+    }
+    res.json({
+      success: true,
+      data: mezcla
+    });
+  });
+
+  // ========== PREPARACIÓN DE TANQUES EN CAMPO ==========
+  static crearTanquePreparado = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const logger = req.logger;
+    const {
+      id_tanque,
+      mezclas,
+      fecha_preparacion,
+      litros_totales,
+      id_rancho,
+      codigo_tanque_preparado,
+      tasa_inyeccion
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)({
+      id_tanque,
+      mezclas,
+      fecha_preparacion,
+      litros_totales,
+      id_rancho,
+      tasa_inyeccion
+    }, ['id_tanque', 'mezclas', 'fecha_preparacion', 'litros_totales', 'id_rancho', 'tasa_inyeccion'], {
+      operation: 'CREATE_TANQUE_PREPARADO'
+    });
+    if (!Array.isArray(mezclas) || mezclas.length === 0) {
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .ValidationError */ .yI('Debe especificar al menos una mezcla', {
+        field: 'mezclas'
+      });
+    }
+    const nuevaTanquePreparado = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const creado = await _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.create({
+        id_tanque,
+        id_rancho,
+        fecha_preparacion,
+        litros_totales,
+        litros_disponibles: litros_totales,
+        codigo_tanque_preparado: codigo_tanque_preparado || null,
+        tasa_inyeccion: tasa_inyeccion || 0
+      }, {
+        transaction
+      });
+      const mezclasData = mezclas.map(m => ({
+        id_tanque_preparado: creado.id,
+        id_mezcla: m.id_mezcla,
+        cantidad_litros: m.cantidad_litros
+      }));
+      await _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .MezclasTanque */ .e.bulkCreate(mezclasData, {
+        transaction
+      });
+      logger.logOperation('CREATE_TANQUE_PREPARADO', 'success', {
+        tanqueId: id_tanque,
+        tanquePreparadoId: creado.id,
+        mezclasCount: mezclas.length,
+        litrosTotales: litros_totales,
+        ranchoId: id_rancho
+      });
+      return creado;
+    }, {
+      operation: 'CREATE_TANQUE_PREPARADO',
+      userId: req.user?.id
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Tanque preparado registrado',
+      data: nuevaTanquePreparado
+    });
+  });
+  static getTanquesPreparados = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const tanques = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(async () => {
+      return _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findAll({
+        where: {
+          litros_disponibles: {
+            [sequelize__WEBPACK_IMPORTED_MODULE_12__.Op.gt]: 0
+          }
+        },
+        include: [{
+          model: _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .MezclasTanque */ .e,
+          include: [{
+            model: _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p,
+            attributes: ['nombre']
+          }]
+        }, {
+          model: _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__/* .Tanques */ .C,
+          attributes: ['codigo', 'etapa']
+        }, {
+          model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__/* .Ranchos */ .h,
+          attributes: ['rancho']
+        }],
+        order: [['fecha_preparacion', 'DESC']]
+      });
+    }, {
+      operation: 'GET_TANQUES_PREPARADOS',
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      data: tanques
+    });
+  });
+  static getTanquesPreparadosPorRancho = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id_rancho
+    } = req.params;
+    const tanques = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(async () => {
+      return _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findAll({
+        where: {
+          id_rancho,
+          litros_disponibles: {
+            [sequelize__WEBPACK_IMPORTED_MODULE_12__.Op.gt]: 0
+          }
+        },
+        include: [{
+          model: _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .MezclasTanque */ .e,
+          include: [{
+            model: _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p,
+            attributes: ['nombre']
+          }]
+        }, {
+          model: _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__/* .Tanques */ .C,
+          attributes: ['codigo', 'etapa']
+        }, {
+          model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__/* .Ranchos */ .h,
+          attributes: ['rancho']
+        }],
+        order: [['fecha_preparacion', 'DESC']]
+      });
+    }, {
+      operation: 'GET_TANQUES_PREPARADOS_POR_RANCHO',
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      data: tanques
+    });
+  });
+  static getDetalleTanque = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const logger = req.logger;
+    const logContext = {
+      operation: 'GET_DETALLE_TANQUE',
+      userId: req.user?.id
+    };
+    logger.info('Obteniendo detalle del tanque', logContext);
+    const tanque = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findByPk(id, {
+      include: [{
+        model: _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .MezclasTanque */ .e,
+        attributes: ['cantidad_litros'],
+        include: [{
+          model: _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p,
+          attributes: ['nombre', 'fabricante'],
+          include: [{
+            model: _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k,
+            include: [{
+              model: _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__/* .ActivoMezcla */ .B
+            }]
+          }]
+        }]
+      }, {
+        model: _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__/* .Tanques */ .C
+      }, {
+        model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__/* .Ranchos */ .h,
+        include: [{
+          model: _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_7__/* .RanchoDsa */ .M
+        }]
+      }]
+    }), {
+      operation: 'GET_DETALLE_TANQUE',
+      userId: req.user?.id,
+      tanqueId: id
+    });
+    logger.info('Detalle del tanque obtenido', {
+      ...logContext,
+      tanqueId: id
+    });
+    if (!tanque) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Tanque preparado no encontrado', {
+      id
+    });
+    res.json({
+      success: true,
+      message: 'Detalle de tanque obtenido',
+      data: tanque
+    });
+  });
+  static registrarAplicacion = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id_tanque_preparado,
+      id_sector,
+      litros_aplicados,
+      fecha,
+      id_responsable
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)({
+      id_tanque_preparado,
+      id_sector,
+      litros_aplicados,
+      fecha,
+      id_responsable
+    }, ['id_tanque_preparado', 'id_sector', 'litros_aplicados', 'fecha', 'id_responsable'], {
+      operation: 'REGISTER_APLICACION_TANQUE'
+    });
+    const resultado = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const tanque = await _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findByPk(id_tanque_preparado, {
+        transaction
+      });
+      if (!tanque) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Tanque no encontrado', {
+        id_tanque_preparado
+      });
+      const disponibles = parseFloat(tanque.litros_disponibles);
+      const aplicados = parseFloat(litros_aplicados);
+      if (Number.isNaN(disponibles) || Number.isNaN(aplicados)) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .ValidationError */ .yI('Valores numéricos inválidos', {
+          litros_disponibles: tanque.litros_disponibles,
+          litros_aplicados
+        });
+      }
+      if (disponibles < aplicados) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .BusinessError */ .H0(`Volumen insuficiente. Disponible: ${tanque.litros_disponibles}L`, {
+          disponibles: tanque.litros_disponibles,
+          solicitados: litros_aplicados
+        });
+      }
+      const sector = await _schema_sectores_js__WEBPACK_IMPORTED_MODULE_2__/* .Sectores */ .d.findByPk(id_sector, {
+        transaction
+      });
+      if (!sector) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Sector no encontrado', {
+        id_sector
+      });
+      const nuevaAplicacion = await _schema_aplicaciones_tanque_js__WEBPACK_IMPORTED_MODULE_5__/* .AplicacionesTanque */ .y.create({
+        id_sector,
+        id_tanque_preparado,
+        id_responsable,
+        fecha,
+        litros_aplicados
+      }, {
+        transaction
+      });
+      const nuevosDisponibles = disponibles - aplicados;
+      await tanque.update({
+        litros_disponibles: nuevosDisponibles
+      }, {
+        transaction
+      });
+      return {
+        nuevaAplicacion,
+        nuevosDisponibles
+      };
+    }, {
+      operation: 'REGISTER_APLICACION_TANQUE',
+      userId: req.user?.id
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Aplicación registrada correctamente',
+      data: {
+        ...resultado.nuevaAplicacion.toJSON(),
+        litros_restantes: resultado.nuevosDisponibles
+      }
+    });
+  });
+
+  // ========== REPORTES - VISTAS ==========
+  static renderReportes = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/fertilizacion/reportes', {
+      title: 'Reportes de Fertilización',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+  static reporteInventario = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_inventario_tanques()', {
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+    }), {
+      operation: 'GET_REPORTE_INVENTARIO',
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      message: 'Reporte de inventario generado',
+      data: results[0]
+    });
+  });
+  static reporteResumenAnual = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio
+    } = req.query;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.query, ['anio'], {
+      operation: 'REPORTE_RESUMEN_ANUAL'
+    });
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_resumen_anual(?)', {
+      replacements: [parseInt(anio)],
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+    }), {
+      operation: 'REPORTE_RESUMEN_ANUAL',
+      userId: req.user?.id,
+      anio
+    });
+    res.json({
+      success: true,
+      message: 'Reporte resumen anual generado',
+      data: results[0]
+    });
+  });
+  static reportePorVariedad = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio,
+      mes
+    } = req.query;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.query, ['anio', 'mes'], {
+      operation: 'REPORTE_POR_VARIEDAD'
+    });
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_reporte_por_variedad(?, ?)', {
+      replacements: [parseInt(anio), parseInt(mes)],
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+    }), {
+      operation: 'REPORTE_POR_VARIEDAD',
+      userId: req.user?.id,
+      anio,
+      mes
+    });
+    res.json({
+      success: true,
+      message: 'Reporte por variedad generado',
+      data: results[0]
+    });
+  });
+  static reporteMensualRancho = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio,
+      mes,
+      id_rancho
+    } = req.query;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.query, ['anio', 'mes', 'id_rancho'], {
+      operation: 'REPORTE_MENSUAL_RANCHO'
+    });
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_reporte_mensual_rancho(?, ?, ?)', {
+      replacements: [parseInt(anio), parseInt(mes), parseInt(id_rancho)],
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+    }), {
+      operation: 'REPORTE_MENSUAL_RANCHO',
+      userId: req.user?.id,
+      anio,
+      mes,
+      id_rancho
+    });
+    res.json({
+      success: true,
+      message: 'Reporte mensual por rancho obtenido',
+      data: results[0]
+    });
+  });
+  static reporteComparativoMensual = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio,
+      id_rancho
+    } = req.query;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.query, ['anio'], {
+      operation: 'REPORTE_COMPARATIVO_MENSUAL'
+    });
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_comparativo_mensual(?, ?)', {
+      replacements: [parseInt(anio), id_rancho ? parseInt(id_rancho) : null],
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+    }), {
+      operation: 'REPORTE_COMPARATIVO_MENSUAL',
+      userId: req.user?.id,
+      anio,
+      id_rancho
+    });
+    res.json({
+      success: true,
+      message: 'Reporte comparativo mensual obtenido',
+      data: results[0]
+    });
+  });
+  static reporteTopSectores = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio,
+      mes,
+      limite
+    } = req.query;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.query, ['anio', 'mes'], {
+      operation: 'REPORTE_TOP_SECTORES'
+    });
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_top_sectores(?, ?, ?)', {
+      replacements: [parseInt(anio), parseInt(mes), limite ? parseInt(limite) : 10],
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+    }), {
+      operation: 'REPORTE_TOP_SECTORES',
+      userId: req.user?.id,
+      anio,
+      mes,
+      limite
+    });
+    res.json({
+      success: true,
+      message: 'Top sectores obtenido',
+      data: results[0]
+    });
+  });
+  static registrarFertilizacion = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id_sector,
+      id_tanque_preparado,
+      litros_aplicados,
+      observaciones,
+      temporada
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)({
+      id_sector,
+      id_tanque_preparado,
+      litros_aplicados,
+      temporada
+    }, ['id_sector', 'id_tanque_preparado', 'litros_aplicados', 'temporada'], {
+      operation: 'CREATE_FERTILIZACION'
+    });
+    const fertilizacion = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const idResponsable = req.user?.id;
+      if (!idResponsable) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .ValidationError */ .yI('Usuario no autenticado', {
+          field: 'user.id'
+        });
+      }
+      await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('SET @p_id_fertilizacion = 0', {
+        transaction,
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+      });
+      await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_crear_fertilizacion(?, ?, ?, ?, ?, @p_id_fertilizacion, ?)', {
+        replacements: [id_sector, idResponsable, id_tanque_preparado, litros_aplicados, observaciones || null, temporada],
+        transaction,
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+      });
+      const [outRow] = await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('SELECT @p_id_fertilizacion AS id', {
+        transaction,
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT
+      });
+      if (!outRow?.id) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .BusinessError */ .H0('No se pudo obtener el ID de la fertilización generada', {
+          id_sector,
+          id_tanque_preparado
+        });
+      }
+      return {
+        id: outRow.id,
+        id_sector,
+        id_responsable: idResponsable,
+        id_tanque_preparado,
+        litros_aplicados,
+        observaciones: observaciones || null,
+        temporada
+      };
+    }, {
+      operation: 'CREATE_FERTILIZACION',
+      userId: req.user?.id,
+      id_sector
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Fertilización registrada exitosamente',
+      data: fertilizacion
+    });
+  });
+  static registrarFertilizacionBulk = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      sectores,
+      id_tanque_preparado,
+      horas_aplicadas,
+      observaciones,
+      temporada
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)({
+      sectores,
+      id_tanque_preparado,
+      horas_aplicadas,
+      temporada
+    }, ['sectores', 'id_tanque_preparado', 'horas_aplicadas', 'temporada'], {
+      operation: 'CREATE_FERTILIZACION_BULK'
+    });
+    if (!Array.isArray(sectores) || sectores.length === 0) {
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .ValidationError */ .yI('Debe especificar al menos un sector', {
+        field: 'sectores'
+      });
+    }
+    const idsCreados = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const idResponsable = req.user?.id;
+      if (!idResponsable) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .ValidationError */ .yI('Usuario no autenticado', {
+          field: 'user.id'
+        });
+      }
+
+      // 1. Obtener información del tanque
+      const tanque = await _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findByPk(id_tanque_preparado, {
+        transaction
+      });
+      if (!tanque) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Tanque preparado no encontrado', {
+        id_tanque_preparado
+      });
+      const tasa = parseFloat(tanque.tasa_inyeccion || 0);
+      const litrosTotales = parseFloat(horas_aplicadas) * tasa;
+      if (parseFloat(tanque.litros_disponibles) < litrosTotales - 0.01) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .BusinessError */ .H0(`Volumen insuficiente en el tanque. Disponible: ${tanque.litros_disponibles}L, Requerido: ${litrosTotales.toFixed(2)}L`);
+      }
+
+      // 2. Obtener hectáreas de los sectores para distribución proporcional
+      const sectoresData = await _schema_sectores_js__WEBPACK_IMPORTED_MODULE_2__/* .Sectores */ .d.findAll({
+        where: {
+          id: sectores
+        },
+        attributes: ['id', 'hectareas'],
+        transaction
+      });
+      if (sectoresData.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('No se encontraron los sectores seleccionados');
+      }
+      const hectareasTotales = sectoresData.reduce((sum, s) => sum + parseFloat(s.hectareas || 0), 0);
+      if (hectareasTotales <= 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .BusinessError */ .H0('La suma de las hectáreas de los sectores seleccionados debe ser mayor a cero');
+      }
+      const createdIds = [];
+
+      // 3. Registrar fertilización para cada sector
+      for (const sector of sectoresData) {
+        const haSector = parseFloat(sector.hectareas || 0);
+        const litrosProporcionales = haSector / hectareasTotales * litrosTotales;
+
+        // Llamar al SP para cada sector
+        await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('SET @p_id_fertilizacion = 0', {
+          transaction,
+          type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+        });
+        await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_crear_fertilizacion(?, ?, ?, ?, ?, @p_id_fertilizacion, ?)', {
+          replacements: [sector.id, idResponsable, id_tanque_preparado, litrosProporcionales.toFixed(2), observaciones || null, temporada],
+          transaction,
+          type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+        });
+        const [outRow] = await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('SELECT @p_id_fertilizacion AS id', {
+          transaction,
+          type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT
+        });
+        if (outRow?.id) createdIds.push(outRow.id);
+      }
+      return createdIds;
+    }, {
+      operation: 'CREATE_FERTILIZACION_BULK',
+      userId: req.user?.id
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Fertilización múltiple registrada exitosamente',
+      data: {
+        ids: idsCreados
+      }
+    });
+  });
+  static obtenerFertilizaciones = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio,
+      mes
+    } = req.query;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.query, ['anio', 'mes'], {
+      operation: 'OBTENER_FERTILIZACIONES'
+    });
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_obtener_fertilizaciones(?, ?)', {
+      replacements: [parseInt(anio), parseInt(mes)],
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+    }), {
+      operation: 'OBTENER_FERTILIZACIONES',
+      userId: req.user?.id,
+      anio,
+      mes
+    });
+    res.json({
+      success: true,
+      message: 'Fertilizaciones obtenidas exitosamente',
+      data: results[0]
+    });
+  });
+  static reporteSemanal = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio,
+      mes
+    } = req.query;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)(req.query, ['anio', 'mes'], {
+      operation: 'REPORTE_SEMANAL'
+    });
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('CALL sp_reporte_semanal_v2(?, ?)', {
+      replacements: [parseInt(anio), parseInt(mes)],
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.RAW
+    }), {
+      operation: 'REPORTE_SEMANAL',
+      userId: req.user?.id,
+      anio,
+      mes
+    });
+    res.json({
+      success: true,
+      message: 'Reporte semanal V2 generado',
+      data: results[0]
+    });
+  });
+  static agregarTanque = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const {
+      id_tanque,
+      litros_aplicados
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_14__/* .validateRequiredData */ .ip)({
+      id,
+      id_tanque,
+      litros_aplicados
+    }, ['id', 'id_tanque', 'litros_aplicados'], {
+      operation: 'ADD_TANQUE_FERTILIZACION'
+    });
+    const resultado = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withTransaction */ .r)(async transaction => {
+      const fertilizacion = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query('SELECT * FROM fertilizaciones WHERE id = ?', {
+        replacements: [id],
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT,
+        transaction
+      }));
+      if (!fertilizacion || fertilizacion.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Fertilización no encontrada', {
+          id
+        });
+      }
+      const tanque = await _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findByPk(id_tanque, {
+        transaction,
+        lock: transaction.LOCK_UPDATE
+      });
+      if (!tanque) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Tanque preparado no encontrado', {
+        id_tanque
+      });
+      if (parseFloat(tanque.litros_disponibles) < parseFloat(litros_aplicados)) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .BusinessError */ .H0(`Litros insuficientes. Disponibles: ${tanque.litros_disponibles}`, {
+          disponible: tanque.litros_disponibles,
+          solicitado: litros_aplicados
+        });
+      }
+      await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query(`INSERT INTO detalle_fertilizacion_tanques (id_fertilizacion, id_tanque_preparado, litros_aplicados)
+                     VALUES (?, ?, ?)`, {
+        replacements: [id, id_tanque, litros_aplicados],
+        transaction
+      });
+      await tanque.update({
+        litros_disponibles: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.literal(`litros_disponibles - ${litros_aplicados}`)
+      }, {
+        transaction
+      });
+      return {
+        message: 'Tanque agregado correctamente',
+        id_fertilizacion: id
+      };
+    }, {
+      operation: 'ADD_TANQUE_FERTILIZACION',
+      userId: req.user?.id,
+      fertilizacionId: id
+    });
+    res.json({
+      success: true,
+      message: 'Tanque agregado a la fertilización',
+      data: resultado
+    });
+  });
+  static reporteFertilizacionCompleto = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio,
+      mes,
+      id_rancho_dsa,
+      id_sector,
+      temporada
+    } = req.query;
+    const results = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(async () => {
+      let query = 'SELECT * FROM npk_fertilizacion_completo WHERE 1=1';
+      const replacements = [];
+      if (anio) {
+        query += ' AND anio = ?';
+        replacements.push(parseInt(anio));
+      }
+      if (mes) {
+        query += ' AND mes = ?';
+        replacements.push(parseInt(mes));
+      }
+      if (id_rancho_dsa) {
+        query += ' AND id_rancho_dsa = ?';
+        replacements.push(parseInt(id_rancho_dsa));
+      }
+      if (id_sector) {
+        query += ' AND id_sector = ?';
+        replacements.push(parseInt(id_sector));
+      }
+      if (temporada) {
+        query += ' AND temporada = ?';
+        replacements.push(temporada);
+      }
+      query += ' ORDER BY fecha DESC';
+      return await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query(query, {
+        replacements,
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT
+      });
+    }, {
+      operation: 'GET_REPORTE_FERTILIZACION_COMPLETO',
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      data: results
+    });
+  });
+  static getDetalleTanquesPorCodigos = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      codigos
+    } = req.query;
+    if (!codigos) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+    const listaCodigos = codigos.split(',').map(c => c.trim()).filter(Boolean);
+    if (listaCodigos.length === 0) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+    const resultado = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(async () => {
+      // Obtener tanques preparados con sus mezclas y activos
+      const placeholders = listaCodigos.map(() => '?').join(',');
+      const tanques = await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query(`SELECT 
+                        tp.id,
+                        tp.codigo_tanque_preparado AS codigo,
+                        tp.litros_totales,
+                        tp.fecha_preparacion,
+                        rd.nombre_rancho_dsa AS rancho,
+                        mc.nombre AS nombre_mezcla,
+                        mc.fabricante,
+                        mt.cantidad_litros AS litros_mezcla,
+                        am.nombre AS nombre_activo,
+                        am.codigo AS codigo_activo,
+                        ma.porcentaje,
+                        am.unidad
+                    FROM tanques_preparados tp
+                    LEFT JOIN ranchos r ON r.id = tp.id_rancho
+                    LEFT JOIN rancho_dsa rd on rd.id_rancho=r.id
+                    LEFT JOIN mezclas_tanque mt ON mt.id_tanque_preparado = tp.id
+                    LEFT JOIN mezclas mc ON mc.id = mt.id_mezcla
+                    LEFT JOIN mezcla_activos ma ON ma.id_mezcla = mc.id
+                    LEFT JOIN activo_mezcla am ON am.id = ma.id_activo
+                    WHERE tp.codigo_tanque_preparado IN (${placeholders})
+                    ORDER BY tp.codigo_tanque_preparado, mc.nombre, am.nombre`, {
+        replacements: listaCodigos,
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT
+      });
+
+      // Agrupar por código de tanque
+      const agrupado = {};
+      tanques.forEach(row => {
+        const cod = row.codigo;
+        if (!agrupado[cod]) {
+          agrupado[cod] = {
+            codigo: cod,
+            litros_totales: row.litros_totales,
+            fecha_preparacion: row.fecha_preparacion,
+            rancho: row.rancho,
+            mezclas: {}
+          };
+        }
+        if (row.nombre_mezcla) {
+          const mezKey = row.nombre_mezcla;
+          if (!agrupado[cod].mezclas[mezKey]) {
+            agrupado[cod].mezclas[mezKey] = {
+              nombre: row.nombre_mezcla,
+              fabricante: row.fabricante,
+              litros: row.litros_mezcla,
+              activos: []
+            };
+          }
+          if (row.nombre_activo) {
+            agrupado[cod].mezclas[mezKey].activos.push({
+              nombre: row.nombre_activo,
+              codigo: row.codigo_activo,
+              porcentaje: row.porcentaje,
+              unidad: row.unidad
+            });
+          }
+        }
+      });
+
+      // Convertir mezclas de objeto a array
+      return Object.values(agrupado).map(t => ({
+        ...t,
+        mezclas: Object.values(t.mezclas)
+      }));
+    }, {
+      operation: 'GET_DETALLE_TANQUES_POR_CODIGOS',
+      userId: req.user?.id
+    });
+    res.json({
+      success: true,
+      data: resultado
+    });
+  });
+  static duplicarTanquePreparado = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const logger = req.logger;
+    const logContext = {
+      operation: 'DUPLICAR_TANQUE_PREPARADO',
+      userId: req.user?.id
+    };
+    logger.info('Iniciando duplicación de tanque preparado', {
+      ...logContext,
+      tanqueId: id
+    });
+
+    // Obtener el tanque original con todas sus mezclas
+    const tanqueOriginal = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(() => _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findByPk(id, {
+      include: [{
+        model: _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .MezclasTanque */ .e,
+        include: [{
+          model: _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p,
+          include: [{
+            model: _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k,
+            include: [{
+              model: _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__/* .ActivoMezcla */ .B
+            }]
+          }]
+        }]
+      }, {
+        model: _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__/* .Tanques */ .C
+      }, {
+        model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__/* .Ranchos */ .h,
+        include: [{
+          model: _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_7__/* .RanchoDsa */ .M
+        }]
+      }]
+    }), {
+      operation: 'GET_TANQUE_ORIGINAL_PARA_DUPLICAR',
+      userId: req.user?.id,
+      tanqueId: id
+    });
+    if (!tanqueOriginal) {
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_15__/* .NotFoundError */ .m_('Tanque preparado no encontrado', {
+        id
+      });
+    }
+
+    // Iniciar transacción para garantizar consistencia
+    const resultado = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(async transaction => {
+      // Generar código basado en el código original del tanque
+      const codigoOriginal = tanqueOriginal.codigo_tanque_preparado || 'TANQUE-SIN-CODIGO';
+
+      // Buscar duplicados existentes con el mismo código base
+      const existingDuplicates = await _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findAll({
+        where: {
+          codigo_tanque_preparado: {
+            [sequelize__WEBPACK_IMPORTED_MODULE_12__.Op.like]: `${codigoOriginal}-%`
+          }
+        },
+        attributes: ['codigo_tanque_preparado'],
+        order: [['codigo_tanque_preparado', 'ASC']],
+        transaction
+      });
+
+      // Extraer el número más alto de los duplicados existentes
+      let maxSuffix = 0;
+      existingDuplicates.forEach(tanque => {
+        const codigo = tanque.codigo_tanque_preparado;
+        const match = codigo.match(new RegExp(`^${codigoOriginal}-(\\d+)$`));
+        if (match) {
+          const suffix = parseInt(match[1], 10);
+          if (suffix > maxSuffix) {
+            maxSuffix = suffix;
+          }
+        }
+      });
+
+      // Generar nuevo código con sufijo incremental
+      const codigoTanquePreparado = `${codigoOriginal}-${maxSuffix + 1}`;
+
+      // Crear nuevo tanque preparado
+      const nuevoTanque = await _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.create({
+        id_tanque: tanqueOriginal.id_tanque,
+        id_rancho: tanqueOriginal.id_rancho,
+        litros_totales: tanqueOriginal.litros_totales,
+        litros_disponibles: tanqueOriginal.litros_totales,
+        fecha_preparacion: new Date(),
+        estado: 'preparado',
+        codigo_tanque_preparado: codigoTanquePreparado,
+        creado_por: req.user?.id
+      }, {
+        transaction
+      });
+
+      // Duplicar todas las mezclas
+      if (tanqueOriginal.MezclasTanques && tanqueOriginal.MezclasTanques.length > 0) {
+        for (const mezclaOriginal of tanqueOriginal.MezclasTanques) {
+          await _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .MezclasTanque */ .e.create({
+            id_tanque_preparado: nuevoTanque.id,
+            id_mezcla: mezclaOriginal.id_mezcla,
+            cantidad_litros: mezclaOriginal.cantidad_litros
+          }, {
+            transaction
+          });
+        }
+      }
+
+      // Obtener el tanque creado con todas sus relaciones
+      const tanqueCreado = await _schema_tanques_preparados_js__WEBPACK_IMPORTED_MODULE_8__/* .TanquesPreparados */ .t.findByPk(nuevoTanque.id, {
+        include: [{
+          model: _schema_mezclas_tanque_js__WEBPACK_IMPORTED_MODULE_9__/* .MezclasTanque */ .e,
+          include: [{
+            model: _schema_mezclas_catalogo_js__WEBPACK_IMPORTED_MODULE_3__/* .MezclaCatalogo */ .p,
+            include: [{
+              model: _schema_mezcla_activos_js__WEBPACK_IMPORTED_MODULE_4__/* .MezclaActivos */ .k,
+              include: [{
+                model: _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_0__/* .ActivoMezcla */ .B
+              }]
+            }]
+          }]
+        }, {
+          model: _schema_tanques_js__WEBPACK_IMPORTED_MODULE_1__/* .Tanques */ .C
+        }, {
+          model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_6__/* .Ranchos */ .h,
+          include: [{
+            model: _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_7__/* .RanchoDsa */ .M
+          }]
+        }],
+        transaction
+      });
+      return tanqueCreado;
+    }, {
+      operation: 'DUPLICAR_TANQUE_PREPARADO',
+      userId: req.user?.id,
+      tanqueOriginalId: id,
+      nuevoTanqueId: null
+    });
+    logger.info('Tanque duplicado exitosamente', {
+      ...logContext,
+      tanqueOriginalId: id,
+      nuevoTanqueId: resultado.id
+    });
+    res.json({
+      success: true,
+      message: 'Tanque duplicado exitosamente',
+      data: resultado
+    });
+  });
+  static reporteExcelFertilizacion = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_16__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      anio,
+      mes,
+      id_rancho_dsa,
+      id_sector,
+      temporada
+    } = req.query;
+    const data = await (0,_utils_transactionUtils_js__WEBPACK_IMPORTED_MODULE_13__/* .withDatabaseQuery */ .Y)(async () => {
+      let query = 'SELECT * FROM npk_fertilizacion_completo WHERE 1=1';
+      const replacements = [];
+      if (anio) {
+        query += ' AND anio = ?';
+        replacements.push(parseInt(anio));
+      }
+      if (mes) {
+        query += ' AND mes = ?';
+        replacements.push(parseInt(mes));
+      }
+      if (id_rancho_dsa) {
+        query += ' AND id_rancho_dsa = ?';
+        replacements.push(parseInt(id_rancho_dsa));
+      }
+      if (id_sector) {
+        query += ' AND id_sector = ?';
+        replacements.push(parseInt(id_sector));
+      }
+      if (temporada) {
+        query += ' AND temporada = ?';
+        replacements.push(temporada);
+      }
+      query += ' ORDER BY fecha DESC';
+      return await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query(query, {
+        replacements,
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT
+      });
+    }, {
+      operation: 'EXPORT_EXCEL_FERTILIZACION',
+      userId: req.user?.id
+    });
+    if (!data || data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No hay datos para exportar'
+      });
+    }
+    const workbook = new exceljs__WEBPACK_IMPORTED_MODULE_10__["default"].Workbook();
+
+    // 1. Hoja de Detalle de Fertilizaciones
+    const worksheetDetalle = workbook.addWorksheet('Detalle Fertilizaciones');
+    worksheetDetalle.columns = [{
+      header: 'Fecha',
+      key: 'fecha',
+      width: 15
+    }, {
+      header: 'Rancho DSA',
+      key: 'nombre_rancho_dsa',
+      width: 20
+    }, {
+      header: 'Sector',
+      key: 'sector_interno',
+      width: 15
+    }, {
+      header: 'Variedad',
+      key: 'variedad',
+      width: 15
+    }, {
+      header: 'Hectáreas',
+      key: 'hectareas',
+      width: 12
+    }, {
+      header: 'Tanque',
+      key: 'codigo_tanque_preparado',
+      width: 18
+    }, {
+      header: 'Litros Aplicados',
+      key: 'litros_aplicados',
+      width: 15
+    }, {
+      header: 'N (kg)',
+      key: 'N_kg',
+      width: 12
+    }, {
+      header: 'P (kg)',
+      key: 'P_kg',
+      width: 12
+    }, {
+      header: 'K (kg)',
+      key: 'K_kg',
+      width: 12
+    }, {
+      header: 'N/ha',
+      key: 'N_kg_ha',
+      width: 12
+    }, {
+      header: 'P/ha',
+      key: 'P_kg_ha',
+      width: 12
+    }, {
+      header: 'K/ha',
+      key: 'K_kg_ha',
+      width: 12
+    }, {
+      header: 'Temporada',
+      key: 'temporada',
+      width: 12
+    }];
+    worksheetDetalle.addRows(data);
+
+    // 2. Hoja de KPIs Generales
+    const worksheetKPIs = workbook.addWorksheet('KPIs Generales');
+
+    // Calcular KPIs
+    const totalEventos = data.length;
+    const totalLitros = data.reduce((acc, curr) => acc + (parseFloat(curr.litros_aplicados) || 0), 0);
+    const tanquesUnicos = [...new Set(data.map(d => d.codigo_tanque_preparado))].length;
+    const totalHectareas = data.reduce((acc, curr) => acc + (parseFloat(curr.hectareas) || 0), 0);
+    const totalN = data.reduce((acc, curr) => acc + (parseFloat(curr.N_kg) || 0), 0);
+    const totalP = data.reduce((acc, curr) => acc + (parseFloat(curr.P_kg) || 0), 0);
+    const totalK = data.reduce((acc, curr) => acc + (parseFloat(curr.K_kg) || 0), 0);
+    worksheetKPIs.columns = [{
+      header: 'Indicador',
+      key: 'indicador',
+      width: 25
+    }, {
+      header: 'Valor',
+      key: 'valor',
+      width: 20
+    }];
+    worksheetKPIs.addRows([{
+      indicador: 'Total Fertilizaciones',
+      valor: totalEventos
+    }, {
+      indicador: 'Total Litros Aplicados',
+      valor: totalLitros.toFixed(2)
+    }, {
+      indicador: 'Total Tanques Utilizados',
+      valor: tanquesUnicos
+    }, {
+      indicador: 'Total Hectáreas',
+      valor: totalHectareas.toFixed(2)
+    }, {
+      indicador: 'Total Nitrógeno (kg)',
+      valor: totalN.toFixed(2)
+    }, {
+      indicador: 'Total Fósforo (kg)',
+      valor: totalP.toFixed(2)
+    }, {
+      indicador: 'Total Potasio (kg)',
+      valor: totalK.toFixed(2)
+    }]);
+
+    // 3. Hoja de NPK por Rancho
+    const worksheetRancho = workbook.addWorksheet('NPK por Rancho');
+    const npkPorRancho = {};
+    data.forEach(row => {
+      const key = row.nombre_rancho_dsa || 'Sin definir';
+      if (!npkPorRancho[key]) npkPorRancho[key] = {
+        N: 0,
+        P: 0,
+        K: 0,
+        ha: 0
+      };
+      npkPorRancho[key].N += parseFloat(row.N_kg) || 0;
+      npkPorRancho[key].P += parseFloat(row.P_kg) || 0;
+      npkPorRancho[key].K += parseFloat(row.K_kg) || 0;
+      npkPorRancho[key].ha += parseFloat(row.hectareas) || 0;
+    });
+    worksheetRancho.columns = [{
+      header: 'Rancho DSA',
+      key: 'rancho',
+      width: 25
+    }, {
+      header: 'N (kg)',
+      key: 'N',
+      width: 15
+    }, {
+      header: 'P (kg)',
+      key: 'P',
+      width: 15
+    }, {
+      header: 'K (kg)',
+      key: 'K',
+      width: 15
+    }, {
+      header: 'N/ha',
+      key: 'N_ha',
+      width: 15
+    }, {
+      header: 'P/ha',
+      key: 'P_ha',
+      width: 15
+    }, {
+      header: 'K/ha',
+      key: 'K_ha',
+      width: 15
+    }];
+    Object.entries(npkPorRancho).sort(([, a], [, b]) => b.N - a.N).forEach(([nombre, npk]) => {
+      const ha = npk.ha || 1;
+      worksheetRancho.addRow({
+        rancho: nombre,
+        N: npk.N.toFixed(2),
+        P: npk.P.toFixed(2),
+        K: npk.K.toFixed(2),
+        N_ha: (npk.N / ha).toFixed(2),
+        P_ha: (npk.P / ha).toFixed(2),
+        K_ha: (npk.K / ha).toFixed(2)
+      });
+    });
+
+    // 4. Hoja de Tanques y Composición
+    const worksheetTanques = workbook.addWorksheet('Tanques y Composición');
+
+    // Obtener códigos únicos de tanques
+    const codigosTanques = [...new Set(data.map(d => d.codigo_tanque_preparado).filter(Boolean))];
+    if (codigosTanques.length > 0) {
+      // Obtener detalle de tanques
+      const placeholders = codigosTanques.map(() => '?').join(',');
+      const detalleTanques = await _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.query(`SELECT 
+                    tp.codigo_tanque_preparado AS codigo,
+                    tp.litros_totales,
+                    tp.fecha_preparacion,
+                    rd.nombre_rancho_dsa AS rancho,
+                    mc.nombre AS nombre_mezcla,
+                    mc.fabricante,
+                    mt.cantidad_litros AS litros_mezcla,
+                    am.nombre AS nombre_activo,
+                    am.codigo AS codigo_activo,
+                    ma.porcentaje,
+                    am.unidad,
+                    (mt.cantidad_litros * ma.porcentaje / 100) AS litros_activo
+                FROM tanques_preparados tp
+                LEFT JOIN ranchos r ON r.id = tp.id_rancho
+                LEFT JOIN rancho_dsa rd on rd.id_rancho=r.id
+                LEFT JOIN mezclas_tanque mt ON mt.id_tanque_preparado = tp.id
+                LEFT JOIN mezclas mc ON mc.id = mt.id_mezcla
+                LEFT JOIN mezcla_activos ma ON ma.id_mezcla = mc.id
+                LEFT JOIN activo_mezcla am ON am.id = ma.id_activo
+                WHERE tp.codigo_tanque_preparado IN (${placeholders})
+                ORDER BY tp.codigo_tanque_preparado, mc.nombre, am.nombre`, {
+        replacements: codigosTanques,
+        type: _db_db_js__WEBPACK_IMPORTED_MODULE_11__/* ["default"] */ .A.QueryTypes.SELECT
+      });
+
+      // Agrupar tanques
+      const tanquesAgrupados = {};
+      detalleTanques.forEach(row => {
+        const cod = row.codigo;
+        if (!tanquesAgrupados[cod]) {
+          tanquesAgrupados[cod] = {
+            codigo: cod,
+            litros_totales: row.litros_totales,
+            fecha_preparacion: row.fecha_preparacion,
+            rancho: row.rancho,
+            mezclas: {}
+          };
+        }
+        if (row.nombre_mezcla) {
+          const mezKey = row.nombre_mezcla;
+          if (!tanquesAgrupados[cod].mezclas[mezKey]) {
+            tanquesAgrupados[cod].mezclas[mezKey] = {
+              nombre: row.nombre_mezcla,
+              fabricante: row.fabricante,
+              litros: row.litros_mezcla,
+              activos: []
+            };
+          }
+          if (row.nombre_activo) {
+            tanquesAgrupados[cod].mezclas[mezKey].activos.push({
+              nombre: row.nombre_activo,
+              codigo: row.codigo_activo,
+              porcentaje: row.porcentaje,
+              unidad: row.unidad,
+              litros_activo: row.litros_activo
+            });
+          }
+        }
+      });
+
+      // Agregar encabezados
+      worksheetTanques.columns = [{
+        header: 'Tanque',
+        key: 'tanque',
+        width: 15
+      }, {
+        header: 'Rancho',
+        key: 'rancho',
+        width: 20
+      }, {
+        header: 'Fecha Preparación',
+        key: 'fecha',
+        width: 15
+      }, {
+        header: 'Litros Totales',
+        key: 'litros_totales',
+        width: 12
+      }, {
+        header: 'Mezcla',
+        key: 'mezcla',
+        width: 20
+      }, {
+        header: 'Fabricante',
+        key: 'fabricante',
+        width: 15
+      }, {
+        header: 'Litros Mezcla',
+        key: 'litros_mezcla',
+        width: 12
+      }, {
+        header: 'Activo',
+        key: 'activo',
+        width: 20
+      }, {
+        header: 'Código Activo',
+        key: 'codigo_activo',
+        width: 12
+      }, {
+        header: 'Porcentaje',
+        key: 'porcentaje',
+        width: 10
+      }, {
+        header: 'Litros Activo',
+        key: 'litros_activo',
+        width: 12
+      }, {
+        header: 'Unidad',
+        key: 'unidad',
+        width: 8
+      }];
+
+      // Agregar datos de tanques
+      Object.values(tanquesAgrupados).forEach(tanque => {
+        if (Object.keys(tanque.mezclas).length === 0) {
+          worksheetTanques.addRow({
+            tanque: tanque.codigo,
+            rancho: tanque.rancho,
+            fecha: tanque.fecha_preparacion,
+            litros_totales: tanque.litros_totales,
+            mezcla: 'Sin mezclas',
+            fabricante: '',
+            litros_mezcla: '',
+            activo: '',
+            codigo_activo: '',
+            porcentaje: '',
+            litros_activo: '',
+            unidad: ''
+          });
+        } else {
+          Object.values(tanque.mezclas).forEach((mezcla, idx) => {
+            if (mezcla.activos.length === 0) {
+              worksheetTanques.addRow({
+                tanque: idx === 0 ? tanque.codigo : '',
+                rancho: idx === 0 ? tanque.rancho : '',
+                fecha: idx === 0 ? tanque.fecha_preparacion : '',
+                litros_totales: idx === 0 ? tanque.litros_totales : '',
+                mezcla: mezcla.nombre,
+                fabricante: mezcla.fabricante,
+                litros_mezcla: mezcla.litros,
+                activo: 'Sin activos',
+                codigo_activo: '',
+                porcentaje: '',
+                litros_activo: '',
+                unidad: ''
+              });
+            } else {
+              mezcla.activos.forEach((activo, actIdx) => {
+                worksheetTanques.addRow({
+                  tanque: idx === 0 && actIdx === 0 ? tanque.codigo : '',
+                  rancho: idx === 0 && actIdx === 0 ? tanque.rancho : '',
+                  fecha: idx === 0 && actIdx === 0 ? tanque.fecha_preparacion : '',
+                  litros_totales: idx === 0 && actIdx === 0 ? tanque.litros_totales : '',
+                  mezcla: actIdx === 0 ? mezcla.nombre : '',
+                  fabricante: actIdx === 0 ? mezcla.fabricante : '',
+                  litros_mezcla: actIdx === 0 ? mezcla.litros : '',
+                  activo: activo.nombre,
+                  codigo_activo: activo.codigo,
+                  porcentaje: activo.porcentaje,
+                  litros_activo: activo.litros_activo ? parseFloat(activo.litros_activo).toFixed(2) : '',
+                  unidad: activo.unidad
+                });
+              });
+            }
+          });
+        }
+      });
+    } else {
+      worksheetTanques.columns = [{
+        header: 'Mensaje',
+        key: 'mensaje',
+        width: 30
+      }];
+      worksheetTanques.addRow({
+        mensaje: 'No hay tanques disponibles para los datos seleccionados'
+      });
+    }
+
+    // Estilizar encabezados en todas las hojas
+    [worksheetDetalle, worksheetKPIs, worksheetRancho, worksheetTanques].forEach(worksheet => {
+      worksheet.getRow(1).font = {
+        bold: true
+      };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: {
+          argb: 'FFE6B8AF'
+        }
+      };
+      worksheet.columns.forEach(column => {
+        column.width = Math.max(column.width || 10, 10);
+      });
+    });
+
+    // Generar nombre de archivo
+    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const filename = `reporte_fertilizacion_${timestamp}.xlsx`;
+
+    // Configurar headers para descarga
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // Enviar archivo
+    await workbook.xlsx.write(res);
+    res.end();
+  });
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 2477:
-/*!**************************************!*\
-  !*** ./src/models/usuario.models.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   UsuarioModel: () => (/* binding */ UsuarioModel)\n/* harmony export */ });\n/* harmony import */ var _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/usuarios.js */ 9491);\n/* harmony import */ var bcryptjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bcryptjs */ 3139);\n/* harmony import */ var jsonwebtoken__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! jsonwebtoken */ 9071);\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../config/env.mjs */ 9097);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n\n\n\n\n\nclass UsuarioModel {\n  // obtener todos los datos\n  static async getAll() {\n    try {\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findAll({\n        attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']\n      });\n      // Verificar si se encontraron resultados\n      if (usuario.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('No se encontraron usuarios para los criterios especificados');\n      }\n      return usuario;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al obtener todos los usuarios');\n    }\n  }\n\n  // uso\n  static async getUserEmail({\n    rol,\n    empresa\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!rol || !empresa) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findAll({\n        attributes: ['nombre', 'email', 'ranchos', 'empresa'],\n        where: {\n          rol,\n          [sequelize__WEBPACK_IMPORTED_MODULE_3__.Op.or]: [{\n            empresa\n          }, {\n            empresa: 'General'\n          }]\n        }\n      });\n      // Verificar si se encontraron resultados\n      if (usuario.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('No se encontraron usuarios para los criterios especificados');\n      }\n      return usuario;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al obtener todos los usuarios');\n    }\n  }\n\n  // uso\n  static async getUserEmailRancho({\n    rol,\n    empresa,\n    rancho\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!rol || !empresa || !rancho) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findAll({\n        attributes: ['nombre', 'email', 'ranchos', 'empresa'],\n        where: {\n          rol,\n          // Se filtra por rol\n          empresa,\n          // Se filtra por empresa\n          ranchos: rancho // Se filtra por rancho\n        }\n      });\n      // Verificar si se encontraron resultados\n      if (usuario.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('No se encontraron usuarios para los criterios especificados');\n      }\n      return usuario;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al obtener todos los usuarios');\n    }\n  }\n  static async getUserEmailGerente({\n    rol,\n    idUsuario\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!rol || !idUsuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findAll({\n        attributes: ['nombre', 'email', 'ranchos', 'empresa'],\n        where: {\n          rol,\n          // Se filtra por rol\n          id: idUsuario // Se filtra por rancho\n        }\n      });\n      // Verificar si se encontraron resultados\n      if (usuario.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('No se encontraron usuarios para los criterios especificados');\n      }\n      return usuario;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al obtener todos los usuarios');\n    }\n  }\n\n  // uso\n  static async getUserEmailEmpresa({\n    rol,\n    empresa\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!rol || !empresa) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findAll({\n        attributes: ['nombre', 'email', 'ranchos', 'empresa'],\n        where: {\n          rol,\n          // Se filtra por rol\n          empresa // Se filtra por empresa\n        }\n      });\n      // Verificar si se encontraron resultados\n      if (usuario.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('No se encontraron usuarios para los criterios especificados');\n      }\n      return usuario;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al obtener todos los usuarios');\n    }\n  }\n\n  // obtener todos los un ato por id\n  static async getOne({\n    rol,\n    empresa\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!rol || !empresa) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findOne({\n        where: {\n          rol,\n          empresa\n        },\n        attributes: ['nombre', 'email', 'rol']\n      });\n      // Verificar si se encontraron resultados\n      if (!usuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('No se encontraron usuarios para los criterios especificados');\n      }\n      return usuario;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al obtener todos los usuarios');\n    }\n  }\n  static async getOneId({\n    id\n  }) {\n    try {\n      if (!id) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('ID no proporcionados');\n      }\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findOne({\n        where: {\n          id\n        },\n        attributes: ['nombre', 'email', 'rol', 'empresa']\n      });\n      // Verificar si se encontraron resultados\n      if (!usuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('No se encontro usuario');\n      }\n      return usuario;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al obtener todos los usuarios');\n    }\n  }\n\n  // eliminar usuario\n  static async delete({\n    id\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!id) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findByPk(id);\n      if (!usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('Usuario no encontrado');\n      await usuario.destroy();\n      return {\n        message: `usuario eliminada correctamente con id ${id}`\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al eliminar usuario');\n    }\n  }\n\n  // crear usuario\n  static async create({\n    data\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!data.usuario || !data.email || !data.password || !data.rol || !data.empresa) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      // verificamos que no exista el usuario\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findOne({\n        where: {\n          usuario: data.usuario,\n          email: data.email\n        }\n      });\n      if (usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('El usuario o email ya existe');\n      // creamos el usuario\n      await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.create({\n        ...data\n      });\n      return {\n        message: `usuario registrado exitosamente ${data.nombre}`\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al crear usuario');\n    }\n  }\n\n  // para actualizar datos de usuario\n  static async update({\n    id,\n    data\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!id || !data.nombre || !data.email || !data.password || !data.rol || !data.empresa) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      // verificamos si existe alguna empresa con el id proporcionado\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findByPk(id);\n      if (!usuario) return {\n        error: 'usuario no encontrado'\n      };\n      // Actualiza solo los campos que se han proporcionado\n      if (data.nombre) usuario.nombre = data.nombre;\n      if (data.email) usuario.email = data.email;\n      if (data.rol) usuario.rol = data.rol;\n      if (data.empresa) usuario.empresa = data.empresa;\n      await usuario.save();\n      return {\n        message: 'usuario actualizada correctamente',\n        rol: data.rol\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al actualizar usuario');\n    }\n  }\n\n  // funcion login\n  static async login({\n    user,\n    password\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!user || !password) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findOne({\n        where: {\n          usuario: user\n        }\n      });\n      if (!usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('Usuario no encontrado');\n      const isValidPassword = await bcryptjs__WEBPACK_IMPORTED_MODULE_1__[\"default\"].compare(password, usuario.password);\n      if (!isValidPassword) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Contraseña incorrecta');\n\n      // creamos jwt\n      const token = jsonwebtoken__WEBPACK_IMPORTED_MODULE_2__[\"default\"].sign({\n        id: usuario.id,\n        nombre: usuario.nombre,\n        rol: usuario.rol,\n        empresa: usuario.empresa,\n        ranchos: usuario.ranchos,\n        cultivo: usuario.variedad\n      }, _config_env_mjs__WEBPACK_IMPORTED_MODULE_4__.envs.SECRET_JWT_KEY, {\n        expiresIn: '24h'\n      });\n      return {\n        message: 'Usuario logueado correctamente',\n        token,\n        rol: usuario.rol\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al iniciar sesión');\n    }\n  }\n\n  // funcion cambiar contraseña usuario\n  static async changePassword({\n    id,\n    oldPassword,\n    newPassword\n  }) {\n    try {\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findByPk(id);\n      if (!usuario) return {\n        error: 'usuario no encontrado'\n      };\n      const isValidPassword = await bcryptjs__WEBPACK_IMPORTED_MODULE_1__[\"default\"].compare(oldPassword, usuario.password);\n      if (!isValidPassword) return {\n        error: 'contraseña actual incorrecta'\n      };\n      usuario.password = newPassword;\n      await usuario.save();\n      return {\n        message: 'contraseña cambiada correctamente'\n      };\n    } catch (e) {\n      console.error(e.message);\n      return {\n        error: 'Error al cambiar contraseña'\n      };\n    }\n  }\n\n  // funcion cambiar contraseña Admin\n  static async changePasswordAdmin({\n    id,\n    newPassword\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!id || !newPassword) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.ValidationError('Datos requeridos no proporcionados');\n      }\n      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__.Usuario.findByPk(id);\n      if (!usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.NotFoundError('usuario no encontrado');\n      usuario.password = newPassword;\n      await usuario.save();\n      return {\n        message: 'Contraseña cambiada correctamente'\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__.DatabaseError('Error al cambiar contraseña');\n    }\n  }\n}\n\n//# sourceURL=webpack://mezclas/./src/models/usuario.models.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   S: () => (/* binding */ UsuarioModel)
+/* harmony export */ });
+/* harmony import */ var _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9491);
+/* harmony import */ var bcryptjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3139);
+/* harmony import */ var jsonwebtoken__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(9071);
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(8265);
+/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(9097);
+/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(2551);
+/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3014);
+/* harmony import */ var _utils_dbHelper_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(7084);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__, _utils_dbHelper_js__WEBPACK_IMPORTED_MODULE_7__]);
+([_schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__, _utils_dbHelper_js__WEBPACK_IMPORTED_MODULE_7__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
 
-/***/ }),
 
-/***/ 2550:
-/*!**************************************!*\
-  !*** ./src/middlewares/rateLimit.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   apiLimiter: () => (/* binding */ apiLimiter)\n/* harmony export */ });\n/* harmony import */ var express_rate_limit__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express-rate-limit */ 9849);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n\n\nconst apiLimiter = (0,express_rate_limit__WEBPACK_IMPORTED_MODULE_0__[\"default\"])({\n  windowMs: 15 * 60 * 1000,\n  // 15 minutos\n  max: 100,\n  // máximo 100 peticiones por ventana\n  message: {\n    error: 'Demasiadas peticiones, por favor intente más tarde'\n  },\n  standardHeaders: true,\n  legacyHeaders: false,\n  handler: (req, res, next, options) => {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].warn('Límite de peticiones excedido', {\n      ip: req.ip,\n      path: req.path\n    });\n    res.status(429).json(options.message);\n  },\n  skip: req => {\n    // Ignorar rutas específicas\n    return req.path.startsWith('/public');\n  }\n});\n\n//# sourceURL=webpack://mezclas/./src/middlewares/rateLimit.js?");
+
+
+
+
+
+/**
+Los operadores de Sequelize (Op) son necesarios para realizar consultas complejas. Algunos operadores comunes son:
+Op.eq: Igual
+Op.ne: No igual
+Op.gt: Mayor que
+Op.lt: Menor que
+Op.in: Dentro de un array
+Op.like: Búsqueda con comodín
+ */
+class UsuarioModel {
+  // obtener todos los datos
+  static async getAll() {
+    try {
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+        attributes: ['id', 'nombre', 'usuario', 'email', 'rol', 'empresa', 'ranchos', 'variedad']
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios');
+    }
+  }
+  static async getUsuarios({
+    nombre,
+    rol,
+    empresa
+  }) {
+    const logContext = {
+      operation: 'getUsuarios Model',
+      nombre,
+      rol,
+      empresa,
+      timestamp: new Date().toISOString()
+    };
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!nombre || !rol || !empresa) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+
+      // Filtrar por empresa y rancho no nulo
+      if (empresa === 'Bioagricultura' && rol === 'adminMezclador') {
+        const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+          attributes: ['id', 'nombre', 'rol', 'empresa', 'ranchos'],
+          where: {
+            empresa,
+            rol: {
+              [sequelize__WEBPACK_IMPORTED_MODULE_3__.Op.in]: ['solicita', 'solicita2']
+            },
+            // Filtrar por rol
+            ranchos: {
+              [sequelize__WEBPACK_IMPORTED_MODULE_3__.Op.ne]: 'Ahualulco'
+            } // Filtrar por rancho no nulo
+          }
+        });
+        // Verificar si se encontraron resultados
+        if (usuario.length === 0) {
+          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+        }
+        return usuario;
+      } else if (empresa === 'General' && rol === 'adminMezclador') {
+        const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+          attributes: ['id', 'nombre', 'rol', 'empresa', 'ranchos'],
+          where: {
+            empresa,
+            rol: {
+              [sequelize__WEBPACK_IMPORTED_MODULE_3__.Op.in]: ['solicita', 'solicita2']
+            },
+            // Filtrar por rol
+            ranchos: {
+              [sequelize__WEBPACK_IMPORTED_MODULE_3__.Op.eq]: 'Ahualulco'
+            } // Filtrar por rancho no nulo
+          }
+        });
+        // Verificar si se encontraron resultados
+        if (usuario.length === 0) {
+          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+        }
+        return usuario;
+      }
+      return {
+        message: 'No se encontraron usuarios para los criterios especificados'
+      };
+    } catch (e) {
+      _utils_logger_js__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A.logError(e, {
+        ...logContext,
+        stack: e.stack
+      });
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios', {
+        originalError: e.message,
+        context: logContext
+      });
+    }
+  }
+  static async getSolicitantes() {
+    try {
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+        attributes: ['id', 'nombre', 'rol', 'empresa', 'ranchos'],
+        where: {
+          rol: {
+            [sequelize__WEBPACK_IMPORTED_MODULE_3__.Op.in]: ['solicita', 'solicita2', 'adminMezclador']
+          } // Filtrar por rol
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios', {
+        originalError: e.message
+      });
+    }
+  }
+
+  // uso
+  static async getUserEmail({
+    rol,
+    empresa
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !empresa) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          [sequelize__WEBPACK_IMPORTED_MODULE_3__.Op.or]: [{
+            empresa
+          }, {
+            empresa: 'General'
+          }]
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios');
+    }
+  }
+
+  // uso
+  static async getUserEmailRancho({
+    rol,
+    empresa,
+    rancho
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !empresa || !rancho) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          empresa,
+          // Se filtra por empresa
+          ranchos: rancho // Se filtra por rancho
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios');
+    }
+  }
+  static async getUserEmailRanchoRol({
+    rol,
+    rancho
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !rancho) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          ranchos: rancho // Se filtra por rancho
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios');
+    }
+  }
+  static async getUserEmailGerente({
+    rol,
+    idUsuario
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !idUsuario) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          id: idUsuario // Se filtra por rancho
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios');
+    }
+  }
+
+  // uso
+  static async getUserEmailEmpresa({
+    rol,
+    empresa
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !empresa) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findAll({
+        attributes: ['nombre', 'email', 'ranchos', 'empresa'],
+        where: {
+          rol,
+          // Se filtra por rol
+          empresa // Se filtra por empresa
+        }
+      });
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios');
+    }
+  }
+
+  // obtener todos los un ato por id
+  static async getOne({
+    rol,
+    empresa
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!rol || !empresa) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findOne({
+        where: {
+          rol,
+          empresa
+        },
+        attributes: ['nombre', 'email', 'rol']
+      });
+      // Verificar si se encontraron resultados
+      if (!usuario) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontraron usuarios para los criterios especificados');
+      }
+      return usuario;
+    } catch (error) {
+      _utils_logger_js__WEBPACK_IMPORTED_MODULE_6__/* ["default"] */ .A.error('Error al determinar destinatarios de notificación', {
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        }
+      });
+      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw error;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios');
+    }
+  }
+  static async getOneId({
+    id
+  }) {
+    try {
+      if (!id) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('ID no proporcionados');
+      }
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findOne({
+        where: {
+          id
+        },
+        attributes: ['nombre', 'email', 'rol', 'empresa']
+      });
+      // Verificar si se encontraron resultados
+      if (!usuario) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('No se encontro usuario');
+      }
+      return usuario;
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al obtener todos los usuarios');
+    }
+  }
+
+  // eliminar usuario
+  static async delete({
+    id,
+    logContext,
+    logger
+  }) {
+    return await _utils_dbHelper_js__WEBPACK_IMPORTED_MODULE_7__/* .DbHelper */ .D.withTransaction(async transaction => {
+      try {
+        // Verificar si se proporcionaron los parámetros requeridos
+        if (!id) {
+          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('ID no proporcionados');
+        }
+        const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findByPk(id);
+        if (!usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('Usuario no encontrado');
+        await usuario.destroy({
+          transaction
+        });
+        return {
+          message: `Usuario eliminado correctamente con id ${id}`
+        };
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          error: error.message
+        });
+        if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw error;
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al eliminar usuario');
+      }
+    });
+  }
+
+  // crear usuario
+  static async create({
+    data
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!data.usuario || !data.email || !data.password || !data.rol || !data.empresa) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+      // verificamos que no exista el usuario
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findOne({
+        where: {
+          usuario: data.usuario,
+          email: data.email
+        }
+      });
+      if (usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('El usuario o email ya existe');
+      // creamos el usuario
+      const newUser = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.create({
+        ...data
+      });
+      return {
+        message: `usuario registrado exitosamente ${data.nombre}`,
+        user: newUser
+      };
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al crear usuario');
+    }
+  }
+
+  // para actualizar datos de usuario
+  static async update({
+    id,
+    data
+  }) {
+    try {
+      // Verificar si se proporcionaron los parámetros requeridos
+      if (!id || !data.nombre || !data.email || !data.password || !data.rol || !data.empresa) {
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+      }
+      // verificamos si existe alguna empresa con el id proporcionado
+      const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findByPk(id);
+      if (!usuario) return {
+        error: 'usuario no encontrado'
+      };
+      // Actualiza solo los campos que se han proporcionado
+      if (data.nombre) usuario.nombre = data.nombre;
+      if (data.email) usuario.email = data.email;
+      if (data.rol) usuario.rol = data.rol;
+      if (data.empresa) usuario.empresa = data.empresa;
+      await usuario.save();
+      return {
+        message: 'usuario actualizada correctamente',
+        rol: data.rol
+      };
+    } catch (e) {
+      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al actualizar usuario');
+    }
+  }
+
+  // funcion login
+  static async login({
+    user,
+    password,
+    logContext,
+    logger
+  }) {
+    return await _utils_dbHelper_js__WEBPACK_IMPORTED_MODULE_7__/* .DbHelper */ .D.executeQuery(async () => {
+      try {
+        // Verificar si se proporcionaron los parámetros requeridos
+        if (!user || !password) {
+          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+        }
+        const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findOne({
+          where: {
+            usuario: user
+          }
+        });
+        if (!usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('Usuario no encontrado');
+        const isValidPassword = await bcryptjs__WEBPACK_IMPORTED_MODULE_1__["default"].compare(password, usuario.password);
+        if (!isValidPassword) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Contraseña incorrecta');
+
+        // creamos jwt
+        const token = jsonwebtoken__WEBPACK_IMPORTED_MODULE_2__["default"].sign({
+          id: usuario.id,
+          nombre: usuario.nombre,
+          rol: usuario.rol,
+          empresa: usuario.empresa,
+          ranchos: usuario.ranchos,
+          cultivo: usuario.variedad
+        }, _config_env_mjs__WEBPACK_IMPORTED_MODULE_4__/* .envs */ .D.SECRET_JWT_KEY, {
+          expiresIn: '24h'
+        });
+        return {
+          message: 'Usuario logueado correctamente',
+          token,
+          rol: usuario.rol,
+          usuario: {
+            nombre: usuario.nombre,
+            rol: usuario.rol,
+            empresa: usuario.empresa,
+            ranchos: usuario.ranchos
+          }
+        };
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          error: error.message
+        });
+        if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw error;
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al iniciar sesión');
+      }
+    });
+  }
+
+  // funcion cambiar contraseña usuario
+  static async changePassword({
+    id,
+    oldPassword,
+    newPassword,
+    logContext,
+    logger
+  }) {
+    return await _utils_dbHelper_js__WEBPACK_IMPORTED_MODULE_7__/* .DbHelper */ .D.withTransaction(async transaction => {
+      try {
+        const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findByPk(id);
+        if (!usuario) return {
+          error: 'usuario no encontrado'
+        };
+        const isValidPassword = await bcryptjs__WEBPACK_IMPORTED_MODULE_1__["default"].compare(oldPassword, usuario.password);
+        if (!isValidPassword) return {
+          error: 'contraseña actual incorrecta'
+        };
+        usuario.password = newPassword;
+        await usuario.save({
+          transaction
+        });
+        return {
+          message: 'contraseña cambiada correctamente'
+        };
+      } catch (error) {
+        logger.logError(error, {
+          ...logContext,
+          error: error.message
+        });
+        if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw error;
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Error al actulizar la contraseña');
+      }
+    });
+  }
+
+  // funcion cambiar contraseña Admin
+  static async changePasswordAdmin({
+    id,
+    newPassword,
+    logContext,
+    logger
+  }) {
+    return await _utils_dbHelper_js__WEBPACK_IMPORTED_MODULE_7__/* .DbHelper */ .D.withTransaction(async transaction => {
+      try {
+        // Cambiar contraseña Admin
+        // Verificar si se proporcionaron los parámetros requeridos
+        if (!id || !newPassword) {
+          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .ValidationError */ .yI('Datos requeridos no proporcionados');
+        }
+        const usuario = await _schema_usuarios_js__WEBPACK_IMPORTED_MODULE_0__/* .Usuario */ .P.findByPk(id);
+        if (!usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .NotFoundError */ .m_('usuario no encontrado');
+        usuario.password = newPassword;
+        await usuario.save({
+          transaction
+        });
+        return {
+          message: 'Contraseña cambiada correctamente'
+        };
+      } catch (e) {
+        logger.logError(e, {
+          ...logContext,
+          error: e.message
+        });
+        if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .CustomError */ .eo) throw e;
+        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_5__/* .DatabaseError */ .a$('Error al cambiar contraseña');
+      }
+    });
+  }
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 2551:
-/*!**********************************!*\
-  !*** ./src/utils/CustomError.js ***!
-  \**********************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   BadRequestError: () => (/* binding */ BadRequestError),\n/* harmony export */   BusinessError: () => (/* binding */ BusinessError),\n/* harmony export */   ConflictError: () => (/* binding */ ConflictError),\n/* harmony export */   CustomError: () => (/* binding */ CustomError),\n/* harmony export */   DatabaseError: () => (/* binding */ DatabaseError),\n/* harmony export */   ForbiddenError: () => (/* binding */ ForbiddenError),\n/* harmony export */   InternalServerError: () => (/* binding */ InternalServerError),\n/* harmony export */   NotFoundError: () => (/* binding */ NotFoundError),\n/* harmony export */   NotImplementedError: () => (/* binding */ NotImplementedError),\n/* harmony export */   RateLimitError: () => (/* binding */ RateLimitError),\n/* harmony export */   ServiceUnavailableError: () => (/* binding */ ServiceUnavailableError),\n/* harmony export */   TimeoutError: () => (/* binding */ TimeoutError),\n/* harmony export */   UnauthorizedError: () => (/* binding */ UnauthorizedError),\n/* harmony export */   ValidationError: () => (/* binding */ ValidationError)\n/* harmony export */ });\nclass CustomError extends Error {\n  constructor(message, statusCode, errorCode, details = {}) {\n    super(message);\n    this.statusCode = statusCode;\n    this.errorCode = errorCode;\n    this.details = details;\n    this.timestamp = new Date().toISOString();\n    this.status = this.getStatusType(statusCode);\n    this.isOperational = true;\n    Error.captureStackTrace(this, this.constructor);\n  }\n  getStatusType(statusCode) {\n    if (statusCode >= 500) return 'error';\n    if (statusCode >= 400) return 'fail';\n    return 'success';\n  }\n}\nclass ValidationError extends CustomError {\n  constructor(message = 'Error de validación', details = {}) {\n    super(message, 400, 'VALIDATION_ERROR', details);\n  }\n}\nclass NotFoundError extends CustomError {\n  constructor(message = 'Recurso no encontrado', details = {}) {\n    super(message, 404, 'NOT_FOUND', details);\n  }\n}\nclass DatabaseError extends CustomError {\n  constructor(message = 'Error en la base de datos', details = {}) {\n    super(message, 500, 'DB_ERROR', details);\n  }\n}\nclass BusinessError extends CustomError {\n  constructor(message = 'Error de negocio', details = {}) {\n    super(message, 422, 'BUSINESS_ERROR', details);\n  }\n}\nclass UnauthorizedError extends CustomError {\n  constructor(message = 'No autorizado', details = {}) {\n    super(message, 401, 'UNAUTHORIZED', details);\n  }\n}\nclass ForbiddenError extends CustomError {\n  constructor(message = 'Acceso denegado', details = {}) {\n    super(message, 403, 'FORBIDDEN', details);\n  }\n}\nclass ConflictError extends CustomError {\n  constructor(message = 'Conflicto', details = {}) {\n    super(message, 409, 'CONFLICT', details);\n  }\n}\nclass InternalServerError extends CustomError {\n  constructor(message = 'Error interno del servidor', details = {}) {\n    super(message, 500, 'INTERNAL_SERVER_ERROR', details);\n  }\n}\nclass ServiceUnavailableError extends CustomError {\n  constructor(message = 'Servicio no disponible', details = {}) {\n    super(message, 503, 'SERVICE_UNAVAILABLE', details);\n  }\n}\nclass RateLimitError extends CustomError {\n  constructor(message = 'Límite de solicitudes alcanzado', details = {}) {\n    super(message, 429, 'RATE_LIMIT', details);\n  }\n}\nclass TimeoutError extends CustomError {\n  constructor(message = 'Tiempo de espera agotado', details = {}) {\n    super(message, 504, 'TIMEOUT', details);\n  }\n}\nclass NotImplementedError extends CustomError {\n  constructor(message = 'Funcionalidad no implementada', details = {}) {\n    super(message, 501, 'NOT_IMPLEMENTED', details);\n  }\n}\nclass BadRequestError extends CustomError {\n  constructor(message = 'Solicitud incorrecta', details = {}) {\n    super(message, 400, 'BAD_REQUEST', details);\n  }\n}\n\n//# sourceURL=webpack://mezclas/./src/utils/CustomError.js?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Cr: () => (/* binding */ MezclaOperationError),
+/* harmony export */   H0: () => (/* binding */ BusinessError),
+/* harmony export */   MU: () => (/* binding */ TimeoutError),
+/* harmony export */   a$: () => (/* binding */ DatabaseError),
+/* harmony export */   eo: () => (/* binding */ CustomError),
+/* harmony export */   m_: () => (/* binding */ NotFoundError),
+/* harmony export */   us: () => (/* binding */ ServiceUnavailableError),
+/* harmony export */   yI: () => (/* binding */ ValidationError)
+/* harmony export */ });
+/* unused harmony exports BadRequestError, UnauthorizedError, ForbiddenError, ConflictError, RateLimitError, InternalServerError, NotImplementedError */
+/**
+ * Clase base para errores personalizados
+ * Extiende Error y proporciona estructura estándar para todos los errores de la aplicación
+ */
+class CustomError extends Error {
+  constructor(message, statusCode, errorCode, details = {}) {
+    super(message);
+    this.statusCode = statusCode;
+    this.errorCode = errorCode;
+    this.details = details;
+    this.timestamp = new Date().toISOString();
+    this.status = this.getStatusType(statusCode);
+    this.isOperational = true;
+    Error.captureStackTrace(this, this.constructor);
+  }
+
+  /**
+   * Determina el tipo de estado basado en el código HTTP
+   * @param {number} statusCode - Código de estado HTTP
+   * @returns {string} 'error' (5xx), 'fail' (4xx), o 'success'
+   */
+  getStatusType(statusCode) {
+    if (statusCode >= 500) return 'error';
+    if (statusCode >= 400) return 'fail';
+    return 'success';
+  }
+}
+
+/**
+ * Error de validación de datos (400)
+ * Usado cuando los datos enviados no cumplen las reglas de validación
+ * @example new ValidationError('El email no es válido', { field: 'email' })
+ */
+class ValidationError extends CustomError {
+  constructor(message = 'Error de validación', details = {}) {
+    super(message, 400, 'VALIDATION_ERROR', details);
+  }
+}
+
+/**
+ * Error de solicitud incorrecta (400)
+ * Usado cuando la solicitud está malformada o es inválida
+ * @example new BadRequestError('Parámetros faltantes')
+ */
+class BadRequestError extends CustomError {
+  constructor(message = 'Solicitud incorrecta', details = {}) {
+    super(message, 400, 'BAD_REQUEST', details);
+  }
+}
+
+/**
+ * Error de autenticación (401)
+ * Usado cuando el usuario no está autenticado
+ * @example new UnauthorizedError('Token expirado')
+ */
+class UnauthorizedError extends CustomError {
+  constructor(message = 'No autorizado', details = {}) {
+    super(message, 401, 'UNAUTHORIZED', details);
+  }
+}
+
+/**
+ * Error de autorización (403)
+ * Usado cuando el usuario no tiene permisos para acceder al recurso
+ * @example new ForbiddenError('No tienes permiso para eliminar activos')
+ */
+class ForbiddenError extends CustomError {
+  constructor(message = 'Acceso denegado', details = {}) {
+    super(message, 403, 'FORBIDDEN', details);
+  }
+}
+
+/**
+ * Error de recurso no encontrado (404)
+ * Usado cuando se intenta acceder a un recurso que no existe
+ * @example new NotFoundError('Activo no encontrado', { id: 123 })
+ */
+class NotFoundError extends CustomError {
+  constructor(message = 'Recurso no encontrado', details = {}) {
+    super(message, 404, 'NOT_FOUND', details);
+  }
+}
+
+/**
+ * Error de conflicto (409)
+ * Usado cuando hay un conflicto con el estado actual (ej: duplicado)
+ * @example new ConflictError('El código ya existe en la base de datos')
+ */
+class ConflictError extends CustomError {
+  constructor(message = 'Conflicto', details = {}) {
+    super(message, 409, 'CONFLICT', details);
+  }
+}
+
+/**
+ * Error de límite de solicitudes (429)
+ * Usado cuando se excede el límite de solicitudes (rate limiting)
+ * @example new RateLimitError('Demasiadas solicitudes, intenta más tarde')
+ */
+class RateLimitError extends CustomError {
+  constructor(message = 'Límite de solicitudes alcanzado', details = {}) {
+    super(message, 429, 'RATE_LIMIT', details);
+  }
+}
+
+/**
+ * Error de negocio (422)
+ * Usado cuando la lógica de negocio rechaza la operación
+ * @example new BusinessError('No se puede eliminar un activo en uso')
+ */
+class BusinessError extends CustomError {
+  constructor(message = 'Error de negocio', details = {}) {
+    super(message, 422, 'BUSINESS_ERROR', details);
+  }
+}
+
+/**
+ * Error de base de datos (500)
+ * Usado cuando hay un error en la operación de base de datos
+ * @example new DatabaseError('Error al insertar registro', { table: 'activos' })
+ */
+class DatabaseError extends CustomError {
+  constructor(message = 'Error en la base de datos', details = {}) {
+    super(message, 500, 'DB_ERROR', details);
+  }
+}
+
+/**
+ * Error interno del servidor (500)
+ * Usado para errores genéricos del servidor
+ * @example new InternalServerError('Algo salió mal')
+ */
+class InternalServerError extends CustomError {
+  constructor(message = 'Error interno del servidor', details = {}) {
+    super(message, 500, 'INTERNAL_SERVER_ERROR', details);
+  }
+}
+
+/**
+ * Error de funcionalidad no implementada (501)
+ * Usado cuando se intenta usar una funcionalidad aún no disponible
+ * @example new NotImplementedError('El reporte de depreciación aún no está disponible')
+ */
+class NotImplementedError extends CustomError {
+  constructor(message = 'Funcionalidad no implementada', details = {}) {
+    super(message, 501, 'NOT_IMPLEMENTED', details);
+  }
+}
+
+/**
+ * Error de servicio no disponible (503)
+ * Usado cuando un servicio externo no está disponible
+ * @example new ServiceUnavailableError('Base de datos no disponible')
+ */
+class ServiceUnavailableError extends CustomError {
+  constructor(message = 'Servicio no disponible', details = {}) {
+    super(message, 503, 'SERVICE_UNAVAILABLE', details);
+  }
+}
+
+/**
+ * Error de timeout (504)
+ * Usado cuando se agota el tiempo de espera de una operación
+ * @example new TimeoutError('La solicitud tardó demasiado')
+ */
+class TimeoutError extends CustomError {
+  constructor(message = 'Tiempo de espera agotado', details = {}) {
+    super(message, 504, 'TIMEOUT', details);
+  }
+}
+
+/**
+ * Error específico de operaciones con mezclas (500)
+ * Usado para errores relacionados con la creación, actualización o eliminación de mezclas
+ * @example new MezclaOperationError('CREATE', 'No hay suficientes productos disponibles')
+ */
+class MezclaOperationError extends CustomError {
+  constructor(operation, message, details = {}) {
+    super(message, 500, `MEZCLA_${operation}_ERROR`, {
+      operation,
+      ...details
+    });
+  }
+}
 
 /***/ }),
 
 /***/ 2674:
-/*!**************************!*\
-  !*** external "express" ***!
-  \**************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_express__;
-
-/***/ }),
-
-/***/ 2767:
-/*!*********************************!*\
-  !*** ./src/middlewares/cors.js ***!
-  \*********************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   corsMiddleware: () => (/* binding */ corsMiddleware)\n/* harmony export */ });\n/* harmony import */ var cors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! cors */ 4127);\n\nconst ACCEPTED_ORIGINS = ['http://localhost:3000', 'http://localhost', 'https://solicitudmezclas.portalrancho.com.mx', 'https://mezclas.portalrancho.com.mx'];\nconst corsMiddleware = ({\n  acceptedOrigins = ACCEPTED_ORIGINS\n} = {}) => (0,cors__WEBPACK_IMPORTED_MODULE_0__[\"default\"])({\n  origin: (origin, callback) => {\n    if (acceptedOrigins.includes(origin)) {\n      return callback(null, true);\n    }\n    if (!origin) {\n      return callback(null, true);\n    }\n    return callback(new Error('Not allowed by CORS'));\n  }\n});\n\n//# sourceURL=webpack://mezclas/./src/middlewares/cors.js?");
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["Router"]: () => (__WEBPACK_EXTERNAL_MODULE_express__.Router), ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_express__["default"]) });
 
 /***/ }),
 
-/***/ 2918:
-/*!************************************************!*\
-  !*** ./src/controller/productos.controller.js ***!
-  \************************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ 2692:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   ProductosController: () => (/* binding */ ProductosController)\n/* harmony export */ });\n/* harmony import */ var _models_recetas_models_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../models/recetas.models.js */ 5952);\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n\n\nclass ProductosController {\n  constructor({\n    productosModel\n  }) {\n    this.productosModel = productosModel;\n  }\n  getAll = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const productos = await this.productosModel.getAll();\n    const recetas = await _models_recetas_models_js__WEBPACK_IMPORTED_MODULE_0__.RecetasModel.getAll();\n    res.json({\n      productos,\n      recetas\n    });\n  });\n  EliminarProducto = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      id\n    } = req.params;\n    const resultado = await this.productosModel.EliminarProducto({\n      id\n    });\n    res.json(resultado);\n  });\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/productos.controller.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   d: () => (/* binding */ Sectores)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const sectoresConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  id_rancho_dsa: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'rancho_dsa',
+      key: 'id'
+    },
+    onUpdate: 'CASCADE',
+    onDelete: 'CASCADE'
+  },
+  sector_interno: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(20),
+    allowNull: false
+  },
+  sector_agrian: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(20),
+    allowNull: false
+  },
+  variedad: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(30),
+    allowNull: false
+  },
+  hectareas: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.FLOAT,
+    allowNull: false
+  },
+  status: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  }
+};
+const Sectores = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('Sectores', sectoresConfig, {
+  tableName: 'sectores',
+  timestamps: false
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 2936:
-/*!*******************************!*\
-  !*** ./src/server/server.mjs ***!
-  \*******************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   startServer: () => (/* binding */ startServer)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var compression__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! compression */ 876);\n/* harmony import */ var helmet__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! helmet */ 7979);\n/* harmony import */ var body_parser__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! body-parser */ 1242);\n/* harmony import */ var cookie_parser__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! cookie-parser */ 3328);\n/* harmony import */ var express_fileupload__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! express-fileupload */ 1762);\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! path */ 6928);\n/* harmony import */ var swagger_ui_express__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! swagger-ui-express */ 3158);\n/* harmony import */ var _utils_swagger_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../utils/swagger.js */ 4756);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _config_paths_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../config/paths.js */ 8165);\n/* harmony import */ var _middlewares_cors_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../middlewares/cors.js */ 2767);\n/* harmony import */ var _middlewares_validateJsonMiddleware_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../middlewares/validateJsonMiddleware.js */ 702);\n/* harmony import */ var _middlewares_error500Middleware_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../middlewares/error500Middleware.js */ 1087);\n/* harmony import */ var _middlewares_rateLimit_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../middlewares/rateLimit.js */ 2550);\n/* harmony import */ var _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../middlewares/authMiddleware.js */ 936);\n/* harmony import */ var _middlewares_correlationMiddleware_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../middlewares/correlationMiddleware.js */ 7176);\n/* harmony import */ var _routes_proteted_routes_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../routes/proteted.routes.js */ 7446);\n/* harmony import */ var _routes_usuario_routes_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../routes/usuario.routes.js */ 5541);\n/* harmony import */ var _routes_centro_routes_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../routes/centro.routes.js */ 786);\n/* harmony import */ var _routes_mezclas_routes_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../routes/mezclas.routes.js */ 1592);\n/* harmony import */ var _routes_productos_routes_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../routes/productos.routes.js */ 4498);\n/* harmony import */ var _routes_productosSolitud_routes_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../routes/productosSolitud.routes.js */ 1366);\n/* harmony import */ var _routes_produccion_routes_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../routes/produccion.routes.js */ 1877);\n/* harmony import */ var _routes_notificaciones_routes_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../routes/notificaciones.routes.js */ 7557);\n/* harmony import */ var _routes_equipos_routes_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../routes/equipos.routes.js */ 9991);\n/* harmony import */ var _routes_empleados_routes_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../routes/empleados.routes.js */ 7635);\n/* harmony import */ var _routes_uploads_routes_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ../routes/uploads.routes.js */ 3975);\n/* harmony import */ var _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ../models/usuario.models.js */ 2477);\n/* harmony import */ var _models_centro_models_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../models/centro.models.js */ 7818);\n/* harmony import */ var _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../models/mezclas.models.js */ 2020);\n/* harmony import */ var _models_productos_models_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../models/productos.models.js */ 9594);\n/* harmony import */ var _models_productosSolicitud_models_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../models/productosSolicitud.models.js */ 1954);\n/* harmony import */ var _models_produccion_models_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../models/produccion.models.js */ 7069);\n/* harmony import */ var _models_notificaciones_models_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../models/notificaciones.models.js */ 3261);\n/* harmony import */ var _models_equipos_models_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../models/equipos.models.js */ 1899);\n/* harmony import */ var _models_empleados_models_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../models/empleados.models.js */ 8015);\n/* harmony import */ var _models_modelAssociations_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../models/modelAssociations.js */ 1148);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n// import logger from 'morgan'\n\n\n\n\n\n\n\n// Librerias\n\n\n// Configuraciones\n\n\n\n// middlewares\n\n\n\n\n\n\n// Rutas\n // protegidas\n\n\n\n\n\n\n\n\n\n\n\n// Models\n\n\n\n\n\n\n\n\n\n\n// Asociaciones\n\n\n// Base de datos\n\nconst startServer = async options => {\n  const {\n    PORT,\n    MODE\n  } = options;\n  const app = (0,express__WEBPACK_IMPORTED_MODULE_0__[\"default\"])();\n\n  // Configura el directorio de uploads\n  const uploadsDir = _config_paths_js__WEBPACK_IMPORTED_MODULE_10__.paths.uploads;\n  const imagesDir = (0,path__WEBPACK_IMPORTED_MODULE_6__.join)(uploadsDir, 'images');\n\n  // MOTOR DE PLANTILLAS EJS\n  app.set('views', _config_paths_js__WEBPACK_IMPORTED_MODULE_10__.paths.views);\n  app.set('view engine', 'ejs');\n  app.set('trust proxy', 1);\n\n  // Middlewares\n  if (MODE === 'development') {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].info('🔧 Modo de desarrollo');\n    // app.use(logger('dev'))\n  } else {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].info('📦 Modo de producción');\n    // app.use(logger('combined'))\n  }\n  // Agregar middleware de correlación\n  app.use(_middlewares_correlationMiddleware_js__WEBPACK_IMPORTED_MODULE_16__.correlationMiddleware);\n  app.use((0,compression__WEBPACK_IMPORTED_MODULE_1__[\"default\"])({\n    filter: (req, res) => {\n      if (req.headers['x-no-compression']) {\n        return false;\n      }\n      return compression__WEBPACK_IMPORTED_MODULE_1__[\"default\"].filter(req, res);\n    },\n    level: 6 // nivel de compresión (0-9)\n  }));\n\n  // Configuración de seguridad para permitir recursos externos mientras se mantiene la seguridad básica\n  if (MODE !== 'development') {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].info('🔒 helmet configurado');\n    app.use((0,helmet__WEBPACK_IMPORTED_MODULE_2__[\"default\"])({\n      contentSecurityPolicy: {\n        directives: {\n          defaultSrc: [\"'self'\"],\n          styleSrc: [\"'self'\", \"'unsafe-inline'\", 'https://ka-f.fontawesome.com', 'http://localhost:3000'],\n          scriptSrc: [\"'self'\", \"'unsafe-inline'\", 'https://ka-f.fontawesome.com'],\n          fontSrc: [\"'self'\", 'https://ka-f.fontawesome.com', 'data:'],\n          connectSrc: [\"'self'\", 'https://ka-f.fontawesome.com', 'http://localhost:3000'],\n          imgSrc: [\"'self'\", 'data:', 'https:'],\n          upgradeInsecureRequests: []\n        }\n      },\n      crossOriginEmbedderPolicy: false,\n      crossOriginResourcePolicy: {\n        policy: 'cross-origin'\n      }\n    }));\n  }\n  // Configurar middleware para cookies y validar JSON en los request\n  app.use((0,cookie_parser__WEBPACK_IMPORTED_MODULE_4__[\"default\"])());\n  app.use(_middlewares_validateJsonMiddleware_js__WEBPACK_IMPORTED_MODULE_12__.validateJSON);\n  app.use((0,_middlewares_cors_js__WEBPACK_IMPORTED_MODULE_11__.corsMiddleware)());\n  app.disable('x-powered-by');\n  app.use((0,express_fileupload__WEBPACK_IMPORTED_MODULE_5__[\"default\"])());\n  app.use(body_parser__WEBPACK_IMPORTED_MODULE_3__[\"default\"].json({\n    limit: '50mb'\n  }));\n  app.use(body_parser__WEBPACK_IMPORTED_MODULE_3__[\"default\"].urlencoded({\n    limit: '50mb',\n    extended: true\n  }));\n  if (MODE !== 'development') {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].info('🔒 limite de peticiones por IP Activado'); // eslint-disable-line no-console\n    app.use(_middlewares_rateLimit_js__WEBPACK_IMPORTED_MODULE_14__.apiLimiter); // Limitar el número de peticiones por IP\n  }\n\n  // Validar que la documentación está disponible solo en desarrollo\n  if (MODE === 'development') {\n    app.use('/api-docs', swagger_ui_express__WEBPACK_IMPORTED_MODULE_7__[\"default\"].serve, swagger_ui_express__WEBPACK_IMPORTED_MODULE_7__[\"default\"].setup(_utils_swagger_js__WEBPACK_IMPORTED_MODULE_8__.swaggerSpec));\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].info('📚 Documentación API disponible en /api-docs');\n  }\n  // rutas API\n  app.use('/api/usuario/', (0,_routes_usuario_routes_js__WEBPACK_IMPORTED_MODULE_18__.createUsuarioRouter)({\n    usuarioModel: _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_28__.UsuarioModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_centro_routes_js__WEBPACK_IMPORTED_MODULE_19__.createCentroCosteRouter)({\n    centroModel: _models_centro_models_js__WEBPACK_IMPORTED_MODULE_29__.CentroCosteModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_mezclas_routes_js__WEBPACK_IMPORTED_MODULE_20__.createMezclasRouter)({\n    mezclaModel: _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_30__.MezclaModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_productos_routes_js__WEBPACK_IMPORTED_MODULE_21__.createProductosRouter)({\n    productosModel: _models_productos_models_js__WEBPACK_IMPORTED_MODULE_31__.ProductosModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_productosSolitud_routes_js__WEBPACK_IMPORTED_MODULE_22__.createProductosSoliRouter)({\n    productossModel: _models_productosSolicitud_models_js__WEBPACK_IMPORTED_MODULE_32__.SolicitudRecetaModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_notificaciones_routes_js__WEBPACK_IMPORTED_MODULE_24__.createNotificacionesRouter)({\n    notificacionModel: _models_notificaciones_models_js__WEBPACK_IMPORTED_MODULE_34__.NotificacionModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_produccion_routes_js__WEBPACK_IMPORTED_MODULE_23__.createProduccionRouter)({\n    produccionModel: _models_produccion_models_js__WEBPACK_IMPORTED_MODULE_33__.ProduccionModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_productos_routes_js__WEBPACK_IMPORTED_MODULE_21__.createProductosRouter)({\n    productosModel: _models_productos_models_js__WEBPACK_IMPORTED_MODULE_31__.ProductosModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_equipos_routes_js__WEBPACK_IMPORTED_MODULE_25__.createEquiposRouter)({\n    equiposModel: _models_equipos_models_js__WEBPACK_IMPORTED_MODULE_35__.EquiposModel\n  }));\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_empleados_routes_js__WEBPACK_IMPORTED_MODULE_26__.createEmpleadosRouter)({\n    empleadosModel: _models_empleados_models_js__WEBPACK_IMPORTED_MODULE_36__.EmpleadosModel\n  }));\n\n  // rutas Protegidas\n  app.use('/protected/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_proteted_routes_js__WEBPACK_IMPORTED_MODULE_17__.createProtetedRouter)());\n\n  // Rutas para imágenes (antes de las rutas API)\n  app.use('/api/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, (0,_routes_uploads_routes_js__WEBPACK_IMPORTED_MODULE_27__.createUploadsRouter)());\n\n  // Servir archivos estáticos de imágenes\n  app.use('/api/uploads/images', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_15__.authenticate, express__WEBPACK_IMPORTED_MODULE_0__[\"default\"][\"static\"](imagesDir));\n\n  // PAGINA DE Inicio\n  app.get('/', (req, res) => {\n    res.render('main', {\n      error: null,\n      registerError: null\n    });\n  });\n\n  // contenido estatico que ponemos disponible\n  app.use(express__WEBPACK_IMPORTED_MODULE_0__[\"default\"][\"static\"](_config_paths_js__WEBPACK_IMPORTED_MODULE_10__.paths.public));\n\n  // Manejo de errores 404\n  app.use(_middlewares_error500Middleware_js__WEBPACK_IMPORTED_MODULE_13__.error404);\n\n  // Manejo de errores 500\n  app.use(_middlewares_error500Middleware_js__WEBPACK_IMPORTED_MODULE_13__.errorHandler);\n  _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].info('📦 Base de datos conectada y sincronizada');\n  try {\n    // Verificar conexión a la base de datos antes de iniciar\n    await _db_db_js__WEBPACK_IMPORTED_MODULE_38__[\"default\"].authenticate({\n      retry: {\n        max: 3,\n        timeout: 10000\n      }\n    });\n    // asociaciones antes de sincronizar\n    (0,_models_modelAssociations_js__WEBPACK_IMPORTED_MODULE_37__.setupAssociations)();\n    await _db_db_js__WEBPACK_IMPORTED_MODULE_38__[\"default\"].sync();\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].info('📦 Base de datos conectada y sincronizada');\n    // Iniciamos el servidor en el puerto especificado\n    app.listen(PORT, () => _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].info(`🚀 Servidor corriendo en puerto ${PORT}`));\n  } catch (error) {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_9__[\"default\"].error('❌ Error al iniciar:', {\n      error: {\n        name: error.name,\n        message: error.message,\n        stack: error.stack\n      }\n    });\n    process.exit(1);\n  }\n};\n\n//# sourceURL=webpack://mezclas/./src/server/server.mjs?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   U: () => (/* binding */ startServer)
+/* harmony export */ });
+/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2674);
+/* harmony import */ var compression__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(876);
+/* harmony import */ var helmet__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(7979);
+/* harmony import */ var body_parser__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1242);
+/* harmony import */ var cookie_parser__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(3328);
+/* harmony import */ var crypto__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(6982);
+/* harmony import */ var swagger_ui_express__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(3158);
+/* harmony import */ var _utils_swagger_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(6210);
+/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(3014);
+/* harmony import */ var _config_paths_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(245);
+/* harmony import */ var _middlewares_cors_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(1764);
+/* harmony import */ var _middlewares_validateJsonMiddleware_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(702);
+/* harmony import */ var _middlewares_error500Middleware_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(1087);
+/* harmony import */ var _middlewares_rateLimit_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(9250);
+/* harmony import */ var _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(936);
+/* harmony import */ var _middlewares_correlationMiddleware_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(7176);
+/* harmony import */ var _routes_usuario_routes_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(5541);
+/* harmony import */ var _routes_fertilizacion_routes_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(8258);
+/* harmony import */ var _routes_corporativo_routes_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(8261);
+/* harmony import */ var _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(2477);
+/* harmony import */ var _models_modelAssociations_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(1148);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_13__, _routes_usuario_routes_js__WEBPACK_IMPORTED_MODULE_15__, _routes_fertilizacion_routes_js__WEBPACK_IMPORTED_MODULE_16__, _routes_corporativo_routes_js__WEBPACK_IMPORTED_MODULE_17__, _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_18__, _models_modelAssociations_js__WEBPACK_IMPORTED_MODULE_19__, _db_db_js__WEBPACK_IMPORTED_MODULE_20__]);
+([_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_13__, _routes_usuario_routes_js__WEBPACK_IMPORTED_MODULE_15__, _routes_fertilizacion_routes_js__WEBPACK_IMPORTED_MODULE_16__, _routes_corporativo_routes_js__WEBPACK_IMPORTED_MODULE_17__, _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_18__, _models_modelAssociations_js__WEBPACK_IMPORTED_MODULE_19__, _db_db_js__WEBPACK_IMPORTED_MODULE_20__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
+
+
+
+
+// Librerias
+
+
+// Configuraciones
+
+
+
+// middlewares
+
+
+
+
+
+
+// Rutas
+
+
+
+
+// Models
+
+
+// Asociaciones
+
+
+// Base de datos
+
+const startServer = async options => {
+  const {
+    PORT,
+    MODE
+  } = options;
+  const app = (0,express__WEBPACK_IMPORTED_MODULE_0__["default"])();
+
+  // MOTOR DE PLANTILLAS EJS
+  app.set('views', _config_paths_js__WEBPACK_IMPORTED_MODULE_9__/* .paths */ .f.views);
+  app.set('view engine', 'ejs');
+  app.set('trust proxy', 1);
+
+  // Middlewares
+  if (MODE === 'development') {
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A.info('🔧 Modo de desarrollo');
+  } else {
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A.info('📦 Modo de producción');
+  }
+  // Agregar middleware de correlación
+  app.use(_middlewares_correlationMiddleware_js__WEBPACK_IMPORTED_MODULE_14__/* .correlationMiddleware */ .t);
+  app.use((0,compression__WEBPACK_IMPORTED_MODULE_1__["default"])({
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) {
+        return false;
+      }
+      return compression__WEBPACK_IMPORTED_MODULE_1__["default"].filter(req, res);
+    },
+    level: 6 // nivel de compresión (0-9)
+  }));
+
+  // Middleware para generar nonce
+  app.use((req, res, next) => {
+    res.locals.nonce = crypto__WEBPACK_IMPORTED_MODULE_5__.randomBytes(16).toString('base64');
+    next();
+  });
+
+  // Configuración de seguridad Helmet con CSP basada en Nonce
+  const isDev = MODE === 'development';
+
+  // Configuración de seguridad para permitir recursos externos mientras se mantiene la seguridad básica
+  app.use((0,helmet__WEBPACK_IMPORTED_MODULE_2__["default"])({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://ka-f.fontawesome.com', 'https://fertilizacion.portalrancho.com.mx', 'https://cdn.jsdelivr.net'],
+        scriptSrc: ["'self'", (req, res) => `'nonce-${res.locals.nonce}'`, 'https://cdn.jsdelivr.net', 'https://code.jquery.com', ...(isDev ? ["'unsafe-inline'"] : [])],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        fontSrc: ["'self'", 'https://ka-f.fontawesome.com', 'https://fonts.googleapis.com',
+        // ✅ dominio de la hoja de estilos
+        'https://fonts.gstatic.com',
+        // ✅ dominio donde están los archivos de fuente reales
+        'data:'],
+        connectSrc: ["'self'", 'https://ka-f.fontawesome.com', 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com',
+        // ✅ necesario para el service worker
+        'https://fonts.gstatic.com',
+        // ✅ necesario para el service worker
+        ...(isDev ? ['http://localhost:3000'] : [])],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https://fertilizacion.portalrancho.com.mx'],
+        mediaSrc: ["'self'", 'blob:'],
+        workerSrc: ["'self'", 'blob:'],
+        childSrc: ["'self'", 'blob:'],
+        frameSrc: ["'self'", 'https://fertilizacion.portalrancho.com.mx', ...(isDev ? ['http://localhost:3000'] : [])],
+        frameAncestors: isDev ? ["'self'", 'http://localhost:3000'] : ["'self'", 'https://mezclas.portalrancho.com.mx'],
+        // ✅ permite iframes desde tu propio dominio
+
+        // ✅ Corregido: 'none' no puede combinarse con otros valores
+        objectSrc: isDev ? ["'self'", 'http://localhost:3000'] : ["'self'", 'https://mezclas.portalrancho.com.mx'],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        ...(isDev ? {} : {
+          upgradeInsecureRequests: null
+        })
+      }
+    },
+    hsts: isDev ? false : {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
+    noSniff: true,
+    frameguard: false,
+    hidePoweredBy: true,
+    referrerPolicy: {
+      policy: 'strict-origin-when-cross-origin'
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: {
+      policy: 'same-site'
+    }
+  }));
+
+  // Configurar middleware para cookies y CORS
+  app.use((0,cookie_parser__WEBPACK_IMPORTED_MODULE_4__["default"])());
+  app.use(_middlewares_validateJsonMiddleware_js__WEBPACK_IMPORTED_MODULE_21__/* .validateJSON */ .B);
+  app.use((0,_middlewares_cors_js__WEBPACK_IMPORTED_MODULE_10__/* .corsMiddleware */ .C)());
+  app.disable('x-powered-by');
+  app.use(body_parser__WEBPACK_IMPORTED_MODULE_3__["default"].json({
+    limit: '50mb'
+  }));
+  app.use(body_parser__WEBPACK_IMPORTED_MODULE_3__["default"].urlencoded({
+    limit: '50mb',
+    extended: true
+  }));
+  if (MODE !== 'development') {
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A.info('🔒 limite de peticiones por IP Activado'); // eslint-disable-line no-console
+    app.use(_middlewares_rateLimit_js__WEBPACK_IMPORTED_MODULE_12__/* .apiLimiter */ .N); // Limitar el número de peticiones por IP
+  }
+
+  // Validar que la documentación está disponible solo en desarrollo
+  if (MODE === 'development') {
+    app.use('/api-docs', swagger_ui_express__WEBPACK_IMPORTED_MODULE_6__["default"].serve, swagger_ui_express__WEBPACK_IMPORTED_MODULE_6__["default"].setup(_utils_swagger_js__WEBPACK_IMPORTED_MODULE_7__/* .swaggerSpec */ ._));
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A.info('📚 Documentación API disponible en /api-docs');
+  }
+  // rutas API
+  app.use('/api/usuario/', (0,_routes_usuario_routes_js__WEBPACK_IMPORTED_MODULE_15__/* .createUsuarioRouter */ .G)({
+    usuarioModel: _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_18__/* .UsuarioModel */ .S
+  }));
+
+  // Modulo Fertilizacion
+  app.use('/api/fertilizacion', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_13__/* .authenticate */ .QF, (0,_routes_fertilizacion_routes_js__WEBPACK_IMPORTED_MODULE_16__/* .createFertilizacionRouter */ .Z)());
+
+  // Modulo Corporativo
+  app.use('/corporativo', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_13__/* .authenticate */ .QF, (0,_routes_corporativo_routes_js__WEBPACK_IMPORTED_MODULE_17__/* .createCorporativoRouter */ .S)());
+
+  // PAGINA DE Inicio
+  app.get('/', (req, res) => {
+    res.render('main', {
+      error: null,
+      registerError: null
+    });
+  });
+  app.use(express__WEBPACK_IMPORTED_MODULE_0__["default"]["static"](_config_paths_js__WEBPACK_IMPORTED_MODULE_9__/* .paths */ .f.public));
+
+  // Manejo de errores 404
+  app.use(_middlewares_error500Middleware_js__WEBPACK_IMPORTED_MODULE_11__/* .error404 */ .v);
+
+  // Manejo de errores 500
+  app.use(_middlewares_error500Middleware_js__WEBPACK_IMPORTED_MODULE_11__/* .errorHandler */ .r);
+  try {
+    // Verificar conexión a la base de datos antes de iniciar
+    await _db_db_js__WEBPACK_IMPORTED_MODULE_20__/* ["default"] */ .A.authenticate({
+      retry: {
+        max: 3,
+        timeout: 10000
+      }
+    });
+    // asociaciones antes de sincronizar
+    (0,_models_modelAssociations_js__WEBPACK_IMPORTED_MODULE_19__/* .setupAssociations */ .i)();
+    await _db_db_js__WEBPACK_IMPORTED_MODULE_20__/* ["default"] */ .A.sync();
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A.info('📦 Base de datos conectada y sincronizada');
+    // Iniciamos el servidor en el puerto especificado
+    app.listen(PORT, () => _utils_logger_js__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A.info(`🚀 Servidor corriendo en puerto ${PORT}`));
+  } catch (error) {
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_8__/* ["default"] */ .A.error('❌ Error al iniciar:', {
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      }
+    });
+    process.exit(1);
+  }
+};
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
-/***/ 3089:
-/*!*****************************************************!*\
-  !*** ./src/controller/notificaciones.controller.js ***!
-  \*****************************************************/
+/***/ 3014:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   NotificacionesController: () => (/* binding */ NotificacionesController)\n/* harmony export */ });\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n\n\nclass NotificacionesController {\n  constructor({\n    notificacionModel\n  }) {\n    this.notificacionModel = notificacionModel;\n  }\n\n  // uso\n  getAllIdUsuario = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const result = await this.notificacionModel.getAllIdUsuario({\n      idUsuario: user.id\n    });\n    res.json(result);\n  });\n\n  // uso\n  updateStatus = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      id\n    } = req.params;\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].info(`id notificacion: ${id}`);\n    const result = await this.notificacionModel.updateStatus({\n      id\n    });\n    return res.json({\n      message: result.message\n    });\n  });\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/notificaciones.controller.js?");
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  A: () => (/* binding */ logger)
+});
+
+;// external "winston"
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+const external_winston_namespaceObject = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_winston__["default"]) });
+;// external "winston-daily-rotate-file"
+var external_winston_daily_rotate_file_x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var external_winston_daily_rotate_file_y = (x) => (() => (x))
+const external_winston_daily_rotate_file_namespaceObject = external_winston_daily_rotate_file_x({  });
+// EXTERNAL MODULE: ./src/config/env.mjs
+var env = __webpack_require__(9097);
+;// external "chalk"
+var external_chalk_x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var external_chalk_y = (x) => (() => (x))
+const external_chalk_namespaceObject = external_chalk_x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_chalk__["default"]) });
+// EXTERNAL MODULE: ./src/config/logger.config.js
+var logger_config = __webpack_require__(9021);
+;// ./src/utils/logger.js
+
+
+
+ // Agregar para colores en terminal
+
+class Logger {
+  constructor() {
+    this.logger = this.createLogger();
+    this.metrics = new Map();
+    if (logger_config/* loggerConfig */.D.metrics.enabled) {
+      this.startMetricsCollection();
+    }
+  }
+
+  // Agregar método para correlación
+  withCorrelation(correlationId) {
+    return {
+      info: (message, meta = {}) => this.info(message, {
+        ...meta,
+        correlationId
+      }),
+      error: (message, meta = {}) => this.error(message, {
+        ...meta,
+        correlationId
+      }),
+      warn: (message, meta = {}) => this.warn(message, {
+        ...meta,
+        correlationId
+      }),
+      debug: (message, meta = {}) => this.debug(message, {
+        ...meta,
+        correlationId
+      }),
+      logOperation: (operation, phase, details = {}) => this.logOperation(operation, phase, {
+        ...details,
+        correlationId
+      }),
+      logModelOperation: (modelName, operation, data = {}) => this.logModelOperation(modelName, operation, {
+        ...data,
+        correlationId
+      }),
+      logTransaction: (transactionId, action, details = {}) => this.logTransaction(transactionId, action, {
+        ...details,
+        correlationId
+      }),
+      logError: (error, context = {}) => this.logError(error, {
+        ...context,
+        correlationId
+      }),
+      logDBTransaction: (operation, status, details = {}) => this.logDBTransaction(operation, status, {
+        ...details,
+        correlationId
+      })
+    };
+  }
+
+  // Agregar colección de métricas
+  startMetricsCollection() {
+    setInterval(() => {
+      const metrics = {
+        timestamp: new Date().toISOString(),
+        operationsCount: this.metrics.get('operationsCount') || 0,
+        errorCount: this.metrics.get('errorCount') || 0,
+        avgResponseTime: this.calculateAverageResponseTime()
+      };
+      this.debug('Metrics collected', {
+        metrics
+      });
+      this.metrics.clear();
+    }, logger_config/* loggerConfig */.D.metrics.interval);
+  }
+
+  // Método para registrar métricas
+  recordMetric(name, value) {
+    const current = this.metrics.get(name) || 0;
+    this.metrics.set(name, current + value);
+  }
+  createLogFormat() {
+    const consoleFormat = external_winston_namespaceObject["default"].format.printf(({
+      timestamp,
+      level,
+      message,
+      metadata,
+      stack
+    }) => {
+      // Formato para la consola con colores y mejor estructura
+      const levelUpperCase = level.toUpperCase().padEnd(7);
+      const coloredLevel = external_chalk_namespaceObject["default"][logger_config/* loggerConfig */.D.levelColors[level]](levelUpperCase);
+      const time = external_chalk_namespaceObject["default"].gray(timestamp);
+      let log = `${time} ${coloredLevel} │ ${message}`;
+
+      // Agregar metadata si existe
+      if (Object.keys(metadata).length > 0 && metadata.metadata !== message) {
+        const metadataStr = JSON.stringify(metadata.metadata, null, 2).split('\n').map(line => external_chalk_namespaceObject["default"].gray('│ ') + line).join('\n');
+        log += '\n' + metadataStr;
+      }
+
+      // Agregar stack trace si existe
+      if (stack) {
+        const stackStr = stack.split('\n').map(line => external_chalk_namespaceObject["default"].red('│ ') + line).join('\n');
+        log += '\n' + stackStr;
+      }
+      return log;
+    });
+    const fileFormat = external_winston_namespaceObject["default"].format.printf(({
+      timestamp,
+      level,
+      message,
+      metadata,
+      stack
+    }) => {
+      // Formato para archivos (sin colores)
+      let log = `${timestamp} [${level.toUpperCase()}] ${message}`;
+      if (Object.keys(metadata).length > 0 && metadata.metadata !== message) {
+        log += `\nMetadata: ${JSON.stringify(metadata.metadata, null, 2)}`;
+      }
+      if (stack) {
+        log += `\nStack: ${stack}`;
+      }
+      return log;
+    });
+    return {
+      console: external_winston_namespaceObject["default"].format.combine(external_winston_namespaceObject["default"].format.timestamp({
+        format: 'YYYY-MM-DD HH:mm:ss'
+      }), external_winston_namespaceObject["default"].format.errors({
+        stack: true
+      }), external_winston_namespaceObject["default"].format.metadata(), consoleFormat),
+      file: external_winston_namespaceObject["default"].format.combine(external_winston_namespaceObject["default"].format.timestamp({
+        format: 'YYYY-MM-DD HH:mm:ss'
+      }), external_winston_namespaceObject["default"].format.errors({
+        stack: true
+      }), external_winston_namespaceObject["default"].format.metadata(), external_winston_namespaceObject["default"].format.json(), fileFormat)
+    };
+  }
+  createLogger() {
+    const formats = this.createLogFormat();
+    const logger = external_winston_namespaceObject["default"].createLogger({
+      levels: logger_config/* loggerConfig */.D.logLevels,
+      level: env/* envs */.D.MODE === 'development' ? 'debug' : 'info',
+      format: formats.file,
+      transports: this.createTransports(),
+      exitOnError: false
+    });
+    if (env/* envs */.D.MODE !== 'production') {
+      logger.add(new external_winston_namespaceObject["default"].transports.Console({
+        format: formats.console
+      }));
+    }
+    return logger;
+  }
+  createTransports() {
+    return [new external_winston_namespaceObject["default"].transports.DailyRotateFile({
+      filename: 'logs/error-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      level: 'error',
+      maxFiles: '14d',
+      maxSize: '20m'
+    }), new external_winston_namespaceObject["default"].transports.DailyRotateFile({
+      filename: 'logs/combined-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      maxFiles: '14d',
+      maxSize: '20m'
+    })];
+  }
+
+  // Método para logging de operaciones de negocio
+  logOperation(operation, phase, details = {}) {
+    const startTime = Date.now();
+    const correlationId = details.correlationId || this.generateCorrelationId();
+    const baseContext = {
+      operation,
+      phase,
+      correlationId,
+      timestamp: new Date().toISOString(),
+      environment: env/* envs */.D.MODE,
+      ...details
+    };
+    this.info(`${operation} ${phase}`, baseContext);
+
+    // Registrar métricas
+    this.recordMetric('operationsCount', 1);
+    this.recordMetric('totalResponseTime', Date.now() - startTime);
+  }
+
+  // Método para logging de modelos
+  logModelOperation(modelName, operation, data = {}) {
+    const context = {
+      model: modelName,
+      operation,
+      timestamp: new Date().toISOString(),
+      ...data
+    };
+    this.debug(`${modelName}.${operation}`, context);
+  }
+  logDBTransaction(operation, status, details = {}) {
+    const context = {
+      operation,
+      status,
+      timestamp: new Date().toISOString(),
+      ...details
+    };
+    this.debug(`DB Transaction: ${operation} ${status}`, context);
+  }
+
+  // Métodos de logging mejorados
+  error(message, metadata = {}) {
+    this.logger.error(message, {
+      metadata
+    });
+  }
+  warn(message, metadata = {}) {
+    this.logger.warn(message, {
+      metadata
+    });
+  }
+  info(message, metadata = {}) {
+    this.logger.info(message, {
+      metadata
+    });
+  }
+  debug(message, metadata = {}) {
+    this.logger.debug(message, {
+      metadata
+    });
+  }
+
+  // Método para logging de transacciones
+  logTransaction(transactionId, action, details = {}) {
+    this.info(`Transaction ${action}`, {
+      transactionId,
+      ...details,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Método para logging de errores con contexto
+  logError(error, context = {}) {
+    const errorDetails = {
+      correlationId: context.correlationId || this.generateCorrelationId(),
+      message: error.message,
+      name: error.name,
+      stack: env/* envs */.D.MODE === 'development' ? error.stack : undefined,
+      code: error.code,
+      ...context
+    };
+
+    // Registrar métricas de error
+    this.recordMetric('errorCount', 1);
+    this.error('Error occurred', errorDetails);
+  }
+
+  // Métodos auxiliares
+  calculateAverageResponseTime() {
+    const total = this.metrics.get('totalResponseTime') || 0;
+    const count = this.metrics.get('operationsCount') || 1;
+    return total / count;
+  }
+  generateCorrelationId() {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+}
+/* harmony default export */ const logger = (new Logger());
 
 /***/ }),
 
 /***/ 3139:
-/*!***************************!*\
-  !*** external "bcryptjs" ***!
-  \***************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_bcryptjs__;
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_bcryptjs__["default"]) });
 
 /***/ }),
 
 /***/ 3158:
-/*!*************************************!*\
-  !*** external "swagger-ui-express" ***!
-  \*************************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_swagger_ui_express_613ebf08__;
-
-/***/ }),
-
-/***/ 3231:
-/*!*******************************!*\
-  !*** ./src/schema/mezclas.js ***!
-  \*******************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Solicitud: () => (/* binding */ Solicitud)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n\nconst solicitudConfig = {\n  id: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    primaryKey: true,\n    autoIncrement: true\n  },\n  folio: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    validate: {\n      len: {\n        args: [0, 50],\n        msg: 'El folio debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  cantidad: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    validate: {\n      len: {\n        args: [0, 10],\n        msg: 'la cantidad debe tener entre 1 y 10 caracteres'\n      }\n    }\n  },\n  idCentroCoste: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    allowNull: false,\n    field: 'idCentroCoste',\n    // Nombre de columna en la base de datos\n    validate: {\n      notNull: {\n        msg: 'El centro de coste es requerido'\n      }\n    }\n  },\n  descripcion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.TEXT,\n    allowNull: true\n  },\n  empresa: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La empresa'\n      },\n      len: {\n        args: [3, 100],\n        msg: 'El nombre de la empresa debe tener entre 3 y 100 caracteres'\n      }\n    }\n  },\n  fechaSolicitud: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DATEONLY,\n    allowNull: true,\n    field: 'fechaSolicitud',\n    // Nombre de columna en la base de datos\n    defaultValue: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.NOW\n  },\n  idUsuarioSolicita: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    allowNull: false,\n    field: 'idUsuarioSolicita',\n    // Nombre de columna en la base de datos\n    validate: {\n      notNull: {\n        msg: 'El ID de usuario en nesesario'\n      }\n    }\n  },\n  idUsuarioMezcla: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    field: 'idUsuarioMezcla',\n    // Nombre de columna en la base de datos\n    allowNull: true\n  },\n  imagenEntrega: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.TEXT,\n    field: 'imagenEntrega',\n    // Nombre de columna en la base de datos\n    allowNull: true\n  },\n  metodoAplicacion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    field: 'metodoAplicacion',\n    // Nombre de columna en la base de datos\n    validate: {\n      notEmpty: {\n        msg: 'El método de aplicación es requerido'\n      },\n      len: {\n        args: [3, 100],\n        msg: 'El método de aplicación debe tener entre 3 y 100 caracteres'\n      }\n    }\n  },\n  notaMezcla: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.TEXT,\n    allowNull: true,\n    field: 'notaMezcla',\n    // Nombre de columna en la base de datos\n    validate: {\n      len: {\n        args: [0, 500],\n        msg: 'La nota de mezcla no puede exceder 500 caracteres'\n      }\n    }\n  },\n  presentacion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    validate: {\n      len: {\n        args: [0, 100],\n        msg: 'La presentación debe tener entre 3 y 100 caracteres'\n      }\n    }\n  },\n  ranchoDestino: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    field: 'ranchoDestino',\n    // Nombre de columna en la base de datos\n    validate: {\n      notEmpty: {\n        msg: 'El rancho es requerido'\n      },\n      len: {\n        args: [3, 100],\n        msg: 'El rancho destino debe tener entre 3 y 100 caracteres'\n      }\n    }\n  },\n  status: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.ENUM('Pendiente', 'Proceso', 'Completada', 'Cancelada'),\n    allowNull: true,\n    defaultValue: 'Pendiente'\n  },\n  temporada: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La temporada es requerida'\n      },\n      len: {\n        args: [4, 20],\n        msg: 'La temporada debe tener entre 4 y 20 caracteres'\n      }\n    }\n  },\n  variedad: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La variedad es requerida'\n      },\n      len: {\n        args: [3, 100],\n        msg: 'La variedad debe tener entre 3 y 100 caracteres'\n      }\n    }\n  },\n  fechaEntrega: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DATEONLY,\n    field: 'fechaEntrega',\n    // Nombre de columna en la base de datos\n    allowNull: true\n  },\n  porcentajes: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El porcentaje es requerido'\n      },\n      len: {\n        args: [3, 100],\n        msg: 'El porcentaje debe tener entre 3 y 100 caracteres'\n      }\n    }\n  },\n  respuestaSolicitud: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    field: 'respuestaSolicitud',\n    // Nombre de columna en la base de datos\n    allowNull: true\n  },\n  respuestaMezclador: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    field: 'respuestaMezclador',\n    // Nombre de columna en la base de datos\n    allowNull: true\n  },\n  motivoCancelacion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    field: 'motivoCancelacion',\n    // Nombre de columna en la base de datos\n    allowNull: true\n  },\n  confirmacion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    field: 'confirmacion',\n    allowNull: true,\n    defaultValue: 'Pendiente'\n  },\n  idUsuarioValida: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    field: 'idUsuarioValida',\n    allowNull: true\n  }\n};\nconst Solicitud = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('solicitud', solicitudConfig, {\n  tableName: 'solicitudes',\n  timestamps: false,\n  hooks: {\n    beforeValidate: solicitud => {\n      // Transformaciones antes de validar\n      if (solicitud.folio) {\n        solicitud.folio = solicitud.folio.trim().toUpperCase();\n      }\n\n      // Generar fecha de solicitud si no se proporciona\n      if (!solicitud.fechaSolicitud) {\n        solicitud.fechaSolicitud = new Date();\n      }\n    },\n    afterCreate: solicitud => {\n      console.log(`Nueva solicitud creada: ${solicitud.folio}`);\n    }\n  }\n});\nSolicitud.associate = models => {\n  Solicitud.belongsTo(models.Usuario, {\n    foreignKey: 'idUsuarioSolicita',\n    as: 'usuarioSolicita'\n  });\n  Solicitud.belongsTo(models.Centrocoste, {\n    foreignKey: 'idCentroCoste',\n    as: 'centroCosto'\n  });\n};\n\n//# sourceURL=webpack://mezclas/./src/schema/mezclas.js?");
-
-/***/ }),
-
-/***/ 3259:
-/*!********************************************!*\
-  !*** external "winston-daily-rotate-file" ***!
-  \********************************************/
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_winston_daily_rotate_file_69928d76__;
-
-/***/ }),
-
-/***/ 3261:
-/*!*********************************************!*\
-  !*** ./src/models/notificaciones.models.js ***!
-  \*********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   NotificacionModel: () => (/* binding */ NotificacionModel)\n/* harmony export */ });\n/* harmony import */ var _schema_notificaciones_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/notificaciones.js */ 7234);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n// utils\n\nclass NotificacionModel {\n  // uso\n  static async create({\n    idSolicitud,\n    mensaje,\n    idUsuario\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!idSolicitud || !mensaje || !idUsuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.ValidationError('Datos requeridos no proporcionados');\n      }\n      // creamos el notificacion\n      await _schema_notificaciones_js__WEBPACK_IMPORTED_MODULE_0__.Notificaciones.create({\n        id_solicitud: idSolicitud,\n        mensaje,\n        id_usuario: idUsuario\n      });\n      return {\n        message: `notificacion registrado exitosamente ${idSolicitud}`\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al crear la notificacion');\n    }\n  }\n\n  // uso\n  static async getAllIdUsuario({\n    idUsuario\n  }) {\n    try {\n      // validamos que el id sea un numero\n      if (isNaN(idUsuario)) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.ValidationError('El id debe ser un numero');\n      const notificacion = await _schema_notificaciones_js__WEBPACK_IMPORTED_MODULE_0__.Notificaciones.findAll({\n        where: {\n          id_usuario: idUsuario,\n          status: 1\n        },\n        attributes: ['id', 'id_solicitud', 'id_usuario', 'mensaje', 'status']\n      });\n      if (!notificacion) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('notificaciones no encontradas');\n      return notificacion;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al obtener las notificaciones');\n    }\n  }\n  static async getOneIDSolicitudUsuario({\n    idUsuario,\n    idSolicitud\n  }) {\n    try {\n      // validamos que el id sea un numero\n      if (isNaN(idUsuario) || isNaN(idSolicitud)) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.ValidationError('No se proporciono el id de usuario o la solicitud');\n      const notificacion = await _schema_notificaciones_js__WEBPACK_IMPORTED_MODULE_0__.Notificaciones.findAll({\n        where: {\n          id_solicitud: idSolicitud,\n          id_usuario: idUsuario,\n          status: 1\n        },\n        attributes: ['id', 'id_solicitud', 'id_usuario', 'mensaje', 'status']\n      });\n      if (!notificacion) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('notificacion no encontrada');\n      return notificacion;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al obtener las notificacion');\n    }\n  }\n\n  // uso\n  static async updateStatus({\n    id\n  }) {\n    try {\n      // validamos que el id sea un numero\n      if (isNaN(id)) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.ValidationError('El id debe ser un numero');\n      const notificacion = await _schema_notificaciones_js__WEBPACK_IMPORTED_MODULE_0__.Notificaciones.findByPk(id);\n      if (!notificacion) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('notificacion con id ' + id + ' no encontrada');\n      // Actualiza solo los campos que se han proporcionado\n      if (id) notificacion.status = 0;\n      await notificacion.save();\n      return {\n        message: 'Notificacion actualizada correctamente'\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al actualizar la notificacion');\n    }\n  }\n}\n\n//# sourceURL=webpack://mezclas/./src/models/notificaciones.models.js?");
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_swagger_ui_express_613ebf08__["default"]) });
 
 /***/ }),
 
 /***/ 3328:
-/*!********************************!*\
-  !*** external "cookie-parser" ***!
-  \********************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_cookie_parser_591162dd__;
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_cookie_parser_591162dd__["default"]) });
 
 /***/ }),
 
-/***/ 3487:
-/*!************************************************!*\
-  !*** ./src/controller/empleados.controller.js ***!
-  \************************************************/
+/***/ 3902:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   EmpleadosController: () => (/* binding */ EmpleadosController)\n/* harmony export */ });\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n\nclass EmpleadosController {\n  constructor({\n    empleadosModel\n  }) {\n    this.empleadosModel = empleadosModel;\n  }\n\n  // extraer\n  getAllEmpleados = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const response = await this.empleadosModel.getAllEmpleados();\n    res.json(response);\n  });\n  agregarUsuario = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const response = await this.empleadosModel.agregarUsuario({\n      data: req.body\n    });\n    res.json(response);\n  });\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/empleados.controller.js?");
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  d: () => (/* binding */ UsuarioController)
+});
+
+// EXTERNAL MODULE: ./src/config/env.mjs
+var env = __webpack_require__(9097);
+;// external "nodemailer"
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+const external_nodemailer_namespaceObject = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_nodemailer__["default"]) });
+// EXTERNAL MODULE: ./src/utils/logger.js + 3 modules
+var logger = __webpack_require__(3014);
+// EXTERNAL MODULE: ./src/utils/CustomError.js
+var CustomError = __webpack_require__(2551);
+;// ./src/config/smtp.js
+
+
+// utils
+
+
+
+// Configuración del transportador SMTP
+const createTransporter = () => {
+  const transporter = external_nodemailer_namespaceObject["default"].createTransport({
+    host: 'portalrancho.com.mx',
+    port: 465,
+    secure: true,
+    auth: {
+      user: env/* envs */.D.EMAIL_USER,
+      pass: env/* envs */.D.EMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: true,
+      minVersion: 'TLSv1.2' // Versión mínima de TLS
+    },
+    pool: true,
+    debug: true,
+    logger: false
+  });
+
+  // Verificar conexión
+  transporter.verify((error, success) => {
+    if (error) {
+      logger/* default */.A.error('Error en verificación SMTP:', error);
+    } else {
+      logger/* default */.A.info('Servidor SMTP listo');
+    }
+  });
+  return transporter;
+};
+
+// Función auxiliar para obtener color según el estatus
+const getStatusColor = status => {
+  const colors = {
+    Proceso: '#28a745',
+    // Verde
+    Completada: '#ffc107',
+    // Amarillo
+    Rechazado: '#dc3545',
+    // Rojo
+    default: '#17a2b8' // Azul
+  };
+  return colors[status] || colors.default;
+};
+
+// Función auxiliar para detalles adicionales según estatus
+const getAdditionalDetails = status => {
+  const details = {
+    Proceso: '<p>Su solicitud está siendo procesada. Le mantendremos informado sobre cualquier actualización.</p>',
+    Completada: '<p>Su solicitud ha sido <strong>completada</strong>. Para más detalles, por favor contacte a nuestro equipo.</p>',
+    default: ''
+  };
+  return details[status] || details.default;
+};
+
+// Función para enviar correo con manejo de errores
+const sendMail = async message => {
+  const transporter = createTransporter();
+  try {
+    const info = await transporter.sendMail(message);
+    logger/* default */.A.info('Correo enviado:', {
+      messageId: info.messageId,
+      response: info.response
+    });
+    return info;
+  } catch (error) {
+    logger/* default */.A.error('Error al enviar correo:', {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    });
+    throw error;
+  }
+};
+const validateEmailData = (type, data) => {
+  const requiredFields = {
+    status: ['email', 'nombre', 'solicitudId', 'status'],
+    solicitud: ['email', 'nombre', 'solicitudId', 'fechaSolicitud', 'usuario', 'data'],
+    notificacion: ['email', 'nombre', 'solicitudId', 'data'],
+    usuario: ['email', 'password'],
+    respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    cancelacion: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    aprobada: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    confirmacionInicial: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],
+    devolucion: ['email', 'nombre', 'usuario', 'data'],
+    reporteMensualFertilizacion: ['email', 'nombre', 'data']
+  };
+  const fields = requiredFields[type] || [];
+  const missing = fields.filter(field => !data[field]);
+  if (missing.length > 0) {
+    throw new CustomError/* ValidationError */.yI(`Faltan campos requeridos para el tipo ${type}: ${missing.join(', ')}`);
+  }
+};
+// Función principal para enviar correos
+const enviarCorreo = async params => {
+  const {
+    type,
+    email,
+    password = '',
+    fechaSolicitud = '',
+    nombre = 'Usuario',
+    solicitudId = '',
+    status = '',
+    usuario = {},
+    data = {}
+  } = params;
+  // Definir constantes de desarrollo
+  const DEV_EMAIL = 'zaragoza051@lgfrutas.com.mx';
+  const PRODUCTION_MODE = 'Produccion';
+
+  // Validar datos requeridos según el tipo
+  validateEmailData(type, params);
+
+  // Configurar mensaje según tipo
+  if (!email || !type) {
+    throw new CustomError/* ValidationError */.yI('Email y tipo de mensaje son requeridos');
+  }
+
+  // Configurar mensaje según tipo
+  const templates = {
+    status: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Actualización de Solicitud - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
+             <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
+                 <h1>Grupo LG</h1>
+            </div>
+            <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
+                <h2>Actualización de Solicitud</h2>
+                <p>Estimado(a) ${nombre},</p>
+                <p>Le informamos que su solicitud con ID: <b>${solicitudId}</b> ha cambiado de estatus.</p>
+                <div style="background-color: ${getStatusColor(status)}; color: white; padding: 10px; border-radius: 5px; text-align: center;">
+                    <h3>Estado Actual: ${status}</h3>
+                </div>
+                <h4>Detalles de la Solicitud:</h4>
+                ${getAdditionalDetails(status)}
+      
+               <a href="https://solicitudmezclas.portalrancho.com.mx/protected/${status}" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Ver Detalles de la Solicitud</a>
+      
+               <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
+               <p>Atentamente,<br>El equipo de Grupo LG</p>
+          </div>
+      </body>`
+    },
+    usuario: {
+      from: '"Registro Portal Checador" <mezclas.rancho@portalrancho.com.mx>',
+      subject: 'Usuario Creado Exitosamente',
+      html: `<body style="font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;">
+        <div style="background-color: #4CAF50;color: white;text-align: center;padding: 20px;">
+            <h1>Grupo LG</h1>
+        </div>
+        <div style="background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;">
+            <h2>¡Bienvenido a Grupo LG!</h2>
+            <p>Estimado nuevo usuario,</p>
+            <p>Nos complace darte la bienvenida a Grupo LG. Tu cuenta ha sido creada exitosamente.</p>
+            <p>Para acceder a tu cuenta, por favor utiliza los siguientes datos:</p>
+            <ul>
+                <li>Nombre de usuario:<b>${email}</b></li>
+                <li>Contraseña temporal:<b>${password}</b></li>
+            </ul>
+             <a href="https://solicitudmezclas.portalrancho.com.mx/" style="display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;">Iniciar Sesión</a>
+            <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>
+            <p>¡Gracias por unirte a nosotros!</p>
+            <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+    </body>`
+    },
+    solicitud: {
+      from: '"Portal de Solicitudes Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Nueva Solicitud Creada - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #4CAF50; color: white; text-align: center; padding: 20px;">
+            <h1>Grupo LG</h1>
+        </div>
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+            <h2>Nueva Solicitud Creada</h2>
+            <p>Estimado(a) ${nombre},</p>
+            <p>Le informamos nueva solicitud ha sido creada con éxito. ID de solicitud es: <b>${solicitudId}</b>.</p>
+
+            <h4>Datos de solicitante:</h4>
+            <ul>
+                <li><strong>Nombre:</strong> ${usuario.nombre}</li>
+                <li><strong>Empresa</strong> ${usuario.empresa}</li>
+                <li><strong>Rancho:</strong> ${data.rancho || data.ranchoDestino}</li>
+            </ul>
+
+            <h4>Detalles de la Solicitud:</h4>
+            <ul>
+                <li><strong>Fecha de Solicitud:</strong> ${fechaSolicitud}</li>
+                <li><strong>Descripción:</strong> ${data.descripcion}</li>
+                <li><strong>Folio Receta:</strong> ${data.folio}</li>
+            </ul>
+
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" style="display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;">Ver Detalles de la Solicitud</a>
+
+            <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>
+            <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+    </body>`
+    },
+    notificacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Notificación de No Disponibilidad - ${solicitudId}`,
+      html: ` <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+               <div style="background-color: #FF5733; color: white; text-align: center; padding: 20px;">
+                   <h1>Grupo LG</h1>
+               </div>
+               <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+                   <h2>Notificación de No Disponibilidad de Producto</h2>
+                   <p>Estimado(a) ${nombre},</p>
+                   <p>Le informamos que el producto que solicitó no está disponible en este momento. A continuación, se detallan los datos de los productos sin existencia:</p>
+      
+                   <h4>Solicitud: <b>${solicitudId}</b></h4>
+      
+                   <ul>
+                      ${Array.isArray(data) ? data.map(product => `
+                   <li>
+                     <strong>Id del Producto:</strong> ${product.id_producto}<br>
+                     <strong>Nombre del Producto:</strong> ${product.nombre_producto}<br>
+                     <strong>Unidad de Medida:</strong> ${product.unidad_medida}<br>
+                     <strong>cantidad:</strong> ${product.cantidad}
+                   </li>
+                 `).join('') : '<li>No hay productos para mostrar</li>'}
+                   </ul>
+      
+                   <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>
+                  <div style="text-align: center; margin-top: 20px;">
+                      <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" 
+                        style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        Ver Solicitud
+                      </a>
+                  </div>
+                   <p>Si tiene alguna pregunta o necesita más información, no dude en contactar a nuestro equipo de almacen.</p>
+                   <p><strong>Encargado de almacen:</strong> ${usuario?.nombre || 'No especificado'}<br></p>
+                   <p><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}<br></p>
+                   <p><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}<br></p>
+                   <p>Atentamente,<br>El equipo de Grupo LG</p>
+               </div>
+             </body>`
+    },
+    respuestaSolicitante: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Respuesta de Solicitante - Solicitud ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Respuesta de Solicitante</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Nueva Respuesta del Solicitante</h2>
+          
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Ranchos:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Mensaje del Solicitante:</h4>
+            <p style="margin-bottom: 0;">${data.mensaje}</p>
+          </div>
+  
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes" 
+               style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+               Ver Solicitud
+            </a>
+          </div>
+  
+          <p style="margin-top: 20px;">Por favor, revise la respuesta y tome las acciones necesarias.</p>
+          
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Este es un mensaje automático. Si necesita ayuda adicional, contacte al departamento de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    cancelacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Cancelada - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #dc3545; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud Cancelada</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Cancelación de Solicitud</h2>
+          
+          <div style="background-color: #ffe6e6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #dc3545;">Detalles de la Solicitud Cancelada:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Cancelación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Motivo de Cancelación:</h4>
+            <p style="margin-bottom: 0;">${data.motivo || 'No se especificó motivo'}</p>
+          </div>
+  
+          <p style="margin-top: 20px;">Si considera que esto fue un error o necesita realizar una nueva solicitud, por favor:</p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/solicitud" 
+               style="display: inline-block; background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Crear Nueva Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si tiene alguna pregunta o necesita aclaraciones, no dude en contactar a nuestro equipo de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    aprobada: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Aprobada - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #28a745; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud Aprobada</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>¡Su Solicitud ha sido Aprobada!</h2>
+          
+          <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #28a745;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Aprobación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #28a745; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Información Importante:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Nota:</strong> La mezcla estará lista para su aprobacion en el almacén asignado.
+          </p>
+
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si tiene alguna pregunta o necesita aclaraciones, no dude en contactar a nuestro equipo de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    confirmacionInicial: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud Pendiente de Confirmación - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Nueva Solicitud por Confirmar</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Nueva Solicitud Requiere Confirmación</h2>
+          
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #2196F3;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Solicitud:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Información de la Mezcla:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio de Receta:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+              <li><strong>Descripción:</strong> ${data.descripcion || 'Sin descripción'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Acción Requerida:</strong> Esta solicitud necesita su confirmación para proceder con la preparación.
+          </p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/confirmacion" 
+               style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Revisar y Confirmar Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Este es un mensaje automático. Por favor, revise y confirme la solicitud lo antes posible.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    reevaluacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Solicitud en Reevaluación - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #FFA500; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Solicitud en Reevaluación</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Solicitud Requiere Reevaluación</h2>
+          
+          <div style="background-color: #FFF3E0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #E65100;">Detalles de la Solicitud:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>
+              <li><strong>Solicitante:</strong> ${nombre}</li>
+              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+              <li><strong>Fecha de Reevaluación:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #FFA500; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Observaciones para Reevaluación:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Motivo:</strong> ${data.motivo || 'No especificado'}</li>
+              <li><strong>Comentarios:</strong> ${data.comentarios || 'Sin comentarios adicionales'}</li>
+            </ul>
+          </div>
+  
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Detalles de la Mezcla:</h4>
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Folio de Receta:</strong> ${data.folio || 'No especificado'}</li>
+              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>
+              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>
+              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>
+            </ul>
+          </div>
+  
+          <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <strong>Acción Requerida:</strong> Por favor, revise los comentarios y realice las correcciones necesarias.
+          </p>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <a href="https://solicitudmezclas.portalrancho.com.mx/protected/reevaluacion/${solicitudId}" 
+               style="display: inline-block; background-color: #FFA500; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+               Revisar Solicitud
+            </a>
+          </div>
+  
+          <hr style="border: 1px solid #eee; margin: 20px 0;">
+          
+          <p style="color: #666; font-size: 0.9em;">
+            Si necesita asistencia adicional, contacte al departamento de soporte.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    },
+    devolucion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Nueva Solicitud de Devolución - ${solicitudId}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+        <h1>Grupo LG - Nueva Devolución</h1>
+      </div>
+      
+      <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+        <h2>Nueva Solicitud de Devolución de Productos</h2>
+        
+        <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <h4 style="margin-top: 0; color: #2196F3;">Información del Solicitante:</h4>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>Solicitante:</strong> ${nombre}</li>
+            <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>
+            <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>
+            <li><strong>Fecha de Solicitud:</strong> ${new Date().toLocaleDateString()}</li>
+          </ul>
+        </div>
+
+        <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;">
+          <h4 style="margin-top: 0;">Productos a Devolver:</h4>
+          <div style="margin: 10px 0;">
+            ${Array.isArray(data.productos) ? data.productos.map(producto => `
+                <div style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                  <strong>Producto:</strong> ${producto.nombre}<br>
+                  <strong>Cantidad:</strong> ${producto.cantidad} ${producto.unidad_medida}
+                </div>
+              `).join('') : '<p>No hay productos especificados</p>'}
+          </div>
+        </div>
+
+        <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #FFA500; margin: 20px 0;">
+          <h4 style="margin-top: 0;">Detalles Adicionales:</h4>
+          <ul style="list-style: none; padding: 0;">
+            <li><strong>Almacén:</strong> ${data.almacen}</li>
+            <li><strong>Temporada:</strong> ${data.temporada}</li>
+            <li><strong>Descripción:</strong> ${data.descripcion || 'Sin descripción'}</li>
+          </ul>
+        </div>
+
+        <p style="background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;">
+          <strong>Acción Requerida:</strong> Por favor revise y procese esta solicitud de devolución.
+        </p>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="https://solicitudmezclas.portalrancho.com.mx/protected/devoluciones" 
+             style="display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;">
+             Gestionar Devolución
+          </a>
+        </div>
+
+        <hr style="border: 1px solid #eee; margin: 20px 0;">
+        
+        <p style="color: #666; font-size: 0.9em;">
+          Este es un mensaje automático. Por favor, procese la devolución lo antes posible.
+        </p>
+        
+        <p>Atentamente,<br>El equipo de Grupo LG</p>
+      </div>
+    </body>`
+    },
+    reporteMensualFertilizacion: {
+      from: '"Grupo LG" <mezclas.rancho@portalrancho.com.mx>',
+      subject: `Reporte Mensual de Fertilización - ${data.mes || ''}`,
+      html: `<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px;">
+        <div style="background-color: #2196F3; color: white; text-align: center; padding: 20px;">
+          <h1>Grupo LG - Reporte Mensual de Fertilización</h1>
+        </div>
+        
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;">
+          <h2>Reporte Detallado de Fertilización</h2>
+          <div style="background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <ul style="list-style: none; padding: 0;">
+              <li><strong>Rancho:</strong> ${data.rancho}</li>
+              <li><strong>Mes:</strong> ${data.mes}</li>
+              <li><strong>Fecha de Generación:</strong> ${new Date().toLocaleString('es-MX')}</li>
+            </ul>
+          </div>
+
+          <div style="background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0; overflow-x: auto;">
+             <!-- El contenido HTML de la tabla se inyecta aquí -->
+             ${data.htmlContent}
+          </div>
+
+          <p style="color: #666; font-size: 0.9em; margin-top: 20px;">
+            Este es un reporte generado automáticamente.
+          </p>
+          
+          <p>Atentamente,<br>El equipo de Grupo LG</p>
+        </div>
+      </body>`
+    }
+  };
+  try {
+    const template = templates[type];
+    if (!template) {
+      throw new CustomError/* ValidationError */.yI(`Tipo de mensaje "${type}" no válido`);
+    }
+    logger/* default */.A.debug('Enviando correo con los siguientes datos:', {
+      MODE: env/* envs */.D.MODE,
+      type,
+      to: env/* envs */.D.MODE !== PRODUCTION_MODE ? DEV_EMAIL : usuario?.email || DEV_EMAIL
+    });
+    // Configurar el mensaje
+    const message = {
+      ...template,
+      to: env/* envs */.D.MODE !== PRODUCTION_MODE ? DEV_EMAIL : usuario?.email || DEV_EMAIL
+    };
+    const result = await sendMail(message);
+    return {
+      success: true,
+      messageId: result.messageId
+    };
+  } catch (error) {
+    logger/* default */.A.error('Error en enviarCorreo:', error);
+    throw error;
+  }
+};
+// EXTERNAL MODULE: ./src/utils/asyncHandler.js
+var asyncHandler = __webpack_require__(6466);
+;// ./src/controller/usuario.controller.js
+
+
+
+class UsuarioController {
+  constructor({
+    usuarioModel
+  }) {
+    this.usuarioModel = usuarioModel;
+  }
+  delete = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const logger = req.logger;
+    const {
+      user
+    } = req.session;
+    const logContext = {
+      operation: 'ELIMINAR USUARIO',
+      nombre: user.nombre,
+      rol: user.rol,
+      id_eliminado: id
+    };
+    logger.info('Iniciando controlador', logContext);
+    const result = await this.usuarioModel.delete({
+      id,
+      logContext,
+      logger
+    });
+    logger.info('Finalizando controlador', logContext);
+    res.json({
+      message: `${result.message}`
+    });
+  });
+
+  // obtener  usuario
+  getAll = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    const usuario = await this.usuarioModel.getAll();
+    return res.json(usuario);
+  });
+
+  // obtener todos los usuarios por empresa
+  getUsuarios = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    const {
+      user
+    } = req.session;
+    const usuario = await this.usuarioModel.getUsuarios({
+      nombre: user.nombre,
+      rol: user.rol,
+      empresa: user.empresa
+    });
+    return res.json(usuario);
+  });
+  create = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    const result = await this.usuarioModel.create({
+      data: req.body
+    });
+    await enviarCorreo({
+      email: req.body.email,
+      subject: 'Bienvenido Nuevo Usuario',
+      password: req.body.password
+    }); // si se creo con exito el usuario enviamos correo con la contraseña
+    return res.json({
+      message: result.message
+    });
+  });
+  update = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const result = await this.usuarioModel.update({
+      id,
+      data: req.body
+    });
+    return res.json({
+      message: result.message
+    });
+  });
+  login = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    const {
+      user,
+      password
+    } = req.body;
+    const logger = req.logger;
+    const logContext = {
+      operation: 'LOGIN',
+      user,
+      password
+    };
+    try {
+      logger.info('LOGIN started', logContext);
+      const result = await this.usuarioModel.login({
+        user,
+        password,
+        logContext,
+        logger
+      });
+      return res.cookie('access_token', result.token, {
+        httpOnly: true,
+        // la cookie solo se puede acceder en el servidor
+        secure: false,
+        sameSite: 'strict' // la cookie solo se puede acceder en el mismo dominio
+        // maxAge: 60 * 60 * 24 * 30 // la cookie expira
+      }).send({
+        message: result.message,
+        rol: result.rol,
+        usuario: result.usuario
+      });
+    } catch (error) {
+      // Log detallado del error
+      logger.error('Error al iniciar sesion', {
+        ...logContext,
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          code: error.code
+        }
+      });
+      throw error;
+    }
+  });
+
+  // actualizar contraseña del usuario
+  changePassword = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const {
+      contrasenaRes,
+      contrasenaRepRes
+    } = req.body;
+    const logger = req.logger;
+    const {
+      user
+    } = req.session;
+    const logContext = {
+      operation: 'Cambio de contraseña',
+      nombre: user.nombre,
+      rol: user.rol,
+      id_cambio: id
+    };
+    // Datos del body
+    if (contrasenaRes !== contrasenaRepRes) {
+      throw new CustomError/* ValidationError */.yI('Las contraseñas no coinciden', {
+        statusCode: 400,
+        logContext
+      });
+    }
+    logger.info('Iniciando controlador', logContext);
+    const result = await this.usuarioModel.changePasswordAdmin({
+      id,
+      newPassword: contrasenaRes,
+      logContext,
+      logger
+    });
+    logger.info('Finalizando controlador', logContext);
+    return res.json({
+      message: result.message
+    });
+  });
+
+  // obtener un usuario por id
+  getOne = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const usuario = await this.usuarioModel.getOneId({
+      id
+    });
+    return res.json(usuario);
+  });
+
+  // cerrar sesion
+  logout = (0,asyncHandler/* asyncHandler */.L)(async (req, res) => {
+    res.clearCookie('access_token');
+    // Destruir la sesión si existe
+    if (req.session) {
+      req.session.user = null;
+    }
+    return res.redirect('/');
+  });
+}
 
 /***/ }),
 
-/***/ 3678:
-/*!***************************!*\
-  !*** external "date-fns" ***!
-  \***************************/
-/***/ ((module) => {
+/***/ 4831:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_date_fns_f4130be9__;
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   t: () => (/* binding */ TanquesPreparados)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
-/***/ }),
 
-/***/ 3975:
-/*!**************************************!*\
-  !*** ./src/routes/uploads.routes.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createUploadsRouter: () => (/* binding */ createUploadsRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _middlewares_validateFormatoImg_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../middlewares/validateFormatoImg.js */ 5707);\n/* harmony import */ var _controller_uploads_controller_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../controller/uploads.controller.js */ 4139);\n\n\n\nconst createUploadsRouter = () => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const uploadsController = new _controller_uploads_controller_js__WEBPACK_IMPORTED_MODULE_2__.UploadsController();\n\n  // agregar Imagenes\n  router.post('/images', _middlewares_validateFormatoImg_js__WEBPACK_IMPORTED_MODULE_1__.validateBase64Image, uploadsController.agregarImagenes);\n\n  // obtener imagenes\n  router.get('/images/:filename', uploadsController.obtenerImagenes);\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/uploads.routes.js?");
-
-/***/ }),
-
-/***/ 3982:
-/*!*****************************!*\
-  !*** external "nodemailer" ***!
-  \*****************************/
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_nodemailer__;
-
-/***/ }),
-
-/***/ 4127:
-/*!***********************!*\
-  !*** external "cors" ***!
-  \***********************/
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_cors__;
-
-/***/ }),
-
-/***/ 4139:
-/*!**********************************************!*\
-  !*** ./src/controller/uploads.controller.js ***!
-  \**********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   UploadsController: () => (/* binding */ UploadsController)\n/* harmony export */ });\n/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ 37);\n/* harmony import */ var fs_promises__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fs/promises */ 1943);\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! path */ 6928);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n\n\n\n\nclass UploadsController {\n  agregarImagenes = async (req, res) => {\n    try {\n      const {\n        image\n      } = req.body;\n\n      // Extraer extensión y datos\n      const matches = image.match(/^data:image\\/(.*?);base64,/);\n      const fileExtension = matches[1];\n      const base64Data = image.replace(/^data:image\\/\\w+;base64,/, '');\n\n      // Generar nombre único\n      const fileName = `${(0,uuid__WEBPACK_IMPORTED_MODULE_0__.v4)()}.${fileExtension}`;\n      const filePath = (0,path__WEBPACK_IMPORTED_MODULE_2__.join)(process.cwd(), 'uploads', 'images', fileName);\n\n      // Guardar archivo\n      await (0,fs_promises__WEBPACK_IMPORTED_MODULE_1__.writeFile)(filePath, base64Data, 'base64');\n      res.json({\n        message: 'Imagen guardada correctamente',\n        fileName,\n        path: `/uploads/images/${fileName}`\n      });\n    } catch (error) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al guardar imagen');\n    }\n  };\n  obtenerImagenes = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    try {\n      // Verificar si el usuario está autenticado (el middleware ya lo hace, pero por seguridad extra)\n      if (!user) {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error('Usuario no autenticado');\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.ValidationError('Usuario no autenticado')();\n      }\n      const {\n        filename\n      } = req.params;\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].debug('filename', filename);\n      const imagePath = (0,path__WEBPACK_IMPORTED_MODULE_2__.join)(__dirname, '..', 'uploads', 'images', filename);\n      res.sendFile(imagePath, err => {\n        if (err) {\n          _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error(`Error al enviar imagen:${err}`);\n          throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError('Imagen no encontrada');\n        }\n      });\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al obtener imagen');\n    }\n  };\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/uploads.controller.js?");
-
-/***/ }),
-
-/***/ 4498:
-/*!****************************************!*\
-  !*** ./src/routes/productos.routes.js ***!
-  \****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createProductosRouter: () => (/* binding */ createProductosRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_productos_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/productos.controller.js */ 2918);\n\n\nconst createProductosRouter = ({\n  productosModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const productosController = new _controller_productos_controller_js__WEBPACK_IMPORTED_MODULE_1__.ProductosController({\n    productosModel\n  });\n\n  // Obtener todos los productos\n  router.get('/productos', productosController.getAll);\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/productos.routes.js?");
-
-/***/ }),
-
-/***/ 4523:
-/*!**********************************************!*\
-  !*** ./src/controller/equipos.controller.js ***!
-  \**********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   EquiposController: () => (/* binding */ EquiposController)\n/* harmony export */ });\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n\nclass EquiposController {\n  constructor({\n    equiposModel\n  }) {\n    this.equiposModel = equiposModel;\n  }\n\n  // extraer\n  getAllDisponible = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const response = await this.equiposModel.getAllDisponible();\n    res.json(response);\n  });\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/equipos.controller.js?");
+const tanquesPreparadosConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  id_tanque: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  },
+  id_rancho: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  },
+  fecha_preparacion: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DATEONLY,
+    allowNull: false
+  },
+  litros_totales: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DECIMAL(10, 2),
+    allowNull: false
+  },
+  litros_disponibles: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DECIMAL(10, 2),
+    allowNull: false
+  },
+  codigo_tanque_preparado: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(50),
+    allowNull: true
+  },
+  tasa_inyeccion: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    defaultValue: 0.00
+  }
+};
+const TanquesPreparados = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('TanquesPreparados', tanquesPreparadosConfig, {
+  tableName: 'tanques_preparados',
+  timestamps: false
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
-/***/ 4601:
-/*!*********************************!*\
-  !*** ./src/schema/productos.js ***!
-  \*********************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ 5129:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Productos: () => (/* binding */ Productos)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n\nconst productosConfig = {\n  id_producto: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    primaryKey: true,\n    autoIncrement: true\n  },\n  id_sap: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El id del Sap es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El id del Sap es requerido'\n      }\n    }\n  },\n  nombre: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El nombre del producto es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El nombre del producto debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  descripcion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    validate: {\n      notEmpty: {\n        msg: 'La presentacion del producto es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  unidad_medida: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La unidad de medida es requerida para el producto'\n      },\n      len: {\n        args: [2, 20],\n        msg: 'El nombre del producto debe tener entre 2 y 20 caracteres'\n      }\n    }\n  }\n};\nconst Productos = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('productos', productosConfig, {\n  tableName: 'productos',\n  // Nombre de la tabla en la base de datos\n  timestamps: true // Agrega createdAt y updatedAt automáticamente\n});\n\n//# sourceURL=webpack://mezclas/./src/schema/productos.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   r: () => (/* binding */ CorporativoController)
+/* harmony export */ });
+/* harmony import */ var _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5458);
+/* harmony import */ var _schema_sectores_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2692);
+/* harmony import */ var _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(5964);
+/* harmony import */ var _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(1682);
+/* harmony import */ var _schema_tanques_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(8293);
+/* harmony import */ var _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(731);
+/* harmony import */ var _schema_temporada_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(6073);
+/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(6466);
+/* harmony import */ var _utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(6963);
+/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(2551);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__, _schema_sectores_js__WEBPACK_IMPORTED_MODULE_1__, _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__, _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__, _schema_tanques_js__WEBPACK_IMPORTED_MODULE_4__, _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_5__, _schema_temporada_js__WEBPACK_IMPORTED_MODULE_6__, _db_db_js__WEBPACK_IMPORTED_MODULE_9__]);
+([_schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__, _schema_sectores_js__WEBPACK_IMPORTED_MODULE_1__, _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__, _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__, _schema_tanques_js__WEBPACK_IMPORTED_MODULE_4__, _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_5__, _schema_temporada_js__WEBPACK_IMPORTED_MODULE_6__, _db_db_js__WEBPACK_IMPORTED_MODULE_9__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+/* eslint-disable camelcase */
+
+
+
+
+
+
+
+
+
+
+
+class CorporativoController {
+  // ========== VISTAS ==========
+  static renderEmpresas = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/catalogo/empresas', {
+      title: 'Empresas',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+  static renderSectores = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const ranchosDsa = await _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__/* .RanchoDsa */ .M.findAll({
+      include: [{
+        model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h,
+        attributes: ['id', 'rancho']
+      }],
+      where: {
+        status: 1
+      }
+    });
+    res.render('pages/catalogo/sectores', {
+      title: 'Sectores',
+      user: req.user,
+      rol: req.user.rol,
+      ranchosDsa
+    });
+  });
+  static renderRanchos = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const empresas = await _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__/* .Empresas */ .p.findAll({
+      where: {
+        status: 1
+      }
+    });
+    res.render('pages/catalogo/ranchos', {
+      title: 'Ranchos',
+      user: req.user,
+      rol: req.user.rol,
+      empresas
+    });
+  });
+  static renderTanques = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const ranchos = await _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h.findAll({
+      where: {
+        status: 1
+      }
+    });
+    res.render('pages/catalogo/tanques', {
+      title: 'Tanques',
+      user: req.user,
+      rol: req.user.rol,
+      ranchos
+    });
+  });
+  static renderActivosMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    res.render('pages/catalogo/activos_mezcla', {
+      title: 'Activos de Mezcla',
+      user: req.user,
+      rol: req.user.rol
+    });
+  });
+  static renderRanchoDsa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const ranchos = await _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h.findAll({
+      where: {
+        status: 1
+      }
+    });
+    res.render('pages/catalogo/rancho_dsa', {
+      title: 'Rancho DSA',
+      user: req.user,
+      rol: req.user.rol,
+      ranchos
+    });
+  });
+
+  // ========== API GET (READ) ==========
+  static getEmpresas = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const empresas = await _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__/* .Empresas */ .p.findAll();
+    res.json(empresas);
+  });
+  static getSectores = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const sectores = await _schema_sectores_js__WEBPACK_IMPORTED_MODULE_1__/* .Sectores */ .d.findAll({
+      include: [{
+        model: _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__/* .RanchoDsa */ .M,
+        attributes: ['id', 'nombre_rancho_dsa', 'numero_rancho_dsa'],
+        include: [{
+          model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h,
+          attributes: ['id', 'rancho']
+        }]
+      }]
+    });
+    res.json(sectores);
+  });
+  static getSectoresPorRancho = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      rancho_id
+    } = req.params;
+    const sectores = await _schema_sectores_js__WEBPACK_IMPORTED_MODULE_1__/* .Sectores */ .d.findAll({
+      where: {
+        id_rancho_dsa: rancho_id,
+        status: 1
+      },
+      include: [{
+        model: _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__/* .RanchoDsa */ .M,
+        attributes: ['id', 'nombre_rancho_dsa', 'numero_rancho_dsa'],
+        include: [{
+          model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h,
+          attributes: ['id', 'rancho']
+        }]
+      }]
+    });
+    res.json(sectores);
+  });
+  static getRanchos = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const ranchos = await _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h.findAll({
+      include: [{
+        model: _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__/* .Empresas */ .p,
+        attributes: ['id', 'nombre_comercial']
+      }]
+    });
+    res.json(ranchos);
+  });
+  static getTanques = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const tanques = await _schema_tanques_js__WEBPACK_IMPORTED_MODULE_4__/* .Tanques */ .C.findAll({
+      include: [{
+        model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h,
+        attributes: ['id', 'rancho']
+      }]
+    });
+    res.json(tanques);
+  });
+  static getTanquesPorRancho = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      rancho_id
+    } = req.params;
+    const tanques = await _schema_tanques_js__WEBPACK_IMPORTED_MODULE_4__/* .Tanques */ .C.findAll({
+      where: {
+        id_rancho: rancho_id,
+        status: 1
+      },
+      include: [{
+        model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h,
+        attributes: ['id', 'rancho']
+      }]
+    });
+    res.json(tanques);
+  });
+  static getActivosMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const activos = await _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_5__/* .ActivoMezcla */ .B.findAll();
+    res.json(activos);
+  });
+  static getRanchosDsa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const ranchos = await _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__/* .RanchoDsa */ .M.findAll({
+      include: [{
+        model: _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h,
+        attributes: ['id', 'rancho']
+      }],
+      where: {
+        status: 1
+      }
+    });
+    res.json(ranchos);
+  });
+
+  // ========== API POST (CREATE), PUT (UPDATE), DELETE ==========
+
+  // --- EMPRESAS ---
+  static createEmpresa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      nombre_comercial,
+      razon_social,
+      rfc
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_7__/* .validateRequiredData */ .ip)(req.body, ['nombre_comercial', 'razon_social', 'rfc'], {
+      operation: 'CREATE_EMPRESA'
+    });
+    const nuevaEmpresa = await _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__/* .Empresas */ .p.create({
+      nombre_comercial,
+      razon_social,
+      rfc,
+      status: 1
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Empresa creada correctamenta',
+      data: nuevaEmpresa
+    });
+  });
+  static updateEmpresa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const {
+      nombre_comercial,
+      razon_social,
+      rfc,
+      status
+    } = req.body;
+    const empresa = await _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__/* .Empresas */ .p.findByPk(id);
+    if (!empresa) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Empresa no encontrada');
+    await empresa.update({
+      nombre_comercial,
+      razon_social,
+      rfc,
+      status
+    });
+    res.json({
+      success: true,
+      message: 'Empresa actualizada correctamente',
+      data: empresa
+    });
+  });
+  static deleteEmpresa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const empresa = await _schema_empresas_js__WEBPACK_IMPORTED_MODULE_0__/* .Empresas */ .p.findByPk(id);
+    if (!empresa) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Empresa no encontrada');
+
+    // Soft delete (cambiar status a 0)
+    await empresa.update({
+      status: 0
+    });
+    res.json({
+      success: true,
+      message: 'Empresa eliminada correctamente'
+    });
+  });
+
+  // --- RANCHOS ---
+  static createRancho = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      rancho,
+      id_empresa
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_7__/* .validateRequiredData */ .ip)(req.body, ['rancho', 'id_empresa'], {
+      operation: 'CREATE_RANCHO'
+    });
+    const nuevoRancho = await _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h.create({
+      rancho,
+      id_empresa,
+      status: 1
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Rancho creado correctamente',
+      data: nuevoRancho
+    });
+  });
+  static updateRancho = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const {
+      rancho,
+      id_empresa,
+      status
+    } = req.body;
+    const ranchoItem = await _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h.findByPk(id);
+    if (!ranchoItem) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Rancho no encontrado');
+    await ranchoItem.update({
+      rancho,
+      id_empresa,
+      status
+    });
+    res.json({
+      success: true,
+      message: 'Rancho actualizado correctamente',
+      data: ranchoItem
+    });
+  });
+  static deleteRancho = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const rancho = await _schema_ranchos_js__WEBPACK_IMPORTED_MODULE_2__/* .Ranchos */ .h.findByPk(id);
+    if (!rancho) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Rancho no encontrado');
+    await rancho.update({
+      status: 0
+    });
+    res.json({
+      success: true,
+      message: 'Rancho eliminado correctamente'
+    });
+  });
+
+  // --- SECTORES ---
+  static createSector = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      sector_interno,
+      sector_agrian,
+      variedad,
+      hectareas,
+      id_rancho_dsa
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_7__/* .validateRequiredData */ .ip)(req.body, ['sector_interno', 'variedad', 'hectareas', 'id_rancho_dsa'], {
+      operation: 'CREATE_SECTOR'
+    });
+    const nuevoSector = await _schema_sectores_js__WEBPACK_IMPORTED_MODULE_1__/* .Sectores */ .d.create({
+      sector_interno,
+      sector_agrian,
+      variedad,
+      hectareas,
+      id_rancho_dsa,
+      status: 1
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Sector creado correctamente',
+      data: nuevoSector
+    });
+  });
+  static updateSector = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const {
+      sector_interno,
+      sector_agrian,
+      variedad,
+      hectareas,
+      id_rancho_dsa,
+      status
+    } = req.body;
+    const sector = await _schema_sectores_js__WEBPACK_IMPORTED_MODULE_1__/* .Sectores */ .d.findByPk(id);
+    if (!sector) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Sector no encontrado');
+    await sector.update({
+      sector_interno,
+      sector_agrian,
+      variedad,
+      hectareas,
+      id_rancho_dsa,
+      status
+    });
+    res.json({
+      success: true,
+      message: 'Sector actualizado correctamente',
+      data: sector
+    });
+  });
+  static deleteSector = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const sector = await _schema_sectores_js__WEBPACK_IMPORTED_MODULE_1__/* .Sectores */ .d.findByPk(id);
+    if (!sector) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Sector no encontrado');
+    await sector.update({
+      status: 0
+    });
+    res.json({
+      success: true,
+      message: 'Sector eliminado correctamente'
+    });
+  });
+
+  // --- TANQUES ---
+  static createTanque = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      codigo,
+      etapa,
+      capacidad,
+      unidad,
+      id_rancho
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_7__/* .validateRequiredData */ .ip)(req.body, ['codigo', 'etapa', 'capacidad', 'id_rancho'], {
+      operation: 'CREATE_TANQUE'
+    });
+    const nuevoTanque = await _schema_tanques_js__WEBPACK_IMPORTED_MODULE_4__/* .Tanques */ .C.create({
+      codigo,
+      etapa,
+      capacidad,
+      unidad: unidad || 'L',
+      status: 1,
+      id_rancho
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Tanque creado correctamente',
+      data: nuevoTanque
+    });
+  });
+  static updateTanque = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const {
+      codigo,
+      etapa,
+      capacidad,
+      unidad,
+      id_rancho,
+      status
+    } = req.body;
+    const tanque = await _schema_tanques_js__WEBPACK_IMPORTED_MODULE_4__/* .Tanques */ .C.findByPk(id);
+    if (!tanque) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Tanque no encontrado');
+    await tanque.update({
+      codigo,
+      etapa,
+      capacidad,
+      unidad,
+      id_rancho,
+      status
+    });
+    res.json({
+      success: true,
+      message: 'Tanque actualizado correctamente',
+      data: tanque
+    });
+  });
+  static deleteTanque = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const tanque = await _schema_tanques_js__WEBPACK_IMPORTED_MODULE_4__/* .Tanques */ .C.findByPk(id);
+    if (!tanque) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Tanque no encontrado');
+    await tanque.update({
+      status: 0
+    });
+    res.json({
+      success: true,
+      message: 'Tanque eliminado correctamente'
+    });
+  });
+
+  // --- ACTIVOS MEZCLA ---
+  static createActivoMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      nombre,
+      codigo,
+      tipo,
+      es_principal,
+      unidad
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_7__/* .validateRequiredData */ .ip)(req.body, ['nombre', 'codigo', 'unidad'], {
+      operation: 'CREATE_ACTIVO_MEZCLA'
+    });
+    const nuevoActivo = await _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_5__/* .ActivoMezcla */ .B.create({
+      nombre,
+      codigo,
+      tipo,
+      es_principal: es_principal || 0,
+      unidad
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Activo creado correctamente',
+      data: nuevoActivo
+    });
+  });
+  static updateActivoMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const {
+      nombre,
+      codigo,
+      tipo,
+      es_principal,
+      unidad
+    } = req.body;
+    const activo = await _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_5__/* .ActivoMezcla */ .B.findByPk(id);
+    if (!activo) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Activo no encontrado');
+    await activo.update({
+      nombre,
+      codigo,
+      tipo,
+      es_principal,
+      unidad
+    });
+    res.json({
+      success: true,
+      message: 'Activo actualizado correctamente',
+      data: activo
+    });
+  });
+  static deleteActivoMezcla = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const activo = await _schema_activo_mezcla_js__WEBPACK_IMPORTED_MODULE_5__/* .ActivoMezcla */ .B.findByPk(id);
+    if (!activo) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Activo no encontrado');
+
+    // Note: activo_mezcla schema doesn't have status field, so we'll do hard delete
+    await activo.destroy();
+    res.json({
+      success: true,
+      message: 'Activo eliminado correctamente'
+    });
+  });
+
+  // ---Ranchos DSA--
+  static createRanchoDsa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      nombre_rancho_dsa,
+      id_rancho,
+      numero_rancho_dsa
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_7__/* .validateRequiredData */ .ip)(req.body, ['id_rancho', 'nombre_rancho_dsa', 'numero_rancho_dsa'], {
+      operation: 'CREATE_RANCHO_DSA'
+    });
+    const nuevoRancho = await _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__/* .RanchoDsa */ .M.create({
+      nombre_rancho_dsa,
+      id_rancho,
+      numero_rancho_dsa
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Rancho DSA creado correctamente',
+      data: nuevoRancho
+    });
+  });
+  static updateRanchoDsa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const {
+      nombre_rancho_dsa,
+      id_rancho,
+      numero_rancho_dsa
+    } = req.body;
+    (0,_utils_errorHandlers_js__WEBPACK_IMPORTED_MODULE_7__/* .validateRequiredData */ .ip)(req.body, ['id_rancho', 'nombre_rancho_dsa', 'numero_rancho_dsa'], {
+      operation: 'UPDATE_RANCHO_DSA'
+    });
+    const rancho = await _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__/* .RanchoDsa */ .M.findByPk(id);
+    if (!rancho) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Rancho DSA no encontrado');
+    await rancho.update({
+      nombre_rancho_dsa,
+      id_rancho,
+      numero_rancho_dsa
+    });
+    res.json({
+      success: true,
+      message: 'Rancho DSA actualizado correctamente',
+      data: rancho
+    });
+  });
+  static deleteRanchoDsa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const {
+      id
+    } = req.params;
+    const rancho = await _schema_rancho_dsa_js__WEBPACK_IMPORTED_MODULE_3__/* .RanchoDsa */ .M.findByPk(id);
+    if (!rancho) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_8__/* .NotFoundError */ .m_('Rancho DSA no encontrado');
+    await rancho.destroy();
+    res.json({
+      success: true,
+      message: 'Rancho DSA eliminado correctamente'
+    });
+  });
+
+  // --- TEMPORADAS ---
+  static getTemporadas = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const temporadas = await _schema_temporada_js__WEBPACK_IMPORTED_MODULE_6__/* .Temporada */ .S.findAll({
+      where: {
+        status: 1
+      }
+    });
+    res.json({
+      temporadas
+    });
+  });
+  static getAnios = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_10__/* .asyncHandler */ .L)(async (req, res) => {
+    const anios = await _db_db_js__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .A.query(`
+                    SELECT anio FROM npk_fertilizacion_completo GROUP by anio
+                    `, {
+      type: _db_db_js__WEBPACK_IMPORTED_MODULE_9__/* ["default"] */ .A.QueryTypes.SELECT
+    });
+    res.json({
+      anios
+    });
+  });
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
-/***/ 4657:
-/*!**********************************************!*\
-  !*** ./src/controller/usuario.controller.js ***!
-  \**********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ 5458:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   UsuarioController: () => (/* binding */ UsuarioController)\n/* harmony export */ });\n/* harmony import */ var _config_smtp_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../config/smtp.js */ 6909);\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n\n\nclass UsuarioController {\n  constructor({\n    usuarioModel\n  }) {\n    this.usuarioModel = usuarioModel;\n  }\n\n  // borra usuario\n  delete = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      id\n    } = req.params;\n    const result = await this.usuarioModel.delete({\n      id\n    });\n    res.json({\n      message: `${result.message}`\n    });\n  });\n\n  // obtener  usuario\n  getAll = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const usuario = await this.usuarioModel.getAll();\n    return res.json(usuario);\n  });\n  create = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const result = await this.usuarioModel.create({\n      data: req.body\n    });\n    await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_0__.enviarCorreo)({\n      email: req.body.email,\n      subject: 'Bienvenido Nuevo Usuario',\n      password: req.body.password\n    }); // si se creo con exito el usuario enviamos correo con la contraseña\n    return res.json({\n      message: result.message\n    });\n  });\n  update = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      id\n    } = req.params;\n    const result = await this.usuarioModel.update({\n      id,\n      data: req.body\n    });\n    return res.json({\n      message: result.message\n    });\n  });\n  login = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      user,\n      password\n    } = req.body;\n    const result = await this.usuarioModel.login({\n      user,\n      password\n    });\n    return res.cookie('access_token', result.token, {\n      httpOnly: true,\n      // la cookie solo se puede acceder en el servidor\n      secure: false,\n      sameSite: 'strict' // la cookie solo se puede acceder en el mismo dominio\n      // maxAge: 60 * 60 * 24 * 30 // la cookie expira\n    }).send({\n      message: result.message,\n      rol: result.rol\n    });\n  });\n\n  // actualizar contraseña del usuario\n  changePassword = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      id\n    } = req.params;\n    const {\n      newPassword\n    } = req.body;\n    const result = await this.usuarioModel.changePasswordAdmin({\n      id,\n      newPassword\n    });\n    return res.json({\n      message: result.message\n    });\n  });\n\n  // obtener una empresa\n  getOne = async (req, res) => {\n    const {\n      id\n    } = req.params;\n    const usuario = await this.usuarioModel.getOne({\n      id\n    });\n    return res.json(usuario);\n  };\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/usuario.controller.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   p: () => (/* binding */ Empresas)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
-/***/ }),
 
-/***/ 4694:
-/*!*******************************!*\
-  !*** ./src/schema/equipos.js ***!
-  \*******************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Equipos: () => (/* binding */ Equipos)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n\nconst equiposConfig = {\n  id: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    primaryKey: true,\n    autoIncrement: true\n  },\n  equipo: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El equipo es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El equipo debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  marca: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La marca es requerida'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'La marca debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  modelo: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El modelo es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El modelo debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  ns: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El NS es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El NS debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  tag: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El tag es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El tag debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  url_factura: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La url de la factura es requerida'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'La url de la factura debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  foto: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La foto es requerida'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'La foto debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  empresa_pertenece: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La empresa pertenece es requerida'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'La empresa pertenece debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  centro_coste: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El centro de coste es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  fecha_baja: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DATE,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La fecha de baja es requerida'\n      }\n    }\n  },\n  documento_baja: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El documento de baja es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El documento de baja debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  fecha_creacion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DATE,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La fecha de creación es requerida'\n      }\n    }\n  },\n  status: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El estado es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El estado debe tener entre 3 y 50 caracteres'\n      }\n    }\n  }\n};\nconst Equipos = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('equipos', equiposConfig, {\n  tableName: 'equipos',\n  // Nombre de la tabla en la base de datos\n  timestamps: false // Agrega createdAt y updatedAt automáticamente\n});\n\n//# sourceURL=webpack://mezclas/./src/schema/equipos.js?");
-
-/***/ }),
-
-/***/ 4756:
-/*!******************************!*\
-  !*** ./src/utils/swagger.js ***!
-  \******************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   swaggerSpec: () => (/* binding */ swaggerSpec)\n/* harmony export */ });\n/* harmony import */ var swagger_jsdoc__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! swagger-jsdoc */ 9168);\n/* harmony import */ var dotenv__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! dotenv */ 5708);\n\n\n(0,dotenv__WEBPACK_IMPORTED_MODULE_1__.config)();\nconst options = {\n  definition: {\n    openapi: '3.0.0',\n    info: {\n      title: 'API de Mezclas',\n      version: '1.0.0',\n      description: 'API para el sistema de mezclas',\n      contact: {\n        name: 'Soporte',\n        email: 'soporte@example.com'\n      }\n    },\n    servers: [{\n      url: process.env.API_URL || 'http://localhost:3000',\n      description: 'Servidor de desarrollo'\n    }],\n    components: {\n      securitySchemes: {\n        bearerAuth: {\n          type: 'http',\n          scheme: 'bearer',\n          bearerFormat: 'JWT',\n          description: 'Ingrese su token JWT'\n        }\n      },\n      responses: {\n        UnauthorizedError: {\n          description: 'Token no proporcionado o inválido',\n          content: {\n            'application/json': {\n              schema: {\n                type: 'object',\n                properties: {\n                  message: {\n                    type: 'string',\n                    example: 'No autorizado'\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    },\n    security: [{\n      bearerAuth: []\n    }]\n  },\n  apis: ['./src/routes/*.js']\n};\nconst swaggerSpec = (0,swagger_jsdoc__WEBPACK_IMPORTED_MODULE_0__[\"default\"])(options);\n\n//# sourceURL=webpack://mezclas/./src/utils/swagger.js?");
-
-/***/ }),
-
-/***/ 5503:
-/*!*******************************!*\
-  !*** ./src/schema/recetas.js ***!
-  \*******************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Recetas: () => (/* binding */ Recetas)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n\nconst recetaConfig = {\n  id_receta: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    primaryKey: true,\n    autoIncrement: true\n  },\n  nombre: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El nombre del producto es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El nombre del producto debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  descripcion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    validate: {\n      notEmpty: {\n        msg: 'La presentacion del producto es requerido'\n      },\n      len: {\n        args: [0, 50],\n        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  presentacion: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    validate: {\n      notEmpty: {\n        msg: 'La presentacion del producto es requerido'\n      },\n      len: {\n        args: [0, 50],\n        msg: 'La presentacion del producto debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  unidad_medida: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notNull: {\n        msg: 'La unidad de medida es necesaria'\n      }\n    }\n  }\n};\nconst Recetas = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('recetas', recetaConfig, {\n  tableName: 'recetas',\n  // Nombre de la tabla en la base de datos\n  timestamps: true // Agrega createdAt y updatedAt automáticamente\n});\n\n//# sourceURL=webpack://mezclas/./src/schema/recetas.js?");
+const empresasConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false // Añadir esta línea
+  },
+  razon_social: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La razón social es requerida'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'La razón social debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  nombre_comercial: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El nombre comercial es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El nombre comercial debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  rfc: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El RFC es requerido'
+      },
+      len: {
+        args: [12, 13],
+        msg: 'El RFC debe tener 12 o 13 caracteres'
+      }
+    }
+  },
+  status: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: true
+  }
+};
+const Empresas = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('empresas', empresasConfig, {
+  tableName: 'empresas',
+  // Nombre de la tabla en la base de datos
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 5541:
-/*!**************************************!*\
-  !*** ./src/routes/usuario.routes.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createUsuarioRouter: () => (/* binding */ createUsuarioRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_usuario_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/usuario.controller.js */ 4657);\n/* harmony import */ var _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../middlewares/authMiddleware.js */ 936);\n\n\n\nconst createUsuarioRouter = ({\n  usuarioModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const usuarioController = new _controller_usuario_controller_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioController({\n    usuarioModel\n  });\n\n  // Crear un usuario\n  router.post('/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.authenticate, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.isAdmin, usuarioController.create);\n  router.get('/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.authenticate, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.isAdmin, usuarioController.getAll);\n  router.get('/:id', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.authenticate, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.isAdmin, usuarioController.getOne);\n  router.patch('/:id', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.authenticate, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.isAdmin, usuarioController.update);\n  router.delete('/:id', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.authenticate, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.isAdmin, usuarioController.delete);\n  router.put('/:id', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.authenticate, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__.isAdmin, usuarioController.changePassword);\n\n  // rutas de inicio de sesion\n  router.post('/login', usuarioController.login); // logear usuario\n\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/usuario.routes.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   G: () => (/* binding */ createUsuarioRouter)
+/* harmony export */ });
+/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2674);
+/* harmony import */ var _controller_usuario_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3902);
+/* harmony import */ var _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(936);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__]);
+_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
 
-/***/ }),
 
-/***/ 5594:
-/*!*****************************!*\
-  !*** ./src/config/excel.js ***!
-  \*****************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   crearExcel: () => (/* binding */ crearExcel),\n/* harmony export */   crearSolicitud: () => (/* binding */ crearSolicitud),\n/* harmony export */   crearSolicitudV2: () => (/* binding */ crearSolicitudV2),\n/* harmony export */   reporteSolicitud: () => (/* binding */ reporteSolicitud),\n/* harmony export */   reporteSolicitudV2: () => (/* binding */ reporteSolicitudV2),\n/* harmony export */   reporteSolicitudv3: () => (/* binding */ reporteSolicitudv3)\n/* harmony export */ });\n/* harmony import */ var exceljs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! exceljs */ 1078);\n/* harmony import */ var _models_productosSolicitud_models_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../models/productosSolicitud.models.js */ 1954);\n/* harmony import */ var _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../models/mezclas.models.js */ 2020);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n\n\n\n// utils\n\n\nasync function obtenerProductosPorSolicitud(idSolicitud) {\n  try {\n    // Asumiendo que este método existe en tu modelo\n    const productos = await _models_productosSolicitud_models_js__WEBPACK_IMPORTED_MODULE_1__.SolicitudRecetaModel.obtenerProductosSolicitud({\n      idSolicitud\n    });\n\n    // Verificamos que se hayan obtenido datos\n    if (!productos || productos.length === 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError(`No se encontraron productos para la solicitud ${idSolicitud}`);\n    }\n    return productos.map(producto => ({\n      id_sap: producto.id_sap,\n      // Asegúrate de que este campo existe en tu modelo\n      nombre: producto.nombre_producto,\n      // Asegúrate de que este campo existe en tu modelo\n      unidad_medida: producto.unidad_medida,\n      cantidad: producto.cantidad\n    }));\n  } catch (error) {\n    if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al obtener productos para la solicitud');\n  }\n}\nasync function obtenerVariedades(idSolicitud) {\n  try {\n    const variedades = await _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_2__.MezclaModel.obtenerPorcentajes({\n      id: idSolicitud\n    });\n    // Verificamos que se hayan obtenido datos\n    if (!variedades || variedades.length === 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError(`No se encontraron variedades para la solicitud ${idSolicitud}`);\n    }\n    if (variedades && variedades.length > 0) {\n      return variedades.map(variedad => ({\n        variedad: variedad.variedad,\n        // Asegúrate de que este campo existe en tu modelo\n        porcentajes: variedad.porcentajes\n      }));\n    } else {\n      // Si no hay productos, puedes devolver un array vacío o productos por defecto\n      return [];\n    }\n  } catch (error) {\n    if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al obtener variedades para la solicitud');\n  }\n}\nasync function obtenerPorcentajes(id) {\n  try {\n    // Asumiendo que este método existe en tu modelo\n    const variedades = await _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_2__.MezclaModel.obtenerPorcentajes({\n      id\n    });\n    // Verificamos que se hayan obtenido datos\n    if (!variedades || variedades.length === 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError(`No se encontraron variedades para el centro de coste ${id}`);\n    }\n    return variedades;\n  } catch (error) {\n    if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al obtener variedades para el centro de coste');\n  }\n}\nasync function obtenerDatosSolicitud(idSolicitud) {\n  try {\n    // Asumiendo que este método existe en tu modelo\n    const solicitudes = await _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_2__.MezclaModel.obtenerDatosSolicitud({\n      id: idSolicitud\n    });\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].debug('solicitudes', solicitudes);\n    // Verificamos que se hayan obtenido datos\n    if (!solicitudes || solicitudes.length === 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError(`No se encontraron datos para la solicitud ${idSolicitud}`);\n    }\n    // Verificar si se obtuvieron solicitudes\n    if (solicitudes && solicitudes.length > 0) {\n      return solicitudes.map(solicitud => ({\n        cantidad: solicitud.cantidad,\n        // Asegúrate de que este campo existe en tu modelo\n        presentacion: solicitud.presentacion,\n        metodoAplicacion: solicitud.metodoAplicacion,\n        descripcion: solicitud.descripcion\n      }));\n    } else {\n      // Si no hay productos, puedes devolver un array vacío o productos por defecto\n      return [];\n    }\n  } catch (error) {\n    if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al obtener datos para la solicitud');\n  }\n}\nconst crearExcel = async parametros => {\n  try {\n    // preparacion de estilos\n    const font = {\n      name: 'Arial',\n      size: 12,\n      bold: true,\n      italic: false\n    };\n\n    // Extraer los datos correctamente\n    const datos = Array.isArray(parametros) ? parametros : parametros.datos || [];\n\n    // Verificar si hay datos\n    if (!datos || datos.length === 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError('No hay datos para generar el Excel');\n    }\n\n    // Crear un nuevo libro de Excel\n    const workbook = new exceljs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].Workbook();\n\n    // Crear hoja principal con los datos de DataTable\n    const hojaGeneral = workbook.addWorksheet('Datos Generales');\n    hojaGeneral.columns = []; // Espacio vacío\n    hojaGeneral.addRow([]); // Espacio vacío entre las tablas\n\n    hojaGeneral.columns = [{\n      header: 'ID Solicitud',\n      key: 'id_solicitud',\n      width: 15\n    }, {\n      header: 'Solicita',\n      key: 'usuario',\n      width: 15\n    }, {\n      header: 'Fecha Solicitud',\n      key: 'fechaSolicitud',\n      width: 15\n    }, {\n      header: 'Fecha Cierre',\n      key: 'fechaCierre',\n      width: 15\n    }, {\n      header: 'Empresa',\n      key: 'empresa',\n      width: 20\n    }, {\n      header: 'Rancho',\n      key: 'rancho',\n      width: 20\n    }, {\n      header: 'Temporada',\n      key: 'temporada',\n      width: 20\n    }, {\n      header: 'Folio de Receta',\n      key: 'folio',\n      width: 20\n    }, {\n      header: 'Centro de Coste',\n      key: 'centroCoste',\n      width: 20\n    }, {\n      header: 'Variedad Fruta',\n      key: 'variedad',\n      width: 20\n    }];\n\n    // Agregar datos filtrados a la hoja principal\n    datos.forEach(dato => {\n      hojaGeneral.addRow({\n        id_solicitud: dato.id_solicitud,\n        usuario: dato.usuario,\n        fechaSolicitud: dato.fechaSolicitud,\n        fechaCierre: dato.fechaEntrega,\n        empresa: dato.empresa,\n        rancho: dato.rancho,\n        temporada: dato.temporada,\n        folio: dato.folio,\n        centroCoste: dato.centroCoste || dato.centro_coste,\n        variedad: dato.variedad\n      });\n    });\n\n    // Procesar cada solicitud para crear hojas personalizadas\n    for (const solicitud of datos) {\n      const idSolicitud = solicitud.id_solicitud || solicitud.idSolicitud;\n      const usuario = solicitud.usuario;\n      const fechaSolicitud = solicitud.fechaSolicitud;\n      const empresa = solicitud.empresa;\n      const rancho = solicitud.rancho;\n      const temporada = solicitud.temporada;\n      const folio = solicitud.folio;\n      const centroCoste = solicitud.centroCoste || solicitud.centro_coste;\n      const variedad = solicitud.variedad;\n      try {\n        // Consultar productos relacionados en la base de datos\n        const productos = await obtenerProductosPorSolicitud(idSolicitud);\n\n        // Crear una hoja para esta solicitud\n        const hojaSolicitud = workbook.addWorksheet(`Solicitud ${idSolicitud}`);\n        hojaSolicitud.addRow([`Datos de la solicitud ${idSolicitud}`]); // Encabezados de la segunda tabla\n        hojaSolicitud.getCell('A1').font = font;\n\n        // Agregar información de la solicitud en la primera tabla\n        hojaSolicitud.addRow(['ID Solicitud', idSolicitud]);\n        hojaSolicitud.addRow(['Solicita', usuario]);\n        hojaSolicitud.addRow(['Fecha Solicitud', fechaSolicitud]);\n        hojaSolicitud.addRow(['Empresa', empresa]);\n        hojaSolicitud.addRow(['Rancho', rancho]);\n        hojaSolicitud.addRow(['Temporada', temporada]);\n        hojaSolicitud.addRow(['Folio de Receta', folio]);\n        hojaSolicitud.addRow(['Centro de Coste', centroCoste]);\n        hojaSolicitud.addRow(['Variedad Fruta', variedad]);\n        hojaSolicitud.addRow([]); // Espacio vacío\n\n        // Agregar encabezados para los productos en la segunda tabla\n        hojaSolicitud.addRow(['Datos de los productos solicitados']); // Encabezados de la segunda tabla\n        hojaSolicitud.getCell('A12').font = font;\n        hojaSolicitud.addRow(['id_sap', 'Producto', 'Unidad Medida', 'Cantidad Solicitada']); // Encabezados de la segunda tabla\n\n        // Agregar productos a la hoja\n        if (productos && productos.length > 0) {\n          for (let i = 0; i < productos.length; i++) {\n            hojaSolicitud.addRow([productos[i].id_sap, productos[i].nombre, productos[i].unidad_medida, productos[i].cantidad]);\n          }\n        } else {\n          _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error({\n            message: 'No se encontraron productos o la estructura es incorrecta',\n            error: 'No se encontraron productos o la estructura es incorrecta'\n          });\n        }\n\n        // Ajustar el ancho de las columnas\n        hojaSolicitud.columns.forEach(column => {\n          const maxLength = column.values.reduce((max, value) => {\n            return Math.max(max, value ? value.toString().length : 0);\n          }, 0);\n          column.width = maxLength + 2; // Añadir un poco de espacio extra\n        });\n      } catch (error) {\n        console.error(`Error al procesar solicitud ${idSolicitud}:`, error);\n        const hojaError = workbook.addWorksheet(`Error ${idSolicitud}`);\n        hojaError.addRow(['Error al obtener productos para esta solicitud.']);\n      }\n    }\n\n    // Retornar el buffer del archivo Excel\n    return await workbook.xlsx.writeBuffer();\n  } catch (error) {\n    if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al procesar datos para el reporte');\n  }\n};\nconst crearSolicitudV2 = async parametros => {\n  try {\n    if (!parametros || parametros.length === 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.ValidationError('No se encontraron datos para la solicitud');\n    }\n\n    // Crear un nuevo libro de Excel\n    const workbook = new exceljs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].Workbook();\n\n    // Estilo de encabezados\n\n    const idSolicitud = parametros.id_solicitud;\n    const folio = parametros.folio;\n    const usuario = parametros.solicita;\n    const fechaSolicitud = parametros.fecha_solicitud;\n    const rancho = parametros.rancho_destino;\n    const centroCoste = parametros.centro_coste;\n    const variedad = parametros.variedad;\n    const empresa = parametros.empresa;\n    const temporada = parametros.temporada;\n    const cantidad = parametros.cantidad;\n    const presentacion = parametros.presentacion;\n    const metodoAplicacion = parametros.metodo_aplicacion;\n    const descripcion = parametros.descripcion;\n    try {\n      // Consultar productos relacionados en la base de datos\n      const productos = await obtenerProductosPorSolicitud(idSolicitud);\n      const font = {\n        name: 'Arial',\n        size: 12,\n        bold: true,\n        italic: false\n      };\n      // Crear una hoja para esta solicitud\n      const hojaGeneral = workbook.addWorksheet(`Solicitud ${idSolicitud}`);\n      hojaGeneral.addRow([`Datos de la solicitud ${idSolicitud}`]); // Encabezados de la segunda tabla\n      hojaGeneral.getCell('A1').font = font;\n\n      // Agregar información de la solicitud en la primera tabla\n      hojaGeneral.addRow(['ID Solicitud', idSolicitud]);\n      hojaGeneral.addRow(['Folio de Receta', folio]);\n      hojaGeneral.addRow(['Solicita', usuario]);\n      hojaGeneral.addRow(['Fecha Solicitud', fechaSolicitud]);\n      hojaGeneral.addRow(['Rancho', rancho]);\n      hojaGeneral.addRow(['Centro de Coste', centroCoste]);\n      hojaGeneral.addRow(['Variedad Fruta', variedad]);\n      hojaGeneral.addRow(['Empresa', empresa]);\n      hojaGeneral.addRow(['Temporada', temporada]);\n      hojaGeneral.addRow(['Cantidad de Mezcla', cantidad]);\n      hojaGeneral.addRow(['Presentacion de la Mezcla', presentacion]);\n      hojaGeneral.addRow(['Metodo de aplicacion', metodoAplicacion]);\n      hojaGeneral.addRow(['Descripcion', descripcion]);\n      hojaGeneral.addRow([]); // Espacio vacío\n\n      // Agregar encabezados para los productos en la segunda tabla\n      hojaGeneral.addRow(['Datos de los productos solicitados']); // Encabezados de la segunda tabla\n      hojaGeneral.getCell('A16').font = font;\n      hojaGeneral.addRow(['id_sap', 'Producto', 'Unidad Medida', 'Cantidad Solicitada']); // Encabezados de la segunda tabla\n\n      // Agregar productos a la hoja\n      if (productos && productos.length > 0) {\n        for (let i = 0; i < productos.length; i++) {\n          hojaGeneral.addRow([productos[i].id_sap, productos[i].nombre, productos[i].unidad_medida, productos[i].cantidad]);\n        }\n      } else {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].info('No se encontraron productos o la estructura es incorrecta');\n      }\n\n      // Ajustar el ancho de las columnas\n      hojaGeneral.columns.forEach(column => {\n        const maxLength = column.values.reduce((max, value) => {\n          return Math.max(max, value ? value.toString().length : 0);\n        }, 0);\n        column.width = maxLength + 2; // Añadir un poco de espacio extra\n      });\n    } catch (error) {\n      const hojaError = workbook.addWorksheet(`Error ${idSolicitud}`);\n      hojaError.addRow(['Error al obtener productos para esta solicitud.']);\n      // Manejo de errores\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al procesar datos para el reporte');\n    }\n\n    // Retornar el buffer del archivo Excel\n    return await workbook.xlsx.writeBuffer();\n  } catch (error) {\n    if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al procesar datos para el reporte');\n  }\n};\n// Crear Reporte Solicitud\nconst reporteSolicitud = async parametros => {\n  // Definir estilos\n  const headerStyle = {\n    font: {\n      bold: true,\n      color: {\n        argb: 'FFFFFFFF'\n      }\n    },\n    fill: {\n      type: 'pattern',\n      pattern: 'solid',\n      fgColor: {\n        argb: 'FF4F81BD'\n      }\n    },\n    border: {\n      top: {\n        style: 'thin'\n      },\n      left: {\n        style: 'thin'\n      },\n      bottom: {\n        style: 'thin'\n      },\n      right: {\n        style: 'thin'\n      }\n    },\n    alignment: {\n      vertical: 'middle',\n      horizontal: 'center'\n    }\n  };\n  const cellStyle = {\n    font: {\n      color: {\n        argb: 'FF000000'\n      }\n    },\n    border: {\n      top: {\n        style: 'thin'\n      },\n      left: {\n        style: 'thin'\n      },\n      bottom: {\n        style: 'thin'\n      },\n      right: {\n        style: 'thin'\n      }\n    },\n    alignment: {\n      vertical: 'middle',\n      horizontal: 'left'\n    }\n  };\n  // varialbles globales\n  let variedades;\n  let filtrados = [];\n  try {\n    // Extraer los datos correctamente\n    const datos = Array.isArray(parametros) ? parametros : parametros.datos || [];\n\n    // console.log('Datos a procesar:', datos)\n\n    // Verificar si hay datos\n    if (!datos || datos.length === 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError('No hay datos para generar el Excel');\n    }\n\n    // Crear un nuevo libro de Excel\n    const workbook = new exceljs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].Workbook();\n\n    // Cabecera de la tabla\n    let cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];\n    let porcentaje = ['', '', ''];\n    try {\n      // Crear una hoja para esta solicitud\n      const hojaGeneral = workbook.addWorksheet('Datos Generales');\n      // obtenemos datos de la variedad\n      for (const dato of datos) {\n        if (dato.variedad.split(',').length > 1) {\n          // Obtener variedades\n          variedades = await obtenerVariedades(dato.id);\n          // console.log('Variedades obtenidas:', variedades)\n\n          // Agregar nombres de variedades a la cabecera\n          if (variedades && variedades.length > 0) {\n            for (const variedad of variedades) {\n              const variedadSplit = variedad.variedad.split(',');\n              const porcentajeSplit = variedad.porcentajes.split(',');\n              // Filtrar ambos arrays en paralelo\n              filtrados = variedadSplit.reduce((acc, variedad, index) => {\n                if (parseInt(porcentajeSplit[index].trim()) !== 0) {\n                  acc.variedades.push(variedad);\n                  acc.porcentajes.push(porcentajeSplit[index]);\n                }\n                return acc;\n              }, {\n                variedades: [],\n                porcentajes: []\n              });\n              for (const item of filtrados.variedades) {\n                if (!cabecera.includes(item)) {\n                  cabecera.push(item);\n                }\n              }\n              for (const item of porcentajeSplit) {\n                if (!porcentaje.includes(item)) {\n                  porcentaje.push(item);\n                }\n              }\n            }\n          }\n        } else {\n          cabecera.push(dato.variedad);\n        }\n        if (dato.variedad.split(',').length > 1) {\n          hojaGeneral.addRow(['Datos Generales Fertilizantes']).eachCell(cell => {\n            cell.style = headerStyle;\n          }); // Encabezado de la hoja\n\n          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.id_solicitud : dato.id]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Solicita', dato.usuario]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Rancho', dato.rancho]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Centro de Coste', dato.centroCoste || dato.centro_coste]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Variedad Fruta', dato.variedad !== 'todo' ? dato.variedad : filtrados.variedades]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Empresa', dato.empresa]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Temporada', dato.temporada]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Descripcion', dato.descripcion]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n        } else {\n          hojaGeneral.addRow(['Datos Generales Mezclas']).eachCell(cell => {\n            cell.style = headerStyle;\n          }); // Encabezado de la hoja\n\n          // obtenemos datos faltantes de la solicitud\n          const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);\n          // console.log('Datos de la solicitud:', datosF)\n\n          hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.idSolicitud : dato.id]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Folio de Receta', dato.folio ? dato.folio : dato.FolioReceta]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Solicita', dato.usuario ? dato.usuario : dato.Solicita]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega ? dato.fechaEntrega : 'No aplica']).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Rancho', dato.rancho ? dato.rancho : dato.ranchoDestino]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Centro de Coste', dato.centroCoste || dato.centro_coste]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Variedad Fruta', dato.variedad !== 'todo' ? dato.variedad : filtrados.variedades]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Empresa', dato.empresa]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Temporada', dato.temporada]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Cantidad de Mezcla', datosF[0].cantidad]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Presentacion de la Mezcla', datosF[0].presentacion]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Metodo de aplicacion', datosF[0].metodoAplicacion]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n          hojaGeneral.addRow(['Descripcion', dato.descripcion]).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n        }\n        // Agregar información de la solicitud\n        hojaGeneral.addRow([]); // Espacio vacío con estilo\n\n        // Agregar la cabecera a la hoja\n        hojaGeneral.addRow(porcentaje);\n        hojaGeneral.addRow(cabecera).eachCell(cell => {\n          cell.style = headerStyle;\n        });\n        // limpiamos cabeceras\n        cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];\n        porcentaje = ['', '', ''];\n\n        // Obtener productos de la base de datos\n        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);\n        // console.log('Productos obtenidos:', productos)\n\n        // Crear el arreglo de datos\n        const data = [];\n        if (productos && productos.length > 0) {\n          for (const producto of productos) {\n            const fila = [producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad];\n\n            // Calcular porcentajes de variedades\n            if (dato.variedad.split(',').length > 1) {\n              if (variedades && variedades.length > 0) {\n                for (const variedad of filtrados) {\n                  const variedadSplit = variedad.porcentajes.split(',');\n                  for (const item of variedadSplit) {\n                    const porcentajeVariedad = producto.cantidad * item / 100;\n                    fila.push(porcentajeVariedad);\n                  }\n                }\n              }\n            } else {\n              fila.push(producto.cantidad);\n            }\n            data.push(fila);\n          }\n        } else {\n          _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].info('No se encontraron productos o la estructura es incorrecta');\n        }\n\n        // Agregar los datos a la hoja\n        data.forEach(row => {\n          hojaGeneral.addRow(row).eachCell(cell => {\n            cell.style = cellStyle;\n          });\n        });\n\n        // Agregar un separador entre solicitudes\n        hojaGeneral.addRow([]);\n        hojaGeneral.addRow([]);\n        hojaGeneral.addRow(['', '', '', '', '', '', '', '', '', '']).eachCell(cell => {\n          cell.border = {\n            top: {\n              style: 'thick',\n              color: {\n                argb: '00000000'\n              }\n            },\n            bottom: {\n              style: 'thick',\n              color: {\n                argb: '00000000'\n              }\n            }\n          };\n        });\n        hojaGeneral.addRow([]);\n        hojaGeneral.addRow([]);\n        // Agregar un separador entre solicitudes\n      }\n\n      // Ajustar el ancho de las columnas\n      hojaGeneral.columns.forEach(column => {\n        const maxLength = column.values.reduce((max, value) => {\n          return Math.max(max, value ? value.toString().length : 0);\n        }, 0);\n        column.width = maxLength + 2; // Añadir un poco de espacio extra\n      });\n    } catch (error) {\n      const hojaError = workbook.addWorksheet('Error');\n      hojaError.addRow(['Error al obtener productos para esta solicitud.']);\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error({\n        message: 'Error al procesar solicitud',\n        error: error.message,\n        stack: error.stack,\n        method: 'reporteSolicitudv3'\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al procesar datos para el reporte');\n    }\n\n    // Retornar el buffer del archivo Excel\n    return await workbook.xlsx.writeBuffer();\n  } catch (error) {\n    if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al procesar datos para el reporte');\n  }\n};\nconst reporteSolicitudV2 = async parametros => {\n  // console.log(parametros)\n  // Definir estilos\n  const headerStyle = {\n    font: {\n      bold: true,\n      color: {\n        argb: 'FFFFFFFF'\n      }\n    },\n    fill: {\n      type: 'pattern',\n      pattern: 'solid',\n      fgColor: {\n        argb: 'FF4F81BD'\n      }\n    },\n    border: {\n      top: {\n        style: 'thin'\n      },\n      left: {\n        style: 'thin'\n      },\n      bottom: {\n        style: 'thin'\n      },\n      right: {\n        style: 'thin'\n      }\n    },\n    alignment: {\n      vertical: 'middle',\n      horizontal: 'center'\n    }\n  };\n  const cellStyle = {\n    font: {\n      color: {\n        argb: 'FF000000'\n      }\n    },\n    border: {\n      top: {\n        style: 'thin'\n      },\n      left: {\n        style: 'thin'\n      },\n      bottom: {\n        style: 'thin'\n      },\n      right: {\n        style: 'thin'\n      }\n    },\n    alignment: {\n      vertical: 'middle',\n      horizontal: 'left'\n    }\n  };\n  // varialbles globales\n  let variedades;\n  const dataMescla = [];\n  // const dataFertilizante = []\n  try {\n    // Extraer los datos correctamente\n    const datos = Array.isArray(parametros) ? parametros : parametros.datos || [];\n\n    // console.log('Datos a procesar:', datos)\n\n    // Crear un nuevo libro de Excel\n    const workbook = new exceljs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].Workbook();\n\n    // Cabecera de la tabla mezclas\n    const cabeceraMezclas = ['Id Solicitud', 'Folio de Receta', 'Solicita', 'Comentario de solicitante', 'Fecha Solicitud', 'Fecha Entrega', 'Rancho', 'Centro de Coste', 'Empresa', 'Temporada', 'Variedad Fruta', 'Cantidad de Mezcla', 'Presentacion de la Mezcla', 'Metodo de aplicacion', 'id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada', 'Porcentaje Correspondiente', 'Cantidad Correspondiente'];\n    try {\n      // Crear una hoja para esta solicitud\n      const hojaGeneral = workbook.addWorksheet('Datos Generales');\n      hojaGeneral.addRow(cabeceraMezclas).eachCell(cell => {\n        cell.style = headerStyle;\n      });\n\n      // obtenemos datos de la variedad\n      for (const dato of datos) {\n        // // obtenemos datos faltantes de la solicitud\n        const datosF = await obtenerDatosSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);\n        console.log('Datos de la solicitud:', datosF);\n        console.log('Datos de la solicitud:', datosF[0].descripcion);\n\n        // // Obtener productos de la base de datos\n        const productos = await obtenerProductosPorSolicitud(dato.id_solicitud ? dato.id_solicitud : dato.id);\n        // console.log('Productos obtenidos:', productos)\n        // Crear el arreglo de datos\n        if (dato.variedad.split(',').length > 1) {\n          variedades = await obtenerPorcentajes(dato.id_solicitud ? dato.id_solicitud : dato.id);\n          // console.log('Variedades obtenidas:', variedades)\n          if (variedades && variedades.length > 0) {\n            for (const variedad of variedades) {\n              const porcentajeSplit = variedad.dataValues.porcentajes.split(',');\n              const variedadSplit = dato.variedad.split(',');\n              for (let i = 0; i < variedadSplit.length; i++) {\n                if (productos && productos.length > 0) {\n                  for (const producto of productos) {\n                    const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, datosF[0].descripcion ? datosF[0].descripcion : 'hola', dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, variedadSplit[i], datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad, '%' + porcentajeSplit[i], producto.cantidad * porcentajeSplit[i] / 100];\n                    dataMescla.push(fila);\n                  }\n                } else {\n                  console.error('No se encontraron productos o la estructura es incorrecta');\n                }\n              }\n            }\n          } else {\n            console.error('No se encontraron productos o la estructura es incorrecta');\n          }\n        } else {\n          for (const producto of productos) {\n            const fila = [dato.id_solicitud, dato.folio ? dato.folio : 'No aplica', dato.usuario, datosF[0].descripcion ? datosF[0].descripcion : 'hola', dato.fechaSolicitud, dato.fechaEntrega, dato.rancho, dato.centroCoste, dato.empresa, dato.temporada, dato.variedad, datosF[0].cantidad ? datosF[0].cantidad : 'No aplica', datosF[0].presentacion ? datosF[0].presentacion : 'No aplica', datosF[0].metodoAplicacion, producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad, '% 100', producto.cantidad];\n            dataMescla.push(fila);\n          }\n        }\n      }\n      // Agregar los datos a la hoja de mezclas\n      dataMescla.forEach(row => {\n        hojaGeneral.addRow(row).eachCell(cell => {\n          cell.style = cellStyle;\n        });\n      });\n      // Ajustar el ancho de las columnas\n      hojaGeneral.columns.forEach(column => {\n        const maxLength = column.values.reduce((max, value) => {\n          return Math.max(max, value ? value.toString().length : 0);\n        }, 0);\n        column.width = maxLength + 2; // Añadir un poco de espacio extra\n      });\n    } catch (error) {\n      console.error('Error al procesar solicitud:', error);\n      const hojaError = workbook.addWorksheet('Error');\n      hojaError.addRow(['Error al obtener productos para esta solicitud.']);\n    }\n\n    // Retornar el buffer del archivo Excel\n    return await workbook.xlsx.writeBuffer();\n  } catch (error) {\n    console.error('Error general al generar Excel:', error);\n    throw error;\n  }\n};\nconst crearSolicitud = async parametros => {\n  // Definir estilos\n  const headerStyle = {\n    font: {\n      bold: true,\n      color: {\n        argb: 'FFFFFFFF'\n      }\n    },\n    fill: {\n      type: 'pattern',\n      pattern: 'solid',\n      fgColor: {\n        argb: 'FF4F81BD'\n      }\n    },\n    border: {\n      top: {\n        style: 'thin'\n      },\n      left: {\n        style: 'thin'\n      },\n      bottom: {\n        style: 'thin'\n      },\n      right: {\n        style: 'thin'\n      }\n    },\n    alignment: {\n      vertical: 'middle',\n      horizontal: 'center'\n    }\n  };\n  const cellStyle = {\n    font: {\n      color: {\n        argb: 'FF000000'\n      }\n    },\n    border: {\n      top: {\n        style: 'thin'\n      },\n      left: {\n        style: 'thin'\n      },\n      bottom: {\n        style: 'thin'\n      },\n      right: {\n        style: 'thin'\n      }\n    },\n    alignment: {\n      vertical: 'middle',\n      horizontal: 'left'\n    }\n  };\n  // varialbles globales\n  let variedades;\n  let filtrados;\n  try {\n    // Crear un nuevo libro de Excel\n    const workbook = new exceljs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].Workbook();\n\n    // Cabecera de la tabla\n    let cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];\n\n    // preparamos datos\n    const idSolicitud = parametros.id_solicitud;\n    const folio = parametros.folio;\n    const usuario = parametros.solicita;\n    const fechaSolicitud = parametros.fecha_solicitud;\n    const rancho = parametros.rancho_destino;\n    const centroCoste = parametros.centro_coste;\n    const variedad = parametros.variedad;\n    const empresa = parametros.empresa;\n    const temporada = parametros.temporada;\n    const cantidad = parametros.cantidad;\n    const presentacion = parametros.presentacion;\n    const metodoAplicacion = parametros.metodo_aplicacion;\n    const descripcion = parametros.descripcion;\n    const varie = variedad.split(',');\n    // console.log(varie)\n    try {\n      // Crear una hoja para esta solicitud\n      const hojaGeneral = workbook.addWorksheet('Datos Generales');\n\n      // Modificación del manejo de variedades múltiples\n      if (varie.length > 1) {\n        variedades = await obtenerPorcentajes(idSolicitud);\n        if (variedades && variedades.length > 0) {\n          // Arrays para almacenar todas las variedades y porcentajes únicos\n          const todasVariedades = [];\n          const todosPorcentajes = [];\n\n          // Primero recolectamos todas las variedades y porcentajes\n          variedades.forEach(variedad => {\n            const variedadSplit = varie;\n            const porcentajeSplit = variedad.dataValues.porcentajes.split(',');\n            // Filtrar ambos arrays en paralelo\n            filtrados = variedadSplit.reduce((acc, variedad, index) => {\n              if (parseInt(porcentajeSplit[index].trim()) !== 0) {\n                acc.variedades.push(variedad);\n                acc.porcentajes.push(porcentajeSplit[index]);\n              }\n              return acc;\n            }, {\n              variedades: [],\n              porcentajes: []\n            });\n            filtrados.variedades.forEach((v, index) => {\n              if (!todasVariedades.includes(v)) {\n                todasVariedades.push(v + ' ' + '%' + filtrados.porcentajes[index]);\n                todosPorcentajes.push(porcentajeSplit[index]);\n              }\n            });\n          });\n\n          // Ahora agregamos a las cabeceras\n          todasVariedades.forEach(v => {\n            if (!cabecera.includes(v)) {\n              cabecera.push(v);\n            }\n          });\n        }\n      } else {\n        cabecera.push(variedad);\n      }\n      hojaGeneral.addRow(['Datos Generales Mezclas']).eachCell(cell => {\n        cell.style = headerStyle;\n      }); // Encabezado de la hoja\n\n      hojaGeneral.addRow(['ID Solicitud', idSolicitud]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Folio de Receta', folio === '' ? 'No aplica' : folio]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Solicita', usuario]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Fecha Solicitud', fechaSolicitud]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Rancho', rancho]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Centro de Coste', centroCoste]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Variedad Fruta', variedad]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Empresa', empresa]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Temporada', temporada]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Cantidad de Mezcla', cantidad === '' ? 'No aplica' : cantidad]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Presentacion de la Mezcla', presentacion === '' ? 'No aplica' : presentacion]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Metodo de aplicacion', metodoAplicacion]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n      hojaGeneral.addRow(['Descripcion', descripcion]).eachCell(cell => {\n        cell.style = cellStyle;\n      });\n\n      // Agregar información de la solicitud\n      hojaGeneral.addRow([]); // Espacio vacío con estilo\n\n      // Agregar la cabecera a la hoja\n\n      hojaGeneral.addRow(cabecera).eachCell(cell => {\n        cell.style = headerStyle;\n      });\n      // limpiamos cabeceras\n      cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];\n\n      // Obtener productos de la base de datos\n      const productos = await obtenerProductosPorSolicitud(idSolicitud);\n\n      // Crear el arreglo de datos\n      const data = [];\n      if (productos && productos.length > 0) {\n        productos.forEach(producto => {\n          const fila = [producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad];\n          if (varie.length > 1 && variedades && variedades.length > 0) {\n            // Agregamos un valor para cada variedad\n            filtrados.porcentajes.forEach(porcentaje => {\n              const cantidadPorcentaje = producto.cantidad * parseFloat(porcentaje) / 100;\n              fila.push(Number(cantidadPorcentaje.toFixed(2))); // Redondear a 2 decimales\n            });\n          } else {\n            fila.push(producto.cantidad);\n          }\n          data.push(fila);\n        });\n      } else {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].info('No se encontraron productos o la estructura es incorrecta');\n      }\n\n      // Agregar los datos a la hoja\n      data.forEach(row => {\n        hojaGeneral.addRow(row).eachCell(cell => {\n          cell.style = cellStyle;\n        });\n      });\n\n      // Ajustar el ancho de las columnas\n      hojaGeneral.columns.forEach(column => {\n        const maxLength = column.values.reduce((max, value) => {\n          return Math.max(max, value ? value.toString().length : 0);\n        }, 0);\n        column.width = maxLength + 2; // Añadir un poco de espacio extra\n      });\n    } catch (error) {\n      const hojaError = workbook.addWorksheet('Error');\n      hojaError.addRow(['Error al obtener productos para esta solicitud.']);\n      // Manejo de errores\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error({\n        message: 'Error al procesar solicitud',\n        error: error.message,\n        stack: error.stack,\n        method: 'reporteSolicitudV2'\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al procesar datos para el reporte');\n    }\n\n    // Retornar el buffer del archivo Excel\n    return await workbook.xlsx.writeBuffer();\n  } catch (error) {\n    console.error('Error general al generar Excel:', error);\n    throw error;\n  }\n};\n\n// Extraer estilos a un objeto de configuración\nconst EXCEL_STYLES = {\n  header: {\n    font: {\n      bold: true,\n      color: {\n        argb: 'FFFFFFFF'\n      }\n    },\n    fill: {\n      type: 'pattern',\n      pattern: 'solid',\n      fgColor: {\n        argb: 'FF4F81BD'\n      }\n    },\n    border: {\n      top: {\n        style: 'thin'\n      },\n      left: {\n        style: 'thin'\n      },\n      bottom: {\n        style: 'thin'\n      },\n      right: {\n        style: 'thin'\n      }\n    },\n    alignment: {\n      vertical: 'middle',\n      horizontal: 'center'\n    }\n  },\n  cell: {\n    font: {\n      color: {\n        argb: 'FF000000'\n      }\n    },\n    border: {\n      top: {\n        style: 'thin'\n      },\n      left: {\n        style: 'thin'\n      },\n      bottom: {\n        style: 'thin'\n      },\n      right: {\n        style: 'thin'\n      }\n    },\n    alignment: {\n      vertical: 'middle',\n      horizontal: 'left'\n    }\n  }\n};\n\n// Separar la lógica de procesamiento de datos\nconst procesarDatosSolicitud = async dato => {\n  const idSolicitud = dato.id_solicitud || dato.id;\n  const productos = await obtenerProductosPorSolicitud(idSolicitud);\n  if (!productos?.length) {\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError('No se encontraron productos para la solicitud');\n  }\n\n  // Procesar variedades si es necesario\n  let variedadesInfo = null;\n  if (dato.variedad.split(',').length > 1) {\n    variedadesInfo = await procesarVariedades(idSolicitud);\n  }\n  return {\n    productos,\n    variedadesInfo,\n    datosSolicitud: await obtenerDatosSolicitud(idSolicitud)\n  };\n};\n\n// Separar la generación de filas\nconst generarFilasProductos = (productos, variedadesInfo) => {\n  return productos.map(producto => {\n    const fila = [producto.id_sap, producto.nombre, producto.unidad_medida, producto.cantidad];\n    if (variedadesInfo) {\n      variedadesInfo.porcentajes.forEach(porcentaje => {\n        const cantidad = producto.cantidad * parseFloat(porcentaje) / 100;\n        fila.push(Number(cantidad.toFixed(2)));\n      });\n    } else {\n      fila.push(producto.cantidad);\n    }\n    return fila;\n  });\n};\nconst procesarVariedades = async idSolicitud => {\n  const variedades = await obtenerVariedades(idSolicitud);\n  if (!variedades?.length) {\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError('No se encontraron variedades para el centro de coste');\n  }\n\n  // Convertir a array, eliminar último elemento y volver a string\n  const variedadesArray = variedades[0].variedad.split(',');\n  const porcentajesArray = variedades[0].porcentajes.split(',');\n\n  // Filtrar ambos arrays en paralelo\n  const filtrados = variedadesArray.reduce((acc, variedad, index) => {\n    if (parseInt(porcentajesArray[index].trim()) !== 0) {\n      acc.variedades.push(variedad);\n      acc.porcentajes.push(porcentajesArray[index]);\n    }\n    return acc;\n  }, {\n    variedades: [],\n    porcentajes: []\n  });\n  return filtrados;\n};\n\n// Agregar encabezados a la hoja\nconst agregarEncabezadoSolicitud = async (hojaGeneral, dato, datosSolicitud, variedadesInfo) => {\n  // Agregar encabezados\n  hojaGeneral.addRow(['Datos Generales']).eachCell(cell => {\n    cell.style = EXCEL_STYLES.header;\n  });\n\n  // Cabecera de la tabla\n  let cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];\n  let porcentaje = ['', '', ''];\n  const todasVariedades = [];\n\n  // obtenemos datos faltantes de la solicitud\n  if (dato.variedad.split(',').length > 1) {\n    // Filtrar ambos arrays en paralelo\n    variedadesInfo.variedades.forEach((v, index) => {\n      if (!todasVariedades.includes(v)) {\n        todasVariedades.push(v + ' ' + '%' + variedadesInfo.porcentajes[index]);\n      }\n    });\n  } else {\n    cabecera.push(dato.variedad);\n  }\n  // Ahora agregamos a las cabeceras\n  todasVariedades.forEach(v => {\n    if (!cabecera.includes(v)) {\n      cabecera.push(v);\n    }\n  });\n  hojaGeneral.addRow(['ID Solicitud', dato.id_solicitud ? dato.id_solicitud : dato.id]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Folio de Receta', dato.FolioReceta === '' || dato.folio === '' ? 'No aplica' : dato.FolioReceta || dato.folio]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Solicita', dato.usuario ? dato.usuario : dato.Solicita]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Comentario de solicitante', datosSolicitud[0].respuestaSolicitud === '' ? 'Sin Comentario' : datosSolicitud[0].respuestaSolicitud]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Fecha Solicitud', dato.fechaSolicitud]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Fecha Entrega', dato.fechaEntrega ? dato.fechaEntrega : 'No aplica']).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Rancho', dato.rancho ? dato.rancho : dato.ranchoDestino]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Centro de Coste', dato.centroCoste || dato.centro_coste]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Variedad Fruta', dato.variedad]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Empresa', dato.empresa]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Temporada', dato.temporada]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Cantidad de Mezcla', datosSolicitud[0].cantidad === '' ? 'No aplica' : datosSolicitud[0].cantidad]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Presentacion de la Mezcla', datosSolicitud[0].cantidad === '' ? 'No aplica' : datosSolicitud[0].cantidad]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Metodo de aplicacion', datosSolicitud[0].metodoAplicacion]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n  hojaGeneral.addRow(['Descripcion', dato.descripcion]).eachCell(cell => {\n    cell.style = EXCEL_STYLES.cell;\n  });\n\n  // Agregar información de la solicitud\n  hojaGeneral.addRow([]); // Espacio vacío con estilo\n\n  // Agregar la cabecera a la hoja\n  hojaGeneral.addRow(porcentaje);\n  hojaGeneral.addRow(cabecera).eachCell(cell => {\n    cell.style = EXCEL_STYLES.header;\n  });\n  // limpiamos cabeceras\n  cabecera = ['id_sap', 'Productos', 'Unidad', 'Cantidad Solicitada'];\n  porcentaje = ['', '', ''];\n};\nconst agregarFilasProductos = (hojaGeneral, filas) => {\n  filas.forEach(fila => {\n    hojaGeneral.addRow(fila).eachCell(cell => {\n      cell.style = EXCEL_STYLES.cell;\n    });\n  });\n};\nconst agregarSeparador = hojaGeneral => {\n  hojaGeneral.addRow([]);\n  hojaGeneral.addRow([]);\n  hojaGeneral.addRow(['', '', '', '', '', '', '', '', '', '']).eachCell(cell => {\n    cell.border = {\n      top: {\n        style: 'thick',\n        color: {\n          argb: '00000000'\n        }\n      },\n      bottom: {\n        style: 'thick',\n        color: {\n          argb: '00000000'\n        }\n      }\n    };\n  });\n  hojaGeneral.addRow([]);\n  hojaGeneral.addRow([]);\n};\nconst ajustarColumnasExcel = hojaGeneral => {\n  hojaGeneral.columns.forEach(column => {\n    const maxLength = column.values.reduce((max, value) => {\n      return Math.max(max, value ? value.toString().length : 0);\n    }, 0);\n    column.width = maxLength + 2; // Añadir un poco de espacio extra\n  });\n};\n// uso\nconst reporteSolicitudv3 = async parametros => {\n  try {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].debug('reporteSolicitudv3', parametros);\n    const datos = Array.isArray(parametros) ? parametros : parametros.datos || [];\n    if (!datos.length) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.NotFoundError('No hay datos para generar el Excel');\n    const workbook = new exceljs__WEBPACK_IMPORTED_MODULE_0__[\"default\"].Workbook();\n    const hojaGeneral = workbook.addWorksheet('Datos Generales');\n    for (const dato of datos) {\n      try {\n        const {\n          productos,\n          variedadesInfo,\n          datosSolicitud\n        } = await procesarDatosSolicitud(dato);\n\n        // Agregar encabezados\n        agregarEncabezadoSolicitud(hojaGeneral, dato, datosSolicitud, variedadesInfo);\n\n        // Agregar productos\n        const filas = generarFilasProductos(productos, variedadesInfo);\n        // console.table(filas)\n        agregarFilasProductos(hojaGeneral, filas);\n\n        // Agregar separador\n        agregarSeparador(hojaGeneral);\n      } catch (error) {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_3__[\"default\"].error(`Error procesando solicitud ${dato.id_solicitud || dato.id}:`, error);\n        continue; // Continuar con la siguiente solicitud\n      }\n    }\n    ajustarColumnasExcel(hojaGeneral);\n    return await workbook.xlsx.writeBuffer();\n  } catch (error) {\n    if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.CustomError) throw error;\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_4__.DatabaseError('Error al procesar datos para el reporte');\n  }\n};\n\n//# sourceURL=webpack://mezclas/./src/config/excel.js?");
+const createUsuarioRouter = ({
+  usuarioModel
+}) => {
+  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();
+  const usuarioController = new _controller_usuario_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .UsuarioController */ .d({
+    usuarioModel
+  });
 
-/***/ }),
+  // rutas de inicio de sesion
 
-/***/ 5638:
-/*!*********************************************************!*\
-  !*** ./src/controller/productosSolicitud.controller.js ***!
-  \*********************************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+  router.post('/login', usuarioController.login); // logear usuario
+  router.get('/logout', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .authenticate */ .QF, usuarioController.logout); // Para enlaces de navegación
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   ProductosController: () => (/* binding */ ProductosController)\n/* harmony export */ });\n/* harmony import */ var _config_smtp_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../config/smtp.js */ 6909);\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n\n\nclass ProductosController {\n  constructor({\n    productossModel\n  }) {\n    this.productossModel = productossModel;\n  }\n  obtenerProductosSolicitud = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const result = await this.productossModel.obtenerProductosSolicitud({\n      idSolicitud: req.params.idSolicitud\n    });\n    return res.json(result);\n  });\n  obtenerTablaMezclasId = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const id = req.params.id;\n    const result = await this.productossModel.obtenerTablaMezclasId({\n      id\n    });\n    return res.json(result.data);\n  });\n  create = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const logger = req.logger;\n    const logContext = {\n      operation: 'CREAR_MEZCLA',\n      userName: user.nombre,\n      userId: user.id,\n      userRole: user.rol,\n      requestBody: req.body,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('CREAR_MEZCLA', 'started', logContext);\n      const result = await this.productossModel.create({\n        data: req.body,\n        idUsuario: user.id\n      });\n      logger.info('CREAR_MEZCLA', 'completed', {\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json({\n        success: true,\n        message: result.message,\n        idSolicitud: result.idSolicitud\n      });\n    } catch (error) {\n      logger.error('Error al crear mezcla', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      throw error;\n    }\n  });\n  actulizarEstado = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const logger = req.logger;\n    const logContext = {\n      operation: 'ACTUALIZAR_ESTADO_PRODUCTOS',\n      userName: user.nombre,\n      userId: user.id,\n      userRole: user.rol,\n      requestBody: req.body,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('ACTUALIZAR_ESTADO_PRODUCTOS', 'started', logContext);\n      const result = await this.productossModel.actualizarEstado({\n        data: req.body,\n        idUsuarioMezcla: user.id\n      });\n      // validamos que data y productos vengan dentro de result\n      if (result.productos || result.data) {\n        await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_0__.enviarCorreo)({\n          type: 'notificacion',\n          email: result.data[0].email,\n          nombre: result.data[0].nombre,\n          solicitudId: req.body.id_solicitud,\n          data: result.productos,\n          usuario: user\n        });\n      } else {\n        logger.warn('No se encontaron resultados', logContext);\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.ValidationError('Error al actualizar el estado de los productos');\n      }\n\n      // Log de finalización\n      logger.info('la operacion ACTUALIZAR_ESTADO_PRODUCTOS', 'completed', {\n        resultCount: Array.isArray(result) ? result.length : 1,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json({\n        message: result.message\n      });\n    } catch (error) {}\n  });\n  EliminarPorducto = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_1__.asyncHandler)(async (req, res) => {\n    const {\n      id\n    } = req.params;\n    const result = await this.productossModel.EliminarPorducto({\n      id\n    });\n    return res.json({\n      message: result.message\n    });\n  });\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/productosSolicitud.controller.js?");
-
-/***/ }),
-
-/***/ 5707:
-/*!***********************************************!*\
-  !*** ./src/middlewares/validateFormatoImg.js ***!
-  \***********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   validateBase64Image: () => (/* binding */ validateBase64Image),\n/* harmony export */   validateImageFile: () => (/* binding */ validateImageFile)\n/* harmony export */ });\nconst validateImageFile = (req, res, next) => {\n  if (!req.files || !req.files.image) {\n    return res.status(400).json({\n      error: 'No se ha subido ninguna imagen'\n    });\n  }\n  const validExtensions = ['jpg', 'jpeg', 'png', 'gif'];\n  const fileExtension = req.files.image.name.split('.').pop().toLowerCase();\n  if (!validExtensions.includes(fileExtension)) {\n    return res.status(400).json({\n      error: 'Formato de archivo no válido. Use: ' + validExtensions.join(', ')\n    });\n  }\n  next();\n};\nconst validateBase64Image = (req, res, next) => {\n  const {\n    image\n  } = req.body;\n  if (!image) {\n    return res.status(400).json({\n      error: 'No se ha enviado ninguna imagen'\n    });\n  }\n\n  // Verificar que sea una cadena base64 válida\n  if (!isValidBase64(image)) {\n    return res.status(400).json({\n      error: 'La imagen no está en formato base64 válido'\n    });\n  }\n\n  // Obtener el tipo de archivo desde el base64\n  const matches = image.match(/^data:image\\/(.*?);base64,/);\n  if (!matches) {\n    return res.status(400).json({\n      error: 'Formato de imagen no válido'\n    });\n  }\n  const fileExtension = matches[1].toLowerCase();\n  const validExtensions = ['jpg', 'jpeg', 'png', 'gif'];\n  if (!validExtensions.includes(fileExtension)) {\n    return res.status(400).json({\n      error: `Formato de archivo no válido. Use: ${validExtensions.join(', ')}`\n    });\n  }\n\n  // Limitar tamaño (ejemplo: 5MB)\n  const base64Data = image.replace(/^data:image\\/\\w+;base64,/, '');\n  const fileSize = Buffer.from(base64Data, 'base64').length;\n  const maxSize = 5 * 1024 * 1024; // 5MB\n\n  if (fileSize > maxSize) {\n    return res.status(400).json({\n      error: 'La imagen excede el tamaño máximo permitido (5MB)'\n    });\n  }\n\n  // Si todo está bien, continuamos\n  next();\n};\n\n// Función auxiliar para validar base64\nconst isValidBase64 = str => {\n  if (!str?.startsWith('data:image/')) return false;\n  try {\n    const base64Data = str.split(',')[1];\n    return Buffer.from(base64Data, 'base64').toString('base64') === base64Data;\n  } catch (e) {\n    return false;\n  }\n};\n\n//# sourceURL=webpack://mezclas/./src/middlewares/validateFormatoImg.js?");
+  // Crear un usuario
+  router.post('/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .authenticate */ .QF, usuarioController.create);
+  router.get('/usuarios', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .authenticate */ .QF, usuarioController.getUsuarios);
+  router.get('/', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .authenticate */ .QF, usuarioController.getAll);
+  router.get('/:id', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .authenticate */ .QF, usuarioController.getOne);
+  router.patch('/:id', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .authenticate */ .QF, usuarioController.update);
+  router.delete('/:id', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .authenticate */ .QF, usuarioController.delete);
+  router.put('/:id', _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .authenticate */ .QF, usuarioController.changePassword);
+  return router;
+};
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 5708:
-/*!*************************!*\
-  !*** external "dotenv" ***!
-  \*************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_dotenv__;
-
-/***/ }),
-
-/***/ 5952:
-/*!**************************************!*\
-  !*** ./src/models/recetas.models.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   RecetasModel: () => (/* binding */ RecetasModel)\n/* harmony export */ });\n/* harmony import */ var _schema_recetas_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/recetas.js */ 5503);\n\nclass RecetasModel {\n  // obtener todos los datos\n  static async getAll() {\n    try {\n      const recetas = await _schema_recetas_js__WEBPACK_IMPORTED_MODULE_0__.Recetas.findAll({\n        attributes: ['id_receta', 'nombre', 'descripcion', 'unidad_medida']\n      });\n      return recetas;\n    } catch (e) {\n      console.error(e.message); // Salida: Error la recetas\n      return {\n        error: 'Error al obtener los recetas'\n      };\n    }\n  }\n\n  // obtener todos los un ato por id\n  static async getOne({\n    id\n  }) {\n    try {\n      const recetas = await _schema_recetas_js__WEBPACK_IMPORTED_MODULE_0__.Recetas.findByPk(id);\n      return recetas || {\n        error: 'recetas no encontrada'\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la recetas\n      return {\n        error: 'Error al obtener al recetas'\n      };\n    }\n  }\n\n  // eliminar recetas\n  static async delete({\n    id\n  }) {\n    try {\n      const recetas = await _schema_recetas_js__WEBPACK_IMPORTED_MODULE_0__.Recetas.findByPk(id);\n      if (!recetas) return {\n        error: 'recetas no encontrado'\n      };\n      await recetas.destroy();\n      return {\n        message: `recetas eliminada correctamente con id ${id}`\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la recetas\n      return {\n        error: 'Error al elimiar el recetas'\n      };\n    }\n  }\n\n  // crear recetas\n  static async create({\n    data\n  }) {\n    try {\n      // verificamos que no exista el recetas\n      const recetas = await _schema_recetas_js__WEBPACK_IMPORTED_MODULE_0__.Recetas.findOne({\n        where: {\n          recetas: data.recetas\n        }\n      });\n      if (recetas) return {\n        error: 'recetas ya existe'\n      };\n      // creamos el recetas\n      await _schema_recetas_js__WEBPACK_IMPORTED_MODULE_0__.Recetas.create({\n        ...data\n      });\n      return {\n        message: `recetas registrado exitosamente ${data.nombre}`\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la recetas\n      return {\n        error: 'Error al crear al recetas'\n      };\n    }\n  }\n\n  // para actualizar datos de recetas\n  static async update({\n    id,\n    data\n  }) {\n    try {\n      // verificamos si existe alguna empresa con el id proporcionado\n      const recetas = await _schema_recetas_js__WEBPACK_IMPORTED_MODULE_0__.Recetas.findByPk(id);\n      if (!recetas) return {\n        error: 'recetas no encontrado'\n      };\n      // Actualiza solo los campos que se han proporcionado\n      if (data.nombre) recetas.nombre = data.nombre;\n      if (data.email) recetas.email = data.email;\n      if (data.rol) recetas.rol = data.rol;\n      if (data.empresa) recetas.empresa = data.empresa;\n      await recetas.save();\n      return {\n        message: 'recetas actualizada correctamente',\n        rol: data.rol\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la recetas\n      return {\n        error: 'Error al obtener las recetass'\n      };\n    }\n  }\n}\n\n//# sourceURL=webpack://mezclas/./src/models/recetas.models.js?");
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["config"]: () => (__WEBPACK_EXTERNAL_MODULE_dotenv__.config), ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_dotenv__["default"]) });
 
 /***/ }),
 
-/***/ 5977:
-/*!*************************************************!*\
-  !*** ./src/controller/produccion.controller.js ***!
-  \*************************************************/
+/***/ 5964:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   h: () => (/* binding */ Ranchos)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const ranchosConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false // Añadir esta línea
+  },
+  rancho: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El rancho es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El rancho debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  status: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: true
+  }
+};
+const Ranchos = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('ranchos', ranchosConfig, {
+  tableName: 'ranchos',
+  // Nombre de la tabla en la base de datos
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ 6073:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   S: () => (/* binding */ Temporada)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const empleadosConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false // Añadir esta línea
+  },
+  temporada: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La temporada es requerida'
+      },
+      len: {
+        args: [3, 20],
+        msg: 'La temporada debe tener entre 3 y 20 caracteres'
+      }
+    }
+  },
+  status: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue: true
+  }
+};
+const Temporada = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('temporada', empleadosConfig, {
+  tableName: 'temporada',
+  // Nombre de la tabla en la base de datos
+  timestamps: false // Agrega createdAt y updatedAt automáticamente
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ 6210:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   ProduccionController: () => (/* binding */ ProduccionController)\n/* harmony export */ });\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n\nclass ProduccionController {\n  constructor({\n    produccionModel\n  }) {\n    this.produccionModel = produccionModel;\n  }\n\n  // extraer\n  ObtenerGastoUsuario = async (req, res) => {\n    try {\n      const centroCoste = await this.produccionModel.ObtenerGastoUsuario({\n        tipo: req.params.tipo\n      });\n      if (centroCoste.error) {\n        res.status(404).json({\n          error: `${centroCoste.error}`\n        });\n      }\n      res.json(centroCoste);\n    } catch (error) {\n      console.error('Error al crear la solicitud:', error);\n      res.status(500).json({\n        mensaje: 'Ocurrió un error al crear la solicitud'\n      });\n    }\n  };\n  solicitudReporte = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    try {\n      const centroCoste = await this.produccionModel.solicitudReporte({\n        empresa: user.empresa,\n        rol: user.rol,\n        idUsuario: user.id\n      });\n      if (centroCoste.error) {\n        res.status(404).json({\n          error: `${centroCoste.error}`\n        });\n      }\n      res.json(centroCoste);\n    } catch (error) {\n      console.error('Error al crear la solicitud:', error);\n      res.status(500).json({\n        mensaje: 'Ocurrió un error al crear la solicitud'\n      });\n    }\n  };\n  descargarEcxel = async (req, res) => {\n    try {\n      const buffer = await this.produccionModel.descargarEcxel({\n        datos: req.body\n      });\n      if (buffer.error) {\n        res.status(404).json({\n          error: `${buffer.error}`\n        });\n      }\n      // Configurar las cabeceras para la descarga del archivo\n      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');\n      res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx');\n      res.send(buffer);\n    } catch (error) {\n      console.error('Error al crear la solicitud:', error);\n      res.status(500).json({\n        mensaje: 'Ocurrió un error al crear la solicitud'\n      });\n    }\n  };\n  descargarSolicitud = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const buffer = await this.produccionModel.descargarSolicitud({\n      datos: req.body\n    });\n    // Configurar las cabeceras para la descarga del archivo\n    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');\n    res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx');\n    res.send(buffer);\n  });\n  descargarReporte = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const buffer = await this.produccionModel.descargarReporte({\n      datos: req.body\n    });\n    // Configurar las cabeceras para la descarga del archivo\n    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');\n    res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx');\n    res.send(buffer);\n  });\n  descargarReporteV2 = async (req, res) => {\n    try {\n      const buffer = await this.produccionModel.descargarReporteV2({\n        datos: req.body\n      });\n      if (buffer.error) {\n        res.status(404).json({\n          error: `${buffer.error}`\n        });\n      }\n      // Configurar las cabeceras para la descarga del archivo\n      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');\n      res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx');\n      res.send(buffer);\n    } catch (error) {\n      console.error('Error al crear la solicitud:', error);\n      res.status(500).json({\n        mensaje: 'Ocurrió un error al crear la solicitud'\n      });\n    }\n  };\n  descargarReportePendientes = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const {\n      empresa\n    } = req.params;\n    let buffer;\n    if (empresa === 'todo') {\n      buffer = await this.produccionModel.descargarReportePendientesCompleto();\n    } else {\n      buffer = await this.produccionModel.descargarReportePendientes({\n        empresa: empresa || user.empresa\n      });\n    }\n    // Configurar las cabeceras para la descarga del archivo\n    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');\n    res.setHeader('Content-Disposition', 'attachment; filename=solicitudes.xlsx');\n    res.send(buffer);\n  });\n  ObtenerReceta = async (req, res) => {\n    try {\n      const buffer = await this.produccionModel.ObtenerReceta();\n      if (buffer.error) {\n        res.status(404).json({\n          error: `${buffer.error}`\n        });\n      }\n      res.json(buffer);\n    } catch (error) {\n      console.error('Error al crear la solicitud:', error);\n      res.status(500).json({\n        mensaje: 'Ocurrió un error al crear la solicitud'\n      });\n    }\n  };\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/produccion.controller.js?");
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  _: () => (/* binding */ swaggerSpec)
+});
+
+;// external "swagger-jsdoc"
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+const external_swagger_jsdoc_namespaceObject = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_swagger_jsdoc_4cc0b3b9__["default"]) });
+// EXTERNAL MODULE: external "dotenv"
+var external_dotenv_ = __webpack_require__(5708);
+;// ./src/utils/swagger.js
+
+
+(0,external_dotenv_.config)();
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API de Mezclas',
+      version: '1.0.0',
+      description: 'API para el sistema de mezclas',
+      contact: {
+        name: 'Soporte',
+        email: 'soporte@example.com'
+      }
+    },
+    servers: [{
+      url: process.env.API_URL || 'http://localhost:3000',
+      description: 'Servidor de desarrollo'
+    }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Ingrese su token JWT'
+        }
+      },
+      responses: {
+        UnauthorizedError: {
+          description: 'Token no proporcionado o inválido',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: {
+                    type: 'string',
+                    example: 'No autorizado'
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    security: [{
+      bearerAuth: []
+    }]
+  },
+  apis: ['./src/routes/*.js']
+};
+const swaggerSpec = (0,external_swagger_jsdoc_namespaceObject["default"])(options);
+
+/***/ }),
+
+/***/ 6386:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   k: () => (/* binding */ MezclaActivos)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const mezclaActivosConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  id_mezcla: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  },
+  id_activo: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  },
+  porcentaje: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DECIMAL(10, 4),
+    allowNull: false
+  }
+};
+const MezclaActivos = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('MezclaActivos', mezclaActivosConfig, {
+  tableName: 'mezcla_activos',
+  timestamps: false
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 6466:
-/*!***********************************!*\
-  !*** ./src/utils/asyncHandler.js ***!
-  \***********************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   asyncHandler: () => (/* binding */ asyncHandler)\n/* harmony export */ });\nconst asyncHandler = fn => {\n  return (req, res, next) => {\n    Promise.resolve(fn(req, res, next)).catch(next);\n  };\n};\n\n//# sourceURL=webpack://mezclas/./src/utils/asyncHandler.js?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   L: () => (/* binding */ asyncHandler)
+/* harmony export */ });
+const asyncHandler = fn => {
+  return (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
 
 /***/ }),
 
-/***/ 6519:
-/*!******************************!*\
-  !*** ./src/schema/centro.js ***!
-  \******************************/
+/***/ 6717:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Centrocoste: () => (/* binding */ Centrocoste)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n\nconst centroConfig = {\n  id: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    primaryKey: true,\n    autoIncrement: true\n  },\n  centroCoste: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    field: 'centroCoste',\n    // Nombre de columna en la base de datos\n    validate: {\n      notEmpty: {\n        msg: 'El centro de coste es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  empresa: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'Empresa pertenece es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'La Empresa debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  rancho: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    unique: true,\n    validate: {\n      notEmpty: {\n        msg: 'El rancho es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El rancho debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  cultivo: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El cultivo es requerido'\n      },\n      len: {\n        args: [8, 100],\n        msg: 'El cultivo debe tener al menos 8 caracteres'\n      }\n    }\n  },\n  variedad: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La variedad es requerida'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'La variedad debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  porcentajes: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La variedad es requerida'\n      }\n    }\n  }\n};\nconst Centrocoste = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('centrocoste', centroConfig, {\n  tableName: 'centrocoste',\n  // Nombre de la tabla en la base de datos\n  timestamps: false // Agrega createdAt y updatedAt automáticamente\n});\n\n//# sourceURL=webpack://mezclas/./src/schema/centro.js?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Uq: () => (/* binding */ retryOperation),
+/* harmony export */   aG: () => (/* binding */ CircuitBreaker)
+/* harmony export */ });
+/* unused harmony export withRetry */
+/* harmony import */ var _CustomError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2551);
+/* harmony import */ var _logger_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3014);
 
-/***/ }),
 
-/***/ 6534:
-/*!*****************************!*\
-  !*** ./src/utils/logger.js ***!
-  \*****************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+const TRANSIENT_ERROR_CODES = ['ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED', 'DEADLOCK', 'LOCK_TIMEOUT', 'PROTOCOL_CONNECTION_LOST', 'ER_CON_COUNT_ERROR', 'ECONNABORTED', 'ER_LOCK_DEADLOCK'];
+const isTransientError = error => {
+  if (!error) return false;
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (__WEBPACK_DEFAULT_EXPORT__)\n/* harmony export */ });\n/* harmony import */ var winston__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! winston */ 9322);\n/* harmony import */ var winston_daily_rotate_file__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! winston-daily-rotate-file */ 3259);\n/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../config/env.mjs */ 9097);\n/* harmony import */ var chalk__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! chalk */ 169);\n/* harmony import */ var _config_logger_config_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../config/logger.config.js */ 9021);\n\n\n\n // Agregar para colores en terminal\n\nclass Logger {\n  constructor() {\n    this.logger = this.createLogger();\n    this.metrics = new Map();\n    if (_config_logger_config_js__WEBPACK_IMPORTED_MODULE_4__.loggerConfig.metrics.enabled) {\n      this.startMetricsCollection();\n    }\n  }\n\n  // Agregar método para correlación\n  withCorrelation(correlationId) {\n    return {\n      info: (message, meta = {}) => this.info(message, {\n        ...meta,\n        correlationId\n      }),\n      error: (message, meta = {}) => this.error(message, {\n        ...meta,\n        correlationId\n      }),\n      warn: (message, meta = {}) => this.warn(message, {\n        ...meta,\n        correlationId\n      }),\n      debug: (message, meta = {}) => this.debug(message, {\n        ...meta,\n        correlationId\n      })\n    };\n  }\n\n  // Agregar colección de métricas\n  startMetricsCollection() {\n    setInterval(() => {\n      const metrics = {\n        timestamp: new Date().toISOString(),\n        operationsCount: this.metrics.get('operationsCount') || 0,\n        errorCount: this.metrics.get('errorCount') || 0,\n        avgResponseTime: this.calculateAverageResponseTime()\n      };\n      this.debug('Metrics collected', {\n        metrics\n      });\n      this.metrics.clear();\n    }, _config_logger_config_js__WEBPACK_IMPORTED_MODULE_4__.loggerConfig.metrics.interval);\n  }\n\n  // Método para registrar métricas\n  recordMetric(name, value) {\n    const current = this.metrics.get(name) || 0;\n    this.metrics.set(name, current + value);\n  }\n  createLogFormat() {\n    const consoleFormat = winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.printf(({\n      timestamp,\n      level,\n      message,\n      metadata,\n      stack\n    }) => {\n      // Formato para la consola con colores y mejor estructura\n      const levelUpperCase = level.toUpperCase().padEnd(7);\n      const coloredLevel = chalk__WEBPACK_IMPORTED_MODULE_3__[\"default\"][_config_logger_config_js__WEBPACK_IMPORTED_MODULE_4__.loggerConfig.levelColors[level]](levelUpperCase);\n      const time = chalk__WEBPACK_IMPORTED_MODULE_3__[\"default\"].gray(timestamp);\n      let log = `${time} ${coloredLevel} │ ${message}`;\n\n      // Agregar metadata si existe\n      if (Object.keys(metadata).length > 0 && metadata.metadata !== message) {\n        const metadataStr = JSON.stringify(metadata.metadata, null, 2).split('\\n').map(line => chalk__WEBPACK_IMPORTED_MODULE_3__[\"default\"].gray('│ ') + line).join('\\n');\n        log += '\\n' + metadataStr;\n      }\n\n      // Agregar stack trace si existe\n      if (stack) {\n        const stackStr = stack.split('\\n').map(line => chalk__WEBPACK_IMPORTED_MODULE_3__[\"default\"].red('│ ') + line).join('\\n');\n        log += '\\n' + stackStr;\n      }\n      return log;\n    });\n    const fileFormat = winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.printf(({\n      timestamp,\n      level,\n      message,\n      metadata,\n      stack\n    }) => {\n      // Formato para archivos (sin colores)\n      let log = `${timestamp} [${level.toUpperCase()}] ${message}`;\n      if (Object.keys(metadata).length > 0 && metadata.metadata !== message) {\n        log += `\\nMetadata: ${JSON.stringify(metadata.metadata, null, 2)}`;\n      }\n      if (stack) {\n        log += `\\nStack: ${stack}`;\n      }\n      return log;\n    });\n    return {\n      console: winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.combine(winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.timestamp({\n        format: 'YYYY-MM-DD HH:mm:ss'\n      }), winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.errors({\n        stack: true\n      }), winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.metadata(), consoleFormat),\n      file: winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.combine(winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.timestamp({\n        format: 'YYYY-MM-DD HH:mm:ss'\n      }), winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.errors({\n        stack: true\n      }), winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.metadata(), winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].format.json(), fileFormat)\n    };\n  }\n  createLogger() {\n    const formats = this.createLogFormat();\n    const logger = winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].createLogger({\n      levels: _config_logger_config_js__WEBPACK_IMPORTED_MODULE_4__.loggerConfig.logLevels,\n      level: _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__.envs.MODE === 'development' ? 'debug' : 'info',\n      format: formats.file,\n      transports: this.createTransports(),\n      exitOnError: false\n    });\n    if (_config_env_mjs__WEBPACK_IMPORTED_MODULE_2__.envs.MODE !== 'production') {\n      logger.add(new winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].transports.Console({\n        format: formats.console\n      }));\n    }\n    return logger;\n  }\n  createTransports() {\n    return [new winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].transports.DailyRotateFile({\n      filename: 'logs/error-%DATE%.log',\n      datePattern: 'YYYY-MM-DD',\n      level: 'error',\n      maxFiles: '14d',\n      maxSize: '20m'\n    }), new winston__WEBPACK_IMPORTED_MODULE_0__[\"default\"].transports.DailyRotateFile({\n      filename: 'logs/combined-%DATE%.log',\n      datePattern: 'YYYY-MM-DD',\n      maxFiles: '14d',\n      maxSize: '20m'\n    })];\n  }\n\n  // Método para logging de operaciones de negocio\n  logOperation(operation, phase, details = {}) {\n    const startTime = Date.now();\n    const correlationId = details.correlationId || this.generateCorrelationId();\n    const baseContext = {\n      operation,\n      phase,\n      correlationId,\n      timestamp: new Date().toISOString(),\n      environment: _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__.envs.MODE,\n      ...details\n    };\n    this.info(`${operation} ${phase}`, baseContext);\n\n    // Registrar métricas\n    this.recordMetric('operationsCount', 1);\n    this.recordMetric('totalResponseTime', Date.now() - startTime);\n  }\n\n  // Método para logging de modelos\n  logModelOperation(modelName, operation, data = {}) {\n    const context = {\n      model: modelName,\n      operation,\n      timestamp: new Date().toISOString(),\n      ...data\n    };\n    this.debug(`${modelName}.${operation}`, context);\n  }\n  logDBTransaction(operation, status, details = {}) {\n    const context = {\n      operation,\n      status,\n      timestamp: new Date().toISOString(),\n      ...details\n    };\n    this.debug(`DB Transaction: ${operation} ${status}`, context);\n  }\n\n  // Métodos de logging mejorados\n  error(message, metadata = {}) {\n    this.logger.error(message, {\n      metadata\n    });\n  }\n  warn(message, metadata = {}) {\n    this.logger.warn(message, {\n      metadata\n    });\n  }\n  info(message, metadata = {}) {\n    this.logger.info(message, {\n      metadata\n    });\n  }\n  debug(message, metadata = {}) {\n    this.logger.debug(message, {\n      metadata\n    });\n  }\n\n  // Método para logging de transacciones\n  logTransaction(transactionId, action, details = {}) {\n    this.info(`Transaction ${action}`, {\n      transactionId,\n      ...details,\n      timestamp: new Date().toISOString()\n    });\n  }\n\n  // Método para logging de errores con contexto\n  logError(error, context = {}) {\n    const errorDetails = {\n      correlationId: context.correlationId || this.generateCorrelationId(),\n      message: error.message,\n      name: error.name,\n      stack: _config_env_mjs__WEBPACK_IMPORTED_MODULE_2__.envs.MODE === 'development' ? error.stack : undefined,\n      code: error.code,\n      ...context\n    };\n\n    // Registrar métricas de error\n    this.recordMetric('errorCount', 1);\n    this.error('Error occurred', errorDetails);\n  }\n\n  // Métodos auxiliares\n  calculateAverageResponseTime() {\n    const total = this.metrics.get('totalResponseTime') || 0;\n    const count = this.metrics.get('operationsCount') || 1;\n    return total / count;\n  }\n  generateCorrelationId() {\n    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;\n  }\n}\n/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (new Logger());\n\n//# sourceURL=webpack://mezclas/./src/utils/logger.js?");
+  // Verificar códigos de error conocidos
+  if (TRANSIENT_ERROR_CODES.includes(error.code)) return true;
 
-/***/ }),
+  // Verificar tipos de error específicos
+  if (error instanceof _CustomError_js__WEBPACK_IMPORTED_MODULE_0__/* .TimeoutError */ .MU || error instanceof _CustomError_js__WEBPACK_IMPORTED_MODULE_0__/* .ServiceUnavailableError */ .us) return true;
 
-/***/ 6754:
-/*!***********************************************!*\
-  !*** ./src/controller/proteted.controller.js ***!
-  \***********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+  // Verificar mensajes de error
+  const errorMsg = error.message?.toLowerCase() || '';
+  return errorMsg.includes('deadlock') || errorMsg.includes('timeout') || errorMsg.includes('connection') || errorMsg.includes('network') || errorMsg.includes('unavailable');
+};
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   ProtetedController: () => (/* binding */ ProtetedController)\n/* harmony export */ });\n/* harmony import */ var _models_productosSolicitud_models_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../models/productosSolicitud.models.js */ 1954);\n/* harmony import */ var _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../models/mezclas.models.js */ 2020);\n/* harmony import */ var _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../models/usuario.models.js */ 2477);\n/* harmony import */ var _models_notificaciones_models_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../models/notificaciones.models.js */ 3261);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n\n\n\n\n\nclass ProtetedController {\n  // ruta Protegida\n  protected = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].debug('Usuario en la ruta protegida:', user);\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    // validamos al usuario\n    if (user.rol === 'admin' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {\n      res.status(200).render('pages/admin/solicitudes', {\n        user,\n        rol: user.rol,\n        titulo: 'Bienvenido'\n      });\n    } else if (user.rol === 'mezclador' || user.rol === 'solicita' || user.rol === 'supervisor' || user.rol === 'solicita2') {\n      res.status(200).render('pages/mezclas/main', {\n        rol: user.rol,\n        nombre: user.nombre\n      });\n    }\n  };\n\n  // ruta vivienda\n  solicitud = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    // Separar los ranchos en un array\n    const ranchos = user.ranchos.split(',');\n    res.render('pages/mezclas/solicitud', {\n      ranchos\n    });\n  };\n  solicitudes = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    res.render('pages/mezclas/pendientes', {\n      rol: user.rol\n    });\n  };\n  proceso = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    res.render('pages/mezclas/proceso', {\n      rol: user.rol\n    });\n  };\n  completadas = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    res.render('pages/mezclas/completadas', {\n      rol: user.rol\n    });\n  };\n  tablaSolicitudes = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    res.render('pages/admin/solicitudes', {\n      user,\n      titulo: 'hola'\n    });\n  };\n  usuarios = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    res.render('pages/admin/usuarios', {\n      user,\n      titulo: 'hola'\n    });\n  };\n  productos = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    res.render('pages/admin/productos', {\n      user,\n      titulo: 'hola'\n    });\n  };\n  centroCoste = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) return res.status(403).render('errorPage', {\n      codeError: '403',\n      errorMsg: 'Acceso no utorizado'\n    });\n    res.render('pages/admin/centrosCoste', {\n      user,\n      titulo: 'hola'\n    });\n  };\n  notificacion = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const {\n      idSolicitud\n    } = req.params;\n    let result;\n\n    // verificamos si existe un usuario\n    if (!user) {\n      return res.status(403).render('errorPage', {\n        title: '403 - Sin Autorisacion',\n        codeError: '403',\n        errorMsg: 'Acceso no utorizado'\n      });\n    }\n    try {\n      // validamos el rol de usuario\n      switch (user.rol) {\n        case 'mezclador':\n          {\n            result = await _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_1__.MezclaModel.getOneMesclador({\n              id: idSolicitud,\n              idSolicita: user.id\n            });\n            if (result.error) {\n              throw new Error(result.error);\n            }\n            return res.render('pages/mezclas/notificacionesMesclador', {\n              rol: user.rol,\n              idSolicitud,\n              data: result.data\n            });\n          }\n        case 'solicita':\n          {\n            result = await _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_1__.MezclaModel.getOneSolicita({\n              id: idSolicitud,\n              idSolicita: user.id\n            });\n            if (result.error) {\n              throw new Error(result.error);\n            }\n\n            // si existe alguna solicitud con el mismo usuario pasamos a obtener los productos\n            const productos = await _models_productosSolicitud_models_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudRecetaModel.obtenerProductoNoDisponibles({\n              idSolicitud\n            });\n\n            // obtenemos los datos del mezclador que proceso la solicitud\n            const mezclador = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_2__.UsuarioModel.getOneId({\n              id: result.dataValues.idUsuarioMezcla\n            });\n\n            // obtenemos datos de la notificacion\n            const notificacion = await _models_notificaciones_models_js__WEBPACK_IMPORTED_MODULE_3__.NotificacionModel.getOneIDSolicitudUsuario({\n              idUsuario: user.id,\n              idSolicitud\n            });\n            _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].debug('Notificación obtenida:', notificacion[0].dataValues);\n            return res.render('pages/mezclas/notificaciones', {\n              nombre: user.nombre,\n              idSolicitud,\n              titulo: 'Cambio productos',\n              productos,\n              nombreMezclador: mezclador.nombre,\n              idMezclador: result.dataValues.idUsuarioMezcla,\n              empresa: mezclador.empresa,\n              respuestaMezclador: result.dataValues.respuestaMezclador,\n              idNotificacion: notificacion[0].dataValues.id\n            });\n          }\n        case 'adminMezclador':\n          {\n            // validamos que el usuario sea fransico ya que es el que procesa la solicitud siendo administrativo\n            if (user.nombre.trim() !== 'Francisco Alvarez') {\n              throw new Error(result.error);\n            }\n            result = await _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_1__.MezclaModel.getOneSolicita({\n              id: idSolicitud,\n              idSolicita: user.id\n            });\n            if (result.error) {\n              throw new Error(result.error);\n            }\n            // si existe alguna solicitud con el mismo usuario pasamos a obtener los productos\n            const productos = await _models_productosSolicitud_models_js__WEBPACK_IMPORTED_MODULE_0__.SolicitudRecetaModel.obtenerProductoNoDisponibles({\n              idSolicitud\n            });\n\n            // obtenemos los datos del mezclador que proceso la solicitud\n            const mezclador = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_2__.UsuarioModel.getOneId({\n              id: result.dataValues.idUsuarioMezcla\n            });\n\n            // obtenemos datos de la notificacion\n            const notificacion = await _models_notificaciones_models_js__WEBPACK_IMPORTED_MODULE_3__.NotificacionModel.getOneIDSolicitudUsuario({\n              idUsuario: user.id,\n              idSolicitud\n            });\n            _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].debug(notificacion);\n            return res.render('pages/mezclas/notificaciones', {\n              nombre: user.nombre,\n              idSolicitud,\n              titulo: 'Cambio productos',\n              productos,\n              nombreMezclador: mezclador.nombre,\n              idMezclador: result.dataValues.idUsuarioMezcla,\n              empresa: mezclador.empresa,\n              respuestaMezclador: result.dataValues.respuestaMezclador,\n              idNotificacion: notificacion[0].dataValues.id\n            });\n          }\n        default:\n          return res.status(403).render('errorPage', {\n            title: '403 - Sin Autorisacion',\n            codeError: '403',\n            errorMsg: 'Acceso no utorizado'\n          });\n      }\n    } catch (error) {\n      return res.status(403).render('errorPage', {\n        title: '403 - Sin Autorisacion',\n        codeError: '403',\n        errorMsg: error.message\n      });\n    }\n  };\n  confirmacion = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) {\n      return res.status(403).render('errorPage', {\n        title: '403 - Sin Autorisacion',\n        codeError: '403',\n        errorMsg: 'Acceso no utorizado'\n      });\n    }\n    try {\n      res.render('pages/mezclas/confirmaSolicitud', {\n        rol: user.rol,\n        user\n      });\n    } catch (error) {\n      return res.status(403).render('errorPage', {\n        title: '403 - Sin Autorisacion',\n        codeError: '403',\n        errorMsg: error.message\n      });\n    }\n  };\n  canceladas = async (req, res) => {\n    const {\n      user\n    } = req.session;\n    // verificamos si existe un usuario\n    if (!user) {\n      return res.status(403).render('errorPage', {\n        title: '403 - Sin Autorisacion',\n        codeError: '403',\n        errorMsg: 'Acceso no utorizado'\n      });\n    }\n    try {\n      if (user.rol === 'admin' || user.rol === 'administrativo' || user.rol === 'adminMezclador') {\n        return res.render('pages/admin/solicitudesCanceladas', {\n          user,\n          rol: user.rol,\n          titulo: 'Bienvenido'\n        });\n      } else if (user.rol === 'solicita' || user.rol === 'solicita2') {\n        return res.render('pages/mezclas/canceladas', {\n          rol: user.rol,\n          nombre: user.nombre\n        });\n      } else {\n        return res.status(403).render('errorPage', {\n          title: '403 - Sin Autorisacion',\n          codeError: '403',\n          errorMsg: 'Acceso no utorizado'\n        });\n      }\n    } catch (error) {\n      return res.status(403).render('errorPage', {\n        title: '403 - Sin Autorisacion',\n        codeError: '403',\n        errorMsg: error.message\n      });\n    }\n  };\n\n  // cerras sesion\n  logout = async (req, res) => {\n    try {\n      res.clearCookie('access_token');\n      return res.redirect('/'); // Asegúrate de usar return aquí\n    } catch (error) {\n      console.error('Logout error:', error);\n      return res.status(500).json({\n        error: 'Internal Server Error'\n      }); // Asegúrate de usar return aquí\n    }\n  };\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/proteted.controller.js?");
+// Circuit breaker para prevenir sobrecarga
+class CircuitBreaker {
+  constructor(options = {}) {
+    this.failureThreshold = options.failureThreshold || 5;
+    this.resetTimeout = options.resetTimeout || 60000;
+    this.failures = 0;
+    this.lastFailureTime = null;
+    this.state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
+  }
+  async execute(operation, context = {}) {
+    if (this.state === 'OPEN') {
+      if (Date.now() - this.lastFailureTime >= this.resetTimeout) {
+        this.state = 'HALF_OPEN';
+        _logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.info('Circuit breaker entrando en estado HALF_OPEN', context);
+      } else {
+        throw new _CustomError_js__WEBPACK_IMPORTED_MODULE_0__/* .ServiceUnavailableError */ .us('Circuit breaker abierto - Servicio temporalmente no disponible');
+      }
+    }
+    try {
+      const result = await operation();
+      if (this.state === 'HALF_OPEN') {
+        this.reset();
+        _logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.info('Circuit breaker restaurado a estado CLOSED', context);
+      }
+      return result;
+    } catch (error) {
+      this.recordFailure(error, context);
+      throw error;
+    }
+  }
+  recordFailure(error, context) {
+    this.failures++;
+    this.lastFailureTime = Date.now();
+    if (this.failures >= this.failureThreshold) {
+      this.state = 'OPEN';
+      _logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.warn('Circuit breaker abierto por exceso de fallos', {
+        ...context,
+        failures: this.failures,
+        error: error.message
+      });
+    }
+  }
+  reset() {
+    this.failures = 0;
+    this.lastFailureTime = null;
+    this.state = 'CLOSED';
+  }
+}
 
-/***/ }),
+// Función principal de retry con circuit breaker
+const retryOperation = async (operation, context = {}, options = {}) => {
+  const {
+    maxRetries = 3,
+    circuitBreaker = null,
+    baseDelay = 1000,
+    errorFilter = isTransientError
+  } = options;
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Si hay un circuit breaker, usarlo
+      if (circuitBreaker) {
+        return await circuitBreaker.execute(operation, context);
+      } else {
+        return await operation();
+      }
+    } catch (error) {
+      lastError = error;
+      if (!errorFilter(error)) {
+        _logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.error('Error no transitorio detectado', {
+          ...context,
+          error: error.message,
+          attempt,
+          maxRetries
+        });
+        throw error;
+      }
+      if (attempt === maxRetries) {
+        _logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.error('Operación fallida después del máximo de reintentos', {
+          ...context,
+          error: error.message,
+          maxRetries
+        });
+        throw new _CustomError_js__WEBPACK_IMPORTED_MODULE_0__/* .DatabaseError */ .a$('Operación fallida después de múltiples reintentos', {
+          originalError: error.message,
+          attempts: maxRetries,
+          context
+        });
+      }
+      const waitTime = baseDelay * Math.pow(2, attempt - 1); // Backoff exponencial
 
-/***/ 6909:
-/*!****************************!*\
-  !*** ./src/config/smtp.js ***!
-  \****************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+      _logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.warn('Reintentando operación después de error transitorio', {
+        ...context,
+        error: error.message,
+        attempt,
+        maxRetries,
+        nextRetryMs: waitTime
+      });
+      await delay(waitTime);
+    }
+  }
+  throw lastError;
+};
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   enviarCorreo: () => (/* binding */ enviarCorreo)\n/* harmony export */ });\n/* harmony import */ var _env_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./env.mjs */ 9097);\n/* harmony import */ var nodemailer__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! nodemailer */ 3982);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n\n// utils\n\n\n\n// Configuración del transportador SMTP\nconst createTransporter = () => {\n  const transporter = nodemailer__WEBPACK_IMPORTED_MODULE_1__[\"default\"].createTransport({\n    host: 'portalrancho.com.mx',\n    port: 465,\n    secure: true,\n    auth: {\n      user: _env_mjs__WEBPACK_IMPORTED_MODULE_0__.envs.EMAIL_USER,\n      pass: _env_mjs__WEBPACK_IMPORTED_MODULE_0__.envs.EMAIL_PASSWORD\n    },\n    tls: {\n      rejectUnauthorized: true,\n      minVersion: 'TLSv1.2' // Versión mínima de TLS\n    },\n    pool: true,\n    debug: true,\n    logger: false\n  });\n\n  // Verificar conexión\n  transporter.verify((error, success) => {\n    if (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].error('Error en verificación SMTP:', error);\n    } else {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].info('Servidor SMTP listo');\n    }\n  });\n  return transporter;\n};\n\n// Función auxiliar para obtener color según el estatus\nconst getStatusColor = status => {\n  const colors = {\n    Proceso: '#28a745',\n    // Verde\n    Completada: '#ffc107',\n    // Amarillo\n    Rechazado: '#dc3545',\n    // Rojo\n    default: '#17a2b8' // Azul\n  };\n  return colors[status] || colors.default;\n};\n\n// Función auxiliar para detalles adicionales según estatus\nconst getAdditionalDetails = status => {\n  const details = {\n    Proceso: '<p>Su solicitud está siendo procesada. Le mantendremos informado sobre cualquier actualización.</p>',\n    Completada: '<p>Su solicitud ha sido <strong>completada</strong>. Para más detalles, por favor contacte a nuestro equipo.</p>',\n    default: ''\n  };\n  return details[status] || details.default;\n};\n\n// Función para enviar correo con manejo de errores\nconst sendMail = async message => {\n  const transporter = createTransporter();\n  try {\n    const info = await transporter.sendMail(message);\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].info('Correo enviado:', {\n      messageId: info.messageId,\n      response: info.response\n    });\n    return info;\n  } catch (error) {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].error('Error al enviar correo:', {\n      error: error.message,\n      code: error.code,\n      command: error.command,\n      response: error.response\n    });\n    throw error;\n  }\n};\nconst validateEmailData = (type, data) => {\n  const requiredFields = {\n    status: ['email', 'nombre', 'solicitudId', 'status'],\n    solicitud: ['email', 'nombre', 'solicitudId', 'fechaSolicitud', 'usuario', 'data'],\n    notificacion: ['email', 'nombre', 'solicitudId', 'data'],\n    usuario: ['email', 'password'],\n    respuestaSolicitante: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],\n    cancelacion: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],\n    aprobada: ['email', 'nombre', 'solicitudId', 'data', 'usuario'],\n    confirmacionInicial: ['email', 'nombre', 'solicitudId', 'data', 'usuario']\n  };\n  const fields = requiredFields[type] || [];\n  const missing = fields.filter(field => !data[field]);\n  if (missing.length > 0) {\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError(`Faltan campos requeridos para el tipo ${type}: ${missing.join(', ')}`);\n  }\n};\n// Función principal para enviar correos\nconst enviarCorreo = async params => {\n  const {\n    type,\n    email,\n    password = '',\n    fechaSolicitud = '',\n    nombre = 'Usuario',\n    solicitudId = '',\n    status = '',\n    usuario = {},\n    data = {}\n  } = params;\n\n  // Validar datos requeridos según el tipo\n  validateEmailData(type, params);\n\n  // Configurar mensaje según tipo\n  if (!email || !type) {\n    throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('Email y tipo de mensaje son requeridos');\n  }\n\n  // Configurar mensaje según tipo\n  const templates = {\n    status: {\n      from: '\"Grupo LG\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: `Actualización de Solicitud - ${solicitudId}`,\n      html: `<body style=\"font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;\">\n             <div style=\"background-color: #4CAF50;color: white;text-align: center;padding: 20px;\">\n                 <h1>Grupo LG</h1>\n            </div>\n            <div style=\"background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;\">\n                <h2>Actualización de Solicitud</h2>\n                <p>Estimado(a) ${nombre},</p>\n                <p>Le informamos que su solicitud con ID: <b>${solicitudId}</b> ha cambiado de estatus.</p>\n                <div style=\"background-color: ${getStatusColor(status)}; color: white; padding: 10px; border-radius: 5px; text-align: center;\">\n                    <h3>Estado Actual: ${status}</h3>\n                </div>\n                <h4>Detalles de la Solicitud:</h4>\n                ${getAdditionalDetails(status)}\n      \n               <a href=\"https://solicitudmezclas.portalrancho.com.mx/protected/${status}\" style=\"display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;\">Ver Detalles de la Solicitud</a>\n      \n               <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>\n               <p>Atentamente,<br>El equipo de Grupo LG</p>\n          </div>\n      </body>`\n    },\n    usuario: {\n      from: '\"Registro Portal Checador\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: 'Usuario Creado Exitosamente',\n      html: `<body style=\"font-family: Arial, sans-serif;line-height: 1.6;color: #333;max-width: 600px;margin: 0 auto;padding: 20px;\">\n        <div style=\"background-color: #4CAF50;color: white;text-align: center;padding: 20px;\">\n            <h1>Grupo LG</h1>\n        </div>\n        <div style=\"background-color: #f9f9f9;border-radius: 5px;padding: 20px;margin-top: 20px;\">\n            <h2>¡Bienvenido a Grupo LG!</h2>\n            <p>Estimado nuevo usuario,</p>\n            <p>Nos complace darte la bienvenida a Grupo LG. Tu cuenta ha sido creada exitosamente.</p>\n            <p>Para acceder a tu cuenta, por favor utiliza los siguientes datos:</p>\n            <ul>\n                <li>Nombre de usuario:<b>${email}</b></li>\n                <li>Contraseña temporal:<b>${password}</b></li>\n            </ul>\n             <a href=\"https://solicitudmezclas.portalrancho.com.mx/\" style=\"display: inline-block;background-color:#4CAF50;color:white;padding: 10px 20px;text-decoration: none;border-radius: 5px;margin-top: 20px;\">Iniciar Sesión</a>\n            <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactar a nuestro equipo de soporte.</p>\n            <p>¡Gracias por unirte a nosotros!</p>\n            <p>Atentamente,<br>El equipo de Grupo LG</p>\n        </div>\n    </body>`\n    },\n    solicitud: {\n      from: '\"Portal de Solicitudes Grupo LG\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: `Nueva Solicitud Creada - ${solicitudId}`,\n      html: `<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n        <div style=\"background-color: #4CAF50; color: white; text-align: center; padding: 20px;\">\n            <h1>Grupo LG</h1>\n        </div>\n        <div style=\"background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;\">\n            <h2>Nueva Solicitud Creada</h2>\n            <p>Estimado(a) ${nombre},</p>\n            <p>Le informamos nueva solicitud ha sido creada con éxito. ID de solicitud es: <b>${solicitudId}</b>.</p>\n\n            <h4>Datos de solicitante:</h4>\n            <ul>\n                <li><strong>Nombre:</strong> ${usuario.nombre}</li>\n                <li><strong>Empresa</strong> ${usuario.empresa}</li>\n                <li><strong>Rancho:</strong> ${data.rancho || data.ranchoDestino}</li>\n            </ul>\n\n            <h4>Detalles de la Solicitud:</h4>\n            <ul>\n                <li><strong>Fecha de Solicitud:</strong> ${fechaSolicitud}</li>\n                <li><strong>Descripción:</strong> ${data.descripcion}</li>\n                <li><strong>Folio Receta:</strong> ${data.folio}</li>\n            </ul>\n\n            <a href=\"https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes\" style=\"display: inline-block; background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;\">Ver Detalles de la Solicitud</a>\n\n            <p>Si tiene alguna pregunta o necesita más información, por favor contacte a nuestro equipo de soporte.</p>\n            <p>Atentamente,<br>El equipo de Grupo LG</p>\n        </div>\n    </body>`\n    },\n    notificacion: {\n      from: '\"Grupo LG\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: `Notificación de No Disponibilidad - ${solicitudId}`,\n      html: ` <body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n               <div style=\"background-color: #FF5733; color: white; text-align: center; padding: 20px;\">\n                   <h1>Grupo LG</h1>\n               </div>\n               <div style=\"background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;\">\n                   <h2>Notificación de No Disponibilidad de Producto</h2>\n                   <p>Estimado(a) ${nombre},</p>\n                   <p>Le informamos que el producto que solicitó no está disponible en este momento. A continuación, se detallan los datos de los productos sin existencia:</p>\n      \n                   <h4>Solicitud: <b>${solicitudId}</b></h4>\n      \n                   <ul>\n                      ${Array.isArray(data) ? data.map(product => `\n                   <li>\n                     <strong>Id del Producto:</strong> ${product.id_producto}<br>\n                     <strong>Nombre del Producto:</strong> ${product.nombre_producto}<br>\n                     <strong>Unidad de Medida:</strong> ${product.unidad_medida}<br>\n                     <strong>cantidad:</strong> ${product.cantidad}\n                   </li>\n                 `).join('') : '<li>No hay productos para mostrar</li>'}\n                   </ul>\n      \n                   <p>Si desea, podemos ofrecerle alternativas similares o puede optar por omitir los productos. Por favor, háganos saber cómo desea proceder.</p>\n                  <div style=\"text-align: center; margin-top: 20px;\">\n                      <a href=\"https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes\" \n                        style=\"display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">\n                        Ver Solicitud\n                      </a>\n                  </div>\n                   <p>Si tiene alguna pregunta o necesita más información, no dude en contactar a nuestro equipo de almacen.</p>\n                   <p><strong>Encargado de almacen:</strong> ${usuario?.nombre || 'No especificado'}<br></p>\n                   <p><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}<br></p>\n                   <p><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}<br></p>\n                   <p>Atentamente,<br>El equipo de Grupo LG</p>\n               </div>\n             </body>`\n    },\n    respuestaSolicitante: {\n      from: '\"Grupo LG\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: `Respuesta de Solicitante - Solicitud ${solicitudId}`,\n      html: `<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n        <div style=\"background-color: #2196F3; color: white; text-align: center; padding: 20px;\">\n          <h1>Grupo LG - Respuesta de Solicitante</h1>\n        </div>\n        \n        <div style=\"background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;\">\n          <h2>Nueva Respuesta del Solicitante</h2>\n          \n          <div style=\"background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0;\">Detalles de la Solicitud:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>\n              <li><strong>Solicitante:</strong> ${nombre}</li>\n              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>\n              <li><strong>Ranchos:</strong> ${usuario?.ranchos || 'No especificado'}</li>\n            </ul>\n          </div>\n  \n          <div style=\"background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0;\">Mensaje del Solicitante:</h4>\n            <p style=\"margin-bottom: 0;\">${data.mensaje}</p>\n          </div>\n  \n          <div style=\"text-align: center; margin-top: 20px;\">\n            <a href=\"https://solicitudmezclas.portalrancho.com.mx/protected/solicitudes\" \n               style=\"display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;\">\n               Ver Solicitud\n            </a>\n          </div>\n  \n          <p style=\"margin-top: 20px;\">Por favor, revise la respuesta y tome las acciones necesarias.</p>\n          \n          <hr style=\"border: 1px solid #eee; margin: 20px 0;\">\n          \n          <p style=\"color: #666; font-size: 0.9em;\">\n            Este es un mensaje automático. Si necesita ayuda adicional, contacte al departamento de soporte.\n          </p>\n          \n          <p>Atentamente,<br>El equipo de Grupo LG</p>\n        </div>\n      </body>`\n    },\n    cancelacion: {\n      from: '\"Grupo LG\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: `Solicitud Cancelada - ${solicitudId}`,\n      html: `<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n        <div style=\"background-color: #dc3545; color: white; text-align: center; padding: 20px;\">\n          <h1>Grupo LG - Solicitud Cancelada</h1>\n        </div>\n        \n        <div style=\"background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;\">\n          <h2>Cancelación de Solicitud</h2>\n          \n          <div style=\"background-color: #ffe6e6; padding: 15px; border-radius: 5px; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0; color: #dc3545;\">Detalles de la Solicitud Cancelada:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>\n              <li><strong>Solicitante:</strong> ${nombre}</li>\n              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>\n              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>\n              <li><strong>Fecha de Cancelación:</strong> ${new Date().toLocaleDateString()}</li>\n            </ul>\n          </div>\n  \n          <div style=\"background-color: #FFFFFF; padding: 15px; border-left: 4px solid #dc3545; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0;\">Motivo de Cancelación:</h4>\n            <p style=\"margin-bottom: 0;\">${data.motivo || 'No se especificó motivo'}</p>\n          </div>\n  \n          <p style=\"margin-top: 20px;\">Si considera que esto fue un error o necesita realizar una nueva solicitud, por favor:</p>\n          \n          <div style=\"text-align: center; margin-top: 20px;\">\n            <a href=\"https://solicitudmezclas.portalrancho.com.mx/protected/solicitud\" \n               style=\"display: inline-block; background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;\">\n               Crear Nueva Solicitud\n            </a>\n          </div>\n  \n          <hr style=\"border: 1px solid #eee; margin: 20px 0;\">\n          \n          <p style=\"color: #666; font-size: 0.9em;\">\n            Si tiene alguna pregunta o necesita aclaraciones, no dude en contactar a nuestro equipo de soporte.\n          </p>\n          \n          <p>Atentamente,<br>El equipo de Grupo LG</p>\n        </div>\n      </body>`\n    },\n    aprobada: {\n      from: '\"Grupo LG\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: `Solicitud Aprobada - ${solicitudId}`,\n      html: `<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n        <div style=\"background-color: #28a745; color: white; text-align: center; padding: 20px;\">\n          <h1>Grupo LG - Solicitud Aprobada</h1>\n        </div>\n        \n        <div style=\"background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;\">\n          <h2>¡Su Solicitud ha sido Aprobada!</h2>\n          \n          <div style=\"background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0; color: #28a745;\">Detalles de la Solicitud:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>\n              <li><strong>Solicitante:</strong> ${nombre}</li>\n              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>\n              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>\n              <li><strong>Fecha de Aprobación:</strong> ${new Date().toLocaleDateString()}</li>\n            </ul>\n          </div>\n  \n          <div style=\"background-color: #FFFFFF; padding: 15px; border-left: 4px solid #28a745; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0;\">Información Importante:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>Folio:</strong> ${data.folio || 'No especificado'}</li>\n              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>\n              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>\n              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>\n            </ul>\n          </div>\n  \n          <p style=\"background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;\">\n            <strong>Nota:</strong> La mezcla estará lista para su aprobacion en el almacén asignado.\n          </p>\n\n          <hr style=\"border: 1px solid #eee; margin: 20px 0;\">\n          \n          <p style=\"color: #666; font-size: 0.9em;\">\n            Si tiene alguna pregunta o necesita aclaraciones, no dude en contactar a nuestro equipo de soporte.\n          </p>\n          \n          <p>Atentamente,<br>El equipo de Grupo LG</p>\n        </div>\n      </body>`\n    },\n    confirmacionInicial: {\n      from: '\"Grupo LG\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: `Solicitud Pendiente de Confirmación - ${solicitudId}`,\n      html: `<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n        <div style=\"background-color: #2196F3; color: white; text-align: center; padding: 20px;\">\n          <h1>Grupo LG - Nueva Solicitud por Confirmar</h1>\n        </div>\n        \n        <div style=\"background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;\">\n          <h2>Nueva Solicitud Requiere Confirmación</h2>\n          \n          <div style=\"background-color: #E3F2FD; padding: 15px; border-radius: 5px; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0; color: #2196F3;\">Detalles de la Solicitud:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>\n              <li><strong>Solicitante:</strong> ${nombre}</li>\n              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>\n              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>\n              <li><strong>Fecha de Solicitud:</strong> ${new Date().toLocaleDateString()}</li>\n            </ul>\n          </div>\n  \n          <div style=\"background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0;\">Información de la Mezcla:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>Folio de Receta:</strong> ${data.folio || 'No especificado'}</li>\n              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>\n              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>\n              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>\n              <li><strong>Descripción:</strong> ${data.descripcion || 'Sin descripción'}</li>\n            </ul>\n          </div>\n  \n          <p style=\"background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;\">\n            <strong>Acción Requerida:</strong> Esta solicitud necesita su confirmación para proceder con la preparación.\n          </p>\n          \n          <div style=\"text-align: center; margin-top: 20px;\">\n            <a href=\"https://solicitudmezclas.portalrancho.com.mx/protected/confirmacion\" \n               style=\"display: inline-block; background-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;\">\n               Revisar y Confirmar Solicitud\n            </a>\n          </div>\n  \n          <hr style=\"border: 1px solid #eee; margin: 20px 0;\">\n          \n          <p style=\"color: #666; font-size: 0.9em;\">\n            Este es un mensaje automático. Por favor, revise y confirme la solicitud lo antes posible.\n          </p>\n          \n          <p>Atentamente,<br>El equipo de Grupo LG</p>\n        </div>\n      </body>`\n    },\n    reevaluacion: {\n      from: '\"Grupo LG\" <mezclas.rancho@portalrancho.com.mx>',\n      subject: `Solicitud en Reevaluación - ${solicitudId}`,\n      html: `<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;\">\n        <div style=\"background-color: #FFA500; color: white; text-align: center; padding: 20px;\">\n          <h1>Grupo LG - Solicitud en Reevaluación</h1>\n        </div>\n        \n        <div style=\"background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-top: 20px;\">\n          <h2>Solicitud Requiere Reevaluación</h2>\n          \n          <div style=\"background-color: #FFF3E0; padding: 15px; border-radius: 5px; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0; color: #E65100;\">Detalles de la Solicitud:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>ID Solicitud:</strong> ${solicitudId}</li>\n              <li><strong>Solicitante:</strong> ${nombre}</li>\n              <li><strong>Empresa:</strong> ${usuario?.empresa || 'No especificada'}</li>\n              <li><strong>Rancho:</strong> ${usuario?.ranchos || 'No especificado'}</li>\n              <li><strong>Fecha de Reevaluación:</strong> ${new Date().toLocaleDateString()}</li>\n            </ul>\n          </div>\n  \n          <div style=\"background-color: #FFFFFF; padding: 15px; border-left: 4px solid #FFA500; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0;\">Observaciones para Reevaluación:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>Motivo:</strong> ${data.motivo || 'No especificado'}</li>\n              <li><strong>Comentarios:</strong> ${data.comentarios || 'Sin comentarios adicionales'}</li>\n            </ul>\n          </div>\n  \n          <div style=\"background-color: #FFFFFF; padding: 15px; border-left: 4px solid #2196F3; margin: 20px 0;\">\n            <h4 style=\"margin-top: 0;\">Detalles de la Mezcla:</h4>\n            <ul style=\"list-style: none; padding: 0;\">\n              <li><strong>Folio de Receta:</strong> ${data.folio || 'No especificado'}</li>\n              <li><strong>Cantidad:</strong> ${data.cantidad || 'No especificada'}</li>\n              <li><strong>Presentación:</strong> ${data.presentacion || 'No especificada'}</li>\n              <li><strong>Método de Aplicación:</strong> ${data.metodoAplicacion || 'No especificado'}</li>\n            </ul>\n          </div>\n  \n          <p style=\"background-color: #fff3cd; padding: 10px; border-radius: 5px; border-left: 4px solid #ffc107;\">\n            <strong>Acción Requerida:</strong> Por favor, revise los comentarios y realice las correcciones necesarias.\n          </p>\n          \n          <div style=\"text-align: center; margin-top: 20px;\">\n            <a href=\"https://solicitudmezclas.portalrancho.com.mx/protected/reevaluacion/${solicitudId}\" \n               style=\"display: inline-block; background-color: #FFA500; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 10px;\">\n               Revisar Solicitud\n            </a>\n          </div>\n  \n          <hr style=\"border: 1px solid #eee; margin: 20px 0;\">\n          \n          <p style=\"color: #666; font-size: 0.9em;\">\n            Si necesita asistencia adicional, contacte al departamento de soporte.\n          </p>\n          \n          <p>Atentamente,<br>El equipo de Grupo LG</p>\n        </div>\n      </body>`\n    }\n  };\n  try {\n    const template = templates[type];\n    if (!template) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError(`Tipo de mensaje \"${type}\" no válido`);\n    }\n    const message = {\n      ...template,\n      to: 'zaragoza051@lfgrutas.com.mx' // Reemplazar con el correo del cliente\n    };\n    const result = await sendMail(message);\n    return {\n      success: true,\n      messageId: result.messageId\n    };\n  } catch (error) {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].error('Error en enviarCorreo:', error);\n    throw error;\n  }\n};\n\n//# sourceURL=webpack://mezclas/./src/config/smtp.js?");
+// Helper para crear una versión con retry de cualquier función
+const withRetry = (operation, options = {}) => {
+  return (...args) => retryOperation(() => operation(...args), options);
+};
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (retryOperation)));
 
 /***/ }),
 
 /***/ 6928:
-/*!***********************!*\
-  !*** external "path" ***!
-  \***********************/
 /***/ ((module) => {
 
 module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("path");
 
 /***/ }),
 
-/***/ 7016:
-/*!**********************!*\
-  !*** external "url" ***!
-  \**********************/
-/***/ ((module) => {
+/***/ 6963:
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("url");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   eX: () => (/* binding */ enrichError),
+/* harmony export */   ie: () => (/* binding */ handleDatabaseError),
+/* harmony export */   ip: () => (/* binding */ validateRequiredData)
+/* harmony export */ });
+/* unused harmony exports handleOperationError, handleTransactionError, withErrorHandling */
+/* harmony import */ var _logger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(3014);
+/* harmony import */ var _CustomError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2551);
+
+
+
+// Utilidad para enriquecer el contexto del error
+const enrichError = (error, context = {}) => {
+  if (error instanceof _CustomError_js__WEBPACK_IMPORTED_MODULE_1__/* .CustomError */ .eo) {
+    error.details = {
+      ...error.details,
+      ...context,
+      timestamp: new Date().toISOString()
+    };
+  }
+  return error;
+};
+
+// Manejo genérico de errores de base de datos
+const handleDatabaseError = (error, operation, context = {}) => {
+  _logger_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A.logError(error, {
+    operation,
+    ...context,
+    stack: error.stack
+  });
+  if (error instanceof _CustomError_js__WEBPACK_IMPORTED_MODULE_1__/* .CustomError */ .eo) {
+    throw enrichError(error, context);
+  }
+  throw new _CustomError_js__WEBPACK_IMPORTED_MODULE_1__/* .DatabaseError */ .a$(`Error en operación: ${operation}`, {
+    originalError: error.message,
+    context: {
+      ...context,
+      operation
+    }
+  });
+};
+
+// Manejo genérico de errores de operaciones
+const handleOperationError = (error, operation, context = {}) => {
+  logger.logError(error, {
+    operation,
+    ...context,
+    stack: error.stack
+  });
+  if (error instanceof CustomError) {
+    throw enrichError(error, context);
+  }
+  throw new MezclaOperationError(operation, `Error en operación: ${operation}`, {
+    originalError: error.message,
+    context: {
+      ...context,
+      operation
+    }
+  });
+};
+
+// Manejador de errores para transacciones
+const handleTransactionError = async (transaction, error, operation, context = {}) => {
+  try {
+    await transaction.rollback();
+    logger.logDBTransaction(operation, 'rolled_back', {
+      error: error.message,
+      correlationId: context.correlationId
+    });
+  } catch (rollbackError) {
+    logger.logError(rollbackError, {
+      operation: `${operation}_ROLLBACK`,
+      originalError: error.message,
+      ...context
+    });
+  }
+  handleOperationError(error, operation, context);
+};
+
+// Validador genérico de datos requeridos
+const validateRequiredData = (data = {}, requiredFields = [], context = {}) => {
+  const missing = requiredFields.filter(field => {
+    const value = data[field];
+    return value === undefined || value === null || value === '';
+  });
+  if (missing.length > 0) {
+    throw enrichError(new _CustomError_js__WEBPACK_IMPORTED_MODULE_1__/* .MezclaOperationError */ .Cr('VALIDATION', 'Datos requeridos no proporcionados', {
+      required: requiredFields,
+      missing,
+      received: Object.keys(data),
+      context
+    }));
+  }
+};
+
+// Manejo de excepciones async
+const withErrorHandling = (operation, handler) => {
+  return async (...args) => {
+    try {
+      return await handler(...args);
+    } catch (error) {
+      handleOperationError(error, operation, {
+        args
+      });
+    }
+  };
+};
 
 /***/ }),
 
-/***/ 7069:
-/*!*****************************************!*\
-  !*** ./src/models/produccion.models.js ***!
-  \*****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ 6982:
+/***/ ((module) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   ProduccionModel: () => (/* binding */ ProduccionModel)\n/* harmony export */ });\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../db/db.js */ 9815);\n/* harmony import */ var _config_excel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../config/excel.js */ 5594);\n/* harmony import */ var _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../models/mezclas.models.js */ 2020);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n\n\n\n// utils\n\n\nclass ProduccionModel {\n  static async ObtenerGastoUsuario({\n    tipo\n  }) {\n    // comprobar que el objeto tipo tenga alguno de los siguientes datos Usuario,temporada, empresa entre otros antes de proceder a la consulta\n    const permitidos = ['usuario', 'temporada', 'empresa', 'centroCoste', 'rancho', 'variedad'];\n    const valido = permitidos.includes(tipo);\n    try {\n      if (valido) {\n        const data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query(`SELECT ${tipo} , SUM(precio_cantidad) AS precio_cantidad FROM vista_solicitudes GROUP BY ${tipo}`);\n        // Verifica si hay duplicados\n        const uniqueData = Array.from(new Map(data.map(item => [valido, item])).values());\n        // Si llegamos aquí, la ejecución fue exitosa\n        return uniqueData;\n      }\n    } catch (error) {\n      // Manejo de errores\n      console.error('Error al procesar producto:', error);\n      return {\n        status: 'error',\n        message: error.message || 'Error desconocido'\n      };\n    }\n  }\n  static async getAsignacionesActivos() {\n    try {\n      const data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('SELECT * FROM total_precio_cantidad_solicitud');\n      // Verificamos que se hayan obtenido datos\n      if (!data || data.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.NotFoundError('No se encontraron datos para el usuario solicitante');\n      }\n      return data;\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.DatabaseError('Error al procesar datos de solicitudes');\n    }\n  }\n  static async solicitudReporte({\n    empresa,\n    rol,\n    idUsuario\n  }) {\n    let data;\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].info('solicitudReporte', {\n      empresa,\n      rol,\n      idUsuario\n    });\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!empresa || !rol || !idUsuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('Datos requeridos no proporcionados');\n      }\n      if (rol === 'admin') {\n        data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('SELECT * FROM total_precio_cantidad_solicitud');\n      } else if (rol === 'administrativo' && empresa === 'General') {\n        data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`!=\"Lugar Agricola\"');\n      } else if (rol === 'adminMezclador') {\n        // admin de Bioagricultura id usuario 33 de francisco alvarez\n        if (empresa === 'Bioagricultura') {\n          data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`=\"Bioagricultura\" OR `empresa`=\"Moras Finas\"');\n        } else if (empresa === 'General') {\n          data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`=\"Bayas del Centro\" OR `empresa`=\"Moras Finas\" OR `empresa`=\"Bioagricultura\"');\n        } else if (empresa === 'Lugar Agricola') {\n          data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('SELECT * FROM `total_precio_cantidad_solicitud` WHERE `empresa`=\"Lugar Agricola\"');\n        }\n      } else if (rol === 'administrativo') {\n        // admin de general id usuario 49 de janet medina\n        data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('SELECT * FROM `total_precio_cantidad_solicitud`');\n      } else {\n        data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query(`SELECT * FROM total_precio_cantidad_solicitud WHERE empresa=\"${empresa}\"`);\n      }\n      // Verificamos que se hayan obtenido datos\n      if (!data || data.length === 0) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.NotFoundError('No se encontraron datos para el usuario solicitante');\n      }\n      // Verifica si hay duplicados\n      const uniqueData = Array.from(new Map(data.map(item => [item.id_solicitud, item])).values());\n      return uniqueData;\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.DatabaseError('Error al procesar datos de solicitudes');\n    }\n  }\n  static async descargarEcxel({\n    datos\n  }) {\n    try {\n      if (!datos || Array.isArray(datos)) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('datos invalidos, se requiere un arreglo de datos filtrados.');\n      }\n      const excel = await (0,_config_excel_js__WEBPACK_IMPORTED_MODULE_1__.crearExcel)(datos);\n      return excel;\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].error({\n        message: 'Error al procesar producto',\n        error: error.message,\n        stack: error.stack,\n        method: 'ProduccionModel.descargarEcxel'\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.DatabaseError('Error al procesar datos de solicitudes');\n    }\n  }\n  static async descargarSolicitud({\n    datos\n  }) {\n    try {\n      if (!datos || Array.isArray(datos)) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('datos invalidos, se requiere un arreglo de datos.');\n      }\n      const excel = await (0,_config_excel_js__WEBPACK_IMPORTED_MODULE_1__.crearSolicitud)(datos);\n      return excel;\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.DatabaseError('Error al procesar datos para el reporte');\n    }\n  }\n\n  // uso\n  static async descargarReporte({\n    datos\n  }) {\n    try {\n      if (!datos || Array.isArray(datos)) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('Datos invalidos, se requiere un arreglo de datos.');\n      }\n      const excel = await (0,_config_excel_js__WEBPACK_IMPORTED_MODULE_1__.reporteSolicitudv3)(datos);\n      return excel;\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.CustomError) throw error;\n      throw error;\n    }\n  }\n  static async descargarReporteV2({\n    datos\n  }) {\n    try {\n      if (!datos || Array.isArray(datos)) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('Datos invalidos, se requiere un arreglo de datos.');\n      }\n      const excel = await (0,_config_excel_js__WEBPACK_IMPORTED_MODULE_1__.reporteSolicitudV2)(datos);\n      return excel;\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].error({\n        message: 'Error al procesar producto',\n        error: error.message,\n        stack: error.stack,\n        method: 'ProduccionModel.descargarReporteV2'\n      });\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.CustomError) throw error;\n      throw error;\n    }\n  }\n\n  // uso\n  static async descargarReportePendientes({\n    empresa\n  }) {\n    try {\n      if (!empresa) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('Se requiere especificar una empresa');\n      }\n      const datos = await _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_2__.MezclaModel.obtenerTablaMezclasEmpresa({\n        status: 'Pendiente',\n        empresa,\n        confirmacion: 'Confirmada'\n      });\n\n      // Validar que hay datos para procesar\n      if (!datos) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.NotFoundError('No se encontraron datos para esta empresa');\n      }\n      const excel = await (0,_config_excel_js__WEBPACK_IMPORTED_MODULE_1__.reporteSolicitudv3)(datos);\n      return excel;\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.CustomError) throw error;\n      throw error;\n    }\n  }\n\n  // uso\n  static async descargarReportePendientesCompleto() {\n    try {\n      const datos = await _models_mezclas_models_js__WEBPACK_IMPORTED_MODULE_2__.MezclaModel.getAllGeneral({\n        status: 'Pendiente'\n      });\n      // Validar que hay datos para procesar\n      if (!datos) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.NotFoundError('No se encontraron datos para esta empresa');\n      }\n      const excel = await (0,_config_excel_js__WEBPACK_IMPORTED_MODULE_1__.reporteSolicitudv3)(datos.data);\n      return excel;\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.CustomError) throw error;\n      throw error;\n    }\n  }\n  static async ObtenerGasto({\n    data\n  }) {\n    try {\n      // Llamar al procedimiento almacenado\n      await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('CALL sp_calcular_precio_solicitud(:idSolicitud, :idProducto, :unidadMedida, :cantidad)', {\n        replacements: {\n          idSolicitud: data.idSolicitud,\n          idProducto: data.producto,\n          unidadMedida: data.unidadMedida,\n          cantidad: data.cantidad\n        },\n        type: _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].QueryTypes.RAW\n      });\n\n      // Si llegamos aquí, la ejecución fue exitosa\n      return {\n        status: 'success',\n        message: 'Producto procesado exitosamente'\n      };\n    } catch (error) {\n      // Manejo de errores\n      console.error(`Error al procesar producto ${data.producto}:`, error);\n      return {\n        status: 'error',\n        message: error.message || 'Error desconocido'\n      };\n    }\n  }\n  static async ObtenerReceta() {\n    try {\n      const data = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].query('SELECT * FROM vista_recetas_costos');\n      const uniqueData = Array.from(new Map(data.map(item => [item.id_receta, item])).values());\n      // Si llegamos aquí, la ejecución fue exitosa\n      return uniqueData;\n    } catch (error) {\n      // Manejo de errores\n      console.error('Error al procesar producto', error);\n      return {\n        status: 'error',\n        message: error.message || 'Error desconocido'\n      };\n    }\n  }\n} // fin modelo\n\n//# sourceURL=webpack://mezclas/./src/models/produccion.models.js?");
+module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("crypto");
+
+/***/ }),
+
+/***/ 7084:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   D: () => (/* binding */ DbHelper)
+/* harmony export */ });
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9815);
+/* harmony import */ var _logger_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3014);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_0__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+class DbHelper {
+  static async executeQuery(callback) {
+    try {
+      const result = await callback(_db_db_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A);
+      return result;
+    } catch (error) {
+      _logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.error('Error ejecutando consulta:', {
+        error: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
+  }
+  static async withTransaction(callback) {
+    const transaction = await _db_db_js__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .A.transaction();
+    try {
+      const result = await callback(transaction);
+      await transaction.commit();
+      return result;
+    } catch (error) {
+      await transaction.rollback();
+      _logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.error('Error en transacción:', {
+        error: error.message
+      });
+      throw error;
+    }
+  }
+}
+
+// Ejemplo de uso:
+/*
+import { DbHelper } from '../utils/dbHelper.js'
+
+// Para consultas simples:
+const resultado = await DbHelper.executeQuery(async (sequelize) => {
+  return await MiModelo.findAll()
+})
+
+// Para transacciones:
+const resultado = await DbHelper.withTransaction(async (transaction) => {
+  const user = await Usuario.create({
+    nombre: 'Juan',
+    email: 'juan@example.com'
+  }, { transaction })
+
+  await Perfil.create({
+    usuarioId: user.id,
+    tipo: 'admin'
+  }, { transaction })
+
+  return user
+})
+*/
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 7176:
-/*!**************************************************!*\
-  !*** ./src/middlewares/correlationMiddleware.js ***!
-  \**************************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   correlationMiddleware: () => (/* binding */ correlationMiddleware)\n/* harmony export */ });\n/* harmony import */ var _config_logger_config_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../config/logger.config.js */ 9021);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n\n\nconst correlationMiddleware = (req, res, next) => {\n  // Obtener o generar ID de correlación\n  const correlationId = req.headers[_config_logger_config_js__WEBPACK_IMPORTED_MODULE_0__.loggerConfig.correlation.headerName] || _utils_logger_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].generateCorrelationId();\n\n  // Agregar a request\n  req.correlationId = correlationId;\n\n  // Agregar a headers de respuesta\n  res.setHeader(_config_logger_config_js__WEBPACK_IMPORTED_MODULE_0__.loggerConfig.correlation.headerName, correlationId);\n\n  // Crear logger con correlación\n  req.logger = _utils_logger_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].withCorrelation(correlationId);\n  next();\n};\n\n//# sourceURL=webpack://mezclas/./src/middlewares/correlationMiddleware.js?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   t: () => (/* binding */ correlationMiddleware)
+/* harmony export */ });
+/* harmony import */ var _config_logger_config_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9021);
+/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3014);
 
-/***/ }),
 
-/***/ 7234:
-/*!**************************************!*\
-  !*** ./src/schema/notificaciones.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+const correlationMiddleware = (req, res, next) => {
+  // Obtener o generar ID de correlación
+  const correlationId = req.headers[_config_logger_config_js__WEBPACK_IMPORTED_MODULE_0__/* .loggerConfig */ .D.correlation.headerName] || _utils_logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.generateCorrelationId();
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Notificaciones: () => (/* binding */ Notificaciones)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n\nconst notificacionesConfig = {\n  id: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    field: 'id_notificacion',\n    // Nombre de columna en la base de datos\n    primaryKey: true,\n    autoIncrement: true\n  },\n  id_solicitud: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    allowNull: false,\n    validate: {\n      notNull: {\n        msg: 'El Id de la solicitud en nesesario'\n      }\n    }\n  },\n  id_usuario: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    allowNull: false,\n    validate: {\n      notNull: {\n        msg: 'El Id de la usuario en nesesario'\n      }\n    }\n  },\n  mensaje: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notNull: {\n        msg: 'El mensaje es requerido para mostrar la notificacion'\n      }\n    }\n  },\n  status: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.BOOLEAN,\n    allowNull: true,\n    defaultValue: 1\n  }\n};\nconst Notificaciones = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('notificaciones', notificacionesConfig, {\n  tableName: 'notificaciones',\n  // Nombre de la tabla en la base de datos\n  timestamps: false // Agrega createdAt y updatedAt automáticamente\n});\n\n//# sourceURL=webpack://mezclas/./src/schema/notificaciones.js?");
+  // Agregar a request
+  req.correlationId = correlationId;
 
-/***/ }),
+  // Agregar a headers de respuesta
+  res.setHeader(_config_logger_config_js__WEBPACK_IMPORTED_MODULE_0__/* .loggerConfig */ .D.correlation.headerName, correlationId);
 
-/***/ 7392:
-/*!**********************************************!*\
-  !*** ./src/controller/mezclas.controller.js ***!
-  \**********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   MezclasController: () => (/* binding */ MezclasController)\n/* harmony export */ });\n/* harmony import */ var _config_smtp_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../config/smtp.js */ 6909);\n/* harmony import */ var _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../models/usuario.models.js */ 2477);\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n\n\n// utils\n\n\n\nclass MezclasController {\n  constructor({\n    mezclaModel\n  }) {\n    this.mezclaModel = mezclaModel;\n  }\n\n  // crear solicitudes\n  create = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const logger = req.logger; // Logger con correlación\n\n    const logContext = {\n      operation: 'CREATE_MEZCLA',\n      userId: user.id,\n      userRole: user.rol,\n      name: user.nombre,\n      requestBody: req.body,\n      timestamp: new Date().toISOString(),\n      correlationId: req.correlationId // Añadir ID de correlación\n    };\n    try {\n      // Inicio de operación\n      logger.info('Iniciando creación de mezcla', logContext);\n\n      // Validación de datos\n      this.#validarDatosCreacion(req.body);\n      const result = await this.mezclaModel.create({\n        data: req.body,\n        idUsuario: user.id\n      });\n\n      // Log de procesamiento\n      logger.debug('Procesando notificaciones', {\n        ...logContext,\n        solicitudId: result.idSolicitud\n      });\n\n      // Proceso de notificaciones por correo\n      const notificationTargets = await this.#determinarDestinatariosNotificacion({\n        rancho: req.body.rancho,\n        user,\n        result\n      });\n      await this.#enviarCorreoNotificacion({\n        targets: notificationTargets,\n        solicitud: result,\n        user,\n        requestData: req.body\n      });\n\n      // Log de finalización\n      logger.info('Mezcla creada exitosamente', {\n        ...logContext,\n        solicitudId: result.idSolicitud,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.status(201).json({\n        message: result.message,\n        idSolicitud: result.idSolicitud\n      });\n    } catch (error) {\n      // Log detallado del error\n      logger.error('Error al crear mezcla', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack,\n          code: error.code\n        }\n      });\n      throw error;\n    }\n  });\n\n  //\n  estadoProceso = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const {\n      idSolicitud\n    } = req.params;\n    const logger = req.logger;\n    const logContext = {\n      operation: 'UPDATE_MEZCLA_STATUS',\n      solicitudId: idSolicitud,\n      userId: user.id,\n      userRole: user.rol,\n      requestBody: req.body,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      // Validación inicial\n      this.#validarRolYPermisos(user, 'UPDATE_MEZCLAS');\n      this.#validarDatosActualizacionEstado(req.body);\n      logger.info('Iniciando actualización de estado', logContext);\n\n      // Actualizar estado\n      const result = await this.mezclaModel.estadoProceso({\n        id: idSolicitud,\n        data: req.body,\n        usuario: user\n      });\n      logger.debug('Estado actualizado, obteniendo información del solicitante', {\n        ...logContext,\n        nuevoEstado: req.body.status\n      });\n\n      // Obtener información del solicitante\n      const solicitante = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioModel.getOneId({\n        id: result.idUsuarioSolicita\n      });\n      if (!solicitante) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('No se encontró el solicitante');\n      }\n\n      // Enviar notificación\n      logger.debug('Enviando notificación por correo', {\n        ...logContext,\n        solicitante: {\n          id: solicitante.id,\n          email: solicitante.email\n        }\n      });\n      await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_0__.enviarCorreo)({\n        type: 'status',\n        email: solicitante.email,\n        nombre: solicitante.nombre,\n        solicitudId: idSolicitud,\n        status: req.body.status,\n        usuario: user,\n        data: {\n          observaciones: req.body.observaciones,\n          fecha: new Date().toISOString()\n        }\n      });\n      logger.info('Estado actualizado exitosamente', {\n        ...logContext,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json({\n        success: true,\n        message: result.message,\n        data: {\n          id: result.id,\n          status: result.status,\n          updatedAt: result.updatedAt\n        }\n      });\n    } catch (error) {\n      logger.error('Error al actualizar estado', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack,\n          code: error.code\n        }\n      });\n      throw error;\n    }\n  });\n  cerrarSolicitid = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const logger = req.logger; // Logger with correlation\n\n    const logContext = {\n      operation: 'CLOSE_SOLICITUD',\n      userId: user.id,\n      userRole: user.rol,\n      requestBody: req.body,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('Iniciando actualización de estado', logContext);\n      const result = await this.mezclaModel.cerrarSolicitid({\n        data: req.body,\n        idUsuario: user.id\n      });\n      logger.debug('Solicitud cerrada exitosamente', {\n        resultado: result.message,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      const solicitante = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioModel.getOneId({\n        id: result.idUsuarioSolicita\n      });\n      logger.debug('Notificación enviada', {\n        solicitante: {\n          id: solicitante.id,\n          email: solicitante.email\n        }\n      });\n      await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_0__.enviarCorreo)({\n        type: 'status',\n        email: solicitante.email,\n        nombre: solicitante.nombre,\n        solicitudId: result.id,\n        status: result.status,\n        usuario: user,\n        data: {\n          rancho: result.rancho || req.body.rancho,\n          descripcion: result.descripcion || req.body.descripcion,\n          folio: result.folio || req.body.folio\n        }\n      });\n      logger.info('Solicitud cerrada exitosamente', {\n        ...logContext,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json({\n        success: true,\n        message: result.message\n      });\n    } catch (error) {\n      logger.error('Error al cerrar solicitud', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack,\n          code: error.code\n        }\n      });\n      throw error;\n    }\n  });\n\n  //\n  notificacion = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const idSolicitud = req.params.idSolicitud;\n    const {\n      mensajes,\n      idMesclador\n    } = req.body;\n    const logger = req.logger; // Logger with correlation\n\n    const logContext = {\n      operation: 'ENVIAR_NOTIFICATION',\n      solicitudId: idSolicitud,\n      userId: user.id,\n      userRole: user.rol,\n      name: user.nombre,\n      mezcladorId: idMesclador,\n      requestBody: req.body,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('ENVIAR_NOTIFICATION', 'started', logContext);\n      const result = await this.mezclaModel.mensajeSolicita({\n        id: idSolicitud,\n        mensajes,\n        idUsuario: idMesclador\n      });\n      const mezclador = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioModel.getOneId({\n        id: idMesclador\n      });\n      req.logger.info('ENVIAR_NOTIFICATION', 'sending_email', {\n        mezclador: {\n          id: mezclador.id,\n          email: mezclador.email\n        }\n      });\n      await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_0__.enviarCorreo)({\n        type: 'respuestaSolicitante',\n        email: mezclador.email,\n        nombre: user.nombre,\n        solicitudId: idSolicitud,\n        usuario: {\n          empresa: user.empresa,\n          ranchos: user.ranchos\n        },\n        data: {\n          mensaje: mensajes\n        }\n      });\n      logger.info('ENVIAR_NOTIFICATION', 'completed', {\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json({\n        success: true,\n        message: result.message\n      });\n    } catch (error) {\n      logger.error('Error al actualizar estado', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack,\n          code: error.code\n        }\n      });\n      throw error;\n    }\n  });\n  obtenerTablaMezclasEmpresa = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const {\n      status\n    } = req.params;\n    const logger = req.logger;\n    const logContext = {\n      operation: 'GET_MEZCLAS_EMPRESA',\n      userId: user.id,\n      userRole: user.rol,\n      name: user.nombre,\n      status,\n      empresa: user.empresa,\n      rancho: user.ranchos,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('Iniciando obtención de mezclas', logContext);\n\n      // Validación inicial\n      if (!status) {\n        logger.warn('Status no proporcionado', logContext);\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('El estado es requerido');\n      }\n\n      // Parámetros base\n      const params = {\n        status,\n        confirmacion: 'Confirmada',\n        idUsuario: user.id\n      };\n\n      // Obtener resultados según rol\n      const result = await this.#obtenerMezclasSegunRol(user, params, logContext);\n\n      // Log de finalización\n      logger.info('Consulta completada exitosamente', {\n        resultCount: Array.isArray(result) ? result.length : 1,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json(result.data || result);\n    } catch (error) {\n      logger.error('Error al obtener mezclas', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      throw error;\n    }\n  });\n\n  //\n  obtenerTablaMezclasId = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const id = req.params.id;\n    const logger = req.logger; // Logger with correlation\n\n    const logContext = {\n      operation: 'Obtener mesclas por id',\n      username: user.nombre,\n      userId: user.id,\n      mezclasId: id,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('Obtener mesclas por id', 'started', logContext);\n      const result = await this.mezclaModel.obtenerTablaMezclasId({\n        id,\n        usuario: user.nombre\n      });\n      logger.info('Obtener mesclas por id', 'completed', {\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json(result.data);\n    } catch (error) {\n      logger.error('Error al obtener mezclas', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      throw error;\n    }\n  });\n\n  //\n  obtenerTablasConfirmar = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const logger = req.logger; // Logger with correlation\n\n    const logContext = {\n      operation: 'GET_TABLAS_CONFIRMAR',\n      userId: user.id,\n      username: user.nombre,\n      userRole: user.rol,\n      userEmpresa: user.empresa,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('GET_TABLAS_CONFIRMAR', 'started', logContext);\n      let result = [];\n      const confirmacion = 'Pendiente';\n      if (user.rol === 'adminMezclador' && user.empresa === 'General') {\n        logger.info('GET_TABLAS_CONFIRMAR', 'fetching_michoacan');\n        const [res2, res1] = await Promise.all([this.mezclaModel.obtenerTablaMezclasValidadosMichoacan({\n          status: 'Pendiente',\n          confirmacion,\n          idUsuario: user.id\n        }), this.mezclaModel.obtenerTablaMezclasRancho({\n          status: 'Pendiente',\n          ranchoDestino: 'Ahualulco',\n          confirmacion,\n          idUsuario: user.id\n        })]);\n        if (Array.isArray(res2)) result = result.concat(res2);\n        if (Array.isArray(res1)) result = result.concat(res1);\n      } else if (user.rol === 'adminMezclador' && user.empresa === 'Bioagricultura') {\n        logger.info('GET_TABLAS_CONFIRMAR', 'fetching_bioagricultura');\n        const [res2, res1] = await Promise.all([this.mezclaModel.obtenerTablaMezclasRancho({\n          status: 'Pendiente',\n          ranchoDestino: 'Atemajac',\n          confirmacion,\n          idUsuario: user.id\n        }), this.mezclaModel.obtenerTablaMezclasUsuario({\n          status: 'Pendiente',\n          idUsuarioSolicita: user.id,\n          confirmacion\n        })]);\n        if (Array.isArray(res2)) result = result.concat(res2);\n        if (Array.isArray(res1)) result = result.concat(res1);\n      }\n      const uniqueResults = this.#eliminarDuplicados(result);\n      logger.info('GET_TABLAS_CONFIRMAR', 'completed', {\n        resultCount: uniqueResults.length,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json(uniqueResults);\n    } catch (error) {\n      logger.error('Error al obtener mezclas', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      throw error;\n    }\n  });\n\n  //\n  mezclaConfirmar = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const idSolicitud = req.params.idSolicitud;\n    const logger = req.logger; // Logger with correlation\n\n    const logContext = {\n      operation: 'CONFIRM_MEZCLA',\n      userId: user.id,\n      userRole: user.rol,\n      username: user.nombre,\n      solicitudId: idSolicitud,\n      requestBody: req.body,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('CONFIRM_MEZCLA', 'started', logContext);\n      const response = await this.mezclaModel.mezclaConfirmar({\n        idSolicitud,\n        data: req.body,\n        usuario: user\n      });\n      logger.info('CONFIRM_MEZCLA', 'completed', {\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json({\n        success: true,\n        message: response.message\n      });\n    } catch (error) {\n      logger.error('Error al obtener mezclas', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      throw error;\n    }\n  });\n  obtenerTablasCancelada = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const logger = req.logger; // Logger with correlation\n\n    const logContext = {\n      operation: 'GET_CANCELLED_MEZCLAS',\n      username: user.nombre,\n      userId: user.id,\n      userRole: user.rol,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('GET_CANCELLED_MEZCLAS', 'started', logContext);\n      const confirmacion = 'Cancelada';\n      const resultado = await this.mezclaModel.obtenerTablaMezclasCancelada({\n        confirmacion,\n        idUsuario: user.id,\n        rol: user.rol\n      });\n      logger.info('GET_CANCELLED_MEZCLAS', 'completed', {\n        resultCount: Array.isArray(resultado) ? resultado.length : 0,\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json(resultado);\n    } catch (error) {\n      logger.error('Error al obtener mezclas', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      throw error;\n    }\n  });\n  validacion = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const data = req.body;\n    const logger = req.logger; // Logger with correlation\n\n    const logContext = {\n      operation: 'VALIDATE_MEZCLA',\n      username: user.nombre,\n      userId: user.id,\n      userRole: user.rol,\n      requestBody: data,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('VALIDATE_MEZCLA', 'started', logContext);\n      const result = await this.mezclaModel.validacion({\n        data,\n        idUsuario: user.id,\n        user\n      });\n      logger.info('VALIDATE_MEZCLA', 'completed', {\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json(result);\n    } catch (error) {\n      logger.error('Error al validar mezclas', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      throw error;\n    }\n  });\n  cancelar = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_2__.asyncHandler)(async (req, res) => {\n    const {\n      user\n    } = req.session;\n    const idSolicitud = req.params.idSolicitud;\n    const data = req.body;\n    const logger = req.logger; // Logger with correlation\n\n    const logContext = {\n      operation: 'CANCEL_MEZCLA',\n      username: user.nombre,\n      userId: user.id,\n      solicitudId: idSolicitud,\n      requestBody: data,\n      timestamp: new Date().toISOString()\n    };\n    try {\n      logger.info('CANCEL_MEZCLA', 'started', logContext);\n      const result = await this.mezclaModel.cancelar({\n        idSolicitud,\n        data,\n        idUsuario: user.id\n      });\n      logger.info('CANCEL_MEZCLA', 'completed', {\n        duration: Date.now() - new Date(logContext.timestamp).getTime()\n      });\n      return res.json(result);\n    } catch (error) {\n      logger.error('Error al cancelar mezclas', {\n        ...logContext,\n        error: {\n          name: error.name,\n          message: error.message,\n          stack: error.stack\n        }\n      });\n      throw error;\n    }\n  });\n\n  // funciones auxiliares y utilitarios\n  #determinarDestinatariosNotificacion = async ({\n    rancho,\n    user,\n    result\n  }) => {\n    let ress = [];\n    if (rancho === 'Atemajac') {\n      const r3 = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioModel.getUserEmailEmpresa({\n        rol: 'adminMezclador',\n        empresa: 'Bioagricultura'\n      }); // idUsuario: 33 es el id de Francisco Alvarez\n      ress = [...r3];\n    } else if (rancho === 'Seccion 7 Fresas') {\n      const r3 = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioModel.getUserEmailEmpresa({\n        rol: 'adminMezclador',\n        empresa: 'Bioagricultura'\n      }); // idUsuario: 33 es el id de Francisco Alvarez\n      ress = [...r3];\n    } else if (rancho === 'Romero' || rancho === 'Potrero' || rancho === 'Casas de Altos') {\n      let r3 = [];\n      if (user.rol === 'adminMezclador' && user.id === 33) {\n        r3 = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioModel.getUserEmailEmpresa({\n          rol: 'adminMezclador',\n          empresa: 'Bioagricultura'\n        }); // idUsuario: 33 es el id de Francisco Alvarez\n      } else {\n        r3 = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioModel.getUserEmailGerente({\n          rol: 'adminMezclador',\n          idUsuario: 51\n        }); // idUsuario: 48 es el id de abigail ortiz\n      }\n      ress = [...r3];\n    } else if (rancho === 'La Loma' || rancho === 'Zapote' || rancho === 'Ojo de Agua' || rancho === 'Ahualulco') {\n      const r1 = await _models_usuario_models_js__WEBPACK_IMPORTED_MODULE_1__.UsuarioModel.getUserEmailGerente({\n        rol: 'adminMezclador',\n        idUsuario: 51\n      }); // idUsuario: 48 es el id de abigail ortiz\n      ress = [...r1];\n    }\n    return ress;\n  };\n  #enviarCorreoNotificacion = async ({\n    target,\n    solicitud,\n    user,\n    requestData\n  }) => {\n    // Usar forEach para mapear los resultados\n    target.forEach(async usuario => {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].info(`nombre:${usuario.nombre}, correo:${usuario.email}`);\n      const respues = await (0,_config_smtp_js__WEBPACK_IMPORTED_MODULE_0__.enviarCorreo)({\n        type: 'confirmacionInicial',\n        email: usuario.email,\n        nombre: user.nombre,\n        solicitudId: solicitud.idSolicitud,\n        usuario: {\n          empresa: usuario.empresa,\n          ranchos: solicitud.data.ranchoDestino\n        },\n        data: {\n          folio: solicitud.data.folio,\n          cantidad: solicitud.data.cantidad,\n          presentacion: solicitud.data.presentacion,\n          metodoAplicacion: solicitud.data.metodoAplicacion,\n          descripcion: solicitud.data.descripcion\n        }\n      });\n      // validamos los solicitudados\n      if (respues.error) {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].error('Error al enviar correo:', respues.error);\n        return false;\n      } else {\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].info('Correo enviado:', respues.messageId);\n      }\n      return true;\n    });\n  };\n  #eliminarDuplicados = array => {\n    const uniqueIds = new Set();\n    return array.filter(item => {\n      if (!uniqueIds.has(item.id)) {\n        uniqueIds.add(item.id);\n        return true;\n      }\n      return false;\n    });\n  };\n  #obtenerMezclasParaAdminMezclador = async (user, params, logContext) => {\n    const {\n      status,\n      confirmacion,\n      idUsuario\n    } = params;\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].debug('Obteniendo mezclas para admin mezclador', {\n      ...logContext,\n      empresa: user.empresa,\n      ranchos: user.ranchos\n    });\n    if (user.empresa === 'General' && user.ranchos === 'General') {\n      return await this.mezclaModel.obtenerMezclasMichoacan();\n    }\n    const [mezclasValidadas, mezclasPorUsuario] = await Promise.all([this.mezclaModel.obtenerTablaMezclasValidados({\n      status,\n      empresa: user.empresa,\n      confirmacion,\n      idUsuario\n    }), this.mezclaModel.obtenerTablaMezclasUsuario({\n      status,\n      idUsuarioSolicita: idUsuario,\n      confirmacion\n    })]);\n    return this.#combinarYFiltrarResultados([mezclasValidadas || [], mezclasPorUsuario || []]);\n  };\n  #obtenerMezclasParaMichoacan = async (params, logContext) => {\n    const {\n      status,\n      confirmacion,\n      idUsuario\n    } = params;\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].debug('Obteniendo mezclas para Michoacán', logContext);\n    const [mezclasValidadas, mezclasRancho] = await Promise.all([this.mezclaModel.obtenerTablaMezclasValidadosMichoacan({\n      status,\n      confirmacion,\n      idUsuario\n    }), this.mezclaModel.obtenerTablaMezclasRancho({\n      status,\n      ranchoDestino: 'Ahualulco',\n      confirmacion,\n      idUsuario\n    })]);\n    return this.#combinarYFiltrarResultados([mezclasValidadas || [], mezclasRancho || []]);\n  };\n  #obtenerMezclasParaBioagricultura = async (params, logContext) => {\n    const {\n      status,\n      confirmacion,\n      idUsuario\n    } = params;\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].debug('Obteniendo mezclas para Bioagricultura', logContext);\n    const [mezclasRancho, mezclasPorUsuario] = await Promise.all([this.mezclaModel.obtenerTablaMezclasRancho({\n      status,\n      ranchoDestino: 'Atemajac',\n      confirmacion,\n      idUsuario\n    }), this.mezclaModel.obtenerTablaMezclasUsuario({\n      status,\n      idUsuarioSolicita: idUsuario,\n      confirmacion\n    })]);\n    return this.#combinarYFiltrarResultados([mezclasRancho || [], mezclasPorUsuario || []]);\n  };\n  #obtenerMezclasSegunRol = async (user, params, logContext) => {\n    const {\n      status,\n      confirmacion,\n      idUsuario\n    } = params;\n    switch (user.rol) {\n      case 'mezclador':\n        return await this.#obtenerMezclasParaMezclador(user, params, logContext);\n      case 'solicita':\n        return await this.mezclaModel.obtenerTablaMezclasUsuario({\n          status,\n          idUsuarioSolicita: idUsuario,\n          confirmacion\n        });\n      case 'solicita2':\n        return await this.mezclaModel.obtenerTablaMezclasEmpresa({\n          status,\n          empresa: user.empresa,\n          confirmacion,\n          idUsuario\n        });\n      case 'supervisor':\n        return await this.mezclaModel.getAll();\n      case 'administrativo':\n        return await this.#obtenerMezclasParaAdministrativo(user, params, logContext);\n      case 'adminMezclador':\n        return await this.#obtenerMezclasParaAdminMezclador(user, params, logContext);\n      default:\n        _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].warn('Rol no autorizado', {\n          ...logContext,\n          rol: user.rol\n        });\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('Rol no autorizado');\n    }\n  };\n  #obtenerMezclasParaAdministrativo = async (user, params, logContext) => {\n    const {\n      status,\n      confirmacion,\n      idUsuario\n    } = params;\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].debug('Obteniendo mezclas para administrativo', {\n      ...logContext,\n      empresa: user.empresa,\n      ranchos: user.ranchos\n    });\n    if (user.empresa === 'General' && user.ranchos) {\n      return await this.mezclaModel.getAllGeneral({\n        status,\n        confirmacion,\n        idUsuario\n      });\n    }\n    const [mezclasPorEmpresa, mezclasPorUsuario] = await Promise.all([this.mezclaModel.obtenerTablaMezclasEmpresa({\n      status,\n      empresa: user.empresa,\n      confirmacion,\n      idUsuario\n    }), this.mezclaModel.obtenerTablaMezclasUsuario({\n      status,\n      idUsuarioSolicita: idUsuario,\n      confirmacion\n    })]);\n    return this.#combinarYFiltrarResultados([mezclasPorEmpresa || [], mezclasPorUsuario || []]);\n  };\n  #obtenerMezclasParaMezclador = async (user, params, logContext) => {\n    const {\n      status,\n      confirmacion,\n      idUsuario\n    } = params;\n    if (user.ranchos === 'General') {\n      return await this.mezclaModel.obtenerTablaMezclasEmpresa({\n        status,\n        empresa: user.empresa,\n        confirmacion,\n        idUsuario\n      });\n    }\n    if (user.ranchos === 'Atemajac') {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_4__[\"default\"].debug('Obteniendo mezclas para Atemajac', logContext);\n      const [mezclasRancho, mezclasEmpresa] = await Promise.all([this.mezclaModel.obtenerTablaMezclasRancho({\n        status,\n        ranchoDestino: user.ranchos,\n        confirmacion,\n        idUsuario\n      }), this.mezclaModel.obtenerTablaMezclasEmpresa({\n        status,\n        empresa: 'Lugar Agricola',\n        confirmacion,\n        idUsuario\n      })]);\n      return this.#combinarYFiltrarResultados([mezclasRancho || [], mezclasEmpresa || []]);\n    }\n    return (await this.mezclaModel.obtenerTablaMezclasRancho({\n      status,\n      ranchoDestino: user.ranchos,\n      confirmacion,\n      idUsuario\n    })) || [];\n  };\n  #combinarYFiltrarResultados = arrays => {\n    const resultados = arrays.flat();\n    return resultados.length > 0 ? this.#eliminarDuplicados(resultados) : [];\n  };\n  #validarDatosCreacion(data) {\n    const errores = [];\n    if (!data.rancho) errores.push('El rancho es requerido');\n    if (!data.empresa) errores.push('La empresa es requerida');\n    // Más validaciones...\n\n    if (errores.length > 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('Datos inválidos', {\n        details: errores\n      });\n    }\n  }\n  #validarDatosActualizacionEstado(data) {\n    const errores = [];\n    const estadosPermitidos = ['Pendiente', 'En Proceso', 'Completado', 'Cancelado'];\n    if (!data.status) {\n      errores.push('El estado es requerido');\n    } else if (!estadosPermitidos.includes(data.status)) {\n      errores.push('Estado no válido');\n    }\n    if (!data.observaciones && ['Cancelado', 'Completado'].includes(data.status)) {\n      errores.push('Las observaciones son requeridas para este estado');\n    }\n    if (errores.length > 0) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError('Datos inválidos para actualización', {\n        details: errores\n      });\n    }\n  }\n\n  // Helper adicional para validar roles y permisos\n  #validarRolYPermisos = (user, operacion) => {\n    const rolesPermitidos = {\n      GET_MEZCLAS: ['mezclador', 'solicita', 'solicita2', 'supervisor', 'administrativo', 'adminMezclador'],\n      VALIDATE_MEZCLAS: ['adminMezclador', 'supervisor'],\n      CONFIRM_MEZCLAS: ['adminMezclador'],\n      CANCEL_MEZCLAS: ['adminMezclador', 'supervisor']\n    };\n    if (!rolesPermitidos[operacion]?.includes(user.rol)) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_3__.ValidationError(`No tienes permisos para ${operacion}`);\n    }\n  };\n\n  // Helper para enriquecer el contexto de log\n  #enriquecerLogContext = (baseContext, extras = {}) => {\n    return {\n      ...baseContext,\n      timestamp: new Date().toISOString(),\n      ...extras\n    };\n  };\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/mezclas.controller.js?");
-
-/***/ }),
-
-/***/ 7399:
-/*!****************************************!*\
-  !*** ./src/schema/solicitud_receta.js ***!
-  \****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   SolicitudProductos: () => (/* binding */ SolicitudProductos)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n\nconst productosConfig = {\n  id: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    field: 'id_receta',\n    // Nombre de columna en la base de datos\n    primaryKey: true,\n    autoIncrement: true\n  },\n  id_solicitud: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    allowNull: false,\n    validate: {\n      notNull: {\n        msg: 'El Id de la solicitud en nesesario'\n      }\n    }\n  },\n  id_producto: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    allowNull: false,\n    validate: {\n      notNull: {\n        msg: 'El Id del producto en nesesario'\n      }\n    }\n  },\n  unidad_medida: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notNull: {\n        msg: 'La unidad de medida es necesaria'\n      }\n    }\n  },\n  cantidad: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DECIMAL(10, 2),\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La cantidad es requerida'\n      },\n      min: {\n        args: [0],\n        msg: 'La cantidad debe ser mayor a 0'\n      }\n    }\n  },\n  status: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.BOOLEAN,\n    allowNull: true,\n    defaultValue: 1\n  }\n};\nconst SolicitudProductos = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('solicitud_receta ', productosConfig, {\n  tableName: 'solicitud_receta',\n  // Nombre de la tabla en la base de datos\n  timestamps: false // Agrega createdAt y updatedAt automáticamente\n});\n\n//# sourceURL=webpack://mezclas/./src/schema/solicitud_receta.js?");
-
-/***/ }),
-
-/***/ 7446:
-/*!***************************************!*\
-  !*** ./src/routes/proteted.routes.js ***!
-  \***************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createProtetedRouter: () => (/* binding */ createProtetedRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_proteted_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/proteted.controller.js */ 6754);\n\n\n// import { isAdmin, isSupervisorOrAdmin, isChecadorOrAdmin } from '../middlewares/authMiddleware.js'\n\nconst createProtetedRouter = () => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const asistenciaController = new _controller_proteted_controller_js__WEBPACK_IMPORTED_MODULE_1__.ProtetedController();\n  // rutas protegidas\n  router.get('/admin', asistenciaController.protected);\n  router.get('/solicitud', asistenciaController.solicitud);\n  router.get('/solicitudes', asistenciaController.solicitudes);\n  router.get('/proceso', asistenciaController.proceso);\n  router.get('/completadas', asistenciaController.completadas);\n  router.get('/tablaSolicitudes', asistenciaController.tablaSolicitudes);\n  router.get('/usuarios', asistenciaController.usuarios);\n  router.get('/productos', asistenciaController.productos);\n  router.get('/centroCoste', asistenciaController.centroCoste);\n  router.get('/notificacion/:idSolicitud', asistenciaController.notificacion);\n  router.get('/confirmacion', asistenciaController.confirmacion);\n  router.get('/canceladas/', asistenciaController.canceladas);\n\n  // cerrar sesion\n  router.get('/cerrarSesion', asistenciaController.logout); // logear usuario\n\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/proteted.routes.js?");
-
-/***/ }),
-
-/***/ 7557:
-/*!*********************************************!*\
-  !*** ./src/routes/notificaciones.routes.js ***!
-  \*********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createNotificacionesRouter: () => (/* binding */ createNotificacionesRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_notificaciones_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/notificaciones.controller.js */ 3089);\n\n\nconst createNotificacionesRouter = ({\n  notificacionModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const notificacionController = new _controller_notificaciones_controller_js__WEBPACK_IMPORTED_MODULE_1__.NotificacionesController({\n    notificacionModel\n  });\n\n  // Obtener todas las notificaciones\n  router.get('/notificaciones', notificacionController.getAllIdUsuario);\n  router.put('/notificaciones/:id', notificacionController.updateStatus);\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/notificaciones.routes.js?");
-
-/***/ }),
-
-/***/ 7635:
-/*!****************************************!*\
-  !*** ./src/routes/empleados.routes.js ***!
-  \****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createEmpleadosRouter: () => (/* binding */ createEmpleadosRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_empleados_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/empleados.controller.js */ 3487);\n\n\nconst createEmpleadosRouter = ({\n  equiposModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const empleadosController = new _controller_empleados_controller_js__WEBPACK_IMPORTED_MODULE_1__.EmpleadosController({\n    equiposModel\n  });\n\n  // Obtener centros de coste. pasamos\n  router.get('/empleados', empleadosController.getAllEmpleados);\n  router.post('/empleados', empleadosController.agregarUsuario);\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/empleados.routes.js?");
-
-/***/ }),
-
-/***/ 7818:
-/*!*************************************!*\
-  !*** ./src/models/centro.models.js ***!
-  \*************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   CentroCosteModel: () => (/* binding */ CentroCosteModel)\n/* harmony export */ });\n/* harmony import */ var _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/centro.js */ 6519);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n// utils\n\nclass CentroCosteModel {\n  // uso\n  static async getAll() {\n    try {\n      const centroCoste = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findAll({\n        attributes: ['id', 'centroCoste', 'empresa', 'rancho', 'cultivo', 'variedad']\n      });\n      if (!centroCoste) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('Centro de coste no encontrados');\n      return centroCoste;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al obtener los centros de coste');\n    }\n  }\n\n  // uso\n  static async getCentrosPorRancho({\n    rancho,\n    cultivo\n  }) {\n    let centros;\n    try {\n      // validamos datos\n      if (!rancho || !cultivo) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.ValidationError('Datos requeridos no proporcionados');\n      }\n      if (cultivo === 'General') {\n        centros = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findAll({\n          where: {\n            rancho\n          },\n          attributes: ['id', 'centroCoste'] // Especifica los atributos que quieres devolver\n        });\n      } else {\n        centros = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findAll({\n          where: {\n            rancho,\n            cultivo\n          },\n          attributes: ['id', 'centroCoste'] // Especifica los atributos que quieres devolver\n        });\n      }\n      if (!centros) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('No se encontraron centros de coste para este rancho');\n      return centros;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al obtener los centros de coste');\n    }\n  }\n\n  // uso\n  static async getVariedadPorCentroCoste({\n    id\n  }) {\n    try {\n      // validamos que el id sea un numero\n      if (isNaN(id)) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.ValidationError('El id debe ser un numero');\n      const variedades = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findAll({\n        where: {\n          id\n        },\n        attributes: ['variedad', 'porcentajes'] // Especifica los atributos que quieres devolver\n      });\n      if (!variedades) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('No se encontraron variedades de este centro de coste');\n      return variedades;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al obtener los variedades de centro de coste');\n    }\n  }\n\n  // uso\n  static async porcentajeVariedad({\n    id,\n    data\n  }) {\n    try {\n      // validados datos\n      if (!id || !data) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.ValidationError('Datos requeridos no proporcionados');\n      }\n      // Verificar si existe el centro de coste\n      const centroCoste = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findByPk(id);\n      if (!centroCoste) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.NotFoundError('Centro de coste no encontrado');\n      }\n      // Actualiza solo los campos que se han proporcionado\n      if (data) centroCoste.porcentajes = data;\n      await centroCoste.save();\n      return {\n        message: 'Porcentajes actualizados correctamente'\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_1__.DatabaseError('Error al actualizar porcentajes');\n    }\n  }\n  static async getOne({\n    id\n  }) {\n    try {\n      const usuario = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findByPk(id);\n      return usuario || {\n        error: 'usuario no encontrada'\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la usuario\n      return {\n        error: 'Error al obtener al usuario'\n      };\n    }\n  }\n  static async getVariedadPorCentroCosteNombre({\n    centroCoste\n  }) {\n    try {\n      const variedades = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findAll({\n        where: {\n          centroCoste\n        },\n        attributes: ['variedad', 'porcentajes'] // Especifica los atributos que quieres devolver\n      });\n      return variedades.length > 0 ? variedades : {\n        message: 'No se encontraron variedades de este centro de coste'\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error al obtener los variedades de coste\n      return {\n        error: 'Error al obtener los variedades de centro de coste'\n      };\n    }\n  }\n  static async delete({\n    id\n  }) {\n    try {\n      const usuario = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findByPk(id);\n      if (!usuario) return {\n        error: 'usuario no encontrado'\n      };\n      await usuario.destroy();\n      return {\n        message: `usuario eliminada correctamente con id ${id}`\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la usuario\n      return {\n        error: 'Error al elimiar el usuario'\n      };\n    }\n  }\n  static async create({\n    data\n  }) {\n    try {\n      // verificamos que no exista el usuario\n      const usuario = await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.findOne({\n        where: {\n          usuario: data.usuario\n        }\n      });\n      if (usuario) return {\n        error: 'usuario ya existe'\n      };\n      // creamos el usuario\n      await _schema_centro_js__WEBPACK_IMPORTED_MODULE_0__.Centrocoste.create({\n        ...data\n      });\n      return {\n        message: `usuario registrado exitosamente ${data.nombre}`\n      };\n    } catch (e) {\n      console.error(e.message); // Salida: Error la usuario\n      return {\n        error: 'Error al crear al usuario'\n      };\n    }\n  }\n}\n\n//# sourceURL=webpack://mezclas/./src/models/centro.models.js?");
+  // Crear logger con correlación
+  req.logger = _utils_logger_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.withCorrelation(correlationId);
+  next();
+};
 
 /***/ }),
 
 /***/ 7979:
-/*!*************************!*\
-  !*** external "helmet" ***!
-  \*************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_helmet__;
-
-/***/ }),
-
-/***/ 8015:
-/*!****************************************!*\
-  !*** ./src/models/empleados.models.js ***!
-  \****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   EmpleadosModel: () => (/* binding */ EmpleadosModel)\n/* harmony export */ });\n/* harmony import */ var _schema_empleados_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../schema/empleados.js */ 9098);\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n // Agregar esta importación\n/**\r\nLos operadores de Sequelize (Op) son necesarios para realizar consultas complejas. Algunos operadores comunes son:\r\nOp.eq: Igual\r\nOp.ne: No igual\r\nOp.gt: Mayor que\r\nOp.lt: Menor que\r\nOp.in: Dentro de un array\r\nOp.like: Búsqueda con comodín\r\n */\n// utils\n\nclass EmpleadosModel {\n  // uso\n  static async getAllEmpleados() {\n    try {\n      const equipo = await _schema_empleados_js__WEBPACK_IMPORTED_MODULE_0__.Empleados.findAll({\n        where: {\n          estado: {\n            [sequelize__WEBPACK_IMPORTED_MODULE_1__.Op.ne]: 'asignado'\n          }\n        },\n        attributes: ['id', 'nombre', 'apellido_paterno']\n      });\n      if (!equipo) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.NotFoundError('Empleados no encontrados');\n      return equipo;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al obtener los equipos');\n    }\n  }\n  static async getDatosEmpleado({\n    id\n  }) {\n    try {\n      // Verificar si se proporcionaron los parámetros requeridos\n      if (!id) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.ValidationError('Datos requeridos no proporcionados');\n      }\n      const usuario = await _schema_empleados_js__WEBPACK_IMPORTED_MODULE_0__.Empleados.findByPk({\n        where: {\n          id\n        },\n        attributes: ['nombre', 'apellido_paterno']\n      });\n      // Verificar si se encontraron resultados\n      if (!usuario) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.NotFoundError('No se encontro empleado con id ' + id);\n      }\n      return usuario;\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al obtener todos los usuarios');\n    }\n  }\n  static async agregarUsuario({\n    data\n  }) {\n    try {\n      // verificamos que no exista el usuario\n      const usuario = await _schema_empleados_js__WEBPACK_IMPORTED_MODULE_0__.Empleados.findOne({\n        where: {\n          id_empleado: data.id_empleado\n        }\n      });\n      if (usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.ValidationError('ya existe un empleado con id ' + data.id_empleado);\n      // creamos el usuario\n      await _schema_empleados_js__WEBPACK_IMPORTED_MODULE_0__.Empleados.create({\n        ...data\n      });\n      return {\n        message: `Usuario registrado exitosamente ${data.nombre}`\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al obtener los equipos');\n    }\n  }\n  static async actualizarUsuario({\n    id,\n    estado\n  }) {\n    try {\n      // validamos que el id sea un numero\n      if (isNaN(id)) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.ValidationError('El id debe ser un numero');\n      const usuario = await _schema_empleados_js__WEBPACK_IMPORTED_MODULE_0__.Empleados.findByPk(id);\n      if (!usuario) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.NotFoundError('Usuario no encontrado');\n      // Actualiza solo los campos que se han proporcionado\n      if (estado) usuario.estado = estado;\n      await usuario.save();\n      return {\n        message: 'Usuario actualizado correctamente',\n        id\n      };\n    } catch (e) {\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al actualizar usuario');\n    }\n  }\n}\n\n//# sourceURL=webpack://mezclas/./src/models/empleados.models.js?");
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_helmet__["default"]) });
 
 /***/ }),
 
-/***/ 8165:
-/*!*****************************!*\
-  !*** ./src/config/paths.js ***!
-  \*****************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ 8118:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   paths: () => (/* binding */ paths)\n/* harmony export */ });\n/* harmony import */ var url__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! url */ 7016);\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! path */ 6928);\n\n\nconst __filename = (0,url__WEBPACK_IMPORTED_MODULE_0__.fileURLToPath)(\"file:///C:/Users/ZARAGOZA051/Desktop/LGZ2024/src/config/paths.js\");\nconst __dirname = (0,path__WEBPACK_IMPORTED_MODULE_1__.dirname)(__filename);\nconst paths = {\n  root: (0,path__WEBPACK_IMPORTED_MODULE_1__.join)(__dirname, '..'),\n  views: (0,path__WEBPACK_IMPORTED_MODULE_1__.join)(__dirname, '..', 'views'),\n  public: (0,path__WEBPACK_IMPORTED_MODULE_1__.join)(__dirname, '..', '..', 'public'),\n  uploads: (0,path__WEBPACK_IMPORTED_MODULE_1__.join)(__dirname, '..', 'uploads')\n};\n\n//# sourceURL=webpack://mezclas/./src/config/paths.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   p: () => (/* binding */ MezclaCatalogo)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const mezclasConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  nombre: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(30),
+    allowNull: false
+  },
+  fabricante: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(50),
+    allowNull: false
+  },
+  descripcion: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.TEXT,
+    allowNull: true
+  }
+};
+
+// User asked for creation of schemas based on SQL.
+// Using 'MezclaCatalogo' as model name to avoid collision if 'Mezcla' is already used by `mezclas.js` (which was Solicitud).
+const MezclaCatalogo = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('MezclaCatalogo', mezclasConfig, {
+  tableName: 'mezclas',
+  timestamps: false
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ 8258:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Z: () => (/* binding */ createFertilizacionRouter)
+/* harmony export */ });
+/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2674);
+/* harmony import */ var _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(1938);
+/* harmony import */ var _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(936);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__]);
+([_controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
+
+const createFertilizacionRouter = () => {
+  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();
+
+  // ========== CATÁLOGOS Y DATOS ==========
+  router.get('/catalogos', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.getCatalogos);
+  router.get('/tanques-preparados', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.getTanquesPreparados);
+  router.post('/tanques-preparados/:id/duplicar', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.duplicarTanquePreparado);
+  router.get('/tanques-preparados/rancho/:id_rancho', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.getTanquesPreparadosPorRancho);
+
+  // ========== RENDERIZAR PÁGINAS ==========
+  router.get('/mezclas', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.renderMezclas);
+  router.get('/graficas', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.renderGraficas);
+  router.get('/preparar-tanque', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.renderPrepararTanque);
+  router.get('/nueva-estructura/registro', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.renderNuevaEstructuraRegistro);
+  router.get('/nueva-estructura/reportes', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.renderNuevaEstructuraReportes);
+
+  // ========== GESTIÓN DE MEZCLAS CATÁLOGO (API) ==========
+  // Crear nueva mezcla catálogo
+  router.post('/mezclas', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.crearMezcla);
+  // Actualizar mezcla catálogo
+  router.put('/mezclas/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.actualizarMezcla);
+  // Eliminar mezcla catálogo
+  router.delete('/mezclas/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.eliminarMezcla);
+  // Obtener todas las mezclas catálogo (API)
+  router.get('/catalogo/mezclas', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.obtenerMezclas);
+  // Obtener una mezcla específica por ID
+  router.get('/mezclas/:id', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.obtenerMezclaPorId);
+  // Asignar ingredientes a una mezcla catálogo (definir receta)
+  router.post('/mezclas/:id_mezcla/ingredientes', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.asignarActivosMezcla);
+  // Obtener ingredientes de una mezcla
+  router.get('/mezclas/:id_mezcla/ingredientes', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.obtenerActivosMezcla);
+  // Actualizar ingredientes de una mezcla (eliminar los viejos y agregar los nuevos)
+  router.put('/mezclas/:id_mezcla/ingredientes', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.actualizarActivosMezcla);
+
+  // ========== PREPARACIÓN DE TANQUES EN CAMPO ==========
+  // PASO 1: Preparar tanque (seleccionar mezcla existente + tanque físico)
+  router.post('/preparar-tanque', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.crearTanquePreparado);
+  router.get('/tanques-preparados/:id', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.getDetalleTanque);
+  router.get('/tanques-preparados/rancho/:id_rancho', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.getTanquesPreparadosPorRancho);
+
+  // ========== FERTILIZACIONES ==========
+  // Registrar nueva fertilización
+  router.post('/fertilizaciones', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.registrarFertilizacion);
+  // Registrar fertilización múltiple (sectores + horas)
+  router.post('/fertilizaciones/bulk', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.registrarFertilizacionBulk);
+  // Agregar tanque a fertilización existente
+  router.post('/fertilizaciones/:id/tanques', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['inocuidad', 'produccion', 'master']), _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.agregarTanque);
+
+  // ========== REPORTES ESPECIALIZADOS (API) ==========
+  router.get('/reportes/inventario', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reporteInventario);
+  router.get('/reportes/resumen-anual', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reporteResumenAnual);
+  router.get('/reportes/semanal', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reporteSemanal);
+  router.get('/reportes/por-variedad', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reportePorVariedad);
+  router.get('/reportes/mensual-rancho', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reporteMensualRancho);
+  router.get('/reportes/comparativo-mensual', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reporteComparativoMensual);
+  router.get('/reportes/top-sectores', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reporteTopSectores);
+  router.get('/reportes/fertilizacion', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reporteFertilizacionCompleto);
+  router.get('/reportes/exportar', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.reporteExcelFertilizacion);
+  router.get('/reportes/detalle-tanques', _controller_fertilizacion_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .FertilizacionController */ .w.getDetalleTanquesPorCodigos);
+  return router;
+};
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ 8261:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   S: () => (/* binding */ createCorporativoRouter)
+/* harmony export */ });
+/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2674);
+/* harmony import */ var _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(5129);
+/* harmony import */ var _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(936);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__]);
+([_controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__, _middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__] = __webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__);
+
+
+
+const createCorporativoRouter = () => {
+  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();
+
+  // ========== RENDERIZAR PÁGINAS ==========
+  router.get('/empresas', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.renderEmpresas);
+  router.get('/sectores', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.renderSectores);
+  router.get('/ranchos', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.renderRanchos);
+  router.get('/tanques', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.renderTanques);
+  router.get('/rancho-dsa', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.renderRanchoDsa);
+  router.get('/activos-mezcla', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.renderActivosMezcla);
+
+  // ========== RUTAS API ==========
+  // --- EMPRESAS ---
+  router.get('/api/empresas', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getEmpresas);
+  router.post('/api/empresas', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.createEmpresa);
+  router.put('/api/empresas/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.updateEmpresa);
+  router.delete('/api/empresas/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.deleteEmpresa);
+
+  // --- SECTORES ---
+  router.get('/api/sectores/', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getSectores);
+  router.get('/api/sectores/:rancho_id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getSectoresPorRancho);
+  router.post('/api/sectores', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.createSector);
+  router.put('/api/sectores/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.updateSector);
+  router.delete('/api/sectores/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.deleteSector);
+
+  // --- RANCHOS ---
+  router.get('/api/ranchos', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getRanchos);
+  router.post('/api/ranchos', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.createRancho);
+  router.put('/api/ranchos/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.updateRancho);
+  router.delete('/api/ranchos/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.deleteRancho);
+
+  // --- TANQUES ---
+  router.get('/api/tanques', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getTanques);
+  router.get('/api/tanques/:rancho_id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getTanquesPorRancho);
+  router.post('/api/tanques', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.createTanque);
+  router.put('/api/tanques/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.updateTanque);
+  router.delete('/api/tanques/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.deleteTanque);
+
+  // --- ACTIVOS MEZCLA ---
+  router.get('/api/activos-mezcla', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getActivosMezcla);
+  router.post('/api/activos-mezcla', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.createActivoMezcla);
+  router.put('/api/activos-mezcla/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.updateActivoMezcla);
+  router.delete('/api/activos-mezcla/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.deleteActivoMezcla);
+
+  // --- RANCHO DSA ---
+  router.get('/api/rancho-dsa', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getRanchosDsa);
+  router.post('/api/rancho-dsa', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.createRanchoDsa);
+  router.put('/api/rancho-dsa/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.updateRanchoDsa);
+  router.delete('/api/rancho-dsa/:id', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.deleteRanchoDsa);
+
+  // --- TEMPORADAS ---
+  router.get('/api/temporadas', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getTemporadas);
+
+  // --- ANIOS ---
+  router.get('/api/anios', (0,_middlewares_authMiddleware_js__WEBPACK_IMPORTED_MODULE_2__/* .checkRoleAuth */ .tE)(['produccion', 'inocuidad', 'master']), _controller_corporativo_controller_js__WEBPACK_IMPORTED_MODULE_1__/* .CorporativoController */ .r.getAnios);
+  return router;
+};
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 8265:
-/*!****************************!*\
-  !*** external "sequelize" ***!
-  \****************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_sequelize__;
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["DataTypes"]: () => (__WEBPACK_EXTERNAL_MODULE_sequelize__.DataTypes), ["Op"]: () => (__WEBPACK_EXTERNAL_MODULE_sequelize__.Op), ["Sequelize"]: () => (__WEBPACK_EXTERNAL_MODULE_sequelize__.Sequelize) });
 
 /***/ }),
 
-/***/ 8398:
-/*!*********************************************!*\
-  !*** ./src/controller/centro.controller.js ***!
-  \*********************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ 8293:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   CentroController: () => (/* binding */ CentroController)\n/* harmony export */ });\n/* harmony import */ var _utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/asyncHandler.js */ 6466);\n\nclass CentroController {\n  constructor({\n    centroModel\n  }) {\n    this.centroModel = centroModel;\n  }\n\n  // extraer\n  getCentrosPorRancho = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const {\n      rancho\n    } = req.params;\n    const {\n      user\n    } = req.session;\n    let centroCoste;\n    // esta validacion es especial para fransico ya que el solo podra solicitar de fresa en estos ranchos\n    if (user.rol === 'administrativo' && (rancho === 'Romero' || rancho === 'Potrero')) {\n      centroCoste = await this.centroModel.getCentrosPorRancho({\n        rancho,\n        cultivo: 'Fresa'\n      });\n    } else {\n      centroCoste = await this.centroModel.getCentrosPorRancho({\n        rancho,\n        cultivo: user.cultivo\n      });\n    }\n    res.json(centroCoste);\n  });\n  getVariedadPorCentroCoste = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const {\n      id\n    } = req.params;\n    const variedad = await this.centroModel.getVariedadPorCentroCoste({\n      id\n    });\n    res.json(variedad);\n  });\n  getAll = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const variedad = await this.centroModel.getAll();\n    res.json(variedad);\n  });\n\n  // actualizar porcentajes de las variedades\n  porcentajeVariedad = (0,_utils_asyncHandler_js__WEBPACK_IMPORTED_MODULE_0__.asyncHandler)(async (req, res) => {\n    const result = await this.centroModel.porcentajeVariedad({\n      id: req.body.centroCoste,\n      data: req.body.porcentajes\n    });\n    return res.json({\n      message: result.message\n    });\n  });\n}\n\n//# sourceURL=webpack://mezclas/./src/controller/centro.controller.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   C: () => (/* binding */ Tanques)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const tanquesConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  codigo: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(20),
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El código es requerido'
+      }
+    }
+  },
+  etapa: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(50),
+    allowNull: false
+  },
+  id_rancho: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      isInt: {
+        msg: 'El rancho es requerido'
+      }
+    }
+  },
+  capacidad: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false,
+    validate: {
+      isInt: {
+        msg: 'La capacidad debe ser un número entero'
+      }
+    }
+  },
+  unidad: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING(20),
+    allowNull: false
+  },
+  status: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.TINYINT,
+    allowNull: false,
+    defaultValue: 1
+  }
+};
+const Tanques = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('Tanques', tanquesConfig, {
+  tableName: 'tanques',
+  timestamps: false
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ 8300:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   y: () => (/* binding */ AplicacionesTanque)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const aplicacionesTanqueConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  id_sector: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  },
+  id_responsable: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: true
+  },
+  fecha: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DATEONLY,
+    allowNull: false
+  },
+  litros_aplicados: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DECIMAL(10, 2),
+    allowNull: false
+  },
+  id_tanque_preparado: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  }
+};
+const AplicacionesTanque = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('AplicacionesTanque', aplicacionesTanqueConfig, {
+  tableName: 'aplicaciones_tanque',
+  timestamps: false
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ 8518:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   e: () => (/* binding */ MezclasTanque)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+const mezclasTanqueConfig = {
+  id: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+    allowNull: false
+  },
+  id_tanque_preparado: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  },
+  id_mezcla: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,
+    allowNull: false
+  },
+  cantidad_litros: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.DECIMAL(10, 2),
+    allowNull: false
+  }
+};
+const MezclasTanque = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('MezclasTanque', mezclasTanqueConfig, {
+  tableName: 'mezclas_tanque',
+  timestamps: false
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 9021:
-/*!*************************************!*\
-  !*** ./src/config/logger.config.js ***!
-  \*************************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   loggerConfig: () => (/* binding */ loggerConfig)\n/* harmony export */ });\nconst loggerConfig = {\n  // Niveles de log por ambiente\n  levels: {\n    development: 'debug',\n    test: 'info',\n    production: 'warn'\n  },\n  levelColors: {\n    error: 'red',\n    warn: 'yellow',\n    info: 'blue',\n    http: 'magenta',\n    debug: 'gray'\n  },\n  logLevels: {\n    error: 0,\n    warn: 1,\n    info: 2,\n    http: 3,\n    debug: 4\n  },\n  // Configuración de rotación de archivos\n  rotation: {\n    maxSize: '20m',\n    maxFiles: '14d',\n    compress: true\n  },\n  // Formato de salida\n  format: {\n    timestamp: 'YYYY-MM-DD HH:mm:ss',\n    includeMeta: true,\n    colorize: true\n  },\n  // Métricas y monitoreo\n  metrics: {\n    enabled: true,\n    interval: 60000,\n    // 1 minuto\n    measurements: ['operationsPerSecond', 'errorRate', 'responseTime']\n  },\n  // Correlación de logs\n  correlation: {\n    enabled: true,\n    headerName: 'X-Correlation-ID'\n  }\n};\n\n//# sourceURL=webpack://mezclas/./src/config/logger.config.js?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   D: () => (/* binding */ loggerConfig)
+/* harmony export */ });
+const loggerConfig = {
+  // Niveles de log por ambiente
+  levels: {
+    development: 'debug',
+    test: 'info',
+    production: 'warn'
+  },
+  levelColors: {
+    error: 'red',
+    logError: 'red',
+    warn: 'yellow',
+    info: 'blue',
+    http: 'magenta',
+    debug: 'gray',
+    logModelOperation: 'gray'
+  },
+  logLevels: {
+    error: 0,
+    logError: 0,
+    warn: 1,
+    info: 2,
+    http: 3,
+    debug: 4,
+    logModelOperation: 4
+  },
+  // Configuración de rotación de archivos
+  rotation: {
+    maxSize: '20m',
+    maxFiles: '14d',
+    compress: true
+  },
+  // Formato de salida
+  format: {
+    timestamp: 'YYYY-MM-DD HH:mm:ss',
+    includeMeta: true,
+    colorize: true
+  },
+  // Métricas y monitoreo
+  metrics: {
+    enabled: true,
+    interval: 60000,
+    // 1 minuto
+    measurements: ['operationsPerSecond', 'errorRate', 'responseTime']
+  },
+  // Correlación de logs
+  correlation: {
+    enabled: true,
+    headerName: 'X-Correlation-ID'
+  }
+};
 
 /***/ }),
 
 /***/ 9071:
-/*!*******************************!*\
-  !*** external "jsonwebtoken" ***!
-  \*******************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_jsonwebtoken__;
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+module.exports = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_jsonwebtoken__["default"]) });
 
 /***/ }),
 
 /***/ 9097:
-/*!****************************!*\
-  !*** ./src/config/env.mjs ***!
-  \****************************/
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   envs: () => (/* binding */ envs)\n/* harmony export */ });\n/* harmony import */ var dotenv__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! dotenv */ 5708);\n/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! path */ 6928);\n\n\nconst envPath = path__WEBPACK_IMPORTED_MODULE_1__.resolve(process.cwd(), `.env.${\"development\" || 0}`);\ndotenv__WEBPACK_IMPORTED_MODULE_0__[\"default\"].config({\n  path: envPath\n});\n\n// Validar versión de Node.js\nconst validateNodeVersion = () => {\n  const currentVersion = process.version;\n  const isDevelopment = \"development\" === 'development';\n  if (isDevelopment && !currentVersion.startsWith('v21')) {\n    throw new Error('Desarrollo requiere Node.js v21.6.2');\n  }\n  if (!isDevelopment && !currentVersion.startsWith('v24')) {\n    throw new Error('Producción requiere Node.js v24.0.1');\n  }\n};\n\n// Configuración según el entorno\nconst getEnvironmentConfig = () => {\n  const isDevelopment = \"development\" === 'development';\n  return {\n    nodeVersion: isDevelopment ? '21.6.2' : '24.0.1',\n    ssl: !isDevelopment,\n    pool: {\n      max: isDevelopment ? 5 : 10,\n      // Máximo de conexiones simultáneas\n      min: 0,\n      // Mínimo de conexiones en espera\n      acquire: isDevelopment ? 30000 : 60000,\n      // Tiempo máximo para obtener conexión (60s)\n      idle: isDevelopment ? 10000 : 20000 // Tiempo máximo de inactividad (20s)\n    }\n  };\n};\n\n// Validar las variables de entorno\nconst validateEnvVars = () => {\n  const required = ['DB_HOST', 'DB_USER', 'DB_NAME'];\n  const optional = ['DB_PASSWORD']; // Password puede estar vacío pero debe existir\n\n  for (const key of required) {\n    if (!process.env[key]) {\n      throw new Error(`Missing required environment variable: ${key}`);\n    }\n  }\n  for (const key of optional) {\n    if (!(key in process.env)) {\n      process.env[key] = ''; // Valor por defecto para variables opcionales\n    }\n  }\n};\n\n// este es un objeto que guarda nuestas variables de entorno para utilizarlas en nuestro proyecto\nconst envs = {\n  PORT: parseInt(process.env.PORT || process.env.PLESK_PORT || 3000),\n  MODE: \"development\" || 0,\n  DB_CONFIG: {\n    host: process.env.DB_HOST,\n    user: process.env.DB_USER,\n    password: process.env.DB_PASSWORD,\n    database: process.env.DB_NAME,\n    // Agregar configuración específica para Plesk\n    ssl: getEnvironmentConfig().ssl,\n    pool: getEnvironmentConfig().pool\n  },\n  SECRET_JWT_KEY: process.env.SECRET_JWT_KEY,\n  EMAIL_USER: process.env.EMAIL_USER,\n  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,\n  PUBLIC_KEY: process.env.PUBLIC_KEY,\n  PRIVATE_KEY: process.env.PRIVATE_KEY,\n  MAILTO: process.env.MAILTO,\n  NOTIFICATION_ICON: process.env.NOTIFICATION_ICON,\n  PLESK_MODE: process.env.PLESK_MODE || false,\n  // Agregar validación\n  validate() {\n    // Validar versión de Node.js\n    validateNodeVersion();\n    // Validar variables requeridas\n    validateEnvVars();\n  }\n};\n\n// Validar variables requeridas\nenvs.validate();\n\n//# sourceURL=webpack://mezclas/./src/config/env.mjs?");
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   D: () => (/* binding */ envs)
+/* harmony export */ });
+/* harmony import */ var dotenv__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5708);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(6928);
 
-/***/ }),
 
-/***/ 9098:
-/*!*********************************!*\
-  !*** ./src/schema/empleados.js ***!
-  \*********************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+const envPath = path__WEBPACK_IMPORTED_MODULE_1__.resolve(process.cwd(), `.env.${"production" || 0}`);
+// Validar versión de Node.js
+// console.log('variables de entono archivo env.mjs:', process.env)
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Empleados: () => (/* binding */ Empleados)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n\n\nconst empleadosConfig = {\n  id: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.INTEGER,\n    primaryKey: true,\n    autoIncrement: true\n  },\n  id_empleado: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El centro de coste es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El centro de coste debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  nombre: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El nombre es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El nombre debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  apellido_paterno: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El apellido paterno es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El apellido paterno debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  apellido_materno: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El apellido materno es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El apellido materno debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  departamento: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El departamento es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El departamento debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  estado: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    defaultValue: 'disponible'\n  }\n};\nconst Empleados = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('empleados', empleadosConfig, {\n  tableName: 'empleados',\n  // Nombre de la tabla en la base de datos\n  timestamps: false // Agrega createdAt y updatedAt automáticamente\n});\n\n//# sourceURL=webpack://mezclas/./src/schema/empleados.js?");
+const validateNodeVersion = () => {
+  const currentVersion = process.version;
+  const isDevelopment = "production" === 'development';
+  if (isDevelopment && !currentVersion.startsWith('v24')) {
+    throw new Error('Desarrollo requiere Node.js 24.14.0');
+  }
+  if (!isDevelopment && !currentVersion.startsWith('v24')) {
+    throw new Error('Producción requiere Node.js 24.14.0');
+  }
+};
+
+// Configuración según el entorno
+const getEnvironmentConfig = () => {
+  const isDevelopment = "production" === 'development';
+  return {
+    nodeVersion: isDevelopment ? '21.6.2' : '24.0.1',
+    pool: {
+      max: isDevelopment ? 5 : 10,
+      min: 0,
+      acquire: isDevelopment ? 30000 : 60000,
+      idle: isDevelopment ? 10000 : 20000
+    }
+  };
+};
+
+// En src/config/env.mjs
+const loadEnvVars = () => {
+  const isPleskMode = process.env.PLESK_MODE === 'true';
+  if (!isPleskMode) {
+    dotenv__WEBPACK_IMPORTED_MODULE_0__["default"].config({
+      path: envPath
+    });
+    // Variables de desarrollo tomadas de archivo .env
+  } else {
+    // Variables de entorno del tomada del servidor:
+  }
+  // Verificar variables críticas
+};
+// Cargar variables de entorno
+loadEnvVars();
+
+// este es un objeto que guarda nuestas variables de entorno para utilizarlas en nuestro proyecto
+const envs = {
+  PORT: parseInt(process.env.PORT),
+  MODE: "production" || 0,
+  DB_CONFIG: {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    // Agregar configuración específica para Plesk
+    ssl: process.env.DB_SSL_ENABLED === 'true' || false,
+    pool: getEnvironmentConfig().pool
+  },
+  SECRET_JWT_KEY: process.env.SECRET_JWT_KEY,
+  EMAIL_USER: process.env.EMAIL_USER,
+  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
+  PUBLIC_KEY: process.env.PUBLIC_KEY,
+  PRIVATE_KEY: process.env.PRIVATE_KEY,
+  MAILTO: process.env.MAILTO,
+  NOTIFICATION_ICON: process.env.NOTIFICATION_ICON,
+  PLESK_MODE: process.env.PLESK_MODE || false,
+  CRON_JOB_VALIDACIONES_PROGRAMADAS: process.env.CRON_JOB_VALIDACIONES_PROGRAMADAS,
+  // Agregar validación
+  validate() {
+    // Validar versión de Node.js
+    validateNodeVersion();
+  }
+};
+
+// Validar variables requeridas
+envs.validate();
 
 /***/ }),
 
 /***/ 9100:
-/*!*********************!*\
-  !*** ./src/app.mjs ***!
-  \*********************/
+/***/ ((__webpack_module__, __unused_webpack___webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony import */ var _server_server_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2936);
+/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9097);
+/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3014);
+/* harmony import */ var _deploy_config_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(777);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_server_server_mjs__WEBPACK_IMPORTED_MODULE_0__]);
+_server_server_mjs__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+
+// SCSS se manejará a través de webpack, no se importa aquí
+
+const env = "production" || 0;
+const config = {
+  ..._deploy_config_mjs__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A.common,
+  ..._deploy_config_mjs__WEBPACK_IMPORTED_MODULE_3__/* ["default"] */ .A[env]
+};
+async function bootstrap() {
+  try {
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.info('Iniciando aplicación', {
+      environment: env,
+      nodeVersion: process.version,
+      port: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.PORT
+    });
+    await (0,_server_server_mjs__WEBPACK_IMPORTED_MODULE_0__/* .startServer */ .U)({
+      PORT: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.PORT,
+      MODE: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.MODE,
+      config
+    });
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.info('✅ Servidor iniciado correctamente', {
+      port: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.PORT,
+      mode: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.MODE
+    });
+  } catch (error) {
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.error('Error al iniciar el servidor', {
+      error: {
+        message: error.message,
+        stack: error.stack
+      }
+    });
+    process.exit(1);
+  }
+}
+
+// Manejo de errores no capturados
+process.on('unhandledRejection', (reason, promise) => {
+  _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.error('Unhandled Rejection', {
+    reason,
+    promise
+  });
+});
+process.on('uncaughtException', error => {
+  _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.error('Uncaught Exception', {
+    error: {
+      message: error.message,
+      stack: error.stack
+    }
+  });
+  process.exit(1);
+});
+bootstrap();
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
+
+/***/ }),
+
+/***/ 9250:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _server_server_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./server/server.mjs */ 2936);\n/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./config/env.mjs */ 9097);\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils/logger.js */ 6534);\n/* harmony import */ var _deploy_config_mjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../deploy.config.mjs */ 777);\n\n\n\n\nconst env = \"development\" || 0;\nconst config = {\n  ..._deploy_config_mjs__WEBPACK_IMPORTED_MODULE_3__[\"default\"].common,\n  ..._deploy_config_mjs__WEBPACK_IMPORTED_MODULE_3__[\"default\"][env]\n};\nasync function bootstrap() {\n  try {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].info('Iniciando aplicación', {\n      environment: env,\n      nodeVersion: process.version,\n      port: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.PORT\n    });\n    await (0,_server_server_mjs__WEBPACK_IMPORTED_MODULE_0__.startServer)({\n      PORT: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.PORT,\n      MODE: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.MODE,\n      config\n    });\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].info('Servidor iniciado correctamente', {\n      port: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.PORT,\n      mode: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.MODE\n    });\n  } catch (error) {\n    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].error('Error al iniciar el servidor', {\n      error: {\n        message: error.message,\n        stack: error.stack\n      }\n    });\n    process.exit(1);\n  }\n}\n\n// Manejo de errores no capturados\nprocess.on('unhandledRejection', (reason, promise) => {\n  _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].error('Unhandled Rejection', {\n    reason,\n    promise\n  });\n});\nprocess.on('uncaughtException', error => {\n  _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__[\"default\"].error('Uncaught Exception', {\n    error: {\n      message: error.message,\n      stack: error.stack\n    }\n  });\n  process.exit(1);\n});\nbootstrap();\n\n//# sourceURL=webpack://mezclas/./src/app.mjs?");
 
-/***/ }),
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  N: () => (/* binding */ apiLimiter)
+});
 
-/***/ 9168:
-/*!********************************!*\
-  !*** external "swagger-jsdoc" ***!
-  \********************************/
-/***/ ((module) => {
+;// external "express-rate-limit"
+var x = (y) => {
+	var x = {}; __webpack_require__.d(x, y); return x
+} 
+var y = (x) => (() => (x))
+const external_express_rate_limit_namespaceObject = x({ ["default"]: () => (__WEBPACK_EXTERNAL_MODULE_express_rate_limit_c965cf1c__["default"]) });
+// EXTERNAL MODULE: ./src/utils/logger.js + 3 modules
+var logger = __webpack_require__(3014);
+;// ./src/middlewares/rateLimit.js
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_swagger_jsdoc_4cc0b3b9__;
 
-/***/ }),
-
-/***/ 9322:
-/*!**************************!*\
-  !*** external "winston" ***!
-  \**************************/
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_winston__;
+const apiLimiter = (0,external_express_rate_limit_namespaceObject["default"])({
+  windowMs: 15 * 60 * 1000,
+  // 15 minutos
+  max: 100,
+  // máximo 100 peticiones por ventana
+  message: {
+    error: 'Demasiadas peticiones, por favor intente más tarde'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res, next, options) => {
+    logger/* default */.A.warn('Límite de peticiones excedido', {
+      ip: req.ip,
+      path: req.path
+    });
+    res.status(429).json(options.message);
+  },
+  skip: req => {
+    // Ignorar rutas específicas
+    return req.path.startsWith('/public');
+  }
+});
 
 /***/ }),
 
 /***/ 9491:
-/*!********************************!*\
-  !*** ./src/schema/usuarios.js ***!
-  \********************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   Usuario: () => (/* binding */ Usuario)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../db/db.js */ 9815);\n/* harmony import */ var bcryptjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bcryptjs */ 3139);\n\n\n\nconst usuarioConfig = {\n  nombre: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El nombre es requerido'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El nombre debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  usuario: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    unique: true,\n    validate: {\n      notEmpty: {\n        msg: 'El Usuario es obligatorio'\n      },\n      len: {\n        args: [3, 50],\n        msg: 'El nombre debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  email: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    unique: true,\n    validate: {\n      notEmpty: {\n        msg: 'El email es requerido'\n      },\n      isEmail: {\n        msg: 'El email debe ser válido'\n      }\n    }\n  },\n  password: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'La contraseña es requerida'\n      },\n      len: {\n        args: [8, 100],\n        msg: 'La contraseña debe tener al menos 8 caracteres'\n      }\n    }\n  },\n  rol: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.ENUM('admin', 'supervisor', 'mezclador', 'solicita', 'administrativo', 'adminMezclador'),\n    allowNull: false,\n    validate: {\n      notEmpty: {\n        msg: 'El rol es requerido'\n      }\n    }\n  },\n  empresa: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    defaultValue: 'Sin empresa asignada',\n    validate: {\n      len: {\n        args: [0, 50],\n        msg: 'La empresa debe tener entre 3 y 50 caracteres'\n      }\n    }\n  },\n  ranchos: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    defaultValue: 'General',\n    validate: {\n      len: {\n        args: [0, 80],\n        msg: 'El rancho debe tener entre 0 y 50 caracteres'\n      }\n    }\n  },\n  variedad: {\n    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,\n    allowNull: true,\n    defaultValue: 'General',\n    validate: {\n      len: {\n        args: [0, 50],\n        msg: 'La variedad debe tener entre 0 y 50 caracteres'\n      }\n    }\n  }\n};\nconst Usuario = _db_db_js__WEBPACK_IMPORTED_MODULE_1__[\"default\"].define('usuarios', usuarioConfig, {\n  timestamps: false,\n  hooks: {\n    beforeCreate: async (usuario, options) => {\n      const salt = await bcryptjs__WEBPACK_IMPORTED_MODULE_2__[\"default\"].genSalt(10);\n      usuario.password = await bcryptjs__WEBPACK_IMPORTED_MODULE_2__[\"default\"].hash(usuario.password, salt);\n    },\n    beforeUpdate: async (usuario, options) => {\n      if (usuario.changed('password')) {\n        const salt = await bcryptjs__WEBPACK_IMPORTED_MODULE_2__[\"default\"].genSalt(10);\n        usuario.password = await bcryptjs__WEBPACK_IMPORTED_MODULE_2__[\"default\"].hash(usuario.password, salt);\n      }\n    }\n  }\n});\n\n//# sourceURL=webpack://mezclas/./src/schema/usuarios.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   P: () => (/* binding */ Usuario)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9815);
+/* harmony import */ var bcryptjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3139);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_1__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_1__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+
+
+
+const usuarioConfig = {
+  nombre: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El nombre es requerido'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El nombre debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  usuario: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'El Usuario es obligatorio'
+      },
+      len: {
+        args: [3, 50],
+        msg: 'El nombre debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  email: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+    validate: {
+      notEmpty: {
+        msg: 'El email es requerido'
+      },
+      isEmail: {
+        msg: 'El email debe ser válido'
+      }
+    }
+  },
+  password: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'La contraseña es requerida'
+      },
+      len: {
+        args: [8, 100],
+        msg: 'La contraseña debe tener al menos 8 caracteres'
+      }
+    }
+  },
+  rol: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: false,
+    validate: {
+      notEmpty: {
+        msg: 'El rol es requerido'
+      }
+    }
+  },
+  empresa: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'Sin empresa asignada',
+    validate: {
+      len: {
+        args: [0, 50],
+        msg: 'La empresa debe tener entre 3 y 50 caracteres'
+      }
+    }
+  },
+  ranchos: {
+    type: sequelize__WEBPACK_IMPORTED_MODULE_0__.DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'General',
+    validate: {
+      len: {
+        args: [0, 80],
+        msg: 'El rancho debe tener entre 0 y 50 caracteres'
+      }
+    }
+  }
+};
+const Usuario = _db_db_js__WEBPACK_IMPORTED_MODULE_1__/* ["default"] */ .A.define('usuarios', usuarioConfig, {
+  timestamps: false,
+  hooks: {
+    beforeCreate: async (usuario, options) => {
+      const salt = await bcryptjs__WEBPACK_IMPORTED_MODULE_2__["default"].genSalt(10);
+      usuario.password = await bcryptjs__WEBPACK_IMPORTED_MODULE_2__["default"].hash(usuario.password, salt);
+    },
+    beforeUpdate: async (usuario, options) => {
+      if (usuario.changed('password')) {
+        const salt = await bcryptjs__WEBPACK_IMPORTED_MODULE_2__["default"].genSalt(10);
+        usuario.password = await bcryptjs__WEBPACK_IMPORTED_MODULE_2__["default"].hash(usuario.password, salt);
+      }
+    }
+  }
+});
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
-/***/ 9594:
-/*!****************************************!*\
-  !*** ./src/models/productos.models.js ***!
-  \****************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ 9648:
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   ProductosModel: () => (/* binding */ ProductosModel)\n/* harmony export */ });\n/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/logger.js */ 6534);\n/* harmony import */ var _schema_productos_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../schema/productos.js */ 4601);\n/* harmony import */ var _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/CustomError.js */ 2551);\n\n\n\nclass ProductosModel {\n  // uso\n  static async getAll() {\n    try {\n      const productos = await _schema_productos_js__WEBPACK_IMPORTED_MODULE_1__.Productos.findAll({\n        attributes: ['id_producto', 'nombre', 'descripcion', 'unidad_medida']\n      });\n      if (!productos) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.NotFoundError('productos no encontrados');\n      return productos;\n    } catch (error) {\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al obtener los productos');\n    }\n  }\n  static async getOne({\n    id\n  }) {\n    try {\n      const producto = await _schema_productos_js__WEBPACK_IMPORTED_MODULE_1__.Productos.findByPk(id);\n      if (!producto) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.NotFoundError(`Producto con ID ${id} no encontrado`);\n      }\n      return producto;\n    } catch (error) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].error(`Productos.model Error al obtener el producto: ${error.message}`);\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al obtener el producto');\n    }\n  }\n  static async delete({\n    id\n  }) {\n    try {\n      const producto = await _schema_productos_js__WEBPACK_IMPORTED_MODULE_1__.Productos.findByPk(id);\n      if (!producto) {\n        throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.NotFoundError(`Producto con ID ${id} no encontrado`);\n      }\n      await producto.destroy();\n      return {\n        message: `producto eliminada correctamente con id ${id}`\n      };\n    } catch (error) {\n      if (error instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.CustomError) throw error;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al eliminar el producto');\n    }\n  }\n\n  // crear producto\n  static async create({\n    data\n  }) {\n    try {\n      // verificamos que no exista el producto\n      const producto = await _schema_productos_js__WEBPACK_IMPORTED_MODULE_1__.Productos.findOne({\n        where: {\n          producto: data.producto\n        }\n      });\n      if (producto) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.ValidationError('Producto ya existe');\n\n      // creamos el producto\n      await _schema_productos_js__WEBPACK_IMPORTED_MODULE_1__.Productos.create({\n        ...data\n      });\n      return {\n        message: `Producto registrado exitosamente ${data.nombre}`\n      };\n    } catch (e) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].error({\n        message: 'Error al crear producto',\n        error: e.message,\n        stack: e.stack,\n        method: 'ProductosModel.create'\n      });\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al crear el producto');\n    }\n  }\n\n  // para actualizar datos de producto\n  static async update({\n    id,\n    data\n  }) {\n    try {\n      // verificamos si existe alguna empresa con el id proporcionado\n      const producto = await _schema_productos_js__WEBPACK_IMPORTED_MODULE_1__.Productos.findByPk(id);\n      if (!producto) throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.NotFoundError(`Producto con ID ${id} no encontrado`);\n      // Actualiza solo los campos que se han proporcionado\n      if (data.nombre) producto.nombre = data.nombre;\n      if (data.email) producto.email = data.email;\n      if (data.rol) producto.rol = data.rol;\n      if (data.empresa) producto.empresa = data.empresa;\n      await producto.save();\n      return {\n        message: 'producto actualizada correctamente',\n        rol: data.rol\n      };\n    } catch (e) {\n      _utils_logger_js__WEBPACK_IMPORTED_MODULE_0__[\"default\"].error({\n        message: 'Error al actualizar producto',\n        error: e.message,\n        stack: e.stack,\n        method: 'ProductosModel.update'\n      });\n      if (e instanceof _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.CustomError) throw e;\n      throw new _utils_CustomError_js__WEBPACK_IMPORTED_MODULE_2__.DatabaseError('Error al actualizar el producto');\n    }\n  }\n}\n\n//# sourceURL=webpack://mezclas/./src/models/productos.models.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* unused harmony exports tieneAccesoASistema, tieneAccesoARancho, tienePermiso */
+/* harmony import */ var _db_db_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(9815);
+var __webpack_async_dependencies__ = __webpack_handle_async_dependencies__([_db_db_js__WEBPACK_IMPORTED_MODULE_0__]);
+_db_db_js__WEBPACK_IMPORTED_MODULE_0__ = (__webpack_async_dependencies__.then ? (await __webpack_async_dependencies__)() : __webpack_async_dependencies__)[0];
+// accessHelpers.js
+
+
+/**
+ * Nivel 1: tiene acceso al sistema?
+ */
+async function tieneAccesoASistema(idUsuario, idSistema) {
+  const [rows] = await sequelize.query('SELECT 1 FROM usuarios_accesos WHERE idUsuario = ? AND idSistema = ? LIMIT 1', {
+    replacements: [idUsuario, idSistema]
+  });
+  return rows.length > 0;
+}
+
+/**
+ * Nivel 2: acceso a rancho (o acceso global a la empresa si idRancho IS NULL)
+ */
+async function tieneAccesoARancho(idUsuario, idRancho, idEmpresa) {
+  if (!idRancho) {
+    // si no se pide rancho, validar que usuario tenga acceso a la empresa en ese sistema OR any entry for company
+    const [rows] = await sequelize.query('SELECT 1 FROM usuarios_accesos WHERE idUsuario = ? AND idEmpresa = ? LIMIT 1', {
+      replacements: [idUsuario, idEmpresa]
+    });
+    return rows.length > 0;
+  }
+  const [rows] = await sequelize.query('SELECT 1 FROM usuarios_accesos WHERE idUsuario = ? AND idEmpresa = ? AND (idRancho = ? OR idRancho IS NULL) LIMIT 1', {
+    replacements: [idUsuario, idEmpresa, idRancho]
+  });
+  return rows.length > 0;
+}
+
+/**
+ * Nivel 3: Permiso sobre módulo y acción
+ * - moduleClave: clave del módulo (ej 'almacen')
+ * - accion: 'create'|'read'|'update'|'approve' etc.
+ * - idSistema: opcional para limitar por sistema
+ */
+async function tienePermiso(idUsuario, moduleClave, accion, idSistema = null) {
+  const params = [idUsuario, moduleClave, accion];
+  let sql = `
+    SELECT 1
+    FROM usuarios_roles ur
+    JOIN roles_permisos rp ON rp.idRol = ur.idRol
+    JOIN permisos p ON p.idPermiso = rp.idPermiso
+    JOIN modulos m ON m.idModulo = p.idModulo
+    WHERE ur.idUsuario = ?
+    AND m.clave = ?
+    AND p.accion = ?
+    `;
+  if (idSistema) {
+    sql += ' AND m.idSistema = ?';
+    params.push(idSistema);
+  }
+  sql += ' LIMIT 1';
+  const [rows] = await sequelize.query(sql, {
+    replacements: params
+  });
+  return rows.length > 0;
+}
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } });
 
 /***/ }),
 
 /***/ 9815:
-/*!**********************!*\
-  !*** ./src/db/db.js ***!
-  \**********************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+/***/ ((__webpack_module__, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => (__WEBPACK_DEFAULT_EXPORT__)\n/* harmony export */ });\n/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sequelize */ 8265);\n/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../config/env.mjs */ 9097);\n\n\nconst TIMEOUT_CONFIG = {\n  PRODUCTION: {\n    acquire: 120_000,\n    idle: 60_000,\n    retry: 30_000\n  },\n  DEVELOPMENT: {\n    acquire: 60_000,\n    idle: 20_000,\n    retry: 15_000\n  }\n};\nconst getTimeouts = () => {\n  const env = _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.MODE === 'production' ? 'PRODUCTION' : 'DEVELOPMENT';\n  return TIMEOUT_CONFIG[env];\n};\nconst sequelizeConfig = {\n  dialect: 'mysql',\n  host: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.DB_CONFIG.host,\n  port: 3306,\n  username: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.DB_CONFIG.user,\n  password: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.DB_CONFIG.password,\n  database: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.DB_CONFIG.database,\n  logging: false,\n  define: {\n    timestamps: false,\n    // No agrega campos created_at y updated_at\n    freezeTableName: true,\n    // Usa el nombre exacto de la tabla\n    underscored: true // Usa snake_case para nombres de columnas\n  },\n  pool: {\n    ..._config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.DB_CONFIG.pool,\n    ...getTimeouts\n  },\n  dialectOptions: {\n    connectTimeout: getTimeouts().connectTimeout,\n    // Aumenta el timeout de conexión\n    ssl: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__.envs.DB_CONFIG.ssl\n  },\n  retry: {\n    max: 3,\n    // Número máximo de reintentos\n    match: [\n    // Errores que provocan reintento\n    /SequelizeConnectionError/, /SequelizeConnectionRefusedError/, /SequelizeHostNotFoundError/, /SequelizeHostNotReachableError/, /SequelizeInvalidConnectionError/, /SequelizeConnectionTimedOutError/],\n    backoffBase: 1000,\n    // Tiempo base entre reintentos (1s)\n    backoffExponent: 1.5,\n    // Factor de incremento del tiempo\n    timeout: getTimeouts().retry // Tiempo máximo de reintento (60s)\n  }\n};\nconst sequelize = new sequelize__WEBPACK_IMPORTED_MODULE_0__.Sequelize(sequelizeConfig);\n/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (sequelize);\n\n//# sourceURL=webpack://mezclas/./src/db/db.js?");
+__webpack_require__.a(__webpack_module__, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   A: () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var sequelize__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(8265);
+/* harmony import */ var _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(9097);
+/* harmony import */ var _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3014);
 
-/***/ }),
 
-/***/ 9849:
-/*!*************************************!*\
-  !*** external "express-rate-limit" ***!
-  \*************************************/
-/***/ ((module) => {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_express_rate_limit_c965cf1c__;
+const getConnectionConfig = () => {
+  const isProduction = _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.MODE === 'production';
+  const config = {
+    dialect: 'mysql',
+    host: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.DB_CONFIG.host,
+    port: 3306,
+    username: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.DB_CONFIG.user,
+    password: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.DB_CONFIG.password,
+    database: _config_env_mjs__WEBPACK_IMPORTED_MODULE_1__/* .envs */ .D.DB_CONFIG.database,
+    logging: false,
+    // logging: msg => logger.debug(msg),
+    define: {
+      timestamps: false,
+      freezeTableName: true,
+      underscored: true
+    },
+    pool: {
+      max: isProduction ? 10 : 5,
+      min: 0,
+      acquire: isProduction ? 180000 : 60000,
+      idle: isProduction ? 60000 : 20000
+    },
+    dialectOptions: {
+      connectTimeout: isProduction ? 180000 : 60000
+    }
+  };
 
-/***/ }),
-
-/***/ 9991:
-/*!**************************************!*\
-  !*** ./src/routes/equipos.routes.js ***!
-  \**************************************/
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
-
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   createEquiposRouter: () => (/* binding */ createEquiposRouter)\n/* harmony export */ });\n/* harmony import */ var express__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! express */ 2674);\n/* harmony import */ var _controller_equipos_controller_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../controller/equipos.controller.js */ 4523);\n\n\nconst createEquiposRouter = ({\n  equiposModel\n}) => {\n  const router = (0,express__WEBPACK_IMPORTED_MODULE_0__.Router)();\n  const equiposController = new _controller_equipos_controller_js__WEBPACK_IMPORTED_MODULE_1__.EquiposController({\n    equiposModel\n  });\n\n  // Obtener centros de coste. pasamos\n  router.get('/equipos', equiposController.getAllDisponible);\n  return router;\n};\n\n//# sourceURL=webpack://mezclas/./src/routes/equipos.routes.js?");
+  // Log de configuración para debug
+  _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.debug('Configuración de base de datos:', {
+    host: config.host,
+    database: config.database,
+    user: config.username
+  });
+  return config;
+};
+const initializeConnection = async () => {
+  try {
+    const config = getConnectionConfig();
+    const sequelize = new sequelize__WEBPACK_IMPORTED_MODULE_0__.Sequelize(config);
+    await sequelize.authenticate();
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.info('✅ Conexión establecida correctamente');
+    return sequelize;
+  } catch (error) {
+    _utils_logger_js__WEBPACK_IMPORTED_MODULE_2__/* ["default"] */ .A.error('❌ Error conectando a la base de datos:', {
+      message: error.message,
+      code: error.original?.code,
+      sqlMessage: error.original?.sqlMessage
+    });
+    throw error;
+  }
+};
+const sequelize = await initializeConnection();
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (sequelize);
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } }, 1);
 
 /***/ })
 
@@ -927,6 +7210,75 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 /******/ }
 /******/ 
 /************************************************************************/
+/******/ /* webpack/runtime/async module */
+/******/ (() => {
+/******/ 	var webpackQueues = typeof Symbol === "function" ? Symbol("webpack queues") : "__webpack_queues__";
+/******/ 	var webpackExports = typeof Symbol === "function" ? Symbol("webpack exports") : "__webpack_exports__";
+/******/ 	var webpackError = typeof Symbol === "function" ? Symbol("webpack error") : "__webpack_error__";
+/******/ 	var resolveQueue = (queue) => {
+/******/ 		if(queue && queue.d < 1) {
+/******/ 			queue.d = 1;
+/******/ 			queue.forEach((fn) => (fn.r--));
+/******/ 			queue.forEach((fn) => (fn.r-- ? fn.r++ : fn()));
+/******/ 		}
+/******/ 	}
+/******/ 	var wrapDeps = (deps) => (deps.map((dep) => {
+/******/ 		if(dep !== null && typeof dep === "object") {
+/******/ 			if(dep[webpackQueues]) return dep;
+/******/ 			if(dep.then) {
+/******/ 				var queue = [];
+/******/ 				queue.d = 0;
+/******/ 				dep.then((r) => {
+/******/ 					obj[webpackExports] = r;
+/******/ 					resolveQueue(queue);
+/******/ 				}, (e) => {
+/******/ 					obj[webpackError] = e;
+/******/ 					resolveQueue(queue);
+/******/ 				});
+/******/ 				var obj = {};
+/******/ 				obj[webpackQueues] = (fn) => (fn(queue));
+/******/ 				return obj;
+/******/ 			}
+/******/ 		}
+/******/ 		var ret = {};
+/******/ 		ret[webpackQueues] = x => {};
+/******/ 		ret[webpackExports] = dep;
+/******/ 		return ret;
+/******/ 	}));
+/******/ 	__webpack_require__.a = (module, body, hasAwait) => {
+/******/ 		var queue;
+/******/ 		hasAwait && ((queue = []).d = -1);
+/******/ 		var depQueues = new Set();
+/******/ 		var exports = module.exports;
+/******/ 		var currentDeps;
+/******/ 		var outerResolve;
+/******/ 		var reject;
+/******/ 		var promise = new Promise((resolve, rej) => {
+/******/ 			reject = rej;
+/******/ 			outerResolve = resolve;
+/******/ 		});
+/******/ 		promise[webpackExports] = exports;
+/******/ 		promise[webpackQueues] = (fn) => (queue && fn(queue), depQueues.forEach(fn), promise["catch"](x => {}));
+/******/ 		module.exports = promise;
+/******/ 		body((deps) => {
+/******/ 			currentDeps = wrapDeps(deps);
+/******/ 			var fn;
+/******/ 			var getResult = () => (currentDeps.map((d) => {
+/******/ 				if(d[webpackError]) throw d[webpackError];
+/******/ 				return d[webpackExports];
+/******/ 			}))
+/******/ 			var promise = new Promise((resolve) => {
+/******/ 				fn = () => (resolve(getResult));
+/******/ 				fn.r = 0;
+/******/ 				var fnQueue = (q) => (q !== queue && !depQueues.has(q) && (depQueues.add(q), q && !q.d && (fn.r++, q.push(fn))));
+/******/ 				currentDeps.map((dep) => (dep[webpackQueues](fnQueue)));
+/******/ 			});
+/******/ 			return fn.r ? promise : getResult();
+/******/ 		}, (err) => ((err ? reject(promise[webpackError] = err) : outerResolve(exports)), resolveQueue(queue)));
+/******/ 		queue && queue.d < 0 && (queue.d = 0);
+/******/ 	};
+/******/ })();
+/******/ 
 /******/ /* webpack/runtime/define property getters */
 /******/ (() => {
 /******/ 	// define getter functions for harmony exports
@@ -944,21 +7296,11 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 /******/ 	__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ })();
 /******/ 
-/******/ /* webpack/runtime/make namespace object */
-/******/ (() => {
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = (exports) => {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/ })();
-/******/ 
 /************************************************************************/
 /******/ 
 /******/ // startup
 /******/ // Load entry module and return exports
-/******/ // This entry module can't be inlined because the eval devtool is used.
+/******/ // This entry module used 'module' so it can't be inlined
 /******/ var __webpack_exports__ = __webpack_require__(9100);
+/******/ __webpack_exports__ = await __webpack_exports__;
 /******/ 

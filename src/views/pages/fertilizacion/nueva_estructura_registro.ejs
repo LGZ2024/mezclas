@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/master/cabecera") %>
+            <link rel="stylesheet" href="/css/app.css">
+            <style>
+                .stepper-container {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 40px;
+                    position: relative;
+                }
+
+                .stepper-container::before {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 0;
+                    right: 0;
+                    height: 2px;
+                    background: #e0e0e0;
+                    transform: translateY(-50%);
+                    z-index: 0;
+                }
+
+                .step {
+                    flex: 1;
+                    text-align: center;
+                    position: relative;
+                    z-index: 1;
+                }
+
+                .step-number {
+                    width: 40px;
+                    height: 40px;
+                    margin: 0 auto 10px;
+                    background: #f0f0f0;
+                    border: 2px solid #e0e0e0;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    transition: all 0.3s ease;
+                }
+
+                .step.active .step-number {
+                    background: #007bff;
+                    color: white;
+                    border-color: #0056b3;
+                }
+
+                .step.completed .step-number {
+                    background: #28a745;
+                    color: white;
+                    border-color: #1e7e34;
+                }
+
+                .step-label {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #666;
+                }
+
+                .step.active .step-label {
+                    color: #007bff;
+                    font-weight: 600;
+                }
+
+                .form-section {
+                    display: none;
+                }
+
+                .form-section.active {
+                    display: block;
+                    animation: fadeIn 0.3s ease;
+                }
+
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+
+                    to {
+                        opacity: 1;
+                    }
+                }
+
+                .form-group label {
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                }
+
+                .required::after {
+                    content: '*';
+                    color: red;
+                    margin-left: 4px;
+                }
+
+                .card-header {
+                    background-color: #f8f9fa;
+                    border-bottom: 2px solid #dee2e6;
+                }
+
+                .btn-group-form {
+                    display: flex;
+                    gap: 10px;
+                    margin-top: 30px;
+                }
+
+                .table-tanques {
+                    margin-top: 20px;
+                }
+
+                .badge-status {
+                    padding: 5px 10px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+
+                .badge-active {
+                    background-color: #d4edda;
+                    color: #155724;
+                }
+
+                .btn-remove {
+                    cursor: pointer;
+                    color: #dc3545;
+                    font-weight: bold;
+                }
+
+                .btn-remove:hover {
+                    color: #c82333;
+                }
+
+                .alert-info {
+                    background-color: #d1ecf1;
+                    border: 1px solid #bee5eb;
+                    color: #0c5460;
+                    padding: 12px;
+                    border-radius: 4px;
+                    margin-bottom: 15px;
+                }
+
+                .info-item {
+                    padding: 10px;
+                    background: #f8f9fa;
+                    border-left: 4px solid #007bff;
+                    margin-bottom: 10px;
+                }
+
+                .info-item strong {
+                    display: block;
+                    color: #007bff;
+                    margin-bottom: 5px;
+                }
+
+                .loading-spinner {
+                    display: none;
+                    text-align: center;
+                    padding: 20px;
+                }
+
+                .spinner {
+                    display: inline-block;
+                    width: 20px;
+                    height: 20px;
+                    border: 3px solid rgba(0, 123, 255, 0.1);
+                    border-top-color: #007bff;
+                    border-radius: 50%;
+                    animation: spin 0.8s linear infinite;
+                }
+
+                @keyframes spin {
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+            </style>
+</head>
+
+<body>
+    <div class="container-scroller">
+        <%- include("../../templates/master/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <%- include("../../templates/master/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="page-header">
+                                <h3 class="page-title">🌱 Nueva Fertilización</h3>
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#">Fertilización</a></li>
+                                        <li class="breadcrumb-item active">Nueva Registro</li>
+                                    </ol>
+                                </nav>
+                            </div>
+
+                            <div class="card">
+                                <!-- STEPPER -->
+                                <div class="card-body">
+                                    <div class="stepper-container">
+                                        <div class="step active" data-step="1">
+                                            <div class="step-number">1</div>
+                                            <div class="step-label">Evento</div>
+                                        </div>
+                                        <div class="step" data-step="2">
+                                            <div class="step-number">2</div>
+                                            <div class="step-label">Tanques</div>
+                                        </div>
+                                        <div class="step" data-step="3">
+                                            <div class="step-number">3</div>
+                                            <div class="step-label">Resumen</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- PASO 1: REGISTRAR EVENTO DE FERTILIZACIÓN -->
+                                    <div class="form-section active" id="step-1">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Paso 1: Crear Evento de Fertilización</h5>
+                                        </div>
+                                        <form id="formPaso1" class="needs-validation">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="id_rancho_dsa" class="required">Rancho</label>
+                                                        <select id="id_rancho_dsa" name="id_rancho_dsa"
+                                                            class="form-control js-example-basic-single" required>
+                                                            <option value="">Seleccionar rancho...</option>
+                                                        </select>
+                                                        <div class="invalid-feedback">El rancho es requerido</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="id_sector" class="required">Sector(es)</label>
+                                                        <select id="id_sector" name="id_sector"
+                                                            class="form-control js-example-basic-multiple"
+                                                            multiple="multiple" required>
+                                                            <option value="">Seleccionar sector(es)...</option>
+                                                        </select>
+                                                        <div class="invalid-feedback">Al menos un sector es requerido
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="fecha_fertilizacion" class="required">Fecha de
+                                                            Fertilización</label>
+                                                        <input type="date" id="fecha_fertilizacion" name="fecha"
+                                                            class="form-control" required>
+                                                        <div class="invalid-feedback">La fecha es requerida</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="observaciones">Observaciones</label>
+                                                        <input type="text" id="observaciones" name="observaciones"
+                                                            class="form-control" placeholder="Notas adicionales...">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="temporada">Temporada</label>
+                                                        <select id="temporada" name="temporada"
+                                                            class="form-control js-example-basic-single">
+                                                            <option value="">Seleccione una temporada</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="alert-info">
+                                                <strong>ℹ️ Información importante:</strong>
+                                                <small>Este paso crea el evento de fertilización. En el siguiente paso
+                                                    podrás agregar los tanques
+                                                    utilizados.</small>
+                                            </div>
+
+                                            <div class="btn-group-form">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="mdi mdi-check"></i> Crear Evento
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <!-- PASO 2: AGREGAR TANQUES -->
+                                    <div class="form-section" id="step-2">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Paso 2: Agregar Tanques a la Fertilización</h5>
+                                        </div>
+
+                                        <div class="info-item" id="infoEvento" style="display:none;">
+                                            <strong>Evento Creado:</strong>
+                                            <div id="eventoDetalles"></div>
+                                        </div>
+
+                                        <form id="formPaso2" class="needs-validation">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="id_tanque_preparado" class="required">Tanque
+                                                            Preparado</label>
+                                                        <select id="id_tanque_preparado" name="id_tanque_preparado"
+                                                            class="form-control" required>
+                                                            <option value="">Seleccionar tanque...</option>
+                                                        </select>
+                                                        <div class="invalid-feedback">Selecciona un tanque</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="horas_aplicadas" class="required">Horas
+                                                            Aplicadas</label>
+                                                        <input type="number" id="horas_aplicadas" name="horas_aplicadas"
+                                                            class="form-control" step="0.01" min="0" placeholder="0.00"
+                                                            required>
+                                                        <div class="invalid-feedback">Ingresa horas aplicadas</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="loading-spinner" id="loadingTanque">
+                                                <div class="spinner"></div>
+                                                <small>Validando tanque...</small>
+                                            </div>
+
+                                            <button type="button" id="btnAgregarTanque" class="btn btn-success">
+                                                <i class="mdi mdi-plus"></i> Agregar Tanque
+                                            </button>
+                                        </form>
+
+                                        <!-- TABLA DE TANQUES AGREGADOS -->
+                                        <div class="table-tanques" id="containerTanques" style="display:none;">
+                                            <h6>Tanques Agregados:</h6>
+                                            <table class="table table-sm table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Tanque</th>
+                                                        <th>Mezcla</th>
+                                                        <th>Horas</th>
+                                                        <th>Litros Totales</th>
+                                                        <th>Estado</th>
+                                                        <th>Acción</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tablaTanques">
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="btn-group-form" style="margin-top:30px;">
+                                            <button type="button" class="btn btn-secondary" onclick="irAlPaso(1)">
+                                                <i class="mdi mdi-arrow-left"></i> Atrás
+                                            </button>
+                                            <button type="button" id="btnFinalizarTanques" class="btn btn-primary"
+                                                disabled>
+                                                <i class="mdi mdi-check"></i> Finalizar
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- PASO 3: RESUMEN -->
+                                    <div class="form-section" id="step-3">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">Paso 3: Resumen de Fertilización</h5>
+                                        </div>
+
+                                        <div class="alert alert-success" role="alert" id="alertExito"
+                                            style="display:none;">
+                                            <h5 class="alert-heading">✅ Fertilización Registrada Exitosamente</h5>
+                                            <div id="resumenExito"></div>
+                                        </div>
+
+                                        <div id="contenidoResumen">
+                                            <div class="info-item">
+                                                <strong>Información del Evento:</strong>
+                                                <table class="table table-sm mb-0">
+                                                    <tbody id="tablaEventoResumen">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="info-item" id="infoTanquesResumen" style="display:none;">
+                                                <strong>Tanques Utilizados:</strong>
+                                                <table class="table table-sm mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Tanque</th>
+                                                            <th>Mezcla</th>
+                                                            <th>Horas</th>
+                                                            <th>Litros Totales</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="tablaTanquesResumen">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div class="alert-info">
+                                                <strong>📊 Totales:</strong>
+                                                <div>
+                                                    Tanques utilizados: <strong id="totalTanques">0</strong>
+                                                </div>
+                                                <div>
+                                                    Total horas aplicadas: <strong id="totalHoras">0</strong>
+                                                </div>
+                                                <div>
+                                                    Total litros calculados: <strong id="totalLitros">0</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="btn-group-form">
+                                        <button type="button" class="btn btn-secondary" onclick="irAlPaso(2)">
+                                            <i class="mdi mdi-arrow-left"></i> Atrás
+                                        </button>
+                                        <button type="button" id="btnNuevoRegistro" class="btn btn-primary">
+                                            <i class="mdi mdi-plus"></i> Nuevo Registro
+                                        </button>
+                                        <a href="/api/fertilizacion/nueva-estructura/reportes" class="btn btn-info">
+                                            <i class="mdi mdi-chart-line"></i> Ver Reportes
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <%- include("../../templates/master/footer") %>
+                    </div>
+            </div>
+    </div>
+
+    <%- include("../../templates/master/scripts") %>
+        <script type="module" src="/app/Fertilizacion/fertilizacion.js"></script>
+</body>
+
+</html>

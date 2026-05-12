@@ -1,13 +1,9 @@
 import express from 'express'
-// import logger from 'morgan'
 import compression from 'compression'
 import helmet from 'helmet'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
-// import fileUpload from 'express-fileupload'
-
-import { join } from 'path'
-
+import crypto from 'crypto'
 // Librerias
 import swaggerUi from 'swagger-ui-express'
 import { swaggerSpec } from '../utils/swagger.js'
@@ -19,59 +15,16 @@ import { paths } from '../config/paths.js'
 import { corsMiddleware } from '../middlewares/cors.js'
 import { validateJSON } from '../middlewares/validateJsonMiddleware.js'
 import { error404, errorHandler } from '../middlewares/error500Middleware.js'
-// import { apiLimiter } from '../middlewares/rateLimit.js'
+import { apiLimiter } from '../middlewares/rateLimit.js'
 import { authenticate } from '../middlewares/authMiddleware.js'
 import { correlationMiddleware } from '../middlewares/correlationMiddleware.js'
-// import { validateBase64Image } from '../middlewares/validateFormatoImg.js'
 // Rutas
-import { createProtetedRouter } from '../routes/protected.routes.js' // protegidas
 import { createUsuarioRouter } from '../routes/usuario.routes.js'
-import { createCentroCosteRouter } from '../routes/centro.routes.js'
-import { createMezclasRouter } from '../routes/mezclas.routes.js'
-import { createProductosRouter } from '../routes/productos.routes.js'
-import { createProductosSoliRouter } from '../routes/productosSolitud.routes.js'
-import { createProduccionRouter } from '../routes/produccion.routes.js'
-import { createNotificacionesRouter } from '../routes/notificaciones.routes.js'
-import { createEquiposRouter } from '../routes/equipos.routes.js'
-import { createEmpleadosRouter } from '../routes/empleados.routes.js'
-import { createUploadsRouter } from '../routes/uploads.routes.js'
-import { createDevolucionRouter } from '../routes/devolucion.routes.js'
-import { createUnidadRouter } from '../routes/unidad.routes.js'
-import { createTallerRouter } from '../routes/taller.routes.js'
-import { createSolicitudServicioRouter } from '../routes/solicitudServicio.routes.js'
-import { createManteniminetoRouter } from '../routes/mantenimiento.routes.js'
-import { createServicioRouter } from '../routes/servicios.routes.js'
-import { createEntradaCombustibleRouter } from '../routes/combustible_entrada.routes.js'
-import { createSalidaCombustibleRouter } from '../routes/combustible_salida.routes.js'
-import { createCargaCombustibleRouter } from '../routes/combustible_carga.routes.js'
-import { createInventarioRouter } from '../routes/combustible_inventario.routes.js'
-import { createAsignacionesRouter } from '../routes/asignaciones.routes.js'
-import { createCatalogoRouter } from '../routes/catalogo_corporativo.routes.js'
-// ruta para creacion de archivops pdf
-import { createPdfRouter } from '../routes/pdf.routes.js'
+import { createFertilizacionRouter } from '../routes/fertilizacion.routes.js'
+import { createCorporativoRouter } from '../routes/corporativo.routes.js'
 
 // Models
 import { UsuarioModel } from '../models/usuario.models.js'
-import { CentroCosteModel } from '../models/centro.models.js'
-import { MezclaModel } from '../models/mezclas.models.js'
-import { ProductosModel } from '../models/productos.models.js'
-import { SolicitudRecetaModel } from '../models/productosSolicitud.models.js'
-import { ProduccionModel } from '../models/produccion.models.js'
-import { NotificacionModel } from '../models/notificaciones.models.js'
-import { EquiposModel } from '../models/equipos.models.js'
-import { EmpleadosModel } from '../models/empleados.models.js'
-import { DevolucionModel } from '../models/devolucion.models.js'
-import { UnidadModel } from '../models/unidad.models.js'
-import { TallerModel } from '../models/taller.models.js'
-import { SolicitudServicioModel } from '../models/solicitudServicio.models.js'
-import { MantenimientosModel } from '../models/mantenimiento.models.js'
-import { ServiciosModel } from '../models/servicios.models.js'
-import { EntradaCombustibleModel } from '../models/combustible_entrada.models.js'
-import { SalidaCombustibleModel } from '../models/combustible_salida.models.js'
-import { CargaCombustibleModel } from '../models/combustible_carga.models.js'
-import { InventarioModel } from '../models/combustible_inventario.models.js'
-import { AsignacionesModel } from '../models/asignaciones.models.js'
-import { CatalogoModel } from '../models/catalogo_corporativo.models.js'
 
 // Asociaciones
 import { setupAssociations } from '../models/modelAssociations.js'
@@ -83,10 +36,6 @@ export const startServer = async (options) => {
   const { PORT, MODE } = options
 
   const app = express()
-
-  // Configura el directorio de uploads
-  const uploadsDir = paths.uploads
-  const imagesDir = join(uploadsDir)
 
   // MOTOR DE PLANTILLAS EJS
   app.set('views', paths.views)
@@ -112,43 +61,99 @@ export const startServer = async (options) => {
     level: 6 // nivel de compresión (0-9)
   }))
 
+  // Middleware para generar nonce
+  app.use((req, res, next) => {
+    res.locals.nonce = crypto.randomBytes(16).toString('base64')
+    next()
+  })
+
+  // Configuración de seguridad Helmet con CSP basada en Nonce
+  const isDev = MODE === 'development'
+
   // Configuración de seguridad para permitir recursos externos mientras se mantiene la seguridad básica
-  if (MODE !== 'development') {
-    loggerWiston.info('🔒 helmet configurado')
-    app.use(helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            'https://ka-f.fontawesome.com',
-            'http://localhost:3000'
-          ],
-          scriptSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            'https://ka-f.fontawesome.com'
-          ],
-          fontSrc: [
-            "'self'",
-            'https://ka-f.fontawesome.com',
-            'data:'
-          ],
-          connectSrc: [
-            "'self'",
-            'https://ka-f.fontawesome.com',
-            'http://localhost:3000'
-          ],
-          imgSrc: ["'self'", 'data:', 'https:'],
-          upgradeInsecureRequests: []
-        }
-      },
-      crossOriginEmbedderPolicy: false,
-      crossOriginResourcePolicy: { policy: 'cross-origin' }
-    }))
-  }
-  // Configurar middleware para cookies y validar JSON en los request
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          'https://ka-f.fontawesome.com',
+          'https://fertilizacion.portalrancho.com.mx',
+          'https://cdn.jsdelivr.net'
+        ],
+        scriptSrc: [
+          "'self'",
+          (req, res) => `'nonce-${res.locals.nonce}'`,
+          'https://cdn.jsdelivr.net',
+          'https://code.jquery.com',
+          ...(isDev ? ["'unsafe-inline'"] : [])
+        ],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        fontSrc: [
+          "'self'",
+          'https://ka-f.fontawesome.com',
+          'https://fonts.googleapis.com', // ✅ dominio de la hoja de estilos
+          'https://fonts.gstatic.com', // ✅ dominio donde están los archivos de fuente reales
+          'data:'
+        ],
+        connectSrc: [
+          "'self'",
+          'https://ka-f.fontawesome.com',
+          'https://cdn.jsdelivr.net',
+          'https://fonts.googleapis.com', // ✅ necesario para el service worker
+          'https://fonts.gstatic.com', // ✅ necesario para el service worker
+          ...(isDev ? ['http://localhost:3000'] : [])
+        ],
+        imgSrc: [
+          "'self'",
+          'data:',
+          'blob:',
+          'https://fertilizacion.portalrancho.com.mx'
+        ],
+        mediaSrc: ["'self'", 'blob:'],
+        workerSrc: ["'self'", 'blob:'],
+        childSrc: ["'self'", 'blob:'],
+        frameSrc: [
+          "'self'",
+          'https://fertilizacion.portalrancho.com.mx',
+          ...(isDev ? ['http://localhost:3000'] : [])
+        ],
+
+        frameAncestors: isDev
+          ? ["'self'", 'http://localhost:3000']
+          : ["'self'", 'https://mezclas.portalrancho.com.mx'], // ✅ permite iframes desde tu propio dominio
+
+        // ✅ Corregido: 'none' no puede combinarse con otros valores
+        objectSrc: isDev
+          ? ["'self'", 'http://localhost:3000']
+          : ["'self'", 'https://mezclas.portalrancho.com.mx'],
+
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+
+        ...(isDev ? {} : { upgradeInsecureRequests: null })
+
+      }
+    },
+        hsts: isDev
+      ? false
+      : {
+          maxAge: 31536000,
+          includeSubDomains: true,
+          preload: true
+        },
+
+    noSniff: true,
+    frameguard: false,
+    hidePoweredBy: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'same-site' }
+  }))
+
+  // Configurar middleware para cookies y CORS
   app.use(cookieParser())
   app.use(validateJSON)
   app.use(corsMiddleware())
@@ -160,10 +165,10 @@ export const startServer = async (options) => {
     extended: true
   }))
 
-  // if (MODE !== 'development') {
-  //   loggerWiston.info('🔒 limite de peticiones por IP Activado') // eslint-disable-line no-console
-  //   app.use(apiLimiter) // Limitar el número de peticiones por IP
-  // }
+  if (MODE !== 'development') {
+    loggerWiston.info('🔒 limite de peticiones por IP Activado') // eslint-disable-line no-console
+    app.use(apiLimiter) // Limitar el número de peticiones por IP
+  }
 
   // Validar que la documentación está disponible solo en desarrollo
   if (MODE === 'development') {
@@ -172,37 +177,12 @@ export const startServer = async (options) => {
   }
   // rutas API
   app.use('/api/usuario/', createUsuarioRouter({ usuarioModel: UsuarioModel }))
-  app.use('/api/', authenticate, createCentroCosteRouter({ centroModel: CentroCosteModel }))
-  app.use('/api/', authenticate, createMezclasRouter({ mezclaModel: MezclaModel }))
-  app.use('/api/', authenticate, createProductosRouter({ productosModel: ProductosModel }))
-  app.use('/api/', authenticate, createProductosSoliRouter({ productossModel: SolicitudRecetaModel }))
-  app.use('/api/', authenticate, createNotificacionesRouter({ notificacionModel: NotificacionModel }))
-  app.use('/api/', authenticate, createProduccionRouter({ produccionModel: ProduccionModel }))
-  app.use('/api/', authenticate, createEquiposRouter({ equiposModel: EquiposModel }))
-  app.use('/api/', authenticate, createEmpleadosRouter({ empleadosModel: EmpleadosModel }))
-  app.use('/api/', authenticate, createDevolucionRouter({ devolucionModel: DevolucionModel }))
-  app.use('/api/', authenticate, createUnidadRouter({ unidadModel: UnidadModel }))
-  app.use('/api/', authenticate, createTallerRouter({ tallerModel: TallerModel }))
-  app.use('/api/', authenticate, createSolicitudServicioRouter({ solicitudModel: SolicitudServicioModel }))
-  app.use('/api/', authenticate, createManteniminetoRouter({ mantenimientoModel: MantenimientosModel }))
-  app.use('/api/', authenticate, createServicioRouter({ servicioModel: ServiciosModel }))
-  app.use('/api/', authenticate, createEntradaCombustibleRouter({ entradaCombustibleModel: EntradaCombustibleModel }))
-  app.use('/api/', authenticate, createSalidaCombustibleRouter({ salidaCombustibleModel: SalidaCombustibleModel }))
-  app.use('/api/', authenticate, createCargaCombustibleRouter({ cargaCombustibleModel: CargaCombustibleModel }))
-  app.use('/api/', authenticate, createInventarioRouter({ inventarioModel: InventarioModel }))
-  app.use('/api/', authenticate, createAsignacionesRouter({ asignacionesModel: AsignacionesModel }))
-  app.use('/api/', authenticate, createCatalogoRouter({ catalogoModel: CatalogoModel }))
-  // ruta para creacion de pdf
-  app.use('/pdf/', authenticate, createPdfRouter())
 
-  // rutas Protegidas
-  app.use('/protected/', authenticate, createProtetedRouter())
+  // Modulo Fertilizacion
+  app.use('/api/fertilizacion', authenticate, createFertilizacionRouter())
 
-  // Rutas para imágenes (antes de las rutas API)
-  app.use('/api/', authenticate, createUploadsRouter())
-
-  // Servir archivos estáticos
-  app.use('/api/uploads/', authenticate, express.static(imagesDir))
+  // Modulo Corporativo
+  app.use('/corporativo', authenticate, createCorporativoRouter())
 
   // PAGINA DE Inicio
   app.get('/', (req, res) => {

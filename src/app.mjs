@@ -2,6 +2,7 @@ import { startServer } from './server/server.mjs'
 import { envs } from './config/env.mjs'
 import logger from './utils/logger.js'
 import deployConfig from '../deploy.config.mjs'
+// SCSS se manejará a través de webpack, no se importa aquí
 
 const env = process.env.NODE_ENV || 'development'
 const config = {
@@ -9,7 +10,7 @@ const config = {
   ...deployConfig[env]
 }
 
-async function bootstrap () {
+async function bootstrap() {
   try {
     logger.info('Iniciando aplicación', {
       environment: env,

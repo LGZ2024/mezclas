@@ -4,13 +4,13 @@
 <head>
     <!-- Required meta tags -->
     <%- include("../../templates/head-pwa") %>
-    <%- include("../../templates/master/cabecera") %>
+        <%- include("../../templates/master/cabecera") %>
 </head>
 
 <body>
     <div class="container-scroller">
         <!-- navcabecera -->
-         <%- include("../../templates/master/navCabecera") %>
+        <%- include("../../templates/master/navCabecera") %>
             <div class="container-fluid page-body-wrapper">
                 <!-- nav lateral -->
                 <%- include("../../templates/master/navLateral") %>
@@ -36,6 +36,7 @@
                                                                 <tr>
                                                                     <th> id# </th>
                                                                     <th> Rancho</th>
+                                                                    <th> Empresa</th>
                                                                     <th> status</th>
                                                                     <th> Acciones</th>
                                                                 </tr>
@@ -64,7 +65,7 @@
 
         <!-- container-scroller -->
         <%- include("../../templates/master/scripts") %>
-            <script type="module" src="/app/activos/main.js"></script>
+            <script src="/app/Corporativo/ranchos.js"></script>
 </body>
 
 </html>

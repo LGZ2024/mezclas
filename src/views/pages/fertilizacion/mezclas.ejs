@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/master/cabecera") %>
+            <style>
+                :root {
+                    --bg-premium: #f8fbff;
+                    --primary-soft: #e3f2fd;
+                    --accent-macro: #2e7d32;
+                    --accent-secundario: #e65100;
+                    --accent-micro: #6a1b9a;
+                    --accent-bio: #01579b;
+                    --accent-coady: #880e4f;
+                    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+                    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+
+                .macro-badge {
+                    display: inline-block;
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
+                    text-transform: uppercase;
+                    box-shadow: var(--shadow-sm);
+                }
+
+                .type-macro {
+                    background: #e8f5e9;
+                    color: var(--accent-macro);
+                    border: 1px solid #c8e6c9;
+                }
+
+                .type-secundario {
+                    background: #fff3e0;
+                    color: var(--accent-secundario);
+                    border: 1px solid #ffe0b2;
+                }
+
+                .type-micro {
+                    background: #f3e5f5;
+                    color: var(--accent-micro);
+                    border: 1px solid #e1bee7;
+                }
+
+                .type-bioestimulante {
+                    background: #e1f5fe;
+                    color: var(--accent-bio);
+                    border: 1px solid #b3e5fc;
+                }
+
+                .type-coadyuvante {
+                    background: #fce4ec;
+                    color: var(--accent-coady);
+                    border: 1px solid #f8bbd0;
+                }
+
+                .mezcla-card {
+                    background: white;
+                    border-radius: 12px;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    cursor: default;
+                }
+
+                .mezcla-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+                }
+
+                .ingrediente-item {
+                    background: #ffffff;
+                    padding: 12px 16px;
+                    border-radius: 10px;
+                    margin-bottom: 10px;
+                    border: 1px solid #edf2f7;
+                    transition: all 0.2s;
+                    box-shadow: var(--shadow-sm);
+                }
+
+                .ingrediente-item:hover {
+                    border-color: #cbd5e0;
+                    background: #fcfdfe;
+                }
+
+                /* Tracker de Porcentaje UI */
+                .percentage-tracker {
+                    background: #f1f5f9;
+                    padding: 15px;
+                    border-radius: 12px;
+                    margin-bottom: 20px;
+                    border: 1px dashed #cbd5e0;
+                }
+
+                .progress-custom {
+                    height: 8px;
+                    border-radius: 4px;
+                    background: #e2e8f0;
+                    overflow: hidden;
+                    margin: 8px 0;
+                }
+
+                .progress-bar-fill {
+                    height: 100%;
+                    width: 0%;
+                    background: linear-gradient(90deg, #4299e1, #667eea);
+                    transition: width 0.4s ease, background 0.3s;
+                }
+
+                .progress-bar-fill.full {
+                    background: linear-gradient(90deg, #48bb78, #38a169);
+                }
+
+                .progress-bar-fill.warning {
+                    background: linear-gradient(90deg, #ed8936, #dd6b20);
+                }
+
+                .progress-bar-fill.danger {
+                    background: linear-gradient(90deg, #f56565, #e53e3e);
+                }
+
+                /* Botones Flat/Modern */
+                .btn-modern {
+                    border-radius: 8px;
+                    font-weight: 600;
+                    padding: 8px 16px;
+                    transition: all 0.2s;
+                }
+
+                .ingredientes-preview .badge {
+                    font-size: 11px;
+                    padding: 5px 8px;
+                    border-radius: 6px;
+                    font-weight: 500;
+                }
+            </style>
+</head>
+
+<body>
+    <div class="container-scroller">
+        <%- include("../../templates/master/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <%- include("../../templates/master/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="page-header">
+                                <h3 class="page-title">Catálogo de Mezclas</h3>
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Mezclas</li>
+                                    </ol>
+                                </nav>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <button class="btn btn-primary btn-sm mb-3" id="btnNuevaMezcla">
+                                        <i class="mdi mdi-plus"></i> Nueva Mezcla
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Listado de Mezclas -->
+                            <div class="row" id="mezclasContainer">
+                                <!-- Se cargará dinámicamente -->
+                            </div>
+                        </div>
+                        <%- include("../../templates/master/footer") %>
+                    </div>
+            </div>
+    </div>
+
+    <!-- MODAL: Crear/Editar Mezcla -->
+    <div class="modal fade" id="modalMezcla" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-mezcla" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMezclaTitle">Nueva Mezcla</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <form id="formMezcla">
+                    <div class="modal-body">
+                        <input type="hidden" id="id_mezcla_edit">
+
+                        <div class="form-group">
+                            <label for="nombre_mezcla">Nombre de la Mezcla *</label>
+                            <input type="text" class="form-control" id="nombre_mezcla" name="nombre_mezcla"
+                                placeholder="Ej: Mezcla NPK 10-20-20" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fabricante_mezcla">Fabricante *</label>
+                            <input type="text" class="form-control" id="fabricante_mezcla" name="fabricante_mezcla"
+                                placeholder="Ej: Fertiberia, Yara" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="descripcion_mezcla">Descripción</label>
+                            <textarea class="form-control" id="descripcion_mezcla" name="descripcion_mezcla" rows="2"
+                                placeholder="Descripción de la mezcla"></textarea>
+                        </div>
+
+                        <hr>
+                        <h6>Receta de la Mezcla</h6>
+                        <p class="text-muted small">Ingresa el porcentaje de cada ingrediente activo en la mezcla final.
+                        </p>
+
+                        <!-- Agregar ingredientes -->
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="select_activo_mezcla">Seleccionar Ingrediente</label>
+                                    <select class="form-control" id="select_activo_mezcla">
+                                        <option value="">-- Elige un ingrediente --</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="cantidad_activo_mezcla">Porcentaje (%)</label>
+                                    <input type="number" class="form-control" id="cantidad_activo_mezcla"
+                                        placeholder="0 - 100" step="0.0001" min="0" max="100">
+                                </div>
+                                <div class="col-md-2">
+                                    <label>&nbsp;</label>
+                                    <button type="button" class="btn btn-primary btn-block"
+                                        id="btnAgregarIngredienteMezcla">
+                                        <i class="mdi mdi-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de ingredientes agregados -->
+                        <div class="form-group mb-0">
+                            <label>Ingredientes de la Receta</label>
+
+                            <!-- Tracker Visual -->
+                            <div class="percentage-tracker">
+                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                    <small class="text-muted font-weight-bold">COMPOSICIÓN TOTAL</small>
+                                    <span id="totalPorcentajeText" class="h4 mb-0 font-weight-bold">0%</span>
+                                </div>
+                                <div class="progress-custom">
+                                    <div id="totalPorcentajeBar" class="progress-bar-fill"></div>
+                                </div>
+                                <div id="porcentajeFeedback" class="small text-muted">
+                                    Completa el 100% para una mezcla balanceada.
+                                </div>
+                            </div>
+
+                            <div id="listaIngredientes" class="border-0" style="min-height: 100px;">
+                                <p class="text-muted text-center mb-0"><i class="mdi mdi-information"></i> Sin
+                                    ingredientes aún</p>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Mezcla</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Ver Activos de Mezcla -->
+    <div class="modal fade" id="modalActivos" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-mezcla" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalActivosTitle">Ingredientes de la Mezcla</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="listadoActivos"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%- include("../../templates/master/scripts") %>
+        <script type="module" src="/app/Fertilizacion/mezclas.js?v=<%= Date.now() %>"></script>
+
+
+</body>
+
+</html>

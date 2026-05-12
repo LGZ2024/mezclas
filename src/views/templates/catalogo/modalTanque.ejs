@@ -1,0 +1,59 @@
+<div class="modal fade" id="modalTanque" tabindex="-1" role="dialog" aria-labelledby="miModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTanqueLabel" style="color: black;">Gestión de Tanque</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formTanque">
+                    <input type="hidden" id="id_tanque" name="id">
+                    <div class="form-group">
+                        <label for="id_rancho">Rancho</label>
+                        <select class="form-control" id="id_rancho" name="id_rancho" required>
+                            <option value="">Seleccione un rancho</option>
+                            <% if (typeof ranchos !=='undefined' ) { %>
+                                <% ranchos.forEach(rancho=> { %>
+                                    <option value="<%= rancho.id %>">
+                                        <%= rancho.rancho %>
+                                    </option>
+                                    <% }) %>
+                                        <% } %>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="codigo">Código</label>
+                        <input type="text" class="form-control" id="codigo" name="codigo" placeholder="Ej: TQ-01"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="etapa">Etapa</label>
+                        <input type="text" class="form-control" id="etapa" name="etapa" placeholder="Ej: Etapa 1"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capacidad">Capacidad</label>
+                        <input type="number" step="0.01" class="form-control" id="capacidad" name="capacidad"
+                            placeholder="0.00" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unidad">Unidad</label>
+                        <select class="form-control" id="unidad" name="unidad" required>
+                            <option value="L">Litros (L)</option>
+                            <option value="GAL">Galones (GAL)</option>
+                            <option value="M3">Metros Cúbicos (M3)</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="submit" form="formTanque" class="btn btn-primary" id="btnRegistrar">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>

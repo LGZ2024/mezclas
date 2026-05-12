@@ -7,8 +7,8 @@ import dotenv from 'dotenv'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const getNodeTarget = (mode) => {
-  return mode === 'production' ? 'node24.0' : 'node21.6'
+const getNodeTarget = () => {
+  return 'node24.0'
 }
 
 export default ({ mode }) => {
@@ -62,7 +62,7 @@ export default ({ mode }) => {
               presets: [
                 ['@babel/preset-env', {
                   targets: {
-                    node: isProduction ? '24' : '21'
+                    node: '24'
                   },
                   modules: false
                 }]

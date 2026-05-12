@@ -34,37 +34,45 @@ const verifyToken = async (token) => {
 
 const checkAccess = ({ idSistema, moduleClave, accion, requireRancho = false }) => {
   return async (req, res, next) => {
-    const user = req.user;
-    if (!user) return res.status(401).json({ msg: 'No autenticado' });
+    const user = req.user
+    if (!user) return res.status(401).json({ msg: 'No autenticado' })
 
     // 1) Sistema
-    const accesoSistema = await tieneAccesoASistema(user.idUsuario, idSistema);
-    if (!accesoSistema) return res.status(403).json({ msg: 'Sin acceso al sistema' });
+    const accesoSistema = await tieneAccesoASistema(user.idUsuario, idSistema)
+    if (!accesoSistema) return res.status(403).json({ msg: 'Sin acceso al sistema' })
 
     // 2) Dominio empresa/rancho - se esperan idEmpresa e idRancho en body/query/params
-    const idEmpresa = req.body.idEmpresa || req.query.idEmpresa || req.params.idEmpresa;
-    const idRancho = req.body.idRancho || req.query.idRancho || req.params.idRancho || null;
+    const idEmpresa = req.body.idEmpresa || req.query.idEmpresa || req.params.idEmpresa
+    const idRancho = req.body.idRancho || req.query.idRancho || req.params.idRancho || null
 
     if (!idEmpresa) {
       // si la ruta requiere empresa explícita, forzarla
-      return res.status(400).json({ msg: 'Falta idEmpresa en la solicitud' });
+      return res.status(400).json({ msg: 'Falta idEmpresa en la solicitud' })
     }
 
-    const accesoDominio = await tieneAccesoARancho(user.idUsuario, idRancho, idEmpresa);
-    if (!accesoDominio) return res.status(403).json({ msg: 'Sin acceso al dominio (empresa/rancho)' });
+    const accesoDominio = await tieneAccesoARancho(user.idUsuario, idRancho, idEmpresa)
+    if (!accesoDominio) return res.status(403).json({ msg: 'Sin acceso al dominio (empresa/rancho)' })
 
     // 3) Permiso sobre módulo/acción
-    const permiso = await tienePermiso(user.idUsuario, moduleClave, accion, idSistema);
-    if (!permiso) return res.status(403).json({ msg: 'Sin permisos en el módulo' });
+    const permiso = await tienePermiso(user.idUsuario, moduleClave, accion, idSistema)
+    if (!permiso) return res.status(403).json({ msg: 'Sin permisos en el módulo' })
 
     // Adjuntar contexto útil
-    req.ctx = { idSistema, moduleClave, accion, idEmpresa: Number(idEmpresa), idRancho: idRancho ? Number(idRancho) : null };
+    req.ctx = { idSistema, moduleClave, accion, idEmpresa: Number(idEmpresa), idRancho: idRancho ? Number(idRancho) : null }
 
-    next();
-  };
+    next()
+  }
 }
 
-export { authenticate, checkAccess }
+const checkRoleAuth = (roles) => (req, res, next) => {
+  if (req.user && roles.includes(req.user.userRole)) {
+    next()
+  } else {
+    res.status(403).render('errorSesion', { codeError: 403, title: '403 - Acceso Denegado', errorMsg: 'No tienes permisos para acceder a este recurso' })
+  }
+}
+
+export { authenticate, checkAccess, checkRoleAuth }
 
 /**
 Sistema 1 = almacén (ejemplo), modulo clave 'almacen', acción 'create'

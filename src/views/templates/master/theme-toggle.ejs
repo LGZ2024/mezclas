@@ -1,0 +1,56 @@
+<!-- Theme Toggle Component -->
+<div class="theme-toggle">
+  <button class="btn btn-sm" id="themeToggle" aria-label="Cambiar tema">
+    <i class="mdi mdi-lightbulb" id="themeIcon"></i>
+  </button>
+</div>
+
+<script nonce="<%= nonce %>">
+// Theme Toggle Functionality
+document.addEventListener('DOMContentLoaded', () => {
+  const themeToggle = document.getElementById('themeToggle')
+  const themeIcon = document.getElementById('themeIcon')
+  const html = document.documentElement
+  
+  // Función para obtener tema preferido
+  function getPreferredTheme() {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme) {
+      return savedTheme
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+  
+  // Función para establecer tema
+  function setTheme(theme) {
+    html.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+    
+    // Actualizar icono
+    themeIcon.className = theme === 'dark' ? 'mdi mdi-lightbulb-outline' : 'mdi mdi-lightbulb'
+    
+    // Actualizar meta theme-color
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+    if (metaThemeColor) {
+      metaThemeColor.content = theme === 'dark' ? '#1a1a1a' : '#0d6efd'
+    }
+  }
+  
+  // Inicializar tema
+  const currentTheme = getPreferredTheme()
+  setTheme(currentTheme)
+  
+  // Event listener para toggle
+  themeToggle.addEventListener('click', () => {
+    const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+  })
+  
+  // Escuchar cambios de preferencia del sistema
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+      setTheme(e.matches ? 'dark' : 'light')
+    }
+  })
+})
+</script>

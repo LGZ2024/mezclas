@@ -2,25 +2,27 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalEmpresaLabel" style="color: black;">Agregar Activo</h5>
+        <h5 class="modal-title" id="modalEmpresaLabel" style="color: black;">Gestión de Empresa</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
         <form id="formEmpresa">
+          <input type="hidden" id="id_empresa" name="id">
           <div class="form-group">
-            <label for="razon_social">Razon Social</label>
-            <input type="text" class="form-control" id="razon_social" name="razon_social" placeholder="Razon Social">
+            <label for="razon_social">Razón Social</label>
+            <input type="text" class="form-control" id="razon_social" name="razon_social" placeholder="Razón Social"
+              required>
           </div>
           <div class="form-group">
             <label for="nombre_comercial">Nombre Comercial</label>
             <input type="text" class="form-control" id="nombre_comercial" name="nombre_comercial"
-              placeholder="Nombre Comercial">
+              placeholder="Nombre Comercial" required>
           </div>
           <div class="form-group">
             <label for="rfc">RFC</label>
-            <input type="text" class="form-control" id="rfc" name="rfc" placeholder="RFC">
+            <input type="text" class="form-control" id="rfc" name="rfc" placeholder="RFC" required>
           </div>
         </form>
       </div>

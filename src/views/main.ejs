@@ -2,70 +2,12 @@
 <html>
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="description" content="Aplicación para gestión de solicitudes de mezclas y productos">
-
-  <!-- PWA manifest y configuración -->
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#0d6efd" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)">
-
-  <!-- Iconos para diferentes plataformas -->
-  <link rel="icon" type="image/webp" href="/images/LogoTransp.webp">
-  <link rel="icon" type="image/png" href="/images/LogoTransp.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/LogoTransp.webp">
-  <link rel="mask-icon" href="/images/LogoTransp.w" color="#0d6efd">
-
-  <!-- Configuración para dispositivos Apple -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Solicitudes Almacen">
-  <meta name="apple-touch-fullscreen" content="yes">
-
-  <!-- Splash screens para iOS -->
-  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-2048-2732.png"
-    media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)">
-  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1668-2388.png"
-    media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2)">
-  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1536-2048.png"
-    media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)">
-  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-1125-2436.png"
-    media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
-  <link rel="apple-touch-startup-image" href="/images/splash/apple-splash-828-1792.png"
-    media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)">
-
-  <!-- Otros metadatos -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="msapplication-tap-highlight" content="no">
-  <meta name="msapplication-TileColor" content="#0d6efd">
-
-  <!-- Optimizaciones para PWA -->
-  <link rel="dns-prefetch" href="//fonts.googleapis.com">
-  <link rel="preconnect" href="//fonts.googleapis.com">
-  <link rel="preconnect" href="//fonts.gstatic.com" crossorigin>
-
-  <!-- Estilos y scripts -->
-  <link rel="stylesheet" href="/css/pwa.css">
-  <!-- <script type="module" src="/js/app.js"></script> -->
-  <!-- Toast para notificaciones de conexión -->
-  <div id="connectionToast" class="connection-toast hide" role="alert" aria-live="polite"></div>
-
-  <!-- Botón de instalación PWA -->
-  <button id="installPwa" class="install-button " aria-label="Instalar aplicación">
-    Instalar aplicación
-  </button>
-<div id="updateNotification" class="update-notification hide">
-  <p>Nueva versión disponible</p>
-  <button onclick="window.location.reload()">Actualizar</button>
-</div>
+  <%- include("./templates/head-pwa") %>
   <title>Login Mezclas</title>
-  <link rel="icon" type="image/webp" href="./images/LogoTransp.webp">
-  <link rel="stylesheet" type="text/css" href="./vendors/toastify/toastify.min.css">
+  <link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96">
+  <link rel="stylesheet" type="text/css" href="/vendors/toastify/toastify.min.css">
 </head>
-<style>
+<style nonce="<%= nonce %>">
   body {
     margin: 0;
     padding: 0;
@@ -97,7 +39,7 @@
     transform: translateX(-50%);
     width: 120px;
     height: 120px;
-    background: url(./images/LogoTransp.webp) no-repeat center center;
+    background: url(./images/logoTransp-2.PNG) no-repeat center center;
     background-size: contain;
   }
 
@@ -158,6 +100,13 @@
 </style>
 
 <body>
+  <!-- toast de conexion -->
+  <div id="connectionToast" class="connection-toast hide" role="alert" aria-live="polite"></div>
+
+  <!-- boton de instalacion -->
+  <button id="installPwa" class="install-button " aria-label="Instalar aplicación">
+    Instalar aplicación
+  </button>
 
   <div class="login-box">
     <h1>Hola Bienvenidos</h1>
@@ -176,7 +125,7 @@
 </body>
 
 </html>
-<script type="module">
+<script type="module" nonce="<%= nonce %>">
 
   const formLogin = document.getElementById('form-login');
   formLogin.addEventListener('submit', handleLogin);
@@ -188,6 +137,7 @@
     const password = document.getElementById('password').value
     // Aquí deberías agregar la lógica para autenticar al usuario
     const response = await fechPeticion({ user, password })
+
     validarUsuario(response)
   }
 
@@ -213,13 +163,20 @@
   async function validarUsuario(response) {
     const data = await response.json();
 
+    
     if (response.status === 200) {
       Toastify({
         text: data.message,
         duration: 1000
       }).showToast()
+      // guardamos el usuario en local storage
+      localStorage.setItem('usuario', JSON.stringify(data.usuario));
       setTimeout(() => {
-        window.location.href = '/protected/admin';
+        if (data.usuario.rol === 'produccion') {
+          window.location.href = '/api/fertilizacion/preparar-tanque';
+        } else {
+          window.location.href = '/api/fertilizacion/nueva-estructura/registro';
+        }
       }, 3000)
     } else {
       return Toastify({

@@ -91,6 +91,26 @@ export class UsuarioModel {
     }
   }
 
+  static async getSolicitantes() {
+    try {
+      const usuario = await Usuario.findAll({
+        attributes: ['id', 'nombre', 'rol', 'empresa', 'ranchos'],
+        where: {
+          rol: { [Op.in]: ['solicita', 'solicita2', 'adminMezclador'] } // Filtrar por rol
+        }
+      })
+      // Verificar si se encontraron resultados
+      if (usuario.length === 0) {
+        throw new NotFoundError('No se encontraron usuarios para los criterios especificados')
+      }
+      return usuario
+    } catch (e) {
+      throw new DatabaseError('Error al obtener todos los usuarios', {
+        originalError: e.message
+      })
+    }
+  }
+
   // uso
   static async getUserEmail({ rol, empresa }) {
     try {
@@ -354,7 +374,7 @@ export class UsuarioModel {
         // creamos jwt
         const token = jwt.sign({ id: usuario.id, nombre: usuario.nombre, rol: usuario.rol, empresa: usuario.empresa, ranchos: usuario.ranchos, cultivo: usuario.variedad }, envs.SECRET_JWT_KEY, { expiresIn: '24h' })
 
-        return { message: 'Usuario logueado correctamente', token, rol: usuario.rol }
+        return { message: 'Usuario logueado correctamente', token, rol: usuario.rol, usuario: { nombre: usuario.nombre, rol: usuario.rol, empresa: usuario.empresa, ranchos: usuario.ranchos } }
       } catch (error) {
         logger.logError(error, {
           ...logContext,
@@ -392,7 +412,7 @@ export class UsuarioModel {
   static async changePasswordAdmin({ id, newPassword, logContext, logger }) {
     return await DbHelper.withTransaction(async (transaction) => {
       try {
-        console.log('cambiar contraseña Admin', id, newPassword)
+        // Cambiar contraseña Admin
         // Verificar si se proporcionaron los parámetros requeridos
         if (!id || !newPassword) {
           throw new ValidationError('Datos requeridos no proporcionados')

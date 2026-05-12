@@ -1,8 +1,8 @@
 <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
   <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-    <a class="navbar-brand brand-logo" href="/protected/admin"><img src="../../../images/logotransp.svg"
+    <a class="navbar-brand brand-logo" href="/protected/admin"><img src="/images/logotransp.svg"
         alt="logo" /></a>
-    <a class="navbar-brand brand-logo-mini" href="/protected/admin"><img src="../../../images/logotransp.svg"
+    <a class="navbar-brand brand-logo-mini" href="/protected/admin"><img src="/images/logotransp.svg"
         alt="logo" /></a>
   </div>
   <div class="navbar-menu-wrapper d-flex align-items-stretch">
@@ -10,6 +10,12 @@
       <span class="mdi mdi-menu"></span>
     </button>
     <ul class="navbar-nav navbar-nav-right">
+      <!-- Theme Toggle -->
+      <li class="nav-item">
+        <%- include("theme-toggle") %>
+      </li>
+      
+      <!-- User Profile -->
       <li class="nav-item nav-profile dropdown">
         <a class="nav-link dropdown-toggle" id="profileDropdown" href="#" data-toggle="dropdown" aria-expanded="false">
           <div class="nav-profile-img">
@@ -39,7 +45,7 @@
             <div role="separator" class="dropdown-divider"></div>
             <h5 class="dropdown-header text-uppercase  pl-2 text-dark mt-2">Acciones</h5>
             <a class="dropdown-item py-1 d-flex align-items-center justify-content-between"
-              href="/protected/cerrarSesion">
+              href="/api/usuario/logout">
               <span>Cerrar Sesion</span>
               <i class="mdi mdi-logout ml-1"></i>
             </a>

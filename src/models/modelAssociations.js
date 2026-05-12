@@ -1,115 +1,70 @@
-// models/modelAssociations.js
-import { Usuario } from '../schema/usuarios.js'
-import { Centrocoste } from '../schema/centro.js'
-import { Solicitud } from '../schema/mezclas.js'
-import { Servicios } from '../schema/servicios.js'
-import { Mantenimientos } from '../schema/mantenimiento.js'
-import { CatalogoTaller } from '../schema/catalogo_taller.js'
-import { unidad } from '../schema/catalogo_unidad.js'
-import { SolicitudProductos } from '../schema/solicitud_receta.js'
-import { Productos } from '../schema/productos.js'
-import { Recetas } from '../schema/recetas.js'
-import { CombustibleSalida } from '../schema/combustible_salida.js'
-import { CombustibleEntrada } from '../schema/combustible_entrada.js'
-import { Devoluciones } from '../schema/devoluciones.js'
-import { CombustibleCarga } from '../schema/combustible_carga.js'
-import { unidadCombustible } from '../schema/catalogo_unidad_combustible.js'
-
-// Nuevos esquemas para roles dinámicos
-import { Roles } from '../schema/roles.js'
-import { Modulos } from '../schema/modulos.js'
-import { Permisos } from '../schema/permisos.js'
-import { RolesPermisos } from '../schema/roles_permisos.js'
-import { UsuariosRoles } from '../schema/usuarios_roles.js'
-import { UsuariosAccesos } from '../schema/usuarios_accesos.js'
 import { Empresas } from '../schema/empresas.js'
 import { Ranchos } from '../schema/ranchos.js'
+import { RanchoDsa } from '../schema/rancho_dsa.js'
+import { Usuario } from '../schema/usuarios.js'
+
+// Fertilization Module Schemas
+import { ActivoMezcla } from '../schema/activo_mezcla.js'
+import { Tanques } from '../schema/tanques.js'
+import { Sectores } from '../schema/sectores.js'
+import { MezclaCatalogo } from '../schema/mezclas_catalogo.js'
+import { MezclaActivos } from '../schema/mezcla_activos.js'
+import { AplicacionesTanque } from '../schema/aplicaciones_tanque.js'
+import { TanquesPreparados } from '../schema/tanques_preparados.js'
+import { MezclasTanque } from '../schema/mezclas_tanque.js'
 
 // logger
 import logger from '../utils/logger.js'
 
 export function setupAssociations() {
-  // Asociaciones para combustible salida
-  CombustibleSalida.belongsTo(Centrocoste, {
-    foreignKey: 'centro_coste', // campo en CombustibleSalida
-    targetKey: 'id' // campo en Centrocoste
-  })
-  // asociasion para combustible entrada
-  CombustibleEntrada.belongsTo(Centrocoste, {
-    foreignKey: 'centro_coste', // campo en CombustibleEntrada
-    targetKey: 'id' // campo en Centrocoste
-  })
-  // Asociaciones para combustible carga
-  CombustibleCarga.belongsTo(unidadCombustible, {
-    foreignKey: 'no_economico', // campo en CombustibleCarga
-    targetKey: 'id' // campo en unidadCombustible
-  })
-  // Asociaciones para c
-  Servicios.belongsTo(CatalogoTaller, {
-    foreignKey: 'taller_asignado', // campo en Servicios
-    targetKey: 'id' // campo en CatalogoTaller
-  })
-  // asociaciones para mantenimientos
-  Mantenimientos.belongsTo(unidad, {
-    foreignKey: 'no_economico', // campo en Mantenimientos
-    targetKey: 'id' // campo en unidad
-  })
-  Mantenimientos.belongsTo(CatalogoTaller, {
-    foreignKey: 'taller_asignado', // campo en Mantenimientos
-    targetKey: 'id' // campo en CatalogoTaller
-  })
-  // Asociaciones para Solicitud
-  Solicitud.belongsTo(Usuario, {
-    foreignKey: 'idUsuarioSolicita'
-  })
+  // --- Asociaciones Modulo Fertilizacion ---
+  // Ranchos <-> Empresas
+  Ranchos.belongsTo(Empresas, { foreignKey: 'id_empresa' })
+  Empresas.hasMany(Ranchos, { foreignKey: 'id_empresa' })
 
-  Solicitud.belongsTo(Centrocoste, {
-    foreignKey: 'idCentroCoste'
-  })
+  // Mezcla <-> Activos (Many-to-Many via MezclaActivos)
+  MezclaCatalogo.hasMany(MezclaActivos, { foreignKey: 'id_mezcla' })
+  MezclaActivos.belongsTo(MezclaCatalogo, { foreignKey: 'id_mezcla' })
 
-  Devoluciones.belongsTo(Usuario, {
-    foreignKey: 'idUsuarioSolicita'
-  })
+  ActivoMezcla.hasMany(MezclaActivos, { foreignKey: 'id_activo' })
+  MezclaActivos.belongsTo(ActivoMezcla, { foreignKey: 'id_activo' })
 
-  // Asociaciones para productos Solicitud
-  SolicitudProductos.belongsTo(Productos, {
-    foreignKey: 'id_producto'
-  })
-  SolicitudProductos.belongsTo(Recetas, {
-    foreignKey: 'id_receta'
-  })
+  // Relacion One-to-Many con MezclasTanque (detalle)
+  TanquesPreparados.hasMany(MezclasTanque, { foreignKey: 'id_tanque_preparado' })
+  MezclasTanque.belongsTo(TanquesPreparados, { foreignKey: 'id_tanque_preparado' })
 
-  // asociaciones para cargas de combustible
-  CombustibleCarga.belongsTo(unidadCombustible, {
-    foreignKey: 'no_economico', // campo en CombustibleCarga
-    targetKey: 'id' // campo en unidadCombustible
-  })
+  // Detalle MezclaTanque -> MezclaCatalogo
+  MezclasTanque.belongsTo(MezclaCatalogo, { foreignKey: 'id_mezcla' })
 
-  // --- Asociaciones para Roles Dinámicos ---
+  TanquesPreparados.belongsTo(Tanques, { foreignKey: 'id_tanque' })
+  Tanques.hasMany(TanquesPreparados, { foreignKey: 'id_tanque' })
 
-  // Usuarios <-> Roles (Many-to-Many)
-  Usuario.belongsToMany(Roles, { through: UsuariosRoles, foreignKey: 'idUsuario', otherKey: 'idRol' })
-  Roles.belongsToMany(Usuario, { through: UsuariosRoles, foreignKey: 'idRol', otherKey: 'idUsuario' })
-  UsuariosRoles.belongsTo(Usuario, { foreignKey: 'idUsuario' })
-  UsuariosRoles.belongsTo(Roles, { foreignKey: 'idRol' })
+  TanquesPreparados.belongsTo(Ranchos, { foreignKey: 'id_rancho' })
+  Ranchos.hasMany(TanquesPreparados, { foreignKey: 'id_rancho' })
 
-  // Roles <-> Permisos (Many-to-Many)
-  Roles.belongsToMany(Permisos, { through: RolesPermisos, foreignKey: 'idRol', otherKey: 'idPermiso' })
-  Permisos.belongsToMany(Roles, { through: RolesPermisos, foreignKey: 'idPermiso', otherKey: 'idRol' })
-  RolesPermisos.belongsTo(Roles, { foreignKey: 'idRol' })
-  RolesPermisos.belongsTo(Permisos, { foreignKey: 'idPermiso' })
+  // Sectores <-> RanchoDsa
+  Sectores.belongsTo(RanchoDsa, { foreignKey: 'id_rancho_dsa' })
+  RanchoDsa.hasMany(Sectores, { foreignKey: 'id_rancho_dsa' })
 
-  // Permisos -> Modulos (One-to-Many)
-  Modulos.hasMany(Permisos, { foreignKey: 'idModulo' })
-  Permisos.belongsTo(Modulos, { foreignKey: 'idModulo' })
+  // RanchoDsa <-> Ranchos
+  RanchoDsa.belongsTo(Ranchos, { foreignKey: 'id_rancho' })
+  Ranchos.hasMany(RanchoDsa, { foreignKey: 'id_rancho' })
 
-  // Usuarios -> Accesos (One-to-Many)
-  Usuario.hasMany(UsuariosAccesos, { foreignKey: 'idUsuario' })
-  UsuariosAccesos.belongsTo(Usuario, { foreignKey: 'idUsuario' })
+  // Aplicaciones
+  AplicacionesTanque.belongsTo(TanquesPreparados, { foreignKey: 'id_tanque_preparado' })
+  TanquesPreparados.hasMany(AplicacionesTanque, { foreignKey: 'id_tanque_preparado' })
 
-  // Accesos -> Empresas/Ranchos (Optional)
-  UsuariosAccesos.belongsTo(Empresas, { foreignKey: 'idEmpresa' })
-  UsuariosAccesos.belongsTo(Ranchos, { foreignKey: 'idRancho' })
+  AplicacionesTanque.belongsTo(Sectores, { foreignKey: 'id_sector' })
+  Sectores.hasMany(AplicacionesTanque, { foreignKey: 'id_sector' })
+
+  AplicacionesTanque.belongsTo(Tanques, { foreignKey: 'id_tanque' })
+
+  // Optional: Link Application to User if 'id_responsable' is used
+  AplicacionesTanque.belongsTo(Usuario, { foreignKey: 'id_responsable' })
+
+  // Tanques <-> Ranchos
+  Tanques.belongsTo(Ranchos, { foreignKey: 'id_rancho' })
+  Ranchos.hasMany(Tanques, { foreignKey: 'id_rancho' })
 
   logger.info('✔ Asociaciones configuradas correctamente')
 }

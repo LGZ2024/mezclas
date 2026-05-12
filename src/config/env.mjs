@@ -9,32 +9,14 @@ const validateNodeVersion = () => {
   const currentVersion = process.version
   const isDevelopment = process.env.NODE_ENV === 'development'
 
-  if (isDevelopment && !currentVersion.startsWith('v21')) {
-    throw new Error('Desarrollo requiere Node.js v21.6.2')
+  if (isDevelopment && !currentVersion.startsWith('v24')) {
+    throw new Error('Desarrollo requiere Node.js 24.14.0')
   }
 
   if (!isDevelopment && !currentVersion.startsWith('v24')) {
-    throw new Error('Producción requiere Node.js v24.0.1')
+    throw new Error('Producción requiere Node.js 24.14.0')
   }
 }
-
-// Validar las variables de entorno
-// const validateEnvVars = () => {
-//   const required = ['DB_HOST', 'DB_USER', 'DB_NAME']
-//   const optional = ['DB_PASSWORD'] // Password puede estar vacío pero debe existir
-
-//   for (const key of required) {
-//     if (!process.env[key]) {
-//       throw new Error(`Falta la variable de entorno requerida: ${key}`)
-//     }
-//   }
-
-//   for (const key of optional) {
-//     if (!(key in process.env)) {
-//       process.env[key] = '' // Valor por defecto para variables opcionales
-//     }
-//   }
-// }
 
 // Configuración según el entorno
 const getEnvironmentConfig = () => {
@@ -56,9 +38,9 @@ const loadEnvVars = () => {
   const isPleskMode = process.env.PLESK_MODE === 'true'
   if (!isPleskMode) {
     env.config({ path: envPath })
-    console.log('variables de desarrollo tomadas de archivo .env')
+    // Variables de desarrollo tomadas de archivo .env
   } else {
-    console.log('variables de entono del tomada del servidor:')
+    // Variables de entorno del tomada del servidor:
   }
   // Verificar variables críticas
 }
@@ -86,8 +68,9 @@ export const envs = {
   MAILTO: process.env.MAILTO,
   NOTIFICATION_ICON: process.env.NOTIFICATION_ICON,
   PLESK_MODE: process.env.PLESK_MODE || false,
+  CRON_JOB_VALIDACIONES_PROGRAMADAS: process.env.CRON_JOB_VALIDACIONES_PROGRAMADAS,
   // Agregar validación
-  validate () {
+  validate() {
     // Validar versión de Node.js
     validateNodeVersion()
   }

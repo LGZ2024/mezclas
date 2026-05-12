@@ -7,6 +7,11 @@ export const createUsuarioRouter = ({ usuarioModel }) => {
 
   const usuarioController = new UsuarioController({ usuarioModel })
 
+  // rutas de inicio de sesion
+
+  router.post('/login', usuarioController.login) // logear usuario
+  router.get('/logout', authenticate, usuarioController.logout) // Para enlaces de navegación
+
   // Crear un usuario
   router.post('/', authenticate, usuarioController.create)
   router.get('/usuarios', authenticate, usuarioController.getUsuarios)
@@ -15,9 +20,6 @@ export const createUsuarioRouter = ({ usuarioModel }) => {
   router.patch('/:id', authenticate, usuarioController.update)
   router.delete('/:id', authenticate, usuarioController.delete)
   router.put('/:id', authenticate, usuarioController.changePassword)
-
-  // rutas de inicio de sesion
-  router.post('/login', usuarioController.login) // logear usuario
 
   return router
 }

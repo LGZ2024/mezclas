@@ -1,0 +1,291 @@
+<!-- Reportes de Fertilización -->
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">📊 Reportes de Fertilización</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Filtros -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <label for="filtro_anio" class="form-label">Año:</label>
+                            <select id="filtro_anio" class="form-select">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtro_mes" class="form-label">Mes:</label>
+                            <select id="filtro_mes" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="1">Enero</option>
+                                <option value="2">Febrero</option>
+                                <option value="3">Marzo</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Mayo</option>
+                                <option value="6">Junio</option>
+                                <option value="7">Julio</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtro_rancho" class="form-label">Rancho:</label>
+                            <select id="filtro_rancho" class="form-select">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-primary form-control" id="btnAplicarFiltros">
+                                <i class="mdi mdi-filter"></i> Aplicar Filtros
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabs de Reportes -->
+                    <ul class="nav nav-tabs" id="reportesTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-npk-rancho" data-bs-toggle="tab" data-bs-target="#content-npk-rancho" type="button" role="tab">
+                                <i class="mdi mdi-chart-bar"></i> NPK por Rancho
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-rancho-mensual" data-bs-toggle="tab" data-bs-target="#content-rancho-mensual" type="button" role="tab">
+                                <i class="mdi mdi-calendar"></i> Resumen Mensual
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-nutrientes" data-bs-toggle="tab" data-bs-target="#content-nutrientes" type="button" role="tab">
+                                <i class="mdi mdi-flask"></i> Nutrientes Detalle
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-sectores" data-bs-toggle="tab" data-bs-target="#content-sectores" type="button" role="tab">
+                                <i class="mdi mdi-map"></i> Detalle Sectores
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-hectareas" data-bs-toggle="tab" data-bs-target="#content-hectareas" type="button" role="tab">
+                                <i class="mdi mdi-earth"></i> Hectáreas
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-tendencia" data-bs-toggle="tab" data-bs-target="#content-tendencia" type="button" role="tab">
+                                <i class="mdi mdi-chart-line"></i> Tendencia NPK
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-inventario" data-bs-toggle="tab" data-bs-target="#content-inventario" type="button" role="tab">
+                                <i class="mdi mdi-package"></i> Inventario
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-anual" data-bs-toggle="tab" data-bs-target="#content-anual" type="button" role="tab">
+                                <i class="mdi mdi-file-chart"></i> Resumen Anual
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Contenido de Tabs -->
+                    <div class="tab-content mt-3" id="reportesContent">
+                        <!-- NPK por Rancho -->
+                        <div class="tab-pane fade show active" id="content-npk-rancho" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabla-npk-rancho">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Empresa</th>
+                                            <th>Rancho</th>
+                                            <th>Mes</th>
+                                            <th>Ha Regadas</th>
+                                            <th>N (KG)</th>
+                                            <th>N (KG/ha)</th>
+                                            <th>P (KG)</th>
+                                            <th>P (KG/ha)</th>
+                                            <th>K (KG)</th>
+                                            <th>K (KG/ha)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-npk-rancho"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Resumen Mensual -->
+                        <div class="tab-pane fade" id="content-rancho-mensual" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabla-rancho-mensual">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Empresa</th>
+                                            <th>Rancho</th>
+                                            <th>Periodo</th>
+                                            <th>Sectores</th>
+                                            <th>Aplicaciones</th>
+                                            <th>Ha Regadas</th>
+                                            <th>Litros Totales</th>
+                                            <th>Tanques</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-rancho-mensual"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Nutrientes Detalle -->
+                        <div class="tab-pane fade" id="content-nutrientes" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabla-nutrientes">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Empresa</th>
+                                            <th>Rancho</th>
+                                            <th>Nutriente</th>
+                                            <th>Tipo</th>
+                                            <th>Cantidad (KG)</th>
+                                            <th>Ha Regadas</th>
+                                            <th>KG/ha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-nutrientes"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Detalle Sectores -->
+                        <div class="tab-pane fade" id="content-sectores" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabla-sectores">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Empresa</th>
+                                            <th>Rancho</th>
+                                            <th>Sector</th>
+                                            <th>Variedad</th>
+                                            <th>Ha</th>
+                                            <th>Aplicaciones</th>
+                                            <th>N (KG)</th>
+                                            <th>P (KG)</th>
+                                            <th>K (KG)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-sectores"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Hectáreas Mensuales -->
+                        <div class="tab-pane fade" id="content-hectareas" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabla-hectareas">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Mes</th>
+                                            <th>Sectores Regados</th>
+                                            <th>Total Aplicaciones</th>
+                                            <th>Ha Totales</th>
+                                            <th>Ha Regadas</th>
+                                            <th>Litros Aplicados</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-hectareas"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tendencia NPK -->
+                        <div class="tab-pane fade" id="content-tendencia" role="tabpanel">
+                            <canvas id="chartTendenciaNPK" style="max-height: 400px;"></canvas>
+                            <div class="table-responsive mt-4">
+                                <table class="table table-striped table-hover" id="tabla-tendencia">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Mes</th>
+                                            <th>N Total (KG)</th>
+                                            <th>P Total (KG)</th>
+                                            <th>K Total (KG)</th>
+                                            <th>Aplicaciones</th>
+                                            <th>Ha Regadas</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-tendencia"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Inventario -->
+                        <div class="tab-pane fade" id="content-inventario" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info">
+                                        <strong>Estado del Inventario:</strong> Tanques preparados y disponibles
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabla-inventario">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Mezcla</th>
+                                            <th>Fabricante</th>
+                                            <th>Tanque</th>
+                                            <th>Litros Totales</th>
+                                            <th>Disponibles</th>
+                                            <th>%</th>
+                                            <th>Estado</th>
+                                            <th>Días Prep.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-inventario"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Resumen Anual -->
+                        <div class="tab-pane fade" id="content-anual" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="tabla-anual">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Año</th>
+                                            <th>Empresa</th>
+                                            <th>Rancho</th>
+                                            <th>Sectores</th>
+                                            <th>Aplicaciones</th>
+                                            <th>Ha Regadas</th>
+                                            <th>Litros Totales</th>
+                                            <th>Tanques</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-anual"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <button id="btnExportarExcel" class="btn btn-success me-2">
+                                <i class="mdi mdi-file-excel"></i> Exportar a Excel
+                            </button>
+                            <button id="btnExportarPDF" class="btn btn-danger me-2">
+                                <i class="mdi mdi-file-pdf"></i> Exportar a PDF
+                            </button>
+                            <button id="btnRefrescar" class="btn btn-info">
+                                <i class="mdi mdi-refresh"></i> Refrescar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/app/Fertilizacion/reportes.js"></script>

@@ -1,0 +1,60 @@
+<div class="modal fade" id="modalSector" tabindex="-1" role="dialog" aria-labelledby="miModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalSectorLabel" style="color: black;">Gestión de Sector</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formSector">
+                    <input type="hidden" id="id_sector" name="id">
+
+                    <div class="form-group">
+                        <label for="id_rancho_dsa">Rancho DSA</label>
+                        <select class="form-control" id="id_rancho_dsa" name="id_rancho_dsa" required>
+                            <option value="">Seleccione un rancho DSA</option>
+                            <% if (typeof ranchosDsa !=='undefined' ) { %>
+                                <% ranchosDsa.forEach(ranchoDsa=> { %>
+                                    <option value="<%= ranchoDsa.id %>">
+                                        <%= ranchoDsa.nombre_rancho_dsa %> - <%= ranchoDsa.numero_rancho_dsa %> 
+                                        <% if (ranchoDsa.rancho) { %>(<%= ranchoDsa.rancho.rancho %>)<% } %>
+                                    </option>
+                                    <% }) %>
+                                        <% } %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sector_interno">Sector Interno</label>
+                        <input type="text" class="form-control" id="sector_interno" name="sector_interno"
+                            placeholder="Ej: S-01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sector_agrian">Sector Agrian</label>
+                        <input type="text" class="form-control" id="sector_agrian" name="sector_agrian"
+                            placeholder="Ej: AGR-001" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="variedad">Variedad</label>
+                        <input type="text" class="form-control" id="variedad" name="variedad"
+                            placeholder="Ej: Frambuesa" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hectareas">Hectáreas</label>
+                        <input type="number" step="0.01" class="form-control" id="hectareas" name="hectareas"
+                            placeholder="0.00" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="submit" form="formSector" class="btn btn-primary" id="btnRegistrar">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>

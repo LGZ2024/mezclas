@@ -1,21 +1,22 @@
 /* eslint-disable no-undef */
 
-const CACHE_NAME = 'solicitudes-v32'
-const VERSION = '1.1.1' // Añadir control de versión
+const CACHE_NAME = 'ferilizacion-v3'
+const VERSION = '1.1.3' // Añadir control de versión
 
 const STATIC_ASSETS = [
   '/',
-  '/app/solicitud/cerrarMezcla.js',
-  '/app/proceso/proceso.js',
-  '/app/productosReceta/productos.js',
   '/css/app.css',
-  '/css/solicitudProductos.css',
   '/css/mobile-fixes.css',
   '/css/spinner.css',
   '/js/app.js',
   '/js/select2.js',
-  '/images/LogoTransp.webp',
-  '/images/LogoTransp.png',
+  '/images/favicon.ico',
+  '/images/favicon.svg',
+  '/images/favicon-96x96.png',
+  '/images/apple-touch-icon.png',
+  '/images/web-app-manifest-192x192.png',
+  '/images/web-app-manifest-512x512.png',
+  '/images/logoTransp-2.PNG',
   '/images/moras.webp',
   '/images/paisaje.webp',
   '/images/paise2.webp',
@@ -24,11 +25,11 @@ const STATIC_ASSETS = [
 ]
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Instalado')
+  // SW Instalado
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[SW] Precargando archivos estáticos')
+        // SW Precargando archivos estáticos
         return cache.addAll(STATIC_ASSETS)
       })
       .then(() => self.skipWaiting())
@@ -81,7 +82,7 @@ self.addEventListener('fetch', (event) => {
           }
 
           return caches.open(CACHE_NAME).then(cache => {
-            console.log('Intentando almacenar en caché:', event.request.url)
+            // SW Intentando almacenar en caché
             // Clona la respuesta para guardarla en caché.
             // Es importante devolver la respuesta original (fetchResponse) a la página.
             cache.put(event.request, fetchResponse.clone()).catch(error => {
@@ -95,7 +96,7 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         // Retornar un fallback para imágenes
         if (event.request.url.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-          return caches.match('/images/LogoTransp.webp')
+          return caches.match('/images/logoTransp-2.PNG')
         }
         return new Response('Error de conexión', {
           status: 503,

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/master/cabecera") %>
+            <style>
+                .required::after {
+                    content: " *";
+                    color: red;
+                }
+
+                .bg-light-custom {
+                    background-color: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 5px;
+                    border: 1px solid #e9ecef;
+                }
+            </style>
+</head>
+
+<body>
+    <div class="container-scroller">
+        <%- include("../../templates/master/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <%- include("../../templates/master/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="page-header">
+                                <h3 class="page-title">Preparar Tanque</h3>
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="/fertilizacion/registro">Fertilización</a>
+                                        </li>
+                                        <li class="breadcrumb-item active" aria-current="page">Preparar tanque</li>
+                                    </ol>
+                                </nav>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-12 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Registrar Preparación</h4>
+                                            <p class="card-description">Seleccione el tanque y agregue las mezclas que
+                                                contendrá.</p>
+
+                                            <form id="formTanque" class="mt-4">
+                                                <!-- Datos Generales -->
+                                                <div class="row mb-3">
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="fecha_preparacion"
+                                                                class="required">Fecha</label>
+                                                            <input type="date" class="form-control"
+                                                                id="fecha_preparacion" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <label for="codigo_tanque_preparado" class="required">Código
+                                                                Identificador</label>
+                                                            <input type="text" class="form-control"
+                                                                id="codigo_tanque_preparado"
+                                                                placeholder="Ej: TANQUE-01-LOTE-A" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <label for="tasa_inyeccion" class="required">Tasa Inyección (L/h)</label>
+                                                            <input type="number" class="form-control"
+                                                                id="tasa_inyeccion"
+                                                                placeholder="0.00" step="0.01" min="0" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="id_rancho_prepa" class="required">Rancho
+                                                                Ubicación</label>
+                                                            <select class="form-control" id="id_rancho_prepa" required>
+                                                                <option value="">Cargando...</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="id_tanque" class="required">Tanque
+                                                                Físico</label>
+                                                            <select class="form-control" id="id_tanque" required>
+                                                                <option value="">Cargando...</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <hr>
+
+                                                <!-- Área de Mezclas -->
+                                                <h5 class="mb-3">Composición del Tanque</h5>
+                                                <div class="bg-light-custom mb-4">
+                                                    <div class="row align-items-end">
+                                                        <div class="col-md-5">
+                                                            <div class="form-group mb-0">
+                                                                <label>Seleccionar Mezcla</label>
+                                                                <select class="form-control" id="select_mezcla_agregar">
+                                                                    <option value="">-- Seleccionar --</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <div class="form-group mb-0">
+                                                                <label>Litros a agregar</label>
+                                                                <input type="number" class="form-control"
+                                                                    id="litros_mezcla_agregar" placeholder="0.00"
+                                                                    min="0.1" step="0.01">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <button type="button" class="btn btn-primary btn-block"
+                                                                id="btnAgregarMezcla">
+                                                                <i class="mdi mdi-plus"></i> Agregar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Tabla de mezclas agregadas -->
+                                                <div class="table-responsive mb-3">
+                                                    <table class="table table-bordered">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Mezcla</th>
+                                                                <th class="text-right">Cantidad (Litros)</th>
+                                                                <th style="width: 50px;"></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="cuerpoTablaMezclas">
+                                                            <!-- Dinámico -->
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr class="bg-light font-weight-bold">
+                                                                <td class="text-right">TOTAL MEZCLAS:</td>
+                                                                <td class="text-right" id="totalMezclasDisplay">0.00 L</td>
+                                                                <td></td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+
+                                                <!-- Campo para agregar agua -->
+                                                <div class="row mb-3">
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label for="litros_agua">Litros de Agua</label>
+                                                            <input type="number" class="form-control" 
+                                                                id="litros_agua" placeholder="0.00" 
+                                                                min="0" step="0.01" value="0">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Etapa del Tanque</label>
+                                                            <div class="form-control-plaintext font-weight-bold" id="etapaTanqueDisplay">
+                                                                -
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Capacidad del Tanque</label>
+                                                            <div class="form-control-plaintext font-weight-bold" id="capacidadTanqueDisplay">
+                                                                0.00 L
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Total Volumen</label>
+                                                            <div class="form-control-plaintext font-weight-bold" id="totalVolumenDisplay">
+                                                                0.00 L
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Barra de progreso de capacidad -->
+                                                <div class="mb-3">
+                                                    <label>Uso de Capacidad</label>
+                                                    <div class="progress">
+                                                        <div class="progress-bar" id="barraCapacidad" role="progressbar" 
+                                                            style="width: 0%;" aria-valuen="0" aria-valuemin="0" 
+                                                            aria-valuemax="100">0%</div>
+                                                    </div>
+                                                    <small class="text-muted" id="mensajeCapacidad">0.00 L utilizados de 0.00 L</small>
+                                                </div>
+
+                                                <!-- Alerta de capacidad excedida -->
+                                                <div class="alert alert-warning d-none" id="alertaCapacidad">
+                                                    <i class="mdi mdi-alert"></i>
+                                                    <span id="textoAlertaCapacidad"></span>
+                                                </div>
+
+                                                <!-- Input oculto para el total real -->
+                                                <input type="hidden" id="litros_totales" value="0">
+
+                                                <div class="d-flex flex-column flex-sm-row justify-content-end pt-3 border-top"
+                                                    style="gap: 10px;">
+                                                    <a href="/fertilizacion/registro" class="btn btn-light">Cancelar</a>
+                                                    <button type="submit" class="btn btn-success btn-lg">
+                                                        <i class="mdi mdi-check"></i> Registrar Preparación
+                                                    </button>
+                                                </div>
+                                            </form>
+
+                                            <!-- Historial (simplificado) -->
+                                            <div class="mt-5">
+                                                <h4 class="card-title">Historial Reciente</h4>
+                                                <div class="table-responsive w-100">
+                                                    <table class="table table-striped table-bordered w-100"
+                                                        id="tbTanquesPreparados">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Código</th>
+                                                                <th>Fecha</th>
+                                                                <th>Rancho</th>
+                                                                <th>Tanque</th>
+                                                                <th>Etapa</th>
+                                                                <th>Contenido</th>
+                                                                <th>Tasa (L/h)</th>
+                                                                <th>Estado (L)</th>
+                                                                <th>Acciones</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="tablaTanquesPreparados"></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <%- include("../../templates/master/footer") %>
+                    </div>
+            </div>
+    </div>
+
+    <!-- Modal Detalle Tanque -->
+    <div class="modal fade" id="modalDetalleTanque" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalle de Composición del Tanque</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Rancho:</strong> <span id="detalleRancho"></span><br>
+                            <strong>Tanque:</strong> <span id="detalleTanqueFisico"></span>
+                        </div>
+                        <div class="col-6 text-right">
+                            <strong>Fecha:</strong> <span id="detalleFecha"></span><br>
+                            <strong>Volumen Total:</strong> <span id="detalleVolumen"></span><br>
+                            <strong>Tasa Inyección:</strong> <span id="detalleTasa"></span>
+                        </div>
+                    </div>
+
+                    <h6>Desglose de Activos</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Activo</th>
+                                    <th>Tipo</th>
+                                    <th class="text-right">Cantidad Calc.</th>
+                                    <th>Unidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaDetalleActivos">
+                                <!-- Dinámico -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include("../../templates/master/scripts") %>
+        <!-- Script específico NUEVO -->
+        <script type="module" src="/app/Fertilizacion/preparar_tanque.js?v=<%= Date.now() %>"></script>
+</body>
+
+</html>

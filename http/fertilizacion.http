@@ -1,0 +1,15 @@
+# POST http://localhost:3000/api/usuario/login
+# content-type: application/json
+
+# {
+#     "user": "ezaragoza",
+#     "password": "12345678"
+# }
+
+# GET http://localhost:3000/corporativo/api/empresas
+# GET http://localhost:3000/corporativo/api/sectores
+# GET http://localhost:3000/corporativo/api/ranchos
+# GET http://localhost:3000/corporativo/api/tanques
+# GET http://localhost:3000/api/fertilizacion/reportes/inventario
+# GET http://localhost:3000/api/fertilizacion/reportes/top-sectores?anio=2026&mes=1
+GET http://localhost:3000/api/fertilizacion/reportes/semanal?anio=2026&mes=1

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include("../../templates/head-pwa") %>
+        <%- include("../../templates/master/cabecera") %>
+            <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+
+<body>
+    <input type="hidden" id="rol" value="<%= rol %> ">
+    <div class="container-scroller">
+        <!-- navcabecera -->
+        <%- include("../../templates/master/navCabecera") %>
+            <div class="container-fluid page-body-wrapper">
+                <!-- nav lateral -->
+                <%- include("../../templates/master/navLateral") %>
+                    <div class="main-panel">
+                        <div class="content-wrapper">
+                            <div class="page-header">
+                                <h3 class="page-title">Dashboard - KPIs de Fertilización</h3>
+                                <nav aria-label="breadcrumb">
+                                    <ol class="breadcrumb">
+                                        <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
+                                        <li class="breadcrumb-item active" aria-current="page">Fertilización</li>
+                                    </ol>
+                                </nav>
+                            </div>
+
+                            <!-- Botones de exportación -->
+                            <div class="btn-group mb-3" role="group">
+                                <button id="btnExportarCSV" class="btn btn-outline-primary">
+                                    <i class="fas fa-file-csv"></i> CSV
+                                </button>
+                                <button id="btnExportarJSON" class="btn btn-outline-primary">
+                                    <i class="fas fa-file-code"></i> JSON
+                                </button>
+                                <button id="btnExportarExcel" class="btn btn-success">
+                                    <i class="fas fa-file-excel"></i> Excel (Detallado)
+                                </button>
+                            </div>
+
+                            <!-- Loading indicator -->
+                            <div class="card" id="estadisticasCard"></div>
+
+                            <!-- Sección de filtros para fertilización -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card shadow-sm">
+                                        <div class="card-body">
+                                            <h4 class="card-title mb-4">
+                                                <i class="mdi mdi-filter-multiple"></i> Filtros
+                                            </h4>
+                                            <div class="row g-3">
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaInicio">Desde (Mes)</label>
+                                                        <input type="month" class="form-control" id="filtroFechaInicio">
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroFechaFin">Hasta (Mes)</label>
+                                                        <input type="month" class="form-control" id="filtroFechaFin">
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroEmpresa">Empresa</label>
+                                                        <select class="form-control" id="filtroEmpresa">
+                                                            <option value="">Todas</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroRancho">Rancho</label>
+                                                        <select class="form-control" id="filtroRancho">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroSector">Sector</label>
+                                                        <select class="form-control" id="filtroSector">
+                                                            <option value="">Todos</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-2 col-md-3 col-sm-6">
+                                                    <div class="form-group mb-0">
+                                                        <label for="filtroVariedad">Variedad</label>
+                                                        <select class="form-control" id="filtroVariedad">
+                                                            <option value="">Todas</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <button id="btnResetFiltros" class="btn btn-outline-secondary">
+                                                        <i class="mdi mdi-refresh"></i> Limpiar Filtros
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Resumen de estadísticas -->
+                            <div class="row mb-4 dashboard-stats">
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="totalAplicaciones">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-success">
+                                                        <span class="mdi mdi-sprout icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Total Aplicaciones</h6>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div id="nutrientesTotales"
+                                                        class="d-flex flex-column justify-content-center">
+                                                        <!-- Los totales NPK se insertarán aquí -->
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-primary">
+                                                        <span class="mdi mdi-flask icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Total NPK (kg)</h6>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="promedioHectarea">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-warning">
+                                                        <span class="mdi mdi-chart-line icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Promedio kg/Ha</h6>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-xl-3 col-sm-6 grid-margin stretch-card">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-9">
+                                                    <div class="d-flex align-items-center align-self-start">
+                                                        <h3 class="mb-0" id="sectoresActivos">0</h3>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="icon icon-box-info">
+                                                        <span class="mdi mdi-map-marker-multiple icon-item"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <h6 class="text-muted font-weight-normal">Sectores Activos</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gráficas -->
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Distribución por Nutriente (NPK)</h4>
+                                            <p class="card-description">Distribución total de nutrientes principales</p>
+                                            <canvas id="nutrienteChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">NPK por Empresa</h4>
+                                            <p class="card-description">Total de nutrientes aplicados por empresa</p>
+                                            <canvas id="empresaChart" height="300"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-8 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Tendencia Mensual NPK</h4>
+                                            <p class="card-description">Evolución de la aplicación de nutrientes por mes
+                                            </p>
+                                            <canvas id="temporalChart" height="250"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">NPK por Variedad</h4>
+                                            <p class="card-description">Distribución por tipo de cultivo</p>
+                                            <canvas id="variedadChart" height="250"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">NPK por Rancho</h4>
+                                            <p class="card-description">Aplicación de nutrientes por rancho</p>
+                                            <canvas id="ranchoChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 grid-margin stretch-card">
+                                    <div class="card chart-card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">Eficiencia - Kg/Ha por Sector</h4>
+                                            <p class="card-description">Top sectores con mayor intensidad nutricional
+                                            </p>
+                                            <canvas id="eficienciaChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- content-wrapper ends -->
+                        <%- include("../../templates/master/footer") %>
+                    </div>
+                    <!-- main-panel ends -->
+            </div>
+            <!-- page-body-wrapper ends -->
+    </div>
+    <!-- container-scroller -->
+    <%- include("../../templates/master/scripts") %>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+        <script src="/js/date-fns-fixed.js"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+        <!-- XLSX Library -->
+        <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+        <!-- Script específico para fertilización -->
+        <script type="module" nonce="<%= nonce %>">
+            // Indicar el tipo de dashboard al sistema
+            localStorage.setItem('dashboardTipo', 'fertilizacion')
+        </script>
+        <script type="module" src="/app/admin/graficas.js"></script>
+</body>
+
+</html>

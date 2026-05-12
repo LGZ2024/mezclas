@@ -1,44 +1,72 @@
-const { spawn } = require('child_process')
-const path = require('path')
 const fs = require('fs')
+const path = require('path')
 
-async function loadModule () {
-  // Crear directorio de logs si no existe
-  const logDir = path.join(__dirname, 'logs')
-  if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir, { recursive: true })
+// Configuración de entorno para Plesk
+const PLESK_CONFIG = {
+  NODE_ENV: 'production',
+  PLESK_MODE: 'true',
+  APP_PATH: path.join(__dirname, 'dist', 'bundle.mjs'),
+  LOG_DIR: path.join(__dirname, 'logs')
+}
+
+// Inicializar logging
+function initializeLogs () {
+  if (!fs.existsSync(PLESK_CONFIG.LOG_DIR)) {
+    fs.mkdirSync(PLESK_CONFIG.LOG_DIR, { recursive: true })
   }
-  const startTime = new Date()
-  const logFile = fs.createWriteStream(path.join(__dirname, 'logs', 'app.log'), { flags: 'a' })
+  return {
+    timestamp: new Date().toISOString(),
+    logFile: path.join(PLESK_CONFIG.LOG_DIR, 'passenger.log')
+  }
+}
 
+// Verificar bundle
+function verifyBundle () {
+  if (!fs.existsSync(PLESK_CONFIG.APP_PATH)) {
+    throw new Error(`Bundle no encontrado en: ${PLESK_CONFIG.APP_PATH}`)
+  }
+}
+
+// Cargar aplicación
+async function loadModule () {
+  const { timestamp, logFile } = initializeLogs()
   try {
-    logFile.write(`[${new Date().toISOString()}] Puerto asignado: ${process.env.PORT}\n`)
+    // Log de inicio
+    fs.appendFileSync(logFile, `[${timestamp}] Iniciando aplicación\n`)
 
-    const app = spawn('node', ['dist/bundle.mjs'], {
-      stdio: ['inherit', 'pipe', 'pipe'],
-      cwd: path.resolve(__dirname),
-      env: {
-        ...process.env
-      }
-    })
+    // Verificar bundle
+    verifyBundle()
 
-    app.stdout.pipe(logFile)
-    app.stderr.pipe(logFile)
+    // Configurar variables de entorno
+    process.env = {
+      ...process.env,
+      ...PLESK_CONFIG
+    }
 
-    app.on('error', (error) => {
-      logFile.write(`[${new Date().toISOString()}] Error al iniciar: ${error.message}\n`)
-      process.exit(1)
-    })
+    // Cargar aplicación
+    await import('./dist/bundle.mjs')
 
-    app.on('exit', (code) => {
-      const runtime = (Date.now() - startTime) / 1000
-      logFile.write(`[${new Date().toISOString()}] Aplicación finalizada. Código: ${code}. Tiempo: ${runtime}s\n`)
-      process.exit(code || 0)
-    })
+    fs.appendFileSync(logFile, `[${timestamp}] Aplicación iniciada correctamente\n`)
   } catch (error) {
-    logFile.write(`[${new Date().toISOString()}] Error fatal: ${error.message}\n`)
+    const errorMessage = `[${new Date().toISOString()}] Error: ${error.message}\n${error.stack}\n`
+    fs.appendFileSync(logFile, errorMessage)
+    console.error('Error al cargar la aplicación:', error)
     process.exit(1)
   }
 }
 
+// Manejo de errores no capturados
+process.on('uncaughtException', (error) => {
+  const errorMessage = `[${new Date().toISOString()}] Error no capturado: ${error.message}\n${error.stack}\n`
+  fs.appendFileSync(PLESK_CONFIG.LOG_DIR + '/passenger.log', errorMessage)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  const errorMessage = `[${new Date().toISOString()}] Promesa rechazada no manejada: ${reason}\n`
+  fs.appendFileSync(PLESK_CONFIG.LOG_DIR + '/passenger.log', errorMessage)
+  process.exit(1)
+})
+
+// Iniciar aplicación
 loadModule()
